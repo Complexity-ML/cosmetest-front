@@ -1,0 +1,27 @@
+/* SidebarIcons.module.css - Placer dans le même dossier que Sidebar.jsx */
+
+.menuIcon {
+    filter: invert(20%) sepia(10%) saturate(250%) hue-rotate(180deg) brightness(95%) contrast(90%);
+    transition: filter 0.2s ease-in-out;
+  }
+  
+  .activeIcon {
+    filter: invert(35%) sepia(60%) saturate(860%) hue-rotate(205deg) brightness(95%) contrast(95%);
+  }
+  
+  .menuIcon:hover {
+    filter: invert(35%) sepia(60%) saturate(860%) hue-rotate(205deg) brightness(95%) contrast(95%);
+  }
+  
+  .collapseIcon {
+    filter: invert(45%) sepia(12%) saturate(290%) hue-rotate(179deg) brightness(92%) contrast(86%);
+    transition: transform 0.3s ease;
+  }
+  
+  .actionIcon {
+    filter: invert(35%) sepia(60%) saturate(860%) hue-rotate(205deg) brightness(95%) contrast(95%);
+  }
+  
+  .actionIcon:hover {
+    filter: invert(24%) sepia(70%) saturate(1200%) hue-rotate(209deg) brightness(96%) contrast(96%);
+  }

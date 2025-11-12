@@ -1,0 +1,190 @@
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
+const CilsSection = ({ formData, onChange }: any) => (
+    <Card>
+      <CardHeader>
+        <CardTitle>Cils & sourcils</CardTitle>
+      </CardHeader>
+      <CardContent>
+  
+      <h3 className="text-md font-medium text-gray-800 mt-2 mb-3">
+        Caractéristiques des cils
+      </h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label
+            htmlFor="epaisseurCils"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            Épaisseur des cils
+          </label>
+          <select
+            id="epaisseurCils"
+            name="epaisseurCils"
+            value={formData.epaisseurCils}
+            onChange={onChange}
+            className="form-select block w-full"
+          >
+            <option value="">Sélectionner</option>
+            <option value="Fins">Fins</option>
+            <option value="Moyens">Moyens</option>
+            <option value="Épais">Épais</option>
+          </select>
+        </div>
+  
+        <div>
+          <label
+            htmlFor="longueurCils"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            Longueur des cils
+          </label>
+          <select
+            id="longueurCils"
+            name="longueurCils"
+            value={formData.longueurCils}
+            onChange={onChange}
+            className="form-select block w-full"
+          >
+            <option value="">Sélectionner</option>
+            <option value="Courts">Courts</option>
+            <option value="Moyens">Moyens</option>
+            <option value="Longs">Longs</option>
+          </select>
+        </div>
+  
+        <div>
+          <label
+            htmlFor="courbureCils"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            Courbure des cils
+          </label>
+          <select
+            id="courbureCils"
+            name="courbureCils"
+            value={formData.courbureCils}
+            onChange={onChange}
+            className="form-select block w-full"
+          >
+            <option value="">Sélectionner</option>
+            <option value="Droits">Droits</option>
+            <option value="Légèrement courbés">Légèrement courbés</option>
+            <option value="Très courbés">Très courbés</option>
+          </select>
+        </div>
+      </div>
+  
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+        <div className="flex items-center">
+          <input
+            type="checkbox"
+            id="cilsAbimes"
+            name="cilsAbimes"
+            checked={formData.cilsAbimes === "Oui"}
+            onChange={onChange}
+            className="form-checkbox h-5 w-5 text-primary-600"
+          />
+          <label
+            htmlFor="cilsAbimes"
+            className="ml-2 block text-sm font-medium text-gray-700"
+          >
+            Cils abîmés
+          </label>
+        </div>
+  
+        <div className="flex items-center">
+          <input
+            type="checkbox"
+            id="cilsBroussailleux"
+            name="cilsBroussailleux"
+            checked={formData.cilsBroussailleux === "Oui"}
+            onChange={onChange}
+            className="form-checkbox h-5 w-5 text-primary-600"
+          />
+          <label
+            htmlFor="cilsBroussailleux"
+            className="ml-2 block text-sm font-medium text-gray-700"
+          >
+            Cils broussailleux
+          </label>
+        </div>
+  
+        <div className="flex items-center">
+          <input
+            type="checkbox"
+            id="chuteDeCils"
+            name="chuteDeCils"
+            checked={formData.chuteDeCils === "Oui"}
+            onChange={onChange}
+            className="form-checkbox h-5 w-5 text-primary-600"
+          />
+          <label
+            htmlFor="chuteDeCils"
+            className="ml-2 block text-sm font-medium text-gray-700"
+          >
+            Chute de cils
+          </label>
+        </div>
+      </div>
+  
+      <h3 className="text-md font-medium text-gray-800 mt-6 mb-3">
+        Sourcils
+      </h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label
+            htmlFor="caracteristiqueSourcils"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            Caractéristiques des sourcils
+          </label>
+          <select
+            id="caracteristiqueSourcils"
+            name="caracteristiqueSourcils"
+            value={formData.caracteristiqueSourcils}
+            onChange={onChange}
+            className="form-select block w-full"
+          >
+            <option value="">Sélectionner</option>
+            <option value="Fins">Fins</option>
+            <option value="Moyens">Moyens</option>
+            <option value="Épais">Épais</option>
+            <option value="Clairsemés">Clairsemés</option>
+            <option value="Fournis">Fournis</option>
+          </select>
+        </div>
+      </div>
+  
+      <h3 className="text-md font-medium text-gray-800 mt-6 mb-3">
+        Lèvres
+      </h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label
+            htmlFor="levres"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            Type de lèvres
+          </label>
+          <select
+            id="levres"
+            name="levres"
+            value={formData.levres}
+            onChange={onChange}
+            className="form-select block w-full"
+          >
+            <option value="">Sélectionner</option>
+            <option value="Fines">Fines</option>
+            <option value="Moyennes">Moyennes</option>
+            <option value="Pulpeuses">Pulpeuses</option>
+            <option value="Asymétriques">Asymétriques</option>
+          </select>
+        </div>
+      </div>
+      </CardContent>
+    </Card>
+  );
+  
+
+export default CilsSection;

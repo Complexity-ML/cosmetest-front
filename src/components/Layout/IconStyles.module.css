@@ -1,0 +1,50 @@
+/* IconStyles.module.css - à placer dans le même dossier que Navbar.jsx */
+
+.searchIcon {
+    filter: invert(45%) sepia(12%) saturate(290%) hue-rotate(179deg) brightness(92%) contrast(86%);
+  }
+  
+  .searchIcon:hover {
+    filter: invert(24%) sepia(70%) saturate(1200%) hue-rotate(209deg) brightness(96%) contrast(96%);
+  }
+  
+  .bellIcon {
+    filter: invert(45%) sepia(12%) saturate(290%) hue-rotate(179deg) brightness(92%) contrast(86%);
+  }
+  
+  .bellIcon:hover {
+    filter: invert(60%) sepia(97%) saturate(1670%) hue-rotate(357deg) brightness(100%) contrast(106%);
+  }
+  
+  .chevronIcon {
+    filter: invert(45%) sepia(12%) saturate(290%) hue-rotate(179deg) brightness(92%) contrast(86%);
+    transition: transform 0.2s;
+  }
+  
+  .chevronIconOpen {
+    transform: rotate(180deg);
+  }
+  
+  .userIcon {
+    filter: invert(45%) sepia(12%) saturate(290%) hue-rotate(179deg) brightness(92%) contrast(86%);
+  }
+  
+  .userIcon:hover {
+    filter: invert(36%) sepia(38%) saturate(3341%) hue-rotate(210deg) brightness(102%) contrast(101%);
+  }
+  
+  .settingsIcon {
+    filter: invert(45%) sepia(12%) saturate(290%) hue-rotate(179deg) brightness(92%) contrast(86%);
+  }
+  
+  .settingsIcon:hover {
+    filter: invert(36%) sepia(38%) saturate(3341%) hue-rotate(210deg) brightness(102%) contrast(101%);
+  }
+  
+  .logoutIcon {
+    filter: invert(39%) sepia(69%) saturate(2467%) hue-rotate(330deg) brightness(105%) contrast(91%);
+  }
+  
+  .logoutIcon:hover {
+    filter: invert(24%) sepia(85%) saturate(1996%) hue-rotate(343deg) brightness(97%) contrast(93%);
+  }

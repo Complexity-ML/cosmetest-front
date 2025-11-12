@@ -1,0 +1,890 @@
+/* Calendar.css */
+
+.calendar-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: #f8fafc;
+  min-height: 100vh;
+}
+
+/* En-tête du calendrier */
+.calendar-header {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
+}
+
+.calendar-navigation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.calendar-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+  text-transform: capitalize;
+}
+
+.nav-button {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.nav-button:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+}
+
+/* Statistiques */
+.calendar-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.stat-item {
+  text-align: center;
+  padding: 16px;
+  background: #f1f5f9;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.stat-number {
+  display: block;
+  font-size: 24px;
+  font-weight: 700;
+  color: #3b82f6;
+  margin-bottom: 4px;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Grille du calendrier */
+.calendar-grid {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
+}
+
+.calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.weekday-header {
+  padding: 16px 8px;
+  text-align: center;
+  font-weight: 600;
+  color: #475569;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.calendar-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.calendar-day {
+  min-height: 120px;
+  border-right: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  background: white;
+}
+
+.calendar-day:hover {
+  background: #f8fafc;
+}
+
+.calendar-day.other-month {
+  background: #f9fafb;
+  color: #9ca3af;
+}
+
+.calendar-day.today {
+  background: #eff6ff !important;
+  border: 2px solid #3b82f6;
+}
+
+.calendar-day.selected {
+  background: #dbeafe !important;
+  border: 2px solid #2563eb;
+}
+
+.calendar-day.has-studies {
+  background: #fefce8;
+}
+
+.day-number {
+  font-weight: 600;
+  font-size: 16px;
+  margin-bottom: 8px;
+  color: #374151;
+}
+
+.calendar-day.today .day-number {
+  color: #3b82f6;
+}
+
+.calendar-day.other-month .day-number {
+  color: #9ca3af;
+}
+
+/* Études dans les jours - AVEC SCROLL */
+.day-studies {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 90px;
+  /* Augmenté de 80px à 90px */
+  overflow-y: auto;
+  /* CHANGÉ de hidden à auto pour activer le scroll */
+  overflow-x: hidden;
+  /* Pas de scroll horizontal */
+  padding-right: 2px;
+  /* Espace pour la scrollbar */
+}
+
+/* Style de la scrollbar */
+.day-studies::-webkit-scrollbar {
+  width: 4px;
+}
+
+.day-studies::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.day-studies::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 2px;
+}
+
+.day-studies::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Pour Firefox */
+.day-studies {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+.study-marker {
+  background: white;
+  border-radius: 4px;
+  padding: 4px 6px;
+  font-size: 11px;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+}
+
+.study-marker:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  z-index: 10;
+}
+
+.study-ref {
+  font-weight: 600;
+  color: #374151;
+}
+
+.study-overflow {
+  background: #f3f4f6;
+  color: #6b7280;
+  text-align: center;
+  padding: 2px 4px;
+  font-size: 10px;
+  border-radius: 4px;
+  margin-top: 2px;
+}
+
+/* Légende */
+.calendar-legend {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  margin-top: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
+}
+
+.legend-section h4 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 12px;
+}
+
+.legend-section p {
+  margin: 4px 0;
+  font-size: 14px;
+  color: #4b5563;
+}
+
+/* =========================== MODAL AMÉLIORÉE =========================== */
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  backdrop-filter: blur(4px);
+}
+
+.enhanced-modal {
+  background: white;
+  border-radius: 16px;
+  max-width: 900px;
+  width: 100%;
+  max-height: 85vh;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* En-tête de la modal améliorée */
+.enhanced-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 24px;
+  border-bottom: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.study-info h3 {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0 0 8px 0;
+  color: white;
+}
+
+.study-title {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0 0 12px 0;
+  line-height: 1.4;
+}
+
+.study-meta {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.study-type,
+.rdv-count {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.modal-close {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 8px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.modal-close:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+}
+
+/* Corps de la modal améliorée */
+.enhanced-body {
+  padding: 0;
+  max-height: calc(85vh - 120px);
+  overflow-y: auto;
+}
+
+.loading-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+}
+
+.rdv-sections {
+  padding: 24px;
+}
+
+.rdv-sections>*+* {
+  margin-top: 32px;
+}
+
+/* Sections de RDV par catégorie temporelle */
+.rdv-section {
+  margin-bottom: 32px;
+}
+
+.section-header {
+  margin-bottom: 16px;
+}
+
+.time-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 18px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.today-badge {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+}
+
+.upcoming-badge {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+}
+
+.past-badge {
+  background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+  color: white;
+}
+
+.badge-icon {
+  font-size: 14px;
+}
+
+.badge-text {
+  font-weight: 600;
+}
+
+.badge-count {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Liste des RDV */
+.rdv-list {
+  display: grid;
+  gap: 12px;
+}
+
+.past-list {
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+.past-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.past-list::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.past-list::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.past-list::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Cartes de RDV */
+.rdv-card {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.rdv-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.today-card {
+  border-left: 4px solid #ef4444;
+  background: linear-gradient(135deg, #fef2f2 0%, #ffffff 100%);
+}
+
+.upcoming-card {
+  border-left: 4px solid #10b981;
+  background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%);
+}
+
+.past-card {
+  border-left: 4px solid #6b7280;
+  background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+}
+
+/* Slot de temps */
+.rdv-time-slot {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.time-display {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1e293b;
+  font-family: 'SF Mono', 'Monaco', 'Cascadia Code', monospace;
+}
+
+.date-display {
+  font-size: 14px;
+  color: #64748b;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+/* Détails du RDV */
+.rdv-details {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.volunteer-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.volunteer-icon {
+  font-size: 16px;
+  opacity: 0.7;
+}
+
+.volunteer-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.rdv-status {
+  margin-left: 16px;
+}
+
+.status-badge {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: 1px solid;
+}
+
+/* Commentaires */
+.rdv-comments {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  background: #f8fafc;
+  padding: 12px;
+  border-radius: 8px;
+  margin-top: 12px;
+}
+
+.comment-icon {
+  font-size: 14px;
+  margin-top: 2px;
+  opacity: 0.7;
+}
+
+.comment-text {
+  font-size: 14px;
+  color: #4b5563;
+  font-style: italic;
+  line-height: 1.5;
+}
+
+/* Indicateur plus de RDV */
+.more-rdv-indicator {
+  text-align: center;
+  padding: 16px;
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  border-radius: 8px;
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 500;
+  border: 1px dashed #cbd5e1;
+}
+
+/* Message aucun RDV */
+.no-rdv-message {
+  text-align: center;
+  padding: 60px 20px;
+  color: #6b7280;
+}
+
+.no-rdv-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.no-rdv-message p {
+  font-size: 16px;
+  margin: 0;
+}
+
+/* États de chargement et d'erreur */
+.loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #e5e7eb;
+  border-top: 4px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-spinner p {
+  color: #6b7280;
+  font-size: 16px;
+  margin: 0;
+}
+
+.error-message {
+  text-align: center;
+  padding: 60px 20px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.error-message p {
+  color: #ef4444;
+  font-size: 16px;
+  margin-bottom: 16px;
+}
+
+.error-message button {
+  background: #ef4444;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.error-message button:hover {
+  background: #dc2626;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .calendar-container {
+    padding: 10px;
+  }
+
+  .calendar-header {
+    padding: 16px;
+  }
+
+  .calendar-title {
+    font-size: 22px;
+  }
+
+  .calendar-navigation {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .calendar-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .calendar-day {
+    min-height: 80px;
+    padding: 4px;
+  }
+
+  .day-studies {
+    max-height: 60px;
+    /* Scroll sur mobile aussi */
+    overflow-y: auto;
+  }
+
+  .day-studies::-webkit-scrollbar {
+    width: 3px;
+    /* Plus fine sur mobile */
+  }
+
+  .study-marker {
+    padding: 2px 4px;
+    font-size: 10px;
+  }
+
+  .day-number {
+    font-size: 14px;
+  }
+
+  .study-marker {
+    padding: 2px 4px;
+    font-size: 10px;
+  }
+
+  .enhanced-modal {
+    margin: 10px;
+    max-height: 90vh;
+    max-width: calc(100vw - 20px);
+  }
+
+  .enhanced-header {
+    padding: 16px;
+  }
+
+  .study-info h3 {
+    font-size: 20px;
+  }
+
+  .rdv-sections {
+    padding: 16px;
+  }
+
+  .rdv-card {
+    padding: 16px;
+  }
+
+  .rdv-details {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .rdv-status {
+    margin-left: 0;
+  }
+
+  .time-display {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .calendar-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .calendar-day {
+    min-height: 60px;
+    padding: 2px;
+  }
+
+  .day-studies {
+    max-height: 45px;
+    /* Encore plus compact */
+    overflow-y: auto;
+  }
+
+  .day-studies::-webkit-scrollbar {
+    width: 2px;
+    /* Très fine */
+  }
+
+  .study-marker {
+    font-size: 9px;
+    padding: 1px 3px;
+  }
+
+  .day-number {
+    font-size: 12px;
+  }
+
+  .day-studies {
+    max-height: 40px;
+  }
+
+  .study-marker {
+    font-size: 9px;
+    padding: 1px 3px;
+  }
+
+  .study-meta {
+    flex-direction: column;
+    gap: 8px;
+  }
+}
+
+/* Styles pour les couleurs de statut */
+.bg-green-100 {
+  background-color: #dcfce7;
+}
+
+.text-green-800 {
+  color: #166534;
+}
+
+.border-green-300 {
+  border-color: #86efac;
+}
+
+.bg-yellow-100 {
+  background-color: #fef3c7;
+}
+
+.text-yellow-800 {
+  color: #92400e;
+}
+
+.border-yellow-300 {
+  border-color: #fcd34d;
+}
+
+.bg-red-100 {
+  background-color: #fee2e2;
+}
+
+.text-red-800 {
+  color: #991b1b;
+}
+
+.border-red-300 {
+  border-color: #fca5a5;
+}
+
+.bg-blue-100 {
+  background-color: #dbeafe;
+}
+
+.text-blue-800 {
+  color: #1e40af;
+}
+
+.border-blue-300 {
+  border-color: #93c5fd;
+}
+
+.bg-purple-100 {
+  background-color: #ede9fe;
+}
+
+.text-purple-800 {
+  color: #5b21b6;
+}
+
+.border-purple-300 {
+  border-color: #c4b5fd;
+}
+
+.bg-gray-100 {
+  background-color: #f3f4f6;
+}
+
+.text-gray-800 {
+  color: #1f2937;
+}
+
+.border-gray-300 {
+  border-color: #d1d5db;
+}
