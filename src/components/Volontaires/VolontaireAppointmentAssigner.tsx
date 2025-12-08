@@ -284,14 +284,20 @@ const VolontaireAppointmentAssigner = ({ volontaireId, volontaire, onAssignmentC
       // Désélectionner ce rendez-vous
       setSelectedAppointments(prev => prev.filter(selected => getAppointmentId(selected) !== id));
     } else {
-      // Sélection one-by-one : remplacer la sélection actuelle par ce seul rendez-vous
-      setSelectedAppointments([rdv]);
+      // Sélection multiple : ajouter ce rendez-vous à la sélection actuelle
+      setSelectedAppointments(prev => [...prev, rdv]);
     }
   };
 
   const handleSelectAllAppointments = () => {
-    // En mode one-by-one, ce bouton sert uniquement à tout désélectionner
-    setSelectedAppointments([]);
+    // Sélectionner ou désélectionner tous les RDV disponibles
+    if (selectedAppointments.length === availableAppointments.length) {
+      // Tout est déjà sélectionné, on désélectionne tout
+      setSelectedAppointments([]);
+    } else {
+      // Sélectionner tous les RDV disponibles
+      setSelectedAppointments([...availableAppointments]);
+    }
   };
 
   // Assignation intelligente avec gestion d'association unique

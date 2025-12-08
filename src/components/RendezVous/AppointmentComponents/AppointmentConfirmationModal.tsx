@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../../ui/dialog';
 import { Button } from '../../ui/button';
 
@@ -30,6 +31,7 @@ const AppointmentConfirmationModal = ({
   appointmentData,
   isSubmitting = false
 }: AppointmentConfirmationModalProps) => {
+  const { t } = useTranslation();
   if (!isOpen || !appointmentData) return null;
 
   const {
@@ -44,27 +46,27 @@ const AppointmentConfirmationModal = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Confirmation de création</DialogTitle>
+          <DialogTitle>{t('appointments.creationConfirmation')}</DialogTitle>
         </DialogHeader>
 
           <div className="space-y-4">
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <h4 className="font-semibold text-blue-800 mb-2">Résumé de la création</h4>
+              <h4 className="font-semibold text-blue-800 mb-2">{t('appointments.creationSummary')}</h4>
               <div className="text-sm text-blue-700 space-y-1">
-                <p><strong>Étude :</strong> {studyInfo?.ref} - {studyInfo?.titre}</p>
-                <p><strong>Groupe :</strong> {groupInfo?.intitule} ({groupInfo?.nbSujet || 0} sujets)</p>
+                <p><strong>{t('appointments.study')} :</strong> {studyInfo?.ref} - {studyInfo?.titre}</p>
+                <p><strong>{t('groups.group')} :</strong> {groupInfo?.intitule} ({groupInfo?.nbSujet || 0} {t('studies.subjects')})</p>
                 <p className="text-lg font-bold text-blue-900 mt-3">
-                  🗓️ <strong>{totalAppointments} rendez-vous</strong> seront créés
+                  🗓️ <strong>{totalAppointments} {t('appointments.list')}</strong> {t('appointments.willBeCreated')}
                 </p>
               </div>
             </div>
 
             <div className="space-y-3">
-              <h4 className="font-semibold text-gray-800">Détail par date :</h4>
+              <h4 className="font-semibold text-gray-800">{t('appointments.detailByDate')} :</h4>
               {datesSummary.map((dateSummary, index) => (
                 <div key={index} className="border rounded-lg p-3 bg-gray-50">
                   <div className="font-medium text-gray-800 mb-2">
-                    📅 {dateSummary.date} - {dateSummary.totalForDate} rendez-vous
+                    📅 {dateSummary.date} - {dateSummary.totalForDate} {t('appointments.list')}
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
                     {dateSummary.slots.map((slot, slotIndex) => (
@@ -79,7 +81,7 @@ const AppointmentConfirmationModal = ({
 
             {comments && (
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                <h4 className="font-medium text-yellow-800 mb-1">Commentaires :</h4>
+                <h4 className="font-medium text-yellow-800 mb-1">{t('appointments.comments')} :</h4>
                 <p className="text-sm text-yellow-700">{comments}</p>
               </div>
             )}
@@ -91,13 +93,13 @@ const AppointmentConfirmationModal = ({
             disabled={isSubmitting}
             variant="outline"
           >
-            ↩️ Retour aux paramètres
+            ↩️ {t('appointments.backToSettings')}
           </Button>
           <Button
             onClick={onConfirm}
             disabled={isSubmitting}
           >
-            {isSubmitting ? 'Création en cours...' : '✅ Confirmer et créer'}
+            {isSubmitting ? t('appointments.creationInProgress') : '✅ ' + t('appointments.confirmAndCreate')}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -1,9 +1,13 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useTranslation } from "react-i18next";
 
-const PeauSection = ({ formData, errors, onChange }: any) => (
+const PeauSection = ({ formData, errors, onChange }: any) => {
+  const { t } = useTranslation();
+
+  return (
     <Card>
       <CardHeader>
-        <CardTitle>Caractéristiques de la peau</CardTitle>
+        <CardTitle>{t('volunteers.skinCharacteristics')}</CardTitle>
       </CardHeader>
       <CardContent>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -12,7 +16,7 @@ const PeauSection = ({ formData, errors, onChange }: any) => (
             htmlFor="typePeau"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
-            Type de peau <span className="text-red-500">*</span>
+            {t('volunteers.skinType')} <span className="text-red-500">*</span>
           </label>
           <select
             id="typePeau"
@@ -22,7 +26,7 @@ const PeauSection = ({ formData, errors, onChange }: any) => (
             className={`form-select block w-full ${errors.typePeauVisage ? "border-red-500" : ""}`}
             required
           >
-            <option value="">Sélectionner</option>
+            <option value="">{t('common.select')}</option>
             <option value="Normale">Normale</option>
             <option value="Sèche">Sèche</option>
             <option value="Grasse">Grasse</option>
@@ -33,13 +37,13 @@ const PeauSection = ({ formData, errors, onChange }: any) => (
             <p className="mt-1 text-sm text-red-500">{errors.typePeauVisage}</p>
           )}
         </div>
-  
+
         <div>
           <label
             htmlFor="carnation"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
-            Carnation
+            {t('volunteers.complexion')}
           </label>
           <select
             id="carnation"
@@ -48,7 +52,7 @@ const PeauSection = ({ formData, errors, onChange }: any) => (
             onChange={onChange}
             className="form-select block w-full"
           >
-            <option value="">Sélectionner</option>
+            <option value="">{t('common.select')}</option>
             <option value="Très claire">Très claire</option>
             <option value="Claire">Claire</option>
             <option value="Moyenne">Moyenne</option>
@@ -57,13 +61,13 @@ const PeauSection = ({ formData, errors, onChange }: any) => (
             <option value="Très foncée">Très foncée</option>
           </select>
         </div>
-  
+
         <div>
           <label
             htmlFor="sensibiliteCutanee"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
-            Sensibilité cutanée
+            {t('volunteers.skinSensitivity')}
           </label>
           <select
             id="sensibiliteCutanee"
@@ -72,13 +76,13 @@ const PeauSection = ({ formData, errors, onChange }: any) => (
             onChange={onChange}
             className="form-select block w-full"
           >
-            <option value="">Sélectionner</option>
+            <option value="">{t('common.select')}</option>
             <option value="Peau sensible">Peau sensible</option>
             <option value="Peau peu sensible">Peau peu sensible</option>
             <option value="Peau non sensible">Peau non sensible</option>
           </select>
         </div>
-  
+
         <div className="flex items-center">
           <input
             type="checkbox"
@@ -92,10 +96,10 @@ const PeauSection = ({ formData, errors, onChange }: any) => (
             htmlFor="teintInhomogene"
             className="ml-2 block text-sm font-medium text-gray-700"
           >
-            Teint inhomogène
+            {t('volunteers.unevenComplexion')}
           </label>
         </div>
-  
+
         <div className="flex items-center">
           <input
             type="checkbox"
@@ -109,10 +113,10 @@ const PeauSection = ({ formData, errors, onChange }: any) => (
             htmlFor="teintTerne"
             className="ml-2 block text-sm font-medium text-gray-700"
           >
-            Teint terne
+            {t('volunteers.dullComplexion')}
           </label>
         </div>
-  
+
         <div className="flex items-center">
           <input
             type="checkbox"
@@ -126,12 +130,12 @@ const PeauSection = ({ formData, errors, onChange }: any) => (
             htmlFor="poresVisibles"
             className="ml-2 block text-sm font-medium text-gray-700"
           >
-            Pores visibles
+            {t('volunteers.visiblePores')}
           </label>
         </div>
       </div>
       <h3 className="text-md font-medium text-gray-800 mt-6 mb-3">
-        Exposition au soleil
+        {t('volunteers.sunExposure')}
       </h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
@@ -139,7 +143,7 @@ const PeauSection = ({ formData, errors, onChange }: any) => (
             htmlFor="expositionSolaire"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
-            Exposition solaire
+            {t('volunteers.sunExposure')}
           </label>
           <select
             id="expositionSolaire"
@@ -148,19 +152,19 @@ const PeauSection = ({ formData, errors, onChange }: any) => (
             onChange={onChange}
             className="form-select block w-full"
           >
-            <option value="">Sélectionner</option>
+            <option value="">{t('common.select')}</option>
             <option value="Faiblement">Faiblement</option>
             <option value="Moyennement">Moyennement</option>
             <option value="Fortement">Fortement</option>
           </select>
         </div>
-  
+
         <div>
           <label
             htmlFor="bronzage"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
-            Bronzage
+            {t('volunteers.tanning')}
           </label>
           <select
             id="bronzage"
@@ -169,20 +173,20 @@ const PeauSection = ({ formData, errors, onChange }: any) => (
             onChange={onChange}
             className="form-select block w-full"
           >
-            <option value="">Sélectionner</option>
+            <option value="">{t('common.select')}</option>
             <option value="Progressif">Progressif</option>
             <option value="Rapide">Rapide</option>
             <option value="Difficile">Difficile</option>
             <option value="Inexistant">Inexistant</option>
           </select>
         </div>
-  
+
         <div>
           <label
             htmlFor="coupsDeSoleil"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
-            Coups de soleil
+            {t('volunteers.sunburns')}
           </label>
           <select
             id="coupsDeSoleil"
@@ -191,7 +195,7 @@ const PeauSection = ({ formData, errors, onChange }: any) => (
             onChange={onChange}
             className="form-select block w-full"
           >
-            <option value="">Sélectionner</option>
+            <option value="">{t('common.select')}</option>
             <option value="Jamais">Jamais</option>
             <option value="Rarement">Rarement</option>
             <option value="Parfois">Parfois</option>
@@ -201,7 +205,7 @@ const PeauSection = ({ formData, errors, onChange }: any) => (
         </div>
       </div>
       <h3 className="text-md font-medium text-gray-800 mt-6 mb-3">
-        Cellulite
+        {t('volunteers.cellulite')}
       </h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="flex items-center">
@@ -217,10 +221,10 @@ const PeauSection = ({ formData, errors, onChange }: any) => (
             htmlFor="celluliteBras"
             className="ml-2 block text-sm font-medium text-gray-700"
           >
-            Cellulite bras
+            {t('volunteers.celluliteArms')}
           </label>
         </div>
-  
+
         <div className="flex items-center">
           <input
             type="checkbox"
@@ -234,10 +238,10 @@ const PeauSection = ({ formData, errors, onChange }: any) => (
             htmlFor="celluliteFessesHanches"
             className="ml-2 block text-sm font-medium text-gray-700"
           >
-            Cellulite fesses/hanches
+            {t('volunteers.celluliteButtocksHips')}
           </label>
         </div>
-  
+
         <div className="flex items-center">
           <input
             type="checkbox"
@@ -251,10 +255,10 @@ const PeauSection = ({ formData, errors, onChange }: any) => (
             htmlFor="celluliteJambes"
             className="ml-2 block text-sm font-medium text-gray-700"
           >
-            Cellulite jambes
+            {t('volunteers.celluliteLegs')}
           </label>
         </div>
-  
+
         <div className="flex items-center">
           <input
             type="checkbox"
@@ -268,12 +272,12 @@ const PeauSection = ({ formData, errors, onChange }: any) => (
             htmlFor="celluliteVentreTaille"
             className="ml-2 block text-sm font-medium text-gray-700"
           >
-            Cellulite ventre/taille
+            {t('volunteers.celluliteBellyWaist')}
           </label>
         </div>
       </div>
       <h3 className="text-md font-medium text-gray-800 mt-6 mb-3">
-        Sécheresse cutanée
+        {t('volunteers.skinDryness')}
       </h3>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="flex items-center">
@@ -289,10 +293,10 @@ const PeauSection = ({ formData, errors, onChange }: any) => (
             htmlFor="secheresseLevres"
             className="ml-2 block text-sm font-medium text-gray-700"
           >
-            Lèvres
+            {t('volunteers.lips')}
           </label>
         </div>
-  
+
         <div className="flex items-center">
           <input
             type="checkbox"
@@ -306,10 +310,10 @@ const PeauSection = ({ formData, errors, onChange }: any) => (
             htmlFor="secheresseCou"
             className="ml-2 block text-sm font-medium text-gray-700"
           >
-            Cou
+            {t('volunteers.neck')}
           </label>
         </div>
-  
+
         <div className="flex items-center">
           <input
             type="checkbox"
@@ -323,10 +327,10 @@ const PeauSection = ({ formData, errors, onChange }: any) => (
             htmlFor="secheressePoitrineDecollete"
             className="ml-2 block text-sm font-medium text-gray-700"
           >
-            Poitrine/Décolleté
+            {t('volunteers.chestNeckline')}
           </label>
         </div>
-  
+
         <div className="flex items-center">
           <input
             type="checkbox"
@@ -340,10 +344,10 @@ const PeauSection = ({ formData, errors, onChange }: any) => (
             htmlFor="secheresseVentreTaille"
             className="ml-2 block text-sm font-medium text-gray-700"
           >
-            Ventre/Taille
+            {t('volunteers.bellyWaist')}
           </label>
         </div>
-  
+
         <div className="flex items-center">
           <input
             type="checkbox"
@@ -357,10 +361,10 @@ const PeauSection = ({ formData, errors, onChange }: any) => (
             htmlFor="secheresseFessesHanches"
             className="ml-2 block text-sm font-medium text-gray-700"
           >
-            Fesses/Hanches
+            {t('volunteers.buttocksHips')}
           </label>
         </div>
-  
+
         <div className="flex items-center">
           <input
             type="checkbox"
@@ -374,10 +378,10 @@ const PeauSection = ({ formData, errors, onChange }: any) => (
             htmlFor="secheresseBras"
             className="ml-2 block text-sm font-medium text-gray-700"
           >
-            Bras
+            {t('volunteers.arms')}
           </label>
         </div>
-  
+
         <div className="flex items-center">
           <input
             type="checkbox"
@@ -391,10 +395,10 @@ const PeauSection = ({ formData, errors, onChange }: any) => (
             htmlFor="secheresseMains"
             className="ml-2 block text-sm font-medium text-gray-700"
           >
-            Mains
+            {t('volunteers.hands')}
           </label>
         </div>
-  
+
         <div className="flex items-center">
           <input
             type="checkbox"
@@ -408,10 +412,10 @@ const PeauSection = ({ formData, errors, onChange }: any) => (
             htmlFor="secheresseJambes"
             className="ml-2 block text-sm font-medium text-gray-700"
           >
-            Jambes
+            {t('volunteers.legs')}
           </label>
         </div>
-  
+
         <div className="flex items-center">
           <input
             type="checkbox"
@@ -425,12 +429,12 @@ const PeauSection = ({ formData, errors, onChange }: any) => (
             htmlFor="secheressePieds"
             className="ml-2 block text-sm font-medium text-gray-700"
           >
-            Pieds
+            {t('volunteers.feet')}
           </label>
         </div>
       </div>
       <h3 className="text-md font-medium text-gray-800 mt-6 mb-3">
-        Problèmes autour des yeux
+        {t('volunteers.eyeProblems')}
       </h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="flex items-center">
@@ -446,10 +450,10 @@ const PeauSection = ({ formData, errors, onChange }: any) => (
             htmlFor="cernesPigmentaires"
             className="ml-2 block text-sm font-medium text-gray-700"
           >
-            Cernes pigmentaires
+            {t('volunteers.pigmentaryCircles')}
           </label>
         </div>
-  
+
         <div className="flex items-center">
           <input
             type="checkbox"
@@ -463,10 +467,10 @@ const PeauSection = ({ formData, errors, onChange }: any) => (
             htmlFor="cernesVasculaires"
             className="ml-2 block text-sm font-medium text-gray-700"
           >
-            Cernes vasculaires
+            {t('volunteers.vascularCircles')}
           </label>
         </div>
-  
+
         <div className="flex items-center">
           <input
             type="checkbox"
@@ -480,12 +484,12 @@ const PeauSection = ({ formData, errors, onChange }: any) => (
             htmlFor="poches"
             className="ml-2 block text-sm font-medium text-gray-700"
           >
-            Poches
+            {t('volunteers.bags')}
           </label>
         </div>
       </div>
       <h3 className="text-md font-medium text-gray-800 mt-6 mb-3">
-        Perte de fermeté
+        {t('volunteers.lossOfFirmness')}
       </h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="flex items-center">
@@ -501,10 +505,10 @@ const PeauSection = ({ formData, errors, onChange }: any) => (
             htmlFor="perteDeFermeteVisage"
             className="ml-2 block text-sm font-medium text-gray-700"
           >
-            Visage
+            {t('volunteers.face')}
           </label>
         </div>
-  
+
         <div className="flex items-center">
           <input
             type="checkbox"
@@ -518,10 +522,10 @@ const PeauSection = ({ formData, errors, onChange }: any) => (
             htmlFor="perteDeFermeteCou"
             className="ml-2 block text-sm font-medium text-gray-700"
           >
-            Cou
+            {t('volunteers.neck')}
           </label>
         </div>
-  
+
         <div className="flex items-center">
           <input
             type="checkbox"
@@ -535,13 +539,13 @@ const PeauSection = ({ formData, errors, onChange }: any) => (
             htmlFor="perteDeFermeteDecollete"
             className="ml-2 block text-sm font-medium text-gray-700"
           >
-            Décolleté
+            {t('volunteers.neckline')}
           </label>
         </div>
       </div>
       </CardContent>
     </Card>
   );
-
+};
 
 export default PeauSection;

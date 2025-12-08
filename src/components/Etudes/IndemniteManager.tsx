@@ -3,6 +3,7 @@
 // ============================================================
 
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import etudeVolontaireService from "../../services/etudeVolontaireService";
 import groupeService from "../../services/groupeService";
 import volontaireService from "../../services/volontaireService";
@@ -14,22 +15,25 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { 
-  Save, 
-  AlertCircle, 
-  TrendingUp, 
-  AlertTriangle, 
-  Handshake, 
-  XCircle, 
-  Edit2, 
-  Check, 
-  X, 
-  Trash2, 
-  Users, 
+import {
+  Save,
+  AlertCircle,
+  TrendingUp,
+  AlertTriangle,
+  Handshake,
+  XCircle,
+  Edit2,
+  Check,
+  X,
+  Trash2,
+  Users,
   Euro,
   UserX,
   Clock,
-  FileText
+  FileText,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown
 } from "lucide-react";
 
 // ===============================
@@ -274,31 +278,42 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
   onError = () => { },
   showDebugInfo = false
 }) => {
+  const { t } = useTranslation();
+
   // États
   const [volontairesAssignes, setVolontairesAssignes] = useState<VolontaireAssigne[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [debugInfo, setDebugInfo] = useState("");
   const [updateStatus, setUpdateStatus] = useState<UpdateStatusMap>({});
+  const [sortConfig, setSortConfig] = useState<{
+    column: 'nom' | 'numsujet' | 'iv' | 'none';
+    order: 'asc' | 'desc';
+  }>({ column: 'none', order: 'asc' });
 
   // Hooks personnalisés
   const { volontairesInfo, loadGroupesInfo, loadVolontairesInfo } = useEntitiesInfo();
 
   // Fonctions de gestion des annulations
-  const enregistrerAnnulation = useCallback(async (volontaire: VolontaireAssigne, commentaire: string = "") => {
+  const enregistrerAnnulation = useCallback(async (
+    volontaire: VolontaireAssigne,
+    commentaire: string = "",
+    annulePar: 'COSMETEST' | 'VOLONTAIRE' = 'COSMETEST'
+  ) => {
     try {
       const annulationData = {
         idVol: volontaire.idVolontaire,
         idEtude: parseInt(etudeId.toString()),
         dateAnnulation: new Date().toISOString().split('T')[0],
-        commentaire: commentaire || `Annulation manuelle`
+        commentaire: commentaire || `Annulation manuelle`,
+        annulePar: annulePar
       };
 
       await annulationService.createWithValidation(annulationData);
-      setDebugInfo(`Annulation enregistrée pour le volontaire ${volontaire.idVolontaire}`);
+      setDebugInfo(`Annulation enregistrée pour le volontaire ${volontaire.idVolontaire} (par ${annulePar})`);
     } catch (error: unknown) {
       console.error("Erreur lors de l'enregistrement de l'annulation:", error);
-      const errorMessage = error && typeof error === 'object' && 'response' in error 
+      const errorMessage = error && typeof error === 'object' && 'response' in error
         ? (error as any).response?.data?.message || String(error)
         : error instanceof Error ? error.message : 'Erreur inconnue';
       setError(`Erreur lors de l'enregistrement de l'annulation: ${errorMessage}`);
@@ -307,18 +322,22 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
 
 
   // Fonction pour annuler un volontaire : supprimer l'association et enregistrer l'annulation
-  const changerStatutVersAnnule = useCallback(async (volontaire: VolontaireAssigne, commentaire: string) => {
+  const changerStatutVersAnnule = useCallback(async (
+    volontaire: VolontaireAssigne,
+    commentaire: string,
+    annulePar: 'COSMETEST' | 'VOLONTAIRE'
+  ) => {
     const volontaireId = volontaire.idVolontaire;
     const statusKey = `${volontaireId}_annulation`;
 
     try {
       setUpdateStatus((prev) => ({ ...prev, [statusKey]: "loading" }));
 
-      console.log(`🔄 Début annulation volontaire ${volontaireId} pour étude ${etudeId}`);
+      console.log(`🔄 Début annulation volontaire ${volontaireId} pour étude ${etudeId} (par ${annulePar})`);
 
       // 1. Enregistrer l'annulation (le backend libère automatiquement les RDV)
       console.log(`📝 Enregistrement annulation (le backend va automatiquement libérer les créneaux RDV)...`);
-      await enregistrerAnnulation(volontaire, commentaire);
+      await enregistrerAnnulation(volontaire, commentaire, annulePar);
       console.log(`✅ Annulation enregistrée et créneaux RDV libérés automatiquement par le backend`);
 
       // 2. Supprimer l'association étude-volontaire
@@ -346,7 +365,7 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
 
       setUpdateStatus((prev) => ({ ...prev, [statusKey]: "success" }));
       console.log(`✅ Annulation terminée avec succès`);
-      setDebugInfo(`Volontaire annulé : association supprimée, RDV supprimés, annulation enregistrée. Commentaire: ${commentaire}`);
+      setDebugInfo(`Volontaire annulé par ${annulePar} : association supprimée, RDV supprimés, annulation enregistrée. Commentaire: ${commentaire}`);
 
       setTimeout(() => {
         setUpdateStatus((prev) => {
@@ -543,11 +562,11 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
 
   const getVolontaireName = useMemo(
     () => (idVolontaire: number) => {
-      if (!idVolontaire) return "Volontaire non assigné";
-      if (idVolontaire === 0) return "Volontaire temporaire";
+      if (!idVolontaire) return t('indemnity.volunteerNotAssigned');
+      if (idVolontaire === 0) return t('indemnity.temporaryVolunteer');
 
       const volontaire = volontairesInfo[idVolontaire];
-      if (!volontaire) return `Volontaire #${idVolontaire}`;
+      if (!volontaire) return `${t('indemnity.volunteer')} #${idVolontaire}`;
 
       const prenom =
         volontaire.prenom ||
@@ -562,7 +581,7 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
       if (nom) return nom;
       if (volontaire.nomComplet) return volontaire.nomComplet;
 
-      return `Volontaire #${idVolontaire}`;
+      return `${t('indemnity.volunteer')} #${idVolontaire}`;
     },
     [volontairesInfo]
   );
@@ -578,6 +597,46 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
       statutBase,
       raison
     };
+  }, []);
+
+  // Liste triée des volontaires
+  const volontairesTries = useMemo(() => {
+    if (sortConfig.column === 'none') {
+      return volontairesAssignes;
+    }
+
+    const sorted = [...volontairesAssignes].sort((a, b) => {
+      let comparison = 0;
+
+      if (sortConfig.column === 'nom') {
+        const nameA = getVolontaireName(a.idVolontaire).toLowerCase();
+        const nameB = getVolontaireName(b.idVolontaire).toLowerCase();
+        comparison = nameA.localeCompare(nameB, 'fr');
+      } else if (sortConfig.column === 'numsujet') {
+        comparison = (a.numsujet || 0) - (b.numsujet || 0);
+      } else if (sortConfig.column === 'iv') {
+        comparison = (a.iv || 0) - (b.iv || 0);
+      }
+
+      return sortConfig.order === 'asc' ? comparison : -comparison;
+    });
+
+    return sorted;
+  }, [volontairesAssignes, sortConfig, getVolontaireName]);
+
+  // Fonction pour changer l'ordre de tri
+  const handleSort = useCallback((column: 'nom' | 'numsujet' | 'iv') => {
+    setSortConfig((prev) => {
+      // Si on clique sur la même colonne, on change l'ordre
+      if (prev.column === column) {
+        return {
+          column,
+          order: prev.order === 'asc' ? 'desc' : 'asc'
+        };
+      }
+      // Si on clique sur une nouvelle colonne, on commence par ordre croissant
+      return { column, order: 'asc' };
+    });
   }, []);
 
   // Statistiques calculées
@@ -676,6 +735,7 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
   const AnnulationButton: React.FC<{ volontaire: VolontaireAssigne }> = ({ volontaire }) => {
     const [showForm, setShowForm] = useState(false);
     const [commentaire, setCommentaire] = useState("");
+    const [annulePar, setAnnulePar] = useState<'COSMETEST' | 'VOLONTAIRE'>('COSMETEST');
 
     const handleAnnuler = async () => {
       if (!commentaire.trim()) {
@@ -683,9 +743,10 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
         return;
       }
 
-      await changerStatutVersAnnule(volontaire, commentaire.trim());
+      await changerStatutVersAnnule(volontaire, commentaire.trim(), annulePar);
       setShowForm(false);
       setCommentaire("");
+      setAnnulePar('COSMETEST');
     };
 
     if (volontaire.idVolontaire === 0) {
@@ -694,20 +755,49 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
 
     if (showForm) {
       return (
-        <div className="space-y-2 p-2 border border-red-300 rounded bg-red-50">
+        <div className="space-y-3 p-3 border border-red-300 rounded bg-red-50">
           <p className="text-xs font-medium text-red-800">
-            Annuler le volontaire
+            {t('indemnity.cancelVolunteer')}
           </p>
 
           <div className="flex items-center gap-2 text-xs text-red-600">
             <AlertTriangle className="w-4 h-4" />
-            <p>Le volontaire sera retiré de l'étude ET de tous ses créneaux de RDV.</p>
+            <p>{t('indemnity.cancelWarning')}</p>
+          </div>
+
+          {/* Choix du type d'annulation */}
+          <div className="space-y-2">
+            <p className="text-xs font-medium text-gray-700">{t('indemnity.cancelledBy')}</p>
+            <div className="flex gap-4">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="annulePar"
+                  value="COSMETEST"
+                  checked={annulePar === 'COSMETEST'}
+                  onChange={(e) => setAnnulePar(e.target.value as 'COSMETEST' | 'VOLONTAIRE')}
+                  className="w-4 h-4 text-red-600"
+                />
+                <span className="text-sm text-gray-700">{t('indemnity.cosmetest')}</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="annulePar"
+                  value="VOLONTAIRE"
+                  checked={annulePar === 'VOLONTAIRE'}
+                  onChange={(e) => setAnnulePar(e.target.value as 'COSMETEST' | 'VOLONTAIRE')}
+                  className="w-4 h-4 text-red-600"
+                />
+                <span className="text-sm text-gray-700">{t('indemnity.volunteer')}</span>
+              </label>
+            </div>
           </div>
 
           <Textarea
             value={commentaire}
             onChange={(e) => setCommentaire(e.target.value)}
-            placeholder="Raison de l'annulation (obligatoire)..."
+            placeholder={t('indemnity.cancelReasonPlaceholder')}
             className="w-full text-xs"
             rows={3}
             maxLength={200}
@@ -715,7 +805,7 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
           />
 
           <div className="text-xs text-gray-500">
-            {commentaire.length}/200 caractères
+            {commentaire.length}/200 {t('indemnity.characters')}
           </div>
 
           <div className="flex space-x-1">
@@ -726,18 +816,19 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
               size="sm"
             >
               <Check className="w-4 h-4 mr-1" />
-              Confirmer l'annulation
+              {t('indemnity.confirmCancellation')}
             </Button>
             <Button
               onClick={() => {
                 setShowForm(false);
                 setCommentaire("");
+                setAnnulePar('COSMETEST');
               }}
               variant="secondary"
               size="sm"
             >
               <X className="w-4 h-4 mr-1" />
-              Annuler
+              {t('common.cancel')}
             </Button>
           </div>
 
@@ -757,7 +848,7 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
           className="text-xs"
         >
           <UserX className="w-4 h-4 mr-1" />
-          Annuler
+          {t('common.cancel')}
         </Button>
       </div>
     );
@@ -780,7 +871,7 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
       return (
         <div className="space-y-2">
           <p className="text-xs text-red-600">
-            Confirmer la suppression ?
+            {t('indemnity.deleteConfirm')}
           </p>
           <div className="flex space-x-1">
             <Button
@@ -789,7 +880,7 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
               size="sm"
             >
               <Check className="w-4 h-4 mr-1" />
-              Supprimer
+              {t('common.delete')}
             </Button>
             <Button
               onClick={() => setShowConfirm(false)}
@@ -797,7 +888,7 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
               size="sm"
             >
               <X className="w-4 h-4 mr-1" />
-              Annuler
+              {t('common.cancel')}
             </Button>
           </div>
           <div className="flex items-center justify-center">
@@ -815,7 +906,7 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
         className="text-xs"
       >
         <Trash2 className="w-4 h-4 mr-1" />
-        Supprimer
+        {t('common.delete')}
       </Button>
     );
   };
@@ -892,7 +983,7 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
                 size="sm"
               >
                 <Check className="w-4 h-4 mr-1" />
-                Sauver
+                {t('common.save')}
               </Button>
               <Button
                 type="button"
@@ -901,7 +992,7 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
                 size="sm"
               >
                 <X className="w-4 h-4 mr-1" />
-                Annuler
+                {t('common.cancel')}
               </Button>
             </div>
           </div>
@@ -929,7 +1020,7 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
             className="text-xs"
           >
             <Edit2 className="w-3 h-3 mr-1" />
-            Modifier statut
+            {t('indemnity.modifyStatus')}
           </Button>
         </div>
 
@@ -953,7 +1044,7 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
       {/* En-tête */}
       <div className="flex justify-between items-center">
         <div>
-          <h3 className="text-xl font-semibold text-gray-900">Gestion des Indemnités</h3>
+          <h3 className="text-xl font-semibold text-gray-900">{t('indemnity.title')}</h3>
           <p className="text-sm text-gray-600 mt-1">
             {etudeTitre} {etudeRef && `(${etudeRef})`}
           </p>
@@ -998,8 +1089,7 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
         <Alert>
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
-            <strong>Attention :</strong> {statistics.volontairesTemporaires} volontaire(s) temporaire(s) (ID=0) détecté(s).
-            Vous pouvez les supprimer en cliquant sur le bouton "Supprimer" dans la colonne Actions.
+            {t('indemnity.temporaryVolunteerWarning', { count: statistics.volontairesTemporaires })}
           </AlertDescription>
         </Alert>
       )}
@@ -1009,7 +1099,7 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
       <Alert>
         <Save className="h-4 w-4" />
         <AlertDescription>
-          <strong>Sauvegarde automatique :</strong> Toutes les modifications (statut, indemnité, numéro sujet) sont sauvegardées automatiquement dès que vous les validez.
+          {t('indemnity.autoSave')}
         </AlertDescription>
       </Alert>
 
@@ -1019,7 +1109,7 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-blue-800 flex items-center gap-2">
               <Euro className="w-4 h-4" />
-              Total des indemnités
+              {t('indemnity.totalIndemnities')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -1028,7 +1118,7 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
             </p>
             <p className="text-xs text-blue-600 mt-1 flex items-center gap-1">
               <Users className="w-3 h-3" />
-              {statistics.nombreVolontaires} volontaires
+              {statistics.nombreVolontaires} {t('studies.volunteers')}
             </p>
           </CardContent>
         </Card>
@@ -1037,7 +1127,7 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-green-800 flex items-center gap-2">
               <TrendingUp className="w-4 h-4" />
-              Moyenne par volontaire
+              {t('indemnity.averagePerVolunteer')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -1051,7 +1141,7 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-purple-800 flex items-center gap-2">
               <Users className="w-4 h-4" />
-              Volontaires assignés
+              {t('indemnity.assignedVolunteers')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -1065,7 +1155,7 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-yellow-800 flex items-center gap-2">
               <Clock className="w-4 h-4" />
-              Volontaires temporaires
+              {t('indemnity.temporaryVolunteers')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -1080,7 +1170,7 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
       {statistics.nombreVolontaires === 0 ? (
         <div className="text-center py-8 bg-gray-50 rounded-lg">
           <p className="text-gray-500">
-            Aucun volontaire assigné à cette étude
+            {t('indemnity.noVolunteerAssigned')}
           </p>
         </div>
       ) : (
@@ -1089,24 +1179,51 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Volontaire
+                  <button
+                    onClick={() => handleSort('nom')}
+                    className="flex items-center gap-2 hover:text-gray-700 transition-colors"
+                    title={t('indemnity.sortByName')}
+                  >
+                    {t('indemnity.volunteer')}
+                    {sortConfig.column !== 'nom' && <ArrowUpDown className="w-4 h-4" />}
+                    {sortConfig.column === 'nom' && sortConfig.order === 'asc' && <ArrowUp className="w-4 h-4" />}
+                    {sortConfig.column === 'nom' && sortConfig.order === 'desc' && <ArrowDown className="w-4 h-4" />}
+                  </button>
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Numéro sujet
+                  <button
+                    onClick={() => handleSort('numsujet')}
+                    className="flex items-center gap-2 hover:text-gray-700 transition-colors"
+                    title={t('indemnity.sortBySubjectNumber')}
+                  >
+                    {t('indemnity.subjectNumber')}
+                    {sortConfig.column !== 'numsujet' && <ArrowUpDown className="w-4 h-4" />}
+                    {sortConfig.column === 'numsujet' && sortConfig.order === 'asc' && <ArrowUp className="w-4 h-4" />}
+                    {sortConfig.column === 'numsujet' && sortConfig.order === 'desc' && <ArrowDown className="w-4 h-4" />}
+                  </button>
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Indemnité (€)
+                  <button
+                    onClick={() => handleSort('iv')}
+                    className="flex items-center gap-2 hover:text-gray-700 transition-colors"
+                    title={t('indemnity.sortByIndemnity')}
+                  >
+                    {t('indemnity.indemnityAmount')}
+                    {sortConfig.column !== 'iv' && <ArrowUpDown className="w-4 h-4" />}
+                    {sortConfig.column === 'iv' && sortConfig.order === 'asc' && <ArrowUp className="w-4 h-4" />}
+                    {sortConfig.column === 'iv' && sortConfig.order === 'desc' && <ArrowDown className="w-4 h-4" />}
+                  </button>
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Statut
+                  {t('indemnity.status')}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
+                  {t('common.actions')}
                 </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {volontairesAssignes.map((volontaire, index) => (
+              {volontairesTries.map((volontaire, index) => (
                 <tr key={`${volontaire.idVolontaire}-${index}`}
                   className={`
                       ${volontaire.idVolontaire === 0 ? "bg-yellow-50" : ""}
@@ -1117,7 +1234,7 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
                         {getVolontaireName(volontaire.idVolontaire)}
                         {volontaire.idVolontaire === 0 && (
                           <span className="ml-2 text-xs bg-yellow-200 text-yellow-800 px-2 py-1 rounded">
-                            TEMPORAIRE
+                            {t('indemnity.temporary')}
                           </span>
                         )}
                       </div>

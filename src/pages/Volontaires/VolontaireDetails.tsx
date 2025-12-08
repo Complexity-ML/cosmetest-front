@@ -1,4 +1,5 @@
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { ChevronRight, Loader2, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -19,6 +20,7 @@ import renderVolontaireDetailsSection from '../../components/Volontaires/details
 import { useVolontaireDetails } from './hooks/useVolontaireDetails';
 
 const VolontaireDetails = () => {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
@@ -27,9 +29,9 @@ const VolontaireDetails = () => {
     return (
       <Alert variant="destructive">
         <AlertDescription>
-          Identifiant du volontaire manquant.
+          {t('volunteers.missingId')}
           <Link to="/volontaires" className="block mt-2 underline">
-            Retour à la liste des volontaires
+            {t('volunteers.backToList')}
           </Link>
         </AlertDescription>
       </Alert>
@@ -74,7 +76,7 @@ const VolontaireDetails = () => {
         <AlertDescription>
           {error}
           <Link to="/volontaires" className="block mt-2 underline">
-            Retour à la liste des volontaires
+            {t('volunteers.backToList')}
           </Link>
         </AlertDescription>
       </Alert>
@@ -85,9 +87,9 @@ const VolontaireDetails = () => {
     return (
       <Alert>
         <AlertDescription>
-          Volontaire non trouvé. Il est possible qu'il ait été supprimé ou que l'identifiant soit incorrect.
+          {t('volunteers.notFound')}
           <Link to="/volontaires" className="block mt-2 underline">
-            Retour à la liste des volontaires
+            {t('volunteers.backToList')}
           </Link>
         </AlertDescription>
       </Alert>
@@ -106,7 +108,7 @@ const VolontaireDetails = () => {
             <BreadcrumbList>
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
-                  <Link to="/volontaires">Volontaires</Link>
+                  <Link to="/volontaires">{t('sidebar.volunteers')}</Link>
                 </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator>
@@ -124,7 +126,7 @@ const VolontaireDetails = () => {
           {annulationsEtudes && annulationsEtudes.length > 0 && (
             <Badge variant="destructive" className="flex items-center gap-1 text-sm px-3 py-1.5">
               <AlertTriangle className="h-4 w-4" />
-              {annulationsEtudes.length} annulation{annulationsEtudes.length > 1 ? 's' : ''}
+              {annulationsEtudes.length} {t('volunteers.cancellation', { count: annulationsEtudes.length })}
             </Badge>
           )}
         </div>
@@ -132,22 +134,22 @@ const VolontaireDetails = () => {
         <div className="flex gap-2">
           <Button variant="outline" asChild>
             <Link to={`/volontaires/${id}/edit`}>
-              Modifier
+              {t('common.edit')}
             </Link>
           </Button>
 
           {volontaire.archive ? (
             <Button onClick={handleUnarchive} variant="outline">
-              Désarchiver
+              {t('volunteers.unarchive')}
             </Button>
           ) : (
             <Button onClick={handleArchive} variant="outline">
-              Archiver
+              {t('common.archive')}
             </Button>
           )}
 
           <Button onClick={handleDelete} variant="destructive">
-            Supprimer
+            {t('common.delete')}
           </Button>
         </div>
       </div>
@@ -179,6 +181,7 @@ const VolontaireDetails = () => {
             showAllAnnulations,
             onToggleAnnulations: handleToggleAnnulations,
             onSelectPhoto: setSelectedPhoto,
+            onPhotoSelect: setSelectedPhoto,
             infoBankData,
             volontaireId: id,
             rdvs,
@@ -195,6 +198,7 @@ const VolontaireDetails = () => {
           photoUrl={selectedPhoto.url}
           alt={selectedPhoto.alt || selectedPhoto.nom || 'Photo du volontaire'}
           onClose={() => setSelectedPhoto(null)}
+          isPdf={selectedPhoto.isPdf}
         />
       )}
     </div>

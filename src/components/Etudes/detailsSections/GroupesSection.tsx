@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import groupeService from '../../../services/groupeService';
 import { EtudeData, GroupeData } from '../../../types/etude.types';
 import React from 'react';
@@ -29,15 +30,17 @@ const GroupesSection = ({
   groupes,
   fetchGroupes,
 }: GroupesSectionProps) => {
+  const { t } = useTranslation();
+
   const handleDeleteGroupe = async (idGroupe: number) => {
     try {
       if (!idGroupe) return;
-      const confirmed = window.confirm('Supprimer ce groupe ? Cette action est irréversible.');
+      const confirmed = window.confirm(t('studyDetails.deleteGroupConfirm'));
       if (!confirmed) return;
 
       const ok = await groupeService.delete(idGroupe);
       if (!ok) {
-        alert('Suppression impossible.');
+        alert(t('studyDetails.deletionImpossible'));
         return;
       }
       if (typeof fetchGroupes === 'function') {
@@ -45,16 +48,16 @@ const GroupesSection = ({
       }
     } catch (err) {
       console.error('Erreur suppression groupe', err);
-      alert('Erreur lors de la suppression du groupe.');
+      alert(t('groups.deleteError'));
     }
   };
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h3 className="text-xl font-semibold text-gray-900">Groupes</h3>
+          <h3 className="text-xl font-semibold text-gray-900">{t('studies.groups')}</h3>
           <p className="text-sm text-gray-600 mt-1">
-            Gestion des groupes pour l'étude {etude.ref}
+            {t('studyDetails.groupManagementFor')} {etude.ref}
           </p>
         </div>
 
@@ -65,7 +68,7 @@ const GroupesSection = ({
           <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
           </svg>
-          Nouveau Groupe
+          {t('studies.newGroup')}
         </button>
       </div>
 
@@ -73,7 +76,7 @@ const GroupesSection = ({
       {showGroupeForm && (
         <div className="bg-gray-50 rounded-lg p-6 mb-6">
           <div className="flex justify-between items-center mb-4">
-            <h4 className="text-lg font-medium text-gray-900">Créer un nouveau groupe</h4>
+            <h4 className="text-lg font-medium text-gray-900">{t('groups.createNewGroup')}</h4>
             <button
               onClick={() => setShowGroupeForm(false)}
               className="text-gray-400 hover:text-gray-600"
@@ -88,7 +91,7 @@ const GroupesSection = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label htmlFor="intitule" className="block text-sm font-medium text-gray-700 mb-1">
-                  Intitulé du groupe *
+                  {t('groups.groupTitle')} *
                 </label>
                 <input
                   type="text"
@@ -103,7 +106,7 @@ const GroupesSection = ({
 
               <div>
                 <label htmlFor="nbSujet" className="block text-sm font-medium text-gray-700 mb-1">
-                  Nombre de sujets
+                  {t('groups.subjectCount')}
                 </label>
                 <input
                   type="number"
@@ -119,7 +122,7 @@ const GroupesSection = ({
 
             <div>
               <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
-                Description
+                {t('studies.description')}
               </label>
               <textarea
                 name="description"
@@ -134,7 +137,7 @@ const GroupesSection = ({
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label htmlFor="ageMinimum" className="block text-sm font-medium text-gray-700 mb-1">
-                  Âge minimum
+                  {t('groups.ageMin')}
                 </label>
                 <input
                   type="number"
@@ -149,7 +152,7 @@ const GroupesSection = ({
 
               <div>
                 <label htmlFor="ageMaximum" className="block text-sm font-medium text-gray-700 mb-1">
-                  Âge maximum
+                  {t('groups.ageMax')}
                 </label>
                 <input
                   type="number"
@@ -164,7 +167,7 @@ const GroupesSection = ({
 
               <div>
                 <label htmlFor="iv" className="block text-sm font-medium text-gray-700 mb-1">
-                  Indemnité Volontaire
+                  {t('groups.volunteerCompensation')}
                 </label>
                 <input
                   type="number"
@@ -180,7 +183,7 @@ const GroupesSection = ({
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Ethnies
+                {t('groups.ethnicities')}
               </label>
               <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
                 {ethniesDisponibles.map((ethnieOption: string) => (
@@ -205,13 +208,13 @@ const GroupesSection = ({
                 onClick={() => setShowGroupeForm(false)}
                 className="btn btn-secondary"
               >
-                Annuler
+                {t('common.cancel')}
               </button>
               <button
                 type="submit"
                 className="btn btn-primary"
               >
-                Créer le groupe
+                {t('studyDetails.createGroup')}
               </button>
             </div>
           </form>
@@ -228,8 +231,8 @@ const GroupesSection = ({
           <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
           </svg>
-          <h3 className="mt-2 text-sm font-medium text-gray-900">Aucun groupe</h3>
-          <p className="mt-1 text-sm text-gray-500">Commencez par créer votre premier groupe pour cette étude.</p>
+          <h3 className="mt-2 text-sm font-medium text-gray-900">{t('groups.noGroups')}</h3>
+          <p className="mt-1 text-sm text-gray-500">{t('studyDetails.startByCreatingGroup')}</p>
           <div className="mt-6">
             <button
               onClick={() => setShowGroupeForm(true)}
@@ -238,7 +241,7 @@ const GroupesSection = ({
               <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
               </svg>
-              Créer un groupe
+              {t('studyDetails.createGroup')}
             </button>
           </div>
         </div>
@@ -253,7 +256,7 @@ const GroupesSection = ({
                     <div className="flex items-center space-x-2">
                       {groupe.nbSujet && (
                         <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
-                          {groupe.nbSujet} sujets
+                          {groupe.nbSujet} {t('studies.subjects')}
                         </span>
                       )}
                       {groupe.iv && (
@@ -264,27 +267,27 @@ const GroupesSection = ({
                     </div>
                   </div>
 
-                  <p className="text-gray-600 mb-3 whitespace-pre-line">{groupe.description || 'Aucune description'}</p>
+                  <p className="text-gray-600 mb-3 whitespace-pre-line">{groupe.description || t('studyDetails.noDescription')}</p>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-sm">
                     <div>
-                      <span className="font-medium text-gray-700">Âge:</span>
+                      <span className="font-medium text-gray-700">{t('studyDetails.age')}:</span>
                       <span className="ml-2 text-gray-600">
                         {groupe.ageMinimum || groupe.ageMaximum
-                          ? `${groupe.ageMinimum || 'Non spécifié'} - ${groupe.ageMaximum || 'Non spécifié'}`
-                          : 'Non spécifié'}
+                          ? `${groupe.ageMinimum || t('groups.notSpecified')} - ${groupe.ageMaximum || t('groups.notSpecified')}`
+                          : t('groups.notSpecified')}
                       </span>
                     </div>
                     <div>
-                      <span className="font-medium text-gray-700">Ethnies:</span>
+                      <span className="font-medium text-gray-700">{t('groups.ethnicities')}:</span>
                       <span className="ml-2 text-gray-600">
-                        {groupe.ethnie || 'Non spécifié'}
+                        {groupe.ethnie || t('groups.notSpecified')}
                       </span>
                     </div>
                     <div>
-                      <span className="font-medium text-gray-700">Critères:</span>
+                      <span className="font-medium text-gray-700">{t('studyDetails.criteria')}:</span>
                       <span className="ml-2 text-gray-600">
-                        {groupe.criteresSupplementaires || 'Aucun'}
+                        {groupe.criteresSupplementaires || t('studyDetails.none')}
                       </span>
                     </div>
                   </div>
@@ -293,7 +296,7 @@ const GroupesSection = ({
                   <button
                     onClick={() => groupe.idGroupe && handleDeleteGroupe(groupe.idGroupe)}
                     className="inline-flex items-center p-2 text-red-500 hover:text-red-700"
-                    title="Supprimer ce groupe"
+                    title={t('studyDetails.deleteThisGroup')}
                   >
                     <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3m-9 0h10" />

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import groupeService from '../../services/groupeService'
 import etudeService from '../../services/etudeService'
 import { Button } from '@/components/ui/button'
@@ -10,6 +11,7 @@ import { Loader2 } from 'lucide-react'
 import type { Groupe, Etude } from '../../types/types'
 
 const GroupeDetails = () => {
+  const { t } = useTranslation()
   const { id } = useParams()
   const navigate = useNavigate()
   
@@ -26,7 +28,7 @@ const GroupeDetails = () => {
         
         // Vérifier si l'ID est défini
         if (!id || id === 'undefined') {
-          throw new Error('Identifiant du groupe non valide')
+          throw new Error(t('groups.invalidId'))
         }
 
         const groupeData = await groupeService.getById(id)
@@ -39,7 +41,7 @@ const GroupeDetails = () => {
         }
       } catch (error: unknown) {
         console.error('Erreur lors du chargement des données:', error)
-        setError('Impossible de charger les informations du groupe. ' + (error as Error).message)
+        setError(t('groups.loadDetailError') + ' ' + (error as Error).message)
       } finally {
         setIsLoading(false)
       }
@@ -49,14 +51,14 @@ const GroupeDetails = () => {
   }, [id])
   
   const handleDelete = async () => {
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer ce groupe ?')) {
+    if (window.confirm(t('groups.deleteConfirm'))) {
       try {
         if (!id) return
         await groupeService.delete(id)
         navigate('/groupes', { replace: true })
       } catch (error) {
         console.error('Erreur lors de la suppression:', error)
-        setError('Une erreur est survenue lors de la suppression du groupe.')
+        setError(t('groups.deleteError'))
       }
     }
   }
@@ -80,9 +82,9 @@ const GroupeDetails = () => {
   if (!groupe) {
     return (
       <div className="text-center py-10">
-        <p className="text-muted-foreground">Groupe non trouvé.</p>
+        <p className="text-muted-foreground">{t('groups.notFound')}</p>
         <Button asChild variant="link" className="mt-2">
-          <Link to="/groupes">Retour à la liste des groupes</Link>
+          <Link to="/groupes">{t('groups.backToList')}</Link>
         </Button>
       </div>
     )
@@ -100,58 +102,58 @@ const GroupeDetails = () => {
         <div className="flex gap-2">
           <Button asChild variant="outline">
             <Link to={`/groupes/${id}/edit`}>
-              Modifier
+              {t('common.edit')}
             </Link>
           </Button>
           <Button
             onClick={handleDelete}
             variant="destructive"
           >
-            Supprimer
+            {t('common.delete')}
           </Button>
         </div>
       </div>
       
       <Card>
         <CardHeader>
-          <CardTitle>Informations du groupe</CardTitle>
+          <CardTitle>{t('groups.groupInformation')}</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
             <TableBody>
               <TableRow>
-                <TableCell className="font-medium w-1/3">Étude associée</TableCell>
+                <TableCell className="font-medium w-1/3">{t('groups.associatedStudy')}</TableCell>
                 <TableCell>
                   {etude ? (
                     <Link to={`/etudes/${etudeId}`} className="text-primary hover:underline">
-                      {etudeReference || etudeTitle || `Étude #${etudeId}`}
+                      {etudeReference || etudeTitle || `${t('studies.study')} #${etudeId}`}
                     </Link>
                   ) : (
-                    <span className="text-muted-foreground">Non spécifiée</span>
+                    <span className="text-muted-foreground">{t('groups.notSpecified')}</span>
                   )}
                 </TableCell>
               </TableRow>
               
               <TableRow>
-                <TableCell className="font-medium">Tranche d'âge</TableCell>
+                <TableCell className="font-medium">{t('groups.ageRange')}</TableCell>
                 <TableCell>
                   {groupe.ageMinimum || groupe.ageMin || groupe.ageMaximum || groupe.ageMax ? (
-                    `${groupe.ageMinimum || groupe.ageMin || '0'} - ${groupe.ageMaximum || groupe.ageMax || '∞'} ans`
+                    `${groupe.ageMinimum || groupe.ageMin || '0'} - ${groupe.ageMaximum || groupe.ageMax || '∞'} ${t('groups.years')}`
                   ) : (
-                    <span className="text-muted-foreground">Non spécifiée</span>
+                    <span className="text-muted-foreground">{t('groups.notSpecified')}</span>
                   )}
                 </TableCell>
               </TableRow>
               
               <TableRow>
-                <TableCell className="font-medium">Ethnie</TableCell>
+                <TableCell className="font-medium">{t('groups.ethnicity')}</TableCell>
                 <TableCell>
-                  {groupe.ethnie || <span className="text-muted-foreground">Non spécifiée</span>}
+                  {groupe.ethnie || <span className="text-muted-foreground">{t('groups.notSpecified')}</span>}
                 </TableCell>
               </TableRow>
               
               <TableRow>
-                <TableCell className="font-medium">Nombre de participants</TableCell>
+                <TableCell className="font-medium">{t('groups.participants')}</TableCell>
                 <TableCell>
                   {groupe.nbSujet || groupe.nombreParticipants || 0}
                 </TableCell>
@@ -159,7 +161,7 @@ const GroupeDetails = () => {
               
               {groupe.description && (
                 <TableRow>
-                  <TableCell className="font-medium align-top">Description</TableCell>
+                  <TableCell className="font-medium align-top">{t('common.details')}</TableCell>
                   <TableCell className="whitespace-pre-line">
                     {groupe.description}
                   </TableCell>
@@ -168,7 +170,7 @@ const GroupeDetails = () => {
               
               {groupe.criteresSupplémentaires && (
                 <TableRow>
-                  <TableCell className="font-medium align-top">Critères supplémentaires</TableCell>
+                  <TableCell className="font-medium align-top">{t('groups.additionalCriteria')}</TableCell>
                   <TableCell className="whitespace-pre-line">
                     {groupe.criteresSupplémentaires}
                   </TableCell>
@@ -177,7 +179,7 @@ const GroupeDetails = () => {
               
               {groupe.iv !== undefined && (
                 <TableRow>
-                  <TableCell className="font-medium">IV</TableCell>
+                  <TableCell className="font-medium">{t('groups.compensation')}</TableCell>
                   <TableCell>
                     {groupe.iv}
                   </TableCell>
@@ -191,7 +193,7 @@ const GroupeDetails = () => {
       <div className="flex justify-between items-center pt-4">
         <Button asChild variant="link" className="p-0">
           <Link to="/groupes">
-            ← Retour à la liste des groupes
+            ← {t('groups.backToList')}
           </Link>
         </Button>
       </div>

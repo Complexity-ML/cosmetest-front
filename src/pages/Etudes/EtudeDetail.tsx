@@ -1,4 +1,5 @@
 import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useEtudeDetail } from './hooks/useEtudeDetail'
 import DetailsSection from '../../components/Etudes/detailsSections/DetailsSection'
 import RendezVousSection from '../../components/Etudes/detailsSections/RendezVousSection'
@@ -10,6 +11,7 @@ import { Loader2 } from 'lucide-react'
 
 
 const EtudeDetail = () => {
+  const { t } = useTranslation()
   const { id } = useParams()
   const navigate = useNavigate()
 
@@ -17,7 +19,7 @@ const EtudeDetail = () => {
   if (!id) {
     return (
       <Alert variant="destructive">
-        <AlertDescription>ID de l'étude manquant</AlertDescription>
+        <AlertDescription>{t('studies.studyIdMissing')}</AlertDescription>
       </Alert>
     )
   }
@@ -76,7 +78,7 @@ const EtudeDetail = () => {
         <button
           onClick={() => setError(null)}
           className="absolute top-2 right-2 text-destructive-foreground hover:text-destructive-foreground/80"
-          aria-label="Fermer l'alerte"
+          aria-label={t('common.close')}
         >
           ×
         </button>
@@ -87,7 +89,7 @@ const EtudeDetail = () => {
   if (!etude) {
     return (
       <Alert>
-        <AlertDescription>Étude non trouvée</AlertDescription>
+        <AlertDescription>{t('studies.notFound')}</AlertDescription>
       </Alert>
     )
   }
@@ -96,14 +98,14 @@ const EtudeDetail = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-800">
-          Détails de l'étude: {etude.titre}
+          {t('studies.studyDetails')}: {etude.titre}
         </h1>
         <div className="flex gap-2">
           <Button asChild variant="outline">
-            <Link to={`/etudes/${etude.idEtude}/edit`}>Modifier</Link>
+            <Link to={`/etudes/${etude.idEtude}/edit`}>{t('common.edit')}</Link>
           </Button>
           <Button onClick={handleDelete} variant="destructive">
-            Supprimer
+            {t('common.delete')}
           </Button>
         </div>
       </div>
@@ -118,7 +120,7 @@ const EtudeDetail = () => {
                 }`}
               onClick={() => setActiveTab('details')}
             >
-              Détails
+              {t('studies.details')}
             </button>
             <button
               className={`py-4 px-6 border-b-2 font-medium text-sm ${activeTab === 'rdvs'
@@ -127,7 +129,7 @@ const EtudeDetail = () => {
                 }`}
               onClick={() => setActiveTab('rdvs')}
             >
-              Rendez-vous
+              {t('studies.appointments')}
             </button>
             <button
               className={`py-4 px-6 border-b-2 font-medium text-sm ${activeTab === 'groupes'
@@ -136,7 +138,7 @@ const EtudeDetail = () => {
                 }`}
               onClick={() => setActiveTab('groupes')}
             >
-              Groupes
+              {t('studies.groups')}
             </button>
             <button
               className={`py-4 px-6 border-b-2 font-medium text-sm ${activeTab === 'indemnites'
@@ -145,7 +147,7 @@ const EtudeDetail = () => {
                 }`}
               onClick={() => setActiveTab('indemnites')}
             >
-              Indemnités
+              {t('studies.compensations')}
             </button>
           </nav>
         </div>
@@ -213,7 +215,7 @@ const EtudeDetail = () => {
 
       <div className="mt-4">
         <Link to="/etudes" className="text-primary-600 hover:text-primary-800">
-          ← Retour à la liste des études
+          ← {t('studies.backToStudies')}
         </Link>
       </div>
     </div>

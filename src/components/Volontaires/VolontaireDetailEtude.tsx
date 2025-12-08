@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import etudeVolontaireService from '../../services/etudeVolontaireService';
 import api from '../../services/api';
 import { formatDate } from '../../utils/dateUtils';
 
 const VolontaireDetailEtude = ({ volontaireId }: any) => {
+  const { t } = useTranslation();
   const [etudesEnrichies, setEtudesEnrichies] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -134,21 +136,21 @@ const VolontaireDetailEtude = ({ volontaireId }: any) => {
 
   // Fonction pour formater l'indemnité
   const formatIndemnite = (iv: any) => {
-    if (!iv || iv === 0) return 'Non rémunéré';
+    if (!iv || iv === 0) return t('studies.notPaid');
     return `${iv} €`;
   };
 
   // Fonction pour formater le statut de paiement
   const formatPaiement = (paye: any, iv: any) => {
     if (!iv || iv === 0) return null;
-    return paye === 1 ? 'Payé' : 'Non payé';
+    return paye === 1 ? t('studies.paid') : t('studies.unpaid');
   };
 
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-32">
         <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary-600"></div>
-        <span className="ml-2 text-gray-600">Chargement des études...</span>
+        <span className="ml-2 text-gray-600">{t('studies.loadingStudies')}</span>
       </div>
     );
   }
@@ -164,7 +166,7 @@ const VolontaireDetailEtude = ({ volontaireId }: any) => {
   if (etudesEnrichies.length === 0) {
     return (
       <div className="bg-gray-50 rounded-lg p-6 text-center">
-        <p className="text-gray-500">Aucune étude trouvée pour ce volontaire</p>
+        <p className="text-gray-500">{t('studies.noStudiesFound')}</p>
       </div>
     );
   }
@@ -203,32 +205,32 @@ const VolontaireDetailEtude = ({ volontaireId }: any) => {
       <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 border border-blue-200">
         <h4 className="font-medium text-gray-900 mb-4 flex items-center">
           <span className="text-lg">📊</span>
-          <span className="ml-2">Résumé des études</span>
+          <span className="ml-2">{t('studies.studySummary')}</span>
         </h4>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           <div className="text-center">
             <p className="text-3xl font-bold text-primary-600">{etudesEnrichies.length}</p>
-            <p className="text-gray-600 text-sm">Études total</p>
+            <p className="text-gray-600 text-sm">{t('studies.totalStudies')}</p>
           </div>
           <div className="text-center">
             <p className="text-3xl font-bold text-green-600">{etudesActives.length}</p>
-            <p className="text-gray-600 text-sm">En cours</p>
+            <p className="text-gray-600 text-sm">{t('studies.ongoingStudies')}</p>
           </div>
           <div className="text-center">
             <p className="text-3xl font-bold text-gray-600">{etudesTerminees.length}</p>
-            <p className="text-gray-600 text-sm">Terminées</p>
+            <p className="text-gray-600 text-sm">{t('studies.completedStudies')}</p>
           </div>
           <div className="text-center">
             <p className="text-3xl font-bold text-orange-600">
               {etudesEnrichies.reduce((total, etude) => total + (etude.iv || 0), 0)} €
             </p>
-            <p className="text-gray-600 text-sm">Indemnités total</p>
+            <p className="text-gray-600 text-sm">{t('studies.totalCompensations')}</p>
           </div>
           <div className="text-center">
             <p className="text-3xl font-bold text-purple-600">
               {indemniteAnneeCourante} €
             </p>
-            <p className="text-gray-600 text-sm">Indemnités {new Date().getFullYear()}</p>
+            <p className="text-gray-600 text-sm">{t('studies.yearCompensations', { year: new Date().getFullYear() })}</p>
           </div>
         </div>
 
@@ -239,13 +241,13 @@ const VolontaireDetailEtude = ({ volontaireId }: any) => {
               <p className="text-xl font-bold text-green-600">
                 {etudesEnrichies.filter(e => e.paye === 1).length}
               </p>
-              <p className="text-gray-600 text-sm">Études payées</p>
+              <p className="text-gray-600 text-sm">{t('studies.paidStudies')}</p>
             </div>
             <div className="text-center">
               <p className="text-xl font-bold text-orange-600">
                 {etudesEnrichies.filter(e => e.paye === 0 && e.iv > 0).length}
               </p>
-              <p className="text-gray-600 text-sm">En attente paiement</p>
+              <p className="text-gray-600 text-sm">{t('studies.awaitingPayment')}</p>
             </div>
             <div className="text-center">
               <p className="text-xl font-bold text-red-600">
@@ -257,7 +259,7 @@ const VolontaireDetailEtude = ({ volontaireId }: any) => {
                     (e.statut === "SURBOOK" || e.statut === "surbook" || e.statut === "SB" || e.statut === "sb");
                 }).length}
               </p>
-              <p className="text-gray-600 text-sm">SURBOOK {new Date().getFullYear()} </p>
+              <p className="text-gray-600 text-sm">{t('studies.surbookYear', { year: new Date().getFullYear() })}</p>
             </div>
           </div>
         </div>
@@ -266,12 +268,12 @@ const VolontaireDetailEtude = ({ volontaireId }: any) => {
       {/* Études en cours */}
       <div>
         <h3 className="text-lg font-medium text-gray-900 mb-4">
-          Études en cours ({etudesActives.length})
+          {t('studies.currentStudies')} ({etudesActives.length})
         </h3>
 
         {etudesActives.length === 0 ? (
           <div className="bg-gray-50 rounded-lg p-6 text-center">
-            <p className="text-gray-500">Aucune étude en cours</p>
+            <p className="text-gray-500">{t('studies.noOngoingStudies')}</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -290,7 +292,7 @@ const VolontaireDetailEtude = ({ volontaireId }: any) => {
                         {etude.ref || `Étude #${etude.idEtude}`}
                       </Link>
                       <span className="text-sm text-gray-500">
-                        Groupe: {etude.idGroupe}
+                        {t('studies.group')}: {etude.idGroupe}
                       </span>
                     </div>
 
@@ -300,15 +302,15 @@ const VolontaireDetailEtude = ({ volontaireId }: any) => {
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                       <div>
-                        <span className="font-medium text-gray-500">N° Sujet:</span>
+                        <span className="font-medium text-gray-500">{t('studies.subjectNumber')}:</span>
                         <p className="text-gray-900">{etude.numsujet || '-'}</p>
                       </div>
                       <div>
-                        <span className="font-medium text-gray-500">Indemnité:</span>
+                        <span className="font-medium text-gray-500">{t('studies.compensation')}:</span>
                         <p className="text-gray-900">{formatIndemnite(etude.iv)}</p>
                       </div>
                       <div>
-                        <span className="font-medium text-gray-500">Paiement:</span>
+                        <span className="font-medium text-gray-500">{t('studies.payment')}:</span>
                         <p className={`text-sm ${etude.paye === 1 ? 'text-green-600' : 'text-orange-600'}`}>
                           {formatPaiement(etude.paye, etude.iv)}
                         </p>
@@ -317,7 +319,7 @@ const VolontaireDetailEtude = ({ volontaireId }: any) => {
 
                     {(etude.dateDebut || etude.dateFin) && (
                       <div className="mt-3">
-                        <span className="font-medium text-gray-500 text-sm">Période:</span>
+                        <span className="font-medium text-gray-500 text-sm">{t('studies.period')}:</span>
                         <p className="text-gray-700 text-sm mt-1">
                           {etude.dateDebut && formatDate(etude.dateDebut)}
                           {etude.dateDebut && etude.dateFin && ' - '}
@@ -328,7 +330,7 @@ const VolontaireDetailEtude = ({ volontaireId }: any) => {
 
                     {etude.description && (
                       <div className="mt-3">
-                        <span className="font-medium text-gray-500 text-sm">Description:</span>
+                        <span className="font-medium text-gray-500 text-sm">{t('studies.description')}:</span>
                         <p className="text-gray-700 text-sm mt-1 line-clamp-2">{etude.description}</p>
                       </div>
                     )}
@@ -336,14 +338,14 @@ const VolontaireDetailEtude = ({ volontaireId }: any) => {
 
                   <div className="flex flex-col items-end space-y-2">
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                      En cours
+                      {t('studies.ongoing')}
                     </span>
 
                     <Link
                       to={`/etudes/${etude.idEtude}`}
                       className="text-xs text-primary-600 hover:text-primary-700"
                     >
-                      Voir étude
+                      {t('studies.viewStudy')}
                     </Link>
                   </div>
                 </div>
@@ -361,7 +363,7 @@ const VolontaireDetailEtude = ({ volontaireId }: any) => {
             className="w-full px-6 py-4 bg-gray-50 hover:bg-gray-100 transition-colors flex items-center justify-between text-left"
           >
             <h3 className="text-lg font-medium text-gray-900">
-              Historique des études ({etudesTerminees.length})
+              {t('studies.studyHistory')} ({etudesTerminees.length})
             </h3>
             <span className={`transform transition-transform duration-200 ${showTerminatedStudies ? 'rotate-180' : ''}`}>
               ▼
@@ -386,7 +388,7 @@ const VolontaireDetailEtude = ({ volontaireId }: any) => {
                             {etude.ref || `Étude #${etude.idEtude}`}
                           </Link>
                           <span className="text-sm text-gray-500">
-                            Groupe: {etude.idGroupe}
+                            {t('studies.group')}: {etude.idGroupe}
                           </span>
                         </div>
 
@@ -396,15 +398,15 @@ const VolontaireDetailEtude = ({ volontaireId }: any) => {
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                           <div>
-                            <span className="font-medium text-gray-500">N° Sujet:</span>
+                            <span className="font-medium text-gray-500">{t('studies.subjectNumber')}:</span>
                             <p className="text-gray-900">{etude.numsujet || '-'}</p>
                           </div>
                           <div>
-                            <span className="font-medium text-gray-500">Indemnité:</span>
+                            <span className="font-medium text-gray-500">{t('studies.compensation')}:</span>
                             <p className="text-gray-900">{formatIndemnite(etude.iv)}</p>
                           </div>
                           <div>
-                            <span className="font-medium text-gray-500">Paiement:</span>
+                            <span className="font-medium text-gray-500">{t('studies.payment')}:</span>
                             <p className={`text-sm ${etude.paye === 1 ? 'text-green-600' : 'text-orange-600'}`}>
                               {formatPaiement(etude.paye, etude.iv)}
                             </p>
@@ -413,7 +415,7 @@ const VolontaireDetailEtude = ({ volontaireId }: any) => {
 
                         {(etude.dateDebut || etude.dateFin) && (
                           <div className="mt-3">
-                            <span className="font-medium text-gray-500 text-sm">Période:</span>
+                            <span className="font-medium text-gray-500 text-sm">{t('studies.period')}:</span>
                             <p className="text-gray-700 text-sm mt-1">
                               {etude.dateDebut && formatDate(etude.dateDebut)}
                               {etude.dateDebut && etude.dateFin && ' - '}
@@ -424,7 +426,7 @@ const VolontaireDetailEtude = ({ volontaireId }: any) => {
 
                         {etude.description && (
                           <div className="mt-3">
-                            <span className="font-medium text-gray-500 text-sm">Description:</span>
+                            <span className="font-medium text-gray-500 text-sm">{t('studies.description')}:</span>
                             <p className="text-gray-700 text-sm mt-1 line-clamp-2">{etude.description}</p>
                           </div>
                         )}
@@ -432,14 +434,14 @@ const VolontaireDetailEtude = ({ volontaireId }: any) => {
 
                       <div className="flex flex-col items-end space-y-2">
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                          Terminé
+                          {t('studies.completed')}
                         </span>
 
                         <Link
                           to={`/etudes/${etude.idEtude}`}
                           className="text-xs text-primary-600 hover:text-primary-700"
                         >
-                          Voir étude
+                          {t('studies.viewStudy')}
                         </Link>
                       </div>
                     </div>

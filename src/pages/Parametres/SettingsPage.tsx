@@ -1,4 +1,5 @@
 import { useState, useEffect, useContext, memo } from "react";
+import { useTranslation } from "react-i18next";
 import parametreService from "../../services/parametreService";
 import { AuthContext } from "../../context/AuthContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
@@ -38,12 +39,13 @@ interface IsolatedParametreFormProps {
     initialData: FormData;
     selectedParametre: Parametre | null;
     onClose: () => void;
+    t: (key: string) => string;
 }
 
 // ===============================
 // FORMULAIRE COMPLÈTEMENT ISOLÉ
 // ===============================
-const IsolatedParametreForm = memo(({ onSubmit, isLoading, initialData, selectedParametre, onClose }: IsolatedParametreFormProps) => {
+const IsolatedParametreForm = memo(({ onSubmit, isLoading, initialData, selectedParametre, onClose, t }: IsolatedParametreFormProps) => {
     // STATE INTERNE - complètement isolé
     const [localData, setLocalData] = useState<FormData>({
         identifiant: '',
@@ -93,10 +95,10 @@ const IsolatedParametreForm = memo(({ onSubmit, isLoading, initialData, selected
         <form onSubmit={handleLocalSubmit} className="space-y-6" autoComplete="off">
             <input type="text" name="fakeusernameremembered" style={{display: 'none'}} />
             <input type="password" name="fakepasswordremembered" style={{display: 'none'}} />
-            
+
             <div className="space-y-2">
                 <Label htmlFor="identifiant">
-                    Identifiant <span className="text-destructive">*</span>
+                    {t('settings.identifierRequired')} <span className="text-destructive">*</span>
                 </Label>
                 <Input
                     id="identifiant"
@@ -106,13 +108,13 @@ const IsolatedParametreForm = memo(({ onSubmit, isLoading, initialData, selected
                     required
                     disabled={isLoading}
                     autoComplete="off"
-                    placeholder="Entrez l'identifiant"
+                    placeholder={t('settings.identifierPlaceholder')}
                 />
-                <p className="text-xs text-muted-foreground">Le login sera automatiquement identique à cet identifiant</p>
+                <p className="text-xs text-muted-foreground">{t('settings.identifierHint')}</p>
             </div>
 
             <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
+                <Label htmlFor="description">{t('settings.description')}</Label>
                 <Textarea
                     id="description"
                     name="description"
@@ -120,29 +122,29 @@ const IsolatedParametreForm = memo(({ onSubmit, isLoading, initialData, selected
                     onChange={handleLocalChange}
                     rows={3}
                     disabled={isLoading}
-                    placeholder="Décrivez ce paramètre..."
+                    placeholder={t('settings.descriptionPlaceholder')}
                 />
             </div>
 
             <div className="space-y-2">
-                <Label htmlFor="role">Rôle</Label>
-                <Select 
-                    value={localData.role} 
+                <Label htmlFor="role">{t('settings.role')}</Label>
+                <Select
+                    value={localData.role}
                     onValueChange={(value) => handleLocalChange({ target: { name: 'role', value } } as any)}
                     disabled={isLoading}
                 >
                     <SelectTrigger>
-                        <SelectValue placeholder="Sélectionner un rôle" />
+                        <SelectValue placeholder={t('settings.selectRole')} />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="ADMIN">Administrateur</SelectItem>
-                        <SelectItem value="UTILISATEUR">Utilisateur</SelectItem>
+                        <SelectItem value="ADMIN">{t('settings.administrator')}</SelectItem>
+                        <SelectItem value="UTILISATEUR">{t('settings.user')}</SelectItem>
                     </SelectContent>
                 </Select>
             </div>
 
             <div className="space-y-2">
-                <Label htmlFor="login">Login (automatique)</Label>
+                <Label htmlFor="login">{t('settings.loginAutomatic')}</Label>
                 <Input
                     id="login"
                     name="login"
@@ -150,12 +152,12 @@ const IsolatedParametreForm = memo(({ onSubmit, isLoading, initialData, selected
                     readOnly
                     disabled
                     className="bg-muted"
-                    placeholder="Sera identique à l'identifiant"
+                    placeholder={t('settings.loginPlaceholder')}
                 />
             </div>
 
             <div className="space-y-2">
-                <Label htmlFor="mailIdentifiant">Email</Label>
+                <Label htmlFor="mailIdentifiant">{t('settings.email')}</Label>
                 <Input
                     id="mailIdentifiant"
                     type="email"
@@ -163,13 +165,13 @@ const IsolatedParametreForm = memo(({ onSubmit, isLoading, initialData, selected
                     value={localData.mailIdentifiant}
                     onChange={handleLocalChange}
                     disabled={isLoading}
-                    placeholder="email@exemple.com"
+                    placeholder={t('settings.emailPlaceholder')}
                 />
             </div>
 
             <div className="space-y-2">
                 <Label htmlFor="mdpIdentifiant">
-                    {selectedParametre ? "Nouveau mot de passe (optionnel)" : "Mot de passe"}
+                    {selectedParametre ? t('settings.newPasswordOptional') : t('settings.password')}
                     {!selectedParametre && <span className="text-destructive"> *</span>}
                 </Label>
                 <Input
@@ -185,7 +187,7 @@ const IsolatedParametreForm = memo(({ onSubmit, isLoading, initialData, selected
                     autoCapitalize="off"
                     spellCheck="false"
                     data-lpignore="true"
-                    placeholder="••••••••"
+                    placeholder={t('settings.passwordPlaceholder')}
                 />
             </div>
 
@@ -195,7 +197,7 @@ const IsolatedParametreForm = memo(({ onSubmit, isLoading, initialData, selected
                     disabled={isLoading}
                     className="flex-1"
                 >
-                    {isLoading ? "Enregistrement..." : (selectedParametre ? "Modifier" : "Créer")}
+                    {isLoading ? t('settings.saving') : (selectedParametre ? t('settings.modify') : t('settings.create'))}
                 </Button>
                 <Button
                     type="button"
@@ -204,7 +206,7 @@ const IsolatedParametreForm = memo(({ onSubmit, isLoading, initialData, selected
                     disabled={isLoading}
                     className="flex-1"
                 >
-                    Annuler
+                    {t('settings.cancel')}
                 </Button>
             </div>
         </form>
@@ -214,9 +216,10 @@ const IsolatedParametreForm = memo(({ onSubmit, isLoading, initialData, selected
 IsolatedParametreForm.displayName = 'IsolatedParametreForm';
 
 // ===============================
-// COMPOSANT PRINCIPAL SIMPLIFIÉ  
+// COMPOSANT PRINCIPAL SIMPLIFIÉ
 // ===============================
 const SettingsPage = () => {
+    const { t } = useTranslation();
     const [parametres, setParametres] = useState<Parametre[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
@@ -248,8 +251,8 @@ const SettingsPage = () => {
             setParametres(data || []);
             setError(null);
         } catch (err) {
-            const errorMessage = err instanceof Error ? err.message : 'Une erreur inconnue est survenue';
-            setError('Erreur lors du chargement des données: ' + errorMessage);
+            const errorMessage = err instanceof Error ? err.message : t('settings.unknownError');
+            setError(t('settings.loadError') + ': ' + errorMessage);
             console.error(err);
         } finally {
             setLoading(false);
@@ -261,20 +264,20 @@ const SettingsPage = () => {
     }, []);
 
     // Soumission - reçoit les données du formulaire isolé
-    const handleSubmit = async (formData: FormData) => {        
+    const handleSubmit = async (formData: FormData) => {
         if (!auth || !auth.hasPermission(2)) {
-            setError("Vous n'avez pas la permission de créer ou modifier des paramètres.");
+            setError(t('settings.permissionError'));
             return;
         }
 
         // Validation côté client
         if (!formData.identifiant.trim()) {
-            setError("L'identifiant est obligatoire.");
+            setError(t('settings.identifierRequiredError'));
             return;
         }
 
         if (!selectedParametre && !formData.mdpIdentifiant.trim()) {
-            setError("Le mot de passe est obligatoire pour un nouveau paramètre.");
+            setError(t('settings.passwordRequiredError'));
             return;
         }
 
@@ -283,11 +286,11 @@ const SettingsPage = () => {
         try {
             if (selectedParametre) {
                 await parametreService.updateParametres(selectedParametre.idIdentifiant, formData);
-                setSuccess("Paramètre modifié avec succès.");
+                setSuccess(t('settings.updateSuccess'));
                 setShowEditForm(false);
             } else {
                 await parametreService.createParametre(formData);
-                setSuccess("Paramètre créé avec succès.");
+                setSuccess(t('settings.createSuccess'));
                 setShowCreateForm(false);
             }
 
@@ -295,21 +298,21 @@ const SettingsPage = () => {
             setTimeout(() => setSuccess(null), 3000);
         } catch (err) {
             console.error('❌ Erreur lors de la soumission:', err);
-            
+
             // Affichage d'erreur plus détaillé
             if (err && typeof err === 'object' && 'response' in err) {
                 const axiosError = err as any;
                 if (axiosError.response?.status === 500) {
-                    setError(`Erreur serveur (500): ${axiosError.response?.data?.message || 'Erreur interne du serveur. Vérifiez les logs côté serveur.'}`);
+                    setError(`${t('settings.serverError')}: ${axiosError.response?.data?.message || t('settings.serverErrorDetail')}`);
                 } else if (axiosError.response?.status === 400) {
-                    setError(`Données invalides (400): ${axiosError.response?.data?.message || 'Vérifiez les données saisies.'}`);
+                    setError(`${t('settings.invalidDataError')}: ${axiosError.response?.data?.message || t('settings.invalidDataErrorDetail')}`);
                 } else {
-                    const errorMessage = err instanceof Error ? err.message : 'Une erreur inconnue est survenue';
-                    setError(`Erreur lors de l'enregistrement: ${errorMessage}`);
+                    const errorMessage = err instanceof Error ? err.message : t('settings.unknownError');
+                    setError(`${t('settings.saveError')}: ${errorMessage}`);
                 }
             } else {
-                const errorMessage = err instanceof Error ? err.message : 'Une erreur inconnue est survenue';
-                setError(`Erreur lors de l'enregistrement: ${errorMessage}`);
+                const errorMessage = err instanceof Error ? err.message : t('settings.unknownError');
+                setError(`${t('settings.saveError')}: ${errorMessage}`);
             }
         } finally {
             setFormLoading(false);
@@ -334,7 +337,7 @@ const SettingsPage = () => {
 
     const handleCreate = () => {
         if (!auth || !auth.hasPermission(2)) {
-            setError("Vous n'avez pas la permission de créer des paramètres.");
+            setError(t('settings.permissionCreateError'));
             return;
         }
 
@@ -343,7 +346,7 @@ const SettingsPage = () => {
             identifiant: '',
             description: '',
             role: '',
-            login: '', // Sera automatiquement rempli quand identifiant sera saisi
+            login: '',
             mailIdentifiant: '',
             mdpIdentifiant: ''
         });
@@ -352,7 +355,7 @@ const SettingsPage = () => {
 
     const handleEdit = async (id: number) => {
         if (!auth || !auth.hasPermission(2)) {
-            setError("Vous n'avez pas la permission de modifier des paramètres.");
+            setError(t('settings.permissionEditError'));
             return;
         }
 
@@ -363,32 +366,32 @@ const SettingsPage = () => {
                 identifiant: parametre.identifiant || '',
                 description: parametre.description || '',
                 role: parametre.role || '',
-                login: parametre.identifiant || '', // Login = identifiant
+                login: parametre.identifiant || '',
                 mailIdentifiant: parametre.mailIdentifiant || '',
                 mdpIdentifiant: ''
             });
             setShowEditForm(true);
         } catch (err) {
-            const errorMessage = err instanceof Error ? err.message : 'Une erreur inconnue est survenue';
-            setError("Erreur lors de la récupération : " + errorMessage);
+            const errorMessage = err instanceof Error ? err.message : t('settings.unknownError');
+            setError(t('settings.retrieveError') + ' : ' + errorMessage);
         }
     };
 
     const handleDelete = async (id: number) => {
         if (!auth || !auth.hasPermission(2)) {
-            setError("Vous n'avez pas la permission de supprimer des paramètres.");
+            setError(t('settings.permissionDeleteError'));
             return;
         }
-        if (!window.confirm("Voulez-vous vraiment supprimer ce paramètre ?")) return;
+        if (!window.confirm(t('settings.deleteConfirm'))) return;
 
         try {
             await parametreService.deleteParametre(id);
             setParametres(prev => prev.filter(p => p.idIdentifiant !== id));
-            setSuccess("Paramètre supprimé avec succès.");
+            setSuccess(t('settings.deleteSuccess'));
             setTimeout(() => setSuccess(null), 3000);
         } catch (err) {
-            const errorMessage = err instanceof Error ? err.message : 'Une erreur inconnue est survenue';
-            setError("Erreur lors de la suppression : " + errorMessage);
+            const errorMessage = err instanceof Error ? err.message : t('settings.unknownError');
+            setError(t('settings.deleteError') + ' : ' + errorMessage);
         }
     };
 
@@ -398,8 +401,8 @@ const SettingsPage = () => {
             setSelectedParametre(parametre);
             setShowViewModal(true);
         } catch (err) {
-            const errorMessage = err instanceof Error ? err.message : 'Une erreur inconnue est survenue';
-            setError("Erreur lors de la récupération : " + errorMessage);
+            const errorMessage = err instanceof Error ? err.message : t('settings.unknownError');
+            setError(t('settings.retrieveError') + ' : ' + errorMessage);
         }
     };
 
@@ -410,9 +413,9 @@ const SettingsPage = () => {
                     <div
                         className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mx-auto mb-4"
                         role="status"
-                        aria-label="Chargement en cours"
+                        aria-label={t('common.loading')}
                     ></div>
-                    <p className="text-muted-foreground">Chargement...</p>
+                    <p className="text-muted-foreground">{t('common.loading')}</p>
                 </div>
             </div>
         );
@@ -427,15 +430,15 @@ const SettingsPage = () => {
                         <Settings2 className="h-6 w-6 text-primary" />
                     </div>
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight">Paramètres</h1>
-                        <p className="text-muted-foreground">Gérez les utilisateurs et leurs permissions</p>
+                        <h1 className="text-3xl font-bold tracking-tight">{t('settings.title')}</h1>
+                        <p className="text-muted-foreground">{t('settings.subtitle')}</p>
                     </div>
                 </div>
 
                 {auth && auth.hasPermission(2) && (
                     <Button onClick={handleCreate} size="lg">
                         <Plus className="mr-2 h-4 w-4" />
-                        Nouveau paramètre
+                        {t('settings.newParameter')}
                     </Button>
                 )}
             </div>
@@ -472,14 +475,14 @@ const SettingsPage = () => {
                 <Card className="text-center py-12">
                     <CardContent className="pt-6">
                         <Settings2 className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-                        <CardTitle className="mb-2">Aucun paramètre trouvé</CardTitle>
+                        <CardTitle className="mb-2">{t('settings.noParameterFound')}</CardTitle>
                         <CardDescription className="mb-4">
-                            Commencez par créer votre premier paramètre.
+                            {t('settings.noParameterFoundDesc')}
                         </CardDescription>
                         {auth && auth.hasPermission(2) && (
                             <Button onClick={handleCreate}>
                                 <Plus className="mr-2 h-4 w-4" />
-                                Créer un paramètre
+                                {t('settings.createParameter')}
                             </Button>
                         )}
                     </CardContent>
@@ -494,7 +497,7 @@ const SettingsPage = () => {
                                         {parametre.identifiant}
                                     </CardTitle>
                                     <Badge variant="secondary" className="text-xs">
-                                        ID: {parametre.idIdentifiant}
+                                        {t('settings.id')}: {parametre.idIdentifiant}
                                     </Badge>
                                 </div>
                                 {parametre.description && (
@@ -508,8 +511,8 @@ const SettingsPage = () => {
                                 {parametre.role && (
                                     <div>
                                         <Badge variant={parametre.role === "2" ? "default" : "outline"}>
-                                            {parametre.role === "2" ? "Administrateur" : 
-                                             parametre.role === "1" ? "Utilisateur" : 
+                                            {parametre.role === "2" ? t('settings.administrator') :
+                                             parametre.role === "1" ? t('settings.user') :
                                              parametre.role}
                                         </Badge>
                                     </div>
@@ -523,7 +526,7 @@ const SettingsPage = () => {
                                         onClick={() => handleView(parametre.idIdentifiant)}
                                     >
                                         <Eye className="mr-2 h-4 w-4" />
-                                        Voir
+                                        {t('settings.view')}
                                     </Button>
                                     {auth && auth.hasPermission(2) && (
                                         <>
@@ -534,7 +537,7 @@ const SettingsPage = () => {
                                                 onClick={() => handleEdit(parametre.idIdentifiant)}
                                             >
                                                 <Pencil className="mr-2 h-4 w-4" />
-                                                Modifier
+                                                {t('settings.modify')}
                                             </Button>
                                             <Button
                                                 variant="destructive"
@@ -556,18 +559,19 @@ const SettingsPage = () => {
             <Dialog open={showCreateForm} onOpenChange={(open) => !open && closeModals()}>
                 <DialogContent className="sm:max-w-[500px]">
                     <DialogHeader>
-                        <DialogTitle>Créer un nouveau paramètre</DialogTitle>
+                        <DialogTitle>{t('settings.createNewParameter')}</DialogTitle>
                         <DialogDescription>
-                            Remplissez les informations pour créer un nouvel utilisateur.
+                            {t('settings.createNewParameterDesc')}
                         </DialogDescription>
                     </DialogHeader>
-                    <IsolatedParametreForm 
+                    <IsolatedParametreForm
                         key="create-isolated"
-                        onSubmit={handleSubmit} 
+                        onSubmit={handleSubmit}
                         isLoading={formLoading}
                         initialData={initialFormData}
                         selectedParametre={null}
                         onClose={closeModals}
+                        t={t}
                     />
                 </DialogContent>
             </Dialog>
@@ -575,18 +579,19 @@ const SettingsPage = () => {
             <Dialog open={showEditForm} onOpenChange={(open) => !open && closeModals()}>
                 <DialogContent className="sm:max-w-[500px]">
                     <DialogHeader>
-                        <DialogTitle>Modifier le paramètre</DialogTitle>
+                        <DialogTitle>{t('settings.editParameter')}</DialogTitle>
                         <DialogDescription>
-                            Modifiez les informations de l'utilisateur.
+                            {t('settings.editParameterDesc')}
                         </DialogDescription>
                     </DialogHeader>
-                    <IsolatedParametreForm 
+                    <IsolatedParametreForm
                         key={`edit-isolated-${selectedParametre?.idIdentifiant}`}
-                        onSubmit={handleSubmit} 
+                        onSubmit={handleSubmit}
                         isLoading={formLoading}
                         initialData={initialFormData}
                         selectedParametre={selectedParametre}
                         onClose={closeModals}
+                        t={t}
                     />
                 </DialogContent>
             </Dialog>
@@ -594,50 +599,50 @@ const SettingsPage = () => {
             <Dialog open={showViewModal} onOpenChange={(open) => !open && closeModals()}>
                 <DialogContent className="sm:max-w-[600px]">
                     <DialogHeader>
-                        <DialogTitle>Détails du paramètre</DialogTitle>
+                        <DialogTitle>{t('settings.parameterDetails')}</DialogTitle>
                         <DialogDescription>
-                            Informations complètes de l'utilisateur.
+                            {t('settings.parameterDetailsDesc')}
                         </DialogDescription>
                     </DialogHeader>
                     {selectedParametre && (
                         <div className="space-y-4">
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div className="space-y-1">
-                                    <Label className="text-muted-foreground">ID</Label>
+                                    <Label className="text-muted-foreground">{t('settings.id')}</Label>
                                     <p className="font-medium">{selectedParametre.idIdentifiant}</p>
                                 </div>
                                 <div className="space-y-1">
-                                    <Label className="text-muted-foreground">Identifiant</Label>
+                                    <Label className="text-muted-foreground">{t('settings.identifier')}</Label>
                                     <p className="font-medium">{selectedParametre.identifiant}</p>
                                 </div>
                                 <div className="sm:col-span-2 space-y-1">
-                                    <Label className="text-muted-foreground">Description</Label>
-                                    <p className="font-medium">{selectedParametre.description || 'Aucune description'}</p>
+                                    <Label className="text-muted-foreground">{t('settings.description')}</Label>
+                                    <p className="font-medium">{selectedParametre.description || t('settings.noDescription')}</p>
                                 </div>
                                 <div className="space-y-1">
-                                    <Label className="text-muted-foreground">Rôle</Label>
+                                    <Label className="text-muted-foreground">{t('settings.role')}</Label>
                                     <div>
                                         <Badge variant={selectedParametre.role === "2" ? "default" : "outline"}>
-                                            {selectedParametre.role === "2" ? "Administrateur" : 
-                                             selectedParametre.role === "1" ? "Utilisateur" : 
-                                             selectedParametre.role || 'Non défini'}
+                                            {selectedParametre.role === "2" ? t('settings.administrator') :
+                                             selectedParametre.role === "1" ? t('settings.user') :
+                                             selectedParametre.role || t('settings.notDefined')}
                                         </Badge>
                                     </div>
                                 </div>
                                 <div className="space-y-1">
-                                    <Label className="text-muted-foreground">Login</Label>
-                                    <p className="font-medium">{selectedParametre.login || 'Non défini'}</p>
+                                    <Label className="text-muted-foreground">{t('settings.login')}</Label>
+                                    <p className="font-medium">{selectedParametre.login || t('settings.notDefined')}</p>
                                 </div>
                                 <div className="space-y-1">
-                                    <Label className="text-muted-foreground">Email</Label>
-                                    <p className="font-medium">{selectedParametre.mailIdentifiant || 'Non défini'}</p>
+                                    <Label className="text-muted-foreground">{t('settings.email')}</Label>
+                                    <p className="font-medium">{selectedParametre.mailIdentifiant || t('settings.notDefined')}</p>
                                 </div>
                                 <div className="space-y-1">
-                                    <Label className="text-muted-foreground">Date de création</Label>
+                                    <Label className="text-muted-foreground">{t('settings.creationDate')}</Label>
                                     <p className="font-medium">
-                                        {selectedParametre.createdAt 
-                                            ? new Date(selectedParametre.createdAt).toLocaleDateString('fr-FR') 
-                                            : 'Non disponible'}
+                                        {selectedParametre.createdAt
+                                            ? new Date(selectedParametre.createdAt).toLocaleDateString('fr-FR')
+                                            : t('settings.notAvailable')}
                                     </p>
                                 </div>
                             </div>
@@ -650,14 +655,14 @@ const SettingsPage = () => {
                                         }}
                                     >
                                         <Pencil className="mr-2 h-4 w-4" />
-                                        Modifier
+                                        {t('settings.modify')}
                                     </Button>
                                 )}
                                 <Button
                                     variant="outline"
                                     onClick={closeModals}
                                 >
-                                    Fermer
+                                    {t('settings.close')}
                                 </Button>
                             </div>
                         </div>

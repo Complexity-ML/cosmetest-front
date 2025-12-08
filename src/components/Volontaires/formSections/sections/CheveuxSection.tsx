@@ -1,9 +1,13 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useTranslation } from "react-i18next";
 
-const CheveuxSection = ({ formData, onChange }: any) => (
+const CheveuxSection = ({ formData, onChange }: any) => {
+  const { t } = useTranslation();
+
+  return (
     <Card>
       <CardHeader>
-        <CardTitle>Caractéristiques des cheveux</CardTitle>
+        <CardTitle>{t('volunteers.hairCharacteristics')}</CardTitle>
       </CardHeader>
       <CardContent>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -12,7 +16,7 @@ const CheveuxSection = ({ formData, onChange }: any) => (
             htmlFor="couleurCheveux"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
-            Couleur des cheveux
+            {t('volunteers.hairColor')}
           </label>
           <select
             id="couleurCheveux"
@@ -21,7 +25,7 @@ const CheveuxSection = ({ formData, onChange }: any) => (
             onChange={onChange}
             className="form-select block w-full"
           >
-            <option value="">Sélectionner</option>
+            <option value="">{t('common.select')}</option>
             <option value="Blonds">Blonds</option>
             <option value="Bruns">Bruns</option>
             <option value="Chatains">Châtains</option>
@@ -32,13 +36,13 @@ const CheveuxSection = ({ formData, onChange }: any) => (
             <option value="Colorés">Colorés</option>
           </select>
         </div>
-  
+
         <div>
           <label
             htmlFor="longueurCheveux"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
-            Longueur des cheveux
+            {t('volunteers.hairLength')}
           </label>
           <select
             id="longueurCheveux"
@@ -47,20 +51,20 @@ const CheveuxSection = ({ formData, onChange }: any) => (
             onChange={onChange}
             className="form-select block w-full"
           >
-            <option value="">Sélectionner</option>
+            <option value="">{t('common.select')}</option>
             <option value="Courts">Courts</option>
             <option value="Mi-longs">Mi-longs</option>
             <option value="Longs">Longs</option>
             <option value="Très longs">Très longs</option>
           </select>
         </div>
-  
+
         <div>
           <label
             htmlFor="natureCheveux"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
-            Nature des cheveux
+            {t('volunteers.hairNature')}
           </label>
           <select
             id="natureCheveux"
@@ -69,7 +73,7 @@ const CheveuxSection = ({ formData, onChange }: any) => (
             onChange={onChange}
             className="form-select block w-full"
           >
-            <option value="">Sélectionner</option>
+            <option value="">{t('common.select')}</option>
             <option value="Lisses">Lisses</option>
             <option value="Ondulés">Ondulés</option>
             <option value="Bouclés">Bouclés</option>
@@ -80,13 +84,13 @@ const CheveuxSection = ({ formData, onChange }: any) => (
             <option value="Gras">Gras</option>
           </select>
         </div>
-  
+
         <div>
           <label
             htmlFor="epaisseurCheveux"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
-            Épaisseur des cheveux
+            {t('volunteers.hairThickness')}
           </label>
           <select
             id="epaisseurCheveux"
@@ -95,19 +99,19 @@ const CheveuxSection = ({ formData, onChange }: any) => (
             onChange={onChange}
             className="form-select block w-full"
           >
-            <option value="">Sélectionner</option>
+            <option value="">{t('common.select')}</option>
             <option value="Fins">Fins</option>
             <option value="Moyens">Moyens</option>
             <option value="Épais">Épais</option>
           </select>
         </div>
-  
+
         <div>
           <label
             htmlFor="natureCuirChevelu"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
-            Nature du cuir chevelu
+            {t('volunteers.scalpNature')}
           </label>
           <select
             id="natureCuirChevelu"
@@ -116,14 +120,14 @@ const CheveuxSection = ({ formData, onChange }: any) => (
             onChange={onChange}
             className="form-select block w-full"
           >
-            <option value="">Sélectionner</option>
+            <option value="">{t('common.select')}</option>
             <option value="Normal">Normal</option>
             <option value="Sec">Sec</option>
             <option value="Gras">Gras</option>
             <option value="Mixte">Mixte</option>
           </select>
         </div>
-  
+
         <div className="flex items-center">
           <input
             type="checkbox"
@@ -137,10 +141,10 @@ const CheveuxSection = ({ formData, onChange }: any) => (
             htmlFor="cuirCheveluSensible"
             className="ml-2 block text-sm font-medium text-gray-700"
           >
-            Cuir chevelu sensible
+            {t('volunteers.sensitiveScalp')}
           </label>
         </div>
-  
+
         <div className="flex items-center">
           <input
             type="checkbox"
@@ -154,10 +158,10 @@ const CheveuxSection = ({ formData, onChange }: any) => (
             htmlFor="chuteDeCheveux"
             className="ml-2 block text-sm font-medium text-gray-700"
           >
-            Chute de cheveux
+            {t('volunteers.hairLoss')}
           </label>
         </div>
-  
+
         <div className="flex items-center">
           <input
             type="checkbox"
@@ -171,13 +175,13 @@ const CheveuxSection = ({ formData, onChange }: any) => (
             htmlFor="cheveuxCassants"
             className="ml-2 block text-sm font-medium text-gray-700"
           >
-            Cheveux cassants
+            {t('volunteers.brittleHair')}
           </label>
         </div>
       </div>
-  
+
       <h3 className="text-md font-medium text-gray-800 mt-6 mb-3">
-        Ongles
+        {t('volunteers.nails')}
       </h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="flex items-center">
@@ -193,10 +197,10 @@ const CheveuxSection = ({ formData, onChange }: any) => (
             htmlFor="onglesCassants"
             className="ml-2 block text-sm font-medium text-gray-700"
           >
-            Ongles cassants
+            {t('volunteers.brittleNails')}
           </label>
         </div>
-  
+
         <div className="flex items-center">
           <input
             type="checkbox"
@@ -210,12 +214,13 @@ const CheveuxSection = ({ formData, onChange }: any) => (
             htmlFor="onglesDedoubles"
             className="ml-2 block text-sm font-medium text-gray-700"
           >
-            Ongles dédoublés
+            {t('volunteers.splitNails')}
           </label>
         </div>
       </div>
       </CardContent>
     </Card>
   );
-  
+};
+
 export default CheveuxSection;

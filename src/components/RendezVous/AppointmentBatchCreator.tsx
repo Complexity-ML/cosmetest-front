@@ -1,17 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import api from '../../services/api';
 import AppointmentConfirmationModal from './AppointmentComponents/AppointmentConfirmationModal';
 import { Etude, Groupe } from '../../types/types';
 import { GroupeData } from '../../types/etude.types';
 import { Button } from '../ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Textarea } from '../ui/textarea';
 import { Badge } from '../ui/badge';
 import { Alert, AlertDescription } from '../ui/alert';
-import { ArrowLeft, Calendar, AlertCircle, CheckCircle2, Info, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Calendar, AlertCircle, CheckCircle2, Info, AlertTriangle, ChevronDown, Check, Search } from 'lucide-react';
 
 interface DateSlot {
   day: string;
@@ -53,12 +53,16 @@ const AppointmentBatchCreator = ({
   onBack,
   onSuccess
 }: AppointmentBatchCreatorProps) => {
+  const { t } = useTranslation();
   const [groups, setGroups] = useState<GroupeData[]>([]);
   const [selectedGroup, setSelectedGroup] = useState<string>('');
-  const [timeBetween, setTimeBetween] = useState<number>(30);
+  const [timeBetweenHours, setTimeBetweenHours] = useState<string>('0');
+  const [timeBetweenMinutes, setTimeBetweenMinutes] = useState<string>('30');
   const [dates, setDates] = useState<DateSlot[]>([{ day: '', month: '', year: '', slots: [] }]);
-  const [startTime, setStartTime] = useState<string>('08h00');
-  const [endTime, setEndTime] = useState<string>('18h00');
+  const [startHour, setStartHour] = useState<string>('08');
+  const [startMinute, setStartMinute] = useState<string>('00');
+  const [endHour, setEndHour] = useState<string>('18');
+  const [endMinute, setEndMinute] = useState<string>('00');
   const [comments, setComments] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -67,6 +71,10 @@ const AppointmentBatchCreator = ({
   const [loadingGroups, setLoadingGroups] = useState<boolean>(false);
   const [showConfirmModal, setShowConfirmModal] = useState<boolean>(false);
   const [appointmentsSummary, setAppointmentsSummary] = useState<AppointmentsSummary | null>(null);
+  const [searchEtudeTerm, setSearchEtudeTerm] = useState<string>('');
+  const [showEtudeSelector, setShowEtudeSelector] = useState<boolean>(false);
+
+  const etudeSelectorRef = useRef<HTMLDivElement>(null);
 
   //  Fonction pour pré-remplir la première date avec la date de début de l'étude
   const prefillFirstDateFromStudy = (study: Etude) => {
@@ -112,16 +120,17 @@ const AppointmentBatchCreator = ({
     }
   };
 
-  // Effet pour maintenir la synchronisation entre props et état local
+  // ✅ Effet pour maintenir la synchronisation entre props et état local
   useEffect(() => {
     if (selectedStudy?.id && selectedStudy.id !== currentStudyId) {
       setCurrentStudyId(selectedStudy.id);
       loadGroupsForStudy(selectedStudy.id);
-      
+
       //  Pré-remplir la première date si l'étude est passée en props
       prefillFirstDateFromStudy(selectedStudy);
     }
-  }, [selectedStudy, currentStudyId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedStudy?.id]); // ⚠️ Ne dépendre QUE de selectedStudy.id, pas de currentStudyId qui change
 
   // Fonction pour charger les groupes d'une étude via l'API
   const loadGroupsForStudy = async (studyId: string | number) => {
@@ -138,7 +147,7 @@ const AppointmentBatchCreator = ({
       if (response.data && response.data.content && Array.isArray(response.data.content)) {
         groupsData = response.data.content;
       } else if (!Array.isArray(response.data)) {
-        console.warn("Format de réponse inattendu:", response.data);
+        console.warn(t('appointments.unexpectedResponseFormat'), response.data);
         groupsData = [];
       }
             
@@ -163,9 +172,9 @@ const AppointmentBatchCreator = ({
         setSelectedGroup(prev => prev || '');
       }
     } catch (err) {
-      console.error('Erreur lors du chargement des groupes:', err);
+      console.error(t('groups.loadError'), err);
       const error = err as Error;
-      setError(`Erreur lors du chargement des groupes: ${error.message}`);
+      setError(`${t('groups.loadError')}: ${error.message}`);
       setGroups([]);
     } finally {
       setLoadingGroups(false);
@@ -194,19 +203,19 @@ const AppointmentBatchCreator = ({
     const subjectCount = getSelectedGroupSubjectCount();
 
     if (!selectedGroup) {
-      return { status: 'no-group', color: 'gray', message: 'Sélectionnez un groupe' };
+      return { status: 'no-group', color: 'gray', message: t('appointments.selectGroup') };
     }
 
     if (totalSlots === 0) {
-      return { status: 'empty', color: 'gray', message: 'Aucun créneau ouvert' };
+      return { status: 'empty', color: 'gray', message: t('appointments.noOpenSlots') };
     }
 
     if (subjectCount === 0) {
-      return { status: 'no-subjects', color: 'yellow', message: 'Aucun sujet inscrit au groupe' };
+      return { status: 'no-subjects', color: 'yellow', message: t('appointments.noSubjectEnrolledInGroup') };
     }
 
     if (totalSlots === subjectCount) {
-      return { status: 'perfect', color: 'green', message: ` Parfait : ${subjectCount} sujets pour ${totalSlots} créneaux` };
+      return { status: 'perfect', color: 'green', message: `${t('appointments.perfect')} : ${subjectCount} ${t('appointments.subjectsFor')} ${totalSlots} ${t('appointments.slots')}` };
     }
 
     if (totalSlots > subjectCount) {
@@ -214,7 +223,7 @@ const AppointmentBatchCreator = ({
       return {
         status: 'shortage',
         color: 'red',
-        message: `⚠️ DÉPASSEMENT : ${diff} créneau(x) en trop (${totalSlots} créneaux pour ${subjectCount} sujets)`
+        message: `⚠️ ${t('appointments.overflow')} : ${diff} ${t('appointments.slotsInExcess')} (${totalSlots} ${t('appointments.slots')} ${t('appointments.subjectsFor')} ${subjectCount} ${t('appointments.subjects')})`
       };
     }
 
@@ -222,7 +231,7 @@ const AppointmentBatchCreator = ({
     return {
       status: 'excess',
       color: 'blue',
-      message: `ℹ️ Capacité restante : ${diff} sujet(s) disponible(s) (${subjectCount} sujets pour ${totalSlots} créneaux)`
+      message: `ℹ️ ${t('appointments.remainingCapacity')} : ${diff} ${t('appointments.subjectsAvailable')} (${subjectCount} ${t('appointments.subjects')} ${t('appointments.subjectsFor')} ${totalSlots} ${t('appointments.slots')})`
     };
   };
 
@@ -330,16 +339,30 @@ const AppointmentBatchCreator = ({
   // Générer les créneaux horaires en fonction des horaires de début et de fin
   const generateTimeSlots = () => {
     const slots = [];
-    const [startHour, startMinute] = startTime.split('h').map(p => parseInt(p, 10));
-    const [endHour, endMinute] = endTime.split('h').map(p => parseInt(p, 10));
+    const startHourInt = parseInt(startHour, 10) || 0;
+    const startMinuteInt = parseInt(startMinute, 10) || 0;
+    const endHourInt = parseInt(endHour, 10) || 0;
+    const endMinuteInt = parseInt(endMinute, 10) || 0;
+    const timeBetweenHoursInt = parseInt(timeBetweenHours, 10) || 0;
+    const timeBetweenMinutesInt = parseInt(timeBetweenMinutes, 10) || 0;
 
     // Convertir en minutes pour faciliter les calculs
-    const startMinutes = startHour * 60 + startMinute;
-    const endMinutes = endHour * 60 + endMinute;
+    const startMinutes = startHourInt * 60 + startMinuteInt;
+    const endMinutes = endHourInt * 60 + endMinuteInt;
+    const timeBetweenTotal = timeBetweenHoursInt * 60 + timeBetweenMinutesInt;
 
     // Vérifier que l'heure de fin est postérieure à l'heure de début
     if (endMinutes <= startMinutes) {
       return [];
+    }
+
+    // Si le temps entre les RDV est 0, retourner un seul créneau
+    if (timeBetweenTotal === 0) {
+      const hour = Math.floor(startMinutes / 60);
+      const minute = startMinutes % 60;
+      const formattedHour = hour.toString().padStart(2, '0');
+      const formattedMinute = minute.toString().padStart(2, '0');
+      return [`${formattedHour}h${formattedMinute}`];
     }
 
     // Générer les créneaux
@@ -351,7 +374,7 @@ const AppointmentBatchCreator = ({
       const formattedMinute = minute.toString().padStart(2, '0');
       slots.push(`${formattedHour}h${formattedMinute}`);
 
-      currentMinutes += timeBetween;
+      currentMinutes += timeBetweenTotal;
     }
 
     return slots;
@@ -362,7 +385,7 @@ const AppointmentBatchCreator = ({
   //  Fonction pour pré-remplir automatiquement les dates consécutives
   const fillConsecutiveDates = () => {
     if (!dates[0].day || !dates[0].month || !dates[0].year) {
-      alert("Veuillez d'abord remplir la Date 1");
+      alert(t('appointments.pleaseFillDate1First'));
       return;
     }
 
@@ -374,7 +397,7 @@ const AppointmentBatchCreator = ({
       );
 
       if (isNaN(baseDate.getTime())) {
-        alert("Date 1 invalide");
+        alert(t('appointments.invalidDate1'));
         return;
       }
 
@@ -393,8 +416,8 @@ const AppointmentBatchCreator = ({
 
       setDates(newDates);
     } catch (err) {
-      console.error("Erreur lors de la génération des dates consécutives:", err);
-      alert("Erreur lors de la génération des dates consécutives");
+      console.error(t('appointments.errorGeneratingDates'), err);
+      alert(t('appointments.errorGeneratingDates'));
     }
   };
 
@@ -440,19 +463,19 @@ const AppointmentBatchCreator = ({
   const handleSubmit = async () => {
     // Validation des entrées
     if (!currentStudyId) {
-      setError('Veuillez sélectionner une étude');
+      setError(t('appointments.pleaseSelectStudy'));
       return;
     }
 
     if (!selectedGroup) {
-      setError('Veuillez sélectionner un groupe');
+      setError(t('appointments.pleaseSelectGroup'));
       return;
     }
 
     // Vérifier que toutes les dates sont complètes
     const incompleteDate = dates.find(d => !d.day || !d.month || !d.year);
     if (incompleteDate) {
-      setError('Veuillez remplir toutes les dates');
+      setError(t('appointments.pleaseFillAllDates'));
       return;
     }
 
@@ -563,7 +586,7 @@ const AppointmentBatchCreator = ({
 
       // Vérifier la réponse
       if (!response.data) {
-        throw new Error('Réponse vide du serveur');
+        throw new Error(t('appointments.emptyServerResponse'));
       }
 
       const { created, total, errors } = response.data;
@@ -574,10 +597,10 @@ const AppointmentBatchCreator = ({
         console.warn(`⚠️ Erreurs batch :`, errors);
 
         if (created === 0) {
-          throw new Error(`Aucun RDV créé : ${errors.join(', ')}`);
+          throw new Error(`${t('appointments.noAppointmentCreated')} : ${errors.join(', ')}`);
         } else {
           // Partiellement réussi
-          alert(`⚠️ ${created} rendez-vous créés sur ${total}.\n\nErreurs :\n${errors.join('\n')}`);
+          alert(t('appointments.appointmentsCreatedPartial', { created, total }) + `\n\nErreurs :\n${errors.join('\n')}`);
         }
       }
 
@@ -592,7 +615,7 @@ const AppointmentBatchCreator = ({
 
     } catch (err) {
       const error = err as Error;
-      setError('Erreur lors de la création des rendez-vous: ' + error.message);
+      setError(t('appointments.errorCreatingAppointments') + ': ' + error.message);
       console.error(err);
       setShowConfirmModal(false);
     } finally {
@@ -602,61 +625,129 @@ const AppointmentBatchCreator = ({
 
   // debug inspectGroups supprimé
 
+  // Filtrer les études selon la recherche
+  const filteredStudies = searchEtudeTerm.trim()
+    ? studies.filter(study => {
+        const searchLower = searchEtudeTerm.toLowerCase();
+        const refMatch = study.ref?.toLowerCase().includes(searchLower);
+        const titleMatch = study.titre?.toLowerCase().includes(searchLower);
+        return refMatch || titleMatch;
+      }).slice(0, 50)
+    : [...studies].reverse().slice(0, 50);
+
+  // Gérer le clic en dehors du dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (etudeSelectorRef.current && !etudeSelectorRef.current.contains(event.target as Node)) {
+        setShowEtudeSelector(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   return (
-    <Card className="max-w-6xl mx-auto">
-      <CardHeader>
-        <div className="flex justify-between items-center">
-          <CardTitle className="text-2xl">Créer plusieurs rendez-vous</CardTitle>
-          <Button
-            variant="ghost"
-            onClick={onBack}
-            className="gap-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Retour
-          </Button>
-        </div>
-      </CardHeader>
+    <div className="p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold">{t('appointments.createMultipleAppointments')}</h2>
+        <Button
+          variant="ghost"
+          onClick={onBack}
+          className="gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          {t('common.back')}
+        </Button>
+      </div>
 
-      <CardContent>
-        {error && (
-          <Alert variant="destructive" className="mb-6">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
+      {error && (
+        <Alert variant="destructive" className="mb-6">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
 
-        <div className="space-y-6">
+      <div className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Sélection d'étude */}
           <div className="space-y-2">
-            <Label htmlFor="study-select">Étude</Label>
-            <Select value={currentStudyId.toString()} onValueChange={handleStudyChange}>
-              <SelectTrigger id="study-select">
-                <SelectValue placeholder="Sélectionner une étude" />
-              </SelectTrigger>
-              <SelectContent>
-                {[...studies].reverse().map(study => (
-                  <SelectItem key={study.id} value={study.id?.toString() || ''}>
-                    {study.ref} - {study.titre}
-                    {study.dateDebut && ` (début: ${study.dateDebut})`}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label htmlFor="study-select">{t('appointments.study')}</Label>
+            <div ref={etudeSelectorRef} className="relative">
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={showEtudeSelector}
+                className="w-full justify-between h-auto py-2"
+                onClick={() => setShowEtudeSelector(!showEtudeSelector)}
+              >
+                <span className="truncate">
+                  {selectedStudy ? `${selectedStudy.ref} - ${selectedStudy.titre}` : t('appointments.selectStudy')}
+                </span>
+                <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+              {showEtudeSelector && (
+                <div className="absolute z-50 mt-1 w-full bg-white border rounded-md shadow-lg max-h-[300px] overflow-auto">
+                  <div className="p-2 border-b sticky top-0 bg-white">
+                    <div className="relative">
+                      <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <Input
+                        placeholder={t('appointments.searchStudy')}
+                        value={searchEtudeTerm}
+                        onChange={(e) => setSearchEtudeTerm(e.target.value)}
+                        className="pl-8"
+                      />
+                    </div>
+                  </div>
+                  <div className="p-1">
+                    {filteredStudies.length === 0 ? (
+                      <div className="px-3 py-2 text-sm text-center text-muted-foreground">
+                        {t('appointments.noStudyFound')}
+                      </div>
+                    ) : (
+                      filteredStudies.map((study) => (
+                        <div
+                          key={study.id}
+                          className={`flex items-center px-3 py-2 text-sm cursor-pointer hover:bg-gray-100 rounded ${
+                            currentStudyId === study.id ? 'bg-blue-50' : ''
+                          }`}
+                          onClick={() => {
+                            handleStudyChange(study.id!.toString());
+                            setShowEtudeSelector(false);
+                            setSearchEtudeTerm('');
+                          }}
+                        >
+                          {currentStudyId === study.id && <Check className="mr-2 h-4 w-4" />}
+                          <span className={currentStudyId !== study.id ? 'ml-6' : ''}>
+                            {study.ref} - {study.titre}
+                          </span>
+                        </div>
+                      ))
+                    )}
+                    {filteredStudies.length >= 50 && (
+                      <div className="px-3 py-2 text-xs text-center text-muted-foreground bg-muted border-t">
+                        {t('appointments.displayLimitedTo50')}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/*  Information sur la date de début */}
             {selectedStudy && selectedStudy.dateDebut && (
               <p className="text-xs text-green-600 flex items-center gap-1">
                 <Calendar className="h-3 w-3" />
-                Date de début d'étude : {selectedStudy.dateDebut} (utilisée pour la Date 1)
+                {t('appointments.studyStartDate')} : {selectedStudy.dateDebut} ({t('appointments.usedForDate1')})
               </p>
             )}
           </div>
 
           {/* Sélection de groupe */}
           <div className="space-y-2">
-            <Label htmlFor="group-select">Groupe</Label>
+            <Label htmlFor="group-select">{t('appointments.group')}</Label>
             <Select
               value={selectedGroup}
               onValueChange={setSelectedGroup}
@@ -665,47 +756,47 @@ const AppointmentBatchCreator = ({
               <SelectTrigger id="group-select">
                 <SelectValue placeholder={
                   loadingGroups
-                    ? "Chargement des groupes..."
+                    ? t('appointments.loadingGroupsInProgress')
                     : groups.length === 0
-                      ? "Aucun groupe disponible"
-                      : "Sélectionner un groupe"
+                      ? t('groups.noGroupAvailable')
+                      : t('appointments.selectGroup')
                 } />
               </SelectTrigger>
               <SelectContent>
                 {groups.map(group => (
                   <SelectItem key={group.idGroupe} value={group.idGroupe?.toString() || ''}>
-                    {group.intitule} ({group.nbSujet || 0} sujets)
+                    {group.intitule} ({group.nbSujet || 0} {t('appointments.subjects')})
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
 
             {/* Grille de groupes supprimée (éviter redondance avec le sélecteur) */}
-            
+
             {/*  PASTILLE D'ÉTAT */}
             {selectedGroup && (
               <div className="mt-3">
                 <SlotStatusBadge />
               </div>
             )}
-            
+
             {/* Informations complémentaires */}
             {selectedGroup && (
               <div className="mt-2 text-xs text-gray-600 space-y-1 bg-gray-50 p-2 rounded">
                 <div className="flex justify-between">
-                  <span>Sujets inscrits au groupe :</span>
+                  <span>{t('appointments.subjectsEnrolledInGroup')} :</span>
                   <span className="font-medium">{getSelectedGroupSubjectCount()}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Créneaux demandés :</span>
+                  <span>{t('appointments.slotsRequested')} :</span>
                   <span className="font-medium">{calculateTotalSlots()}</span>
                 </div>
                 {calculateTotalSlots() > 0 && getSelectedGroupSubjectCount() > 0 && (
                   <div className="flex justify-between border-t pt-1">
-                    <span>Différence :</span>
+                    <span>{t('appointments.difference')} :</span>
                     <span className={`font-medium ${
-                      calculateTotalSlots() > getSelectedGroupSubjectCount() ? 'text-red-600' : 
-                      calculateTotalSlots() < getSelectedGroupSubjectCount() ? 'text-blue-600' : 
+                      calculateTotalSlots() > getSelectedGroupSubjectCount() ? 'text-red-600' :
+                      calculateTotalSlots() < getSelectedGroupSubjectCount() ? 'text-blue-600' :
                       'text-green-600'
                     }`}>
                       {calculateTotalSlots() - getSelectedGroupSubjectCount() > 0 ? '+' : ''}
@@ -715,17 +806,17 @@ const AppointmentBatchCreator = ({
                 )}
               </div>
             )}
-            
+
             {loadingGroups && (
               <p className="mt-1 text-sm text-blue-600">
-                Chargement des groupes en cours...
+                {t('appointments.loadingGroupsInProgress')}
               </p>
             )}
-            
+
             {groups.length === 0 && currentStudyId && !loadingGroups && (
               <div className="mt-2">
                 <p className="text-sm text-yellow-600 mb-2">
-                  Aucun groupe trouvé pour cette étude.
+                  {t('appointments.noGroupForThisStudy')}
                 </p>
                 <Button
                   variant="link"
@@ -733,7 +824,7 @@ const AppointmentBatchCreator = ({
                   onClick={() => loadGroupsForStudy(currentStudyId)}
                   className="h-auto p-0 text-xs"
                 >
-                  Essayer de recharger les groupes
+                  {t('appointments.tryReloadGroups')}
                 </Button>
               </div>
             )}
@@ -741,22 +832,47 @@ const AppointmentBatchCreator = ({
 
           {/* Temps entre chaque RDV */}
           <div className="space-y-2">
-            <Label htmlFor="time-between">Temps entre chaque RDV (minutes)</Label>
-            <Select value={timeBetween.toString()} onValueChange={(val) => setTimeBetween(parseInt(val, 10))}>
-              <SelectTrigger id="time-between">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {[5, 10, 15, 20, 30, 45, 60, 90, 120].map(time => (
-                  <SelectItem key={time} value={time.toString()}>{time}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label>{t('appointments.timeBetweenAppointments')}</Label>
+            <div className="flex items-center gap-2">
+              <div className="flex-1">
+                <Input
+                  type="number"
+                  min="0"
+                  max="23"
+                  placeholder="HH"
+                  value={timeBetweenHours}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === '' || (parseInt(val, 10) >= 0 && parseInt(val, 10) <= 23)) {
+                      setTimeBetweenHours(val);
+                    }
+                  }}
+                  className="text-center"
+                />
+              </div>
+              <span className="text-lg font-bold">:</span>
+              <div className="flex-1">
+                <Input
+                  type="number"
+                  min="0"
+                  max="59"
+                  placeholder="MM"
+                  value={timeBetweenMinutes}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === '' || (parseInt(val, 10) >= 0 && parseInt(val, 10) <= 59)) {
+                      setTimeBetweenMinutes(val);
+                    }
+                  }}
+                  className="text-center"
+                />
+              </div>
+            </div>
           </div>
 
           {/* Nombre de dates */}
           <div className="space-y-2">
-            <Label htmlFor="date-count">Nombre de dates</Label>
+            <Label htmlFor="date-count">{t('appointments.numberOfDates')}</Label>
             <Select value={dateCount.toString()} onValueChange={handleDateCountChange}>
               <SelectTrigger id="date-count">
                 <SelectValue />
@@ -771,51 +887,87 @@ const AppointmentBatchCreator = ({
 
           {/* Heure de début */}
           <div className="space-y-2">
-            <Label htmlFor="start-time">Heure Min</Label>
-            <Select value={startTime} onValueChange={setStartTime}>
-              <SelectTrigger id="start-time">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {Array.from({ length: 24 }, (_, i) => i).map(hour => (
-                  ['00', '15', '30', '45'].map(minute => {
-                    const timeValue = `${hour.toString().padStart(2, '0')}h${minute}`;
-                    return (
-                      <SelectItem key={`${hour}-${minute}`} value={timeValue}>
-                        {timeValue}
-                      </SelectItem>
-                    );
-                  })
-                ))}
-              </SelectContent>
-            </Select>
+            <Label>{t('appointments.hourMin')}</Label>
+            <div className="flex items-center gap-2">
+              <div className="flex-1">
+                <Input
+                  type="number"
+                  min="0"
+                  max="23"
+                  placeholder="HH"
+                  value={startHour}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === '' || (parseInt(val, 10) >= 0 && parseInt(val, 10) <= 23)) {
+                      setStartHour(val);
+                    }
+                  }}
+                  className="text-center"
+                />
+              </div>
+              <span className="text-lg font-bold">:</span>
+              <div className="flex-1">
+                <Input
+                  type="number"
+                  min="0"
+                  max="59"
+                  placeholder="MM"
+                  value={startMinute}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === '' || (parseInt(val, 10) >= 0 && parseInt(val, 10) <= 59)) {
+                      setStartMinute(val);
+                    }
+                  }}
+                  className="text-center"
+                />
+              </div>
+            </div>
           </div>
 
           {/* Heure de fin */}
           <div className="space-y-2">
-            <Label htmlFor="end-time">Heure Max</Label>
-            <Select value={endTime} onValueChange={setEndTime}>
-              <SelectTrigger id="end-time">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {Array.from({ length: 24 }, (_, i) => i).map(hour => (
-                  ['00', '15', '30', '45'].map(minute => {
-                    const timeValue = `${hour.toString().padStart(2, '0')}h${minute}`;
-                    return (
-                      <SelectItem key={`${hour}-${minute}`} value={timeValue}>
-                        {timeValue}
-                      </SelectItem>
-                    );
-                  })
-                ))}
-              </SelectContent>
-            </Select>
+            <Label>{t('appointments.hourMax')}</Label>
+            <div className="flex items-center gap-2">
+              <div className="flex-1">
+                <Input
+                  type="number"
+                  min="0"
+                  max="23"
+                  placeholder="HH"
+                  value={endHour}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === '' || (parseInt(val, 10) >= 0 && parseInt(val, 10) <= 23)) {
+                      setEndHour(val);
+                    }
+                  }}
+                  className="text-center"
+                />
+              </div>
+              <span className="text-lg font-bold">:</span>
+              <div className="flex-1">
+                <Input
+                  type="number"
+                  min="0"
+                  max="59"
+                  placeholder="MM"
+                  value={endMinute}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === '' || (parseInt(val, 10) >= 0 && parseInt(val, 10) <= 59)) {
+                      setEndMinute(val);
+                    }
+                  }}
+                  className="text-center"
+                />
+              </div>
+            </div>
           </div>
 
           {/* Commentaires */}
           <div className="md:col-span-2 space-y-2">
-            <Label htmlFor="comments">Commentaires (s'applique à tous les RDV)</Label>
+            <Label htmlFor="comments">{t('appointments.commentsApplyToAll')}</Label>
             <Textarea
               id="comments"
               className="h-24"
@@ -832,8 +984,8 @@ const AppointmentBatchCreator = ({
             <AlertDescription>
               <div className="flex items-center justify-between">
                 <div>
-                  <h4 className="font-medium text-blue-800 mb-1">Génération automatique de dates</h4>
-                  <p className="text-sm text-blue-600">Remplissez automatiquement les dates suivantes en jours consécutifs</p>
+                  <h4 className="font-medium text-blue-800 mb-1">{t('appointments.automaticDateGeneration')}</h4>
+                  <p className="text-sm text-blue-600">{t('appointments.automaticallyFillDates')}</p>
                 </div>
                 <Button
                   type="button"
@@ -843,7 +995,7 @@ const AppointmentBatchCreator = ({
                   className="gap-2"
                 >
                   <Calendar className="h-4 w-4" />
-                  Générer {dateCount - 1} dates consécutives
+                  {t('appointments.generateConsecutiveDates', { count: dateCount - 1 })}
                 </Button>
               </div>
             </AlertDescription>
@@ -852,15 +1004,15 @@ const AppointmentBatchCreator = ({
 
         {/* Configuration des dates */}
         {dates.map((date, dateIndex) => (
-          <Card key={`date-${dateIndex}`}>
-            <CardHeader>
+          <div key={`date-${dateIndex}`} className="border rounded-lg">
+            <div className="p-6 pb-4">
               <div className="flex justify-between items-center">
-                <CardTitle className="text-lg">Date {dateIndex + 1}</CardTitle>
+                <h3 className="text-lg font-semibold">{t('appointments.dateNumber', { number: dateIndex + 1 })}</h3>
                 <div className="flex items-center gap-2">
                   {dateIndex === 0 && selectedStudy?.dateDebut && date.day && date.month && date.year && (
                     <Badge variant="secondary" className="gap-1">
                       <Calendar className="h-3 w-3" />
-                      Pré-remplie avec la date de début d'étude
+                      {t('appointments.prefilledWithStudyStart')}
                     </Badge>
                   )}
                   {dateIndex === 0 && selectedStudy?.dateDebut && (
@@ -870,20 +1022,20 @@ const AppointmentBatchCreator = ({
                       size="sm"
                       onClick={() => prefillFirstDateFromStudy(selectedStudy)}
                       className="gap-1"
-                      title="Restaurer la date de début d'étude"
+                      title={t('appointments.restoreStartDate')}
                     >
                       <Calendar className="h-3 w-3" />
-                      Restaurer date début
+                      {t('appointments.restoreStartDate')}
                     </Button>
                   )}
                 </div>
               </div>
-            </CardHeader>
+            </div>
 
-            <CardContent className="space-y-4">
+            <div className="px-6 pb-6 space-y-4">
               <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor={`day-${dateIndex}`}>Jour (JJ)</Label>
+                  <Label htmlFor={`day-${dateIndex}`}>{t('appointments.dayDD')}</Label>
                   <Input
                     id={`day-${dateIndex}`}
                     type="text"
@@ -894,7 +1046,7 @@ const AppointmentBatchCreator = ({
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor={`month-${dateIndex}`}>Mois (MM)</Label>
+                  <Label htmlFor={`month-${dateIndex}`}>{t('appointments.monthMM')}</Label>
                   <Input
                     id={`month-${dateIndex}`}
                     type="text"
@@ -905,7 +1057,7 @@ const AppointmentBatchCreator = ({
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor={`year-${dateIndex}`}>Année (AAAA)</Label>
+                  <Label htmlFor={`year-${dateIndex}`}>{t('appointments.yearYYYY')}</Label>
                   <Input
                     id={`year-${dateIndex}`}
                     type="text"
@@ -916,9 +1068,46 @@ const AppointmentBatchCreator = ({
                 </div>
               </div>
 
+              {/* Remplissage rapide */}
+              <Alert className="bg-blue-50 border-blue-200">
+                <AlertDescription>
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2 flex-1">
+                      <Label htmlFor={`default-value-${dateIndex}`} className="text-sm font-medium whitespace-nowrap">
+                        {t('appointments.defaultValue')}:
+                      </Label>
+                      <Select
+                        defaultValue="1"
+                        onValueChange={(val) => {
+                          const newDates = [...dates];
+                          if (!newDates[dateIndex].slots) {
+                            newDates[dateIndex].slots = [];
+                          }
+                          // Remplir tous les créneaux avec cette valeur
+                          for (let i = 0; i < timeSlots.length; i++) {
+                            newDates[dateIndex].slots[i] = parseInt(val, 10);
+                          }
+                          setDates(newDates);
+                        }}
+                      >
+                        <SelectTrigger id={`default-value-${dateIndex}`} className="w-24 h-9">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Array.from({ length: 21 }, (_, i) => i).map(num => (
+                            <SelectItem key={num} value={num.toString()}>{num}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <span className="text-sm text-blue-600">{t('appointments.volunteersPerSlot')}</span>
+                    </div>
+                  </div>
+                </AlertDescription>
+              </Alert>
+
             {/* Créneaux horaires */}
               <div>
-                <Label className="text-base mb-3 block">Nombre de volontaires par créneau:</Label>
+                <Label className="text-base mb-3 block">{t('appointments.customizeEachSlot')}:</Label>
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   {timeSlots.map((slot, slotIndex) => (
@@ -932,7 +1121,7 @@ const AppointmentBatchCreator = ({
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          {Array.from({ length: 11 }, (_, i) => i).map(num => (
+                          {Array.from({ length: 21 }, (_, i) => i).map(num => (
                             <SelectItem key={num} value={num.toString()}>{num}</SelectItem>
                           ))}
                         </SelectContent>
@@ -941,8 +1130,8 @@ const AppointmentBatchCreator = ({
                   ))}
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         ))}
 
         <div className="flex justify-end mt-6">
@@ -951,11 +1140,10 @@ const AppointmentBatchCreator = ({
             disabled={isSubmitting || !selectedGroup}
             size="lg"
           >
-            {isSubmitting ? 'Création en cours...' : 'Prévisualiser les rendez-vous'}
+            {isSubmitting ? t('appointments.creatingInProgress') : t('appointments.previewAppointments')}
           </Button>
         </div>
-        </div>
-      </CardContent>
+      </div>
 
       {/* Modal de confirmation */}
       <AppointmentConfirmationModal
@@ -965,7 +1153,7 @@ const AppointmentBatchCreator = ({
         appointmentData={appointmentsSummary}
         isSubmitting={isSubmitting}
       />
-    </Card>
+    </div>
   );
 };
 

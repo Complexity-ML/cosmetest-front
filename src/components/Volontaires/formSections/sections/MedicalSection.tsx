@@ -1,9 +1,13 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useTranslation } from "react-i18next";
 
-const MedicalSection = ({ formData, onChange }: any) => (
+const MedicalSection = ({ formData, onChange }: any) => {
+  const { t } = useTranslation();
+
+  return (
     <Card>
       <CardHeader>
-        <CardTitle>Informations médicales</CardTitle>
+        <CardTitle>{t('volunteers.medicalInformation')}</CardTitle>
       </CardHeader>
       <CardContent>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -12,7 +16,7 @@ const MedicalSection = ({ formData, onChange }: any) => (
             htmlFor="traitement"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
-            Traitement en cours
+            {t('volunteers.currentTreatment')}
           </label>
           <textarea
             id="traitement"
@@ -21,16 +25,16 @@ const MedicalSection = ({ formData, onChange }: any) => (
             value={formData.traitement}
             onChange={onChange}
             className="form-textarea block w-full"
-            placeholder="Traitements médicaux en cours"
+            placeholder={t('volunteers.currentTreatment')}
           />
         </div>
-  
+
         <div>
           <label
             htmlFor="anamnese"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
-            Anamnèse
+            {t('volunteers.anamnesis')}
           </label>
           <textarea
             id="anamnese"
@@ -39,16 +43,16 @@ const MedicalSection = ({ formData, onChange }: any) => (
             value={formData.anamnese}
             onChange={onChange}
             className="form-textarea block w-full"
-            placeholder="Antécédents médicaux"
+            placeholder={t('volunteers.anamnesis')}
           />
         </div>
-  
+
         <div>
           <label
             htmlFor="contraception"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
-            Contraception
+            {t('volunteers.contraception')}
           </label>
           <select
             id="contraception"
@@ -57,7 +61,7 @@ const MedicalSection = ({ formData, onChange }: any) => (
             onChange={onChange}
             className="form-select block w-full"
           >
-            <option value="">Sélectionner</option>
+            <option value="">{t('common.select')}</option>
             <option value="Pilule">Pilule</option>
             <option value="Stérilet">Stérilet</option>
             <option value="Implant">Implant</option>
@@ -69,7 +73,7 @@ const MedicalSection = ({ formData, onChange }: any) => (
             <option value="Abstinence">Abstinence</option>
           </select>
         </div>
-  
+
         <div className="flex items-center">
           <input
             type="checkbox"
@@ -83,16 +87,16 @@ const MedicalSection = ({ formData, onChange }: any) => (
             htmlFor="menopause"
             className="ml-2 block text-sm font-medium text-gray-700"
           >
-            Ménopause
+            {t('volunteers.menopause')}
           </label>
         </div>
-  
+
         <div className="md:col-span-2">
           <label
             htmlFor="allergiesCommentaires"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
-            Allergies connues
+            {t('volunteers.knownAllergies')}
           </label>
           <textarea
             id="allergiesCommentaires"
@@ -101,16 +105,16 @@ const MedicalSection = ({ formData, onChange }: any) => (
             value={formData.allergiesCommentaires}
             onChange={onChange}
             className="form-textarea block w-full"
-            placeholder="Allergies connues (médicaments, aliments, autres substances)"
+            placeholder={t('volunteers.knownAllergies')}
           />
         </div>
-  
+
         <div>
           <label
             htmlFor="santeCompatible"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
-            Santé compatible
+            {t('volunteers.compatibleHealth')}
           </label>
           <select
             id="santeCompatible"
@@ -119,13 +123,14 @@ const MedicalSection = ({ formData, onChange }: any) => (
             onChange={onChange}
             className="form-select block w-full"
           >
-            <option value="Oui">Oui</option>
-            <option value="Non">Non</option>
+            <option value="Oui">{t('common.yes')}</option>
+            <option value="Non">{t('common.no')}</option>
           </select>
         </div>
       </div>
       </CardContent>
     </Card>
   );
-  
+};
+
 export default MedicalSection;

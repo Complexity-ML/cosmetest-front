@@ -1,4 +1,5 @@
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent } from '@/components/ui/card';
@@ -8,6 +9,7 @@ import { renderVolontaireFormSection } from '../../components/Volontaires/formSe
 import { useVolontaireForm } from './hooks/useVolontaireForm';
 
 const VolontaireForm = () => {
+  const { t } = useTranslation();
   const { id } = useParams();
   const navigate = useNavigate();
   const isEditMode = Boolean(id);
@@ -40,20 +42,20 @@ const VolontaireForm = () => {
           to="/volontaires"
           className="text-gray-500 hover:text-primary-600"
         >
-          Volontaires
+          {t('sidebar.volunteers')}
         </Link>
         <ChevronRight className="mx-2 text-gray-400 h-4 w-4" />
         <span className="font-medium">
           {isEditMode
-            ? `Modifier ${formData.prenom} ${formData.nom}`
-            : "Nouveau volontaire"}
+            ? `${t('common.edit')} ${formData.prenom} ${formData.nom}`
+            : t('volunteers.newVolunteer')}
         </span>
       </div>
 
       <Card>
         <CardContent className="p-6">
           <h1 className="text-2xl font-bold text-gray-800 mb-6">
-            {isEditMode ? "Modifier le volontaire" : "Ajouter un volontaire"}
+            {isEditMode ? t('volunteers.editVolunteer') : t('volunteers.addVolunteer')}
           </h1>
 
           {formError && (
@@ -85,7 +87,7 @@ const VolontaireForm = () => {
             <div className="flex justify-end gap-3">
               <Button asChild variant="outline">
                 <Link to={isEditMode ? `/volontaires/${id}` : "/volontaires"}>
-                  Annuler
+                  {t('common.cancel')}
                 </Link>
               </Button>
               <Button
@@ -95,10 +97,10 @@ const VolontaireForm = () => {
                 {isSaving ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Enregistrement...
+                    {t('volunteers.saving')}
                   </>
                 ) : (
-                  "Enregistrer"
+                  t('common.save')
                 )}
               </Button>
             </div>

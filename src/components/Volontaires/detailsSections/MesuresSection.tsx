@@ -1,22 +1,26 @@
+import { useTranslation } from 'react-i18next';
 import { displayValue } from '../../../pages/Volontaires/utils/detailsHelpers';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { Separator } from '../../ui/separator';
 
-const MesuresSection = ({ volontaireDisplayData }: { volontaireDisplayData: any }) => (
+const MesuresSection = ({ volontaireDisplayData }: { volontaireDisplayData: any }) => {
+  const { t } = useTranslation();
+
+  return (
   <Card>
     <CardHeader>
-      <CardTitle>Mesures et Scores</CardTitle>
+      <CardTitle>{t('volunteers.measurementsAndScores')}</CardTitle>
     </CardHeader>
     <CardContent className="space-y-6">
       <div>
-        <h3 className="text-sm font-semibold text-gray-800 mb-4">Index d'hydratation</h3>
+        <h3 className="text-sm font-semibold text-gray-800 mb-4">{t('volunteers.hydrationIndex')}</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-1">
-            <p className="text-sm font-medium text-brand-cyan">IH Bras droit</p>
+            <p className="text-sm font-medium text-brand-cyan">{t('volunteers.hiRightArm')}</p>
             <p className="text-sm text-gray-900">{displayValue(volontaireDisplayData.ihBrasDroit)}</p>
           </div>
           <div className="space-y-1">
-            <p className="text-sm font-medium text-brand-cyan">IH Bras gauche</p>
+            <p className="text-sm font-medium text-brand-cyan">{t('volunteers.hiLeftArm')}</p>
             <p className="text-sm text-gray-900">{displayValue(volontaireDisplayData.ihBrasGauche)}</p>
           </div>
         </div>
@@ -25,7 +29,7 @@ const MesuresSection = ({ volontaireDisplayData }: { volontaireDisplayData: any 
       <Separator />
 
       <div>
-        <h3 className="text-sm font-semibold text-gray-800 mb-4">Scores d'évaluation</h3>
+        <h3 className="text-sm font-semibold text-gray-800 mb-4">{t('volunteers.evaluationScores')}</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="space-y-1">
             <p className="text-sm font-medium text-brand-cyan">Score POD</p>
@@ -93,16 +97,17 @@ const MesuresSection = ({ volontaireDisplayData }: { volontaireDisplayData: any 
       <Separator />
 
       <div>
-        <h3 className="text-sm font-semibold text-gray-800 mb-4">Autres</h3>
+        <h3 className="text-sm font-semibold text-gray-800 mb-4">{t('volunteers.others')}</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-1">
-            <p className="text-sm font-medium text-brand-cyan">Nombre de cigarettes par jour</p>
+            <p className="text-sm font-medium text-brand-cyan">{t('volunteers.cigarettesPerDay')}</p>
             <p className="text-sm text-gray-900">{displayValue(volontaireDisplayData.nbCigarettesJour)}</p>
           </div>
         </div>
       </div>
     </CardContent>
   </Card>
-);
+  );
+};
 
 export default MesuresSection;

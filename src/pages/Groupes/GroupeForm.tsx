@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import groupeService from '../../services/groupeService'
 import etudeService from '../../services/etudeService'
 import { Button } from '@/components/ui/button'
@@ -29,6 +30,7 @@ interface FormErrors {
 }
 
 const GroupeForm = () => {
+  const { t } = useTranslation()
   const { id } = useParams()
   const navigate = useNavigate()
   const isEditMode = !!id
@@ -58,7 +60,7 @@ const GroupeForm = () => {
         setEtudes(response)
       } catch (error) {
         console.error('Erreur lors du chargement des études:', error)
-        setError('Impossible de charger la liste des études.')
+        setError(t('groups.errorLoadingStudies'))
       }
     }
 
@@ -109,8 +111,8 @@ const GroupeForm = () => {
           setGroupe(groupeData)
         } catch (error) {
           console.error('Erreur lors du chargement du groupe:', error)
-          const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue'
-          setError('Impossible de charger les informations du groupe: ' + errorMessage)
+          const errorMessage = error instanceof Error ? error.message : t('errors.unknownError')
+          setError(t('groups.errorLoadingGroup') + ' ' + errorMessage)
         } finally {
           setIsLoading(false)
         }
@@ -166,10 +168,10 @@ const GroupeForm = () => {
   const validateForm = (): FormErrors => {
     const errors: FormErrors = {}
 
-    if (!groupe.intitule) errors.intitule = 'L\'intitule du groupe est requis'
-    if (!groupe.idEtude) errors.idEtude = 'L\'étude est requise'
+    if (!groupe.intitule) errors.intitule = t('groups.titleRequired')
+    if (!groupe.idEtude) errors.idEtude = t('groups.studyRequired')
     if (groupe.ageMinimum && groupe.ageMaximum && parseInt(groupe.ageMinimum) > parseInt(groupe.ageMaximum)) {
-      errors.ageRange = 'L\'âge minimum doit être inférieur à l\'âge maximum'
+      errors.ageRange = t('groups.ageRangeInvalid')
     }
 
     return errors
@@ -180,7 +182,7 @@ const GroupeForm = () => {
 
     const formErrors = validateForm()
     if (Object.keys(formErrors).length > 0) {
-      setError('Veuillez corriger les erreurs suivantes: ' + Object.values(formErrors).join(', '))
+      setError(t('groups.correctErrors') + ' ' + Object.values(formErrors).join(', '))
       return
     }
 
@@ -212,7 +214,7 @@ const GroupeForm = () => {
       }, 1500)
     } catch (error) {
       console.error('Erreur lors de l\'enregistrement:', error)
-      setError('Une erreur est survenue lors de l\'enregistrement du groupe.')
+      setError(t('groups.saveError'))
     } finally {
       setIsLoading(false)
     }
@@ -229,7 +231,7 @@ const GroupeForm = () => {
   return (
     <div className="max-w-3xl mx-auto">
       <h1 className="text-2xl font-bold text-gray-800 mb-6">
-        {isEditMode ? 'Modifier le groupe' : 'Créer un nouveau groupe'}
+        {isEditMode ? t('groups.editGroup') : t('groups.createNewGroup')}
       </h1>
 
       {error && (
@@ -240,13 +242,13 @@ const GroupeForm = () => {
 
       {success && (
         <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4">
-          Groupe {isEditMode ? 'modifié' : 'créé'} avec succès! Redirection en cours...
+          {t('groups.groupSaved', { action: isEditMode ? t('groups.modified') : t('groups.created') })}
         </div>
       )}
 
       <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-sm p-6 space-y-4">
         <div>
-          <Label htmlFor="intitule">Intitule du groupe *</Label>
+          <Label htmlFor="intitule">{t('groups.groupTitle')} *</Label>
           <Input
             type="text"
             name="intitule"
@@ -258,7 +260,7 @@ const GroupeForm = () => {
         </div>
 
         <div>
-          <Label htmlFor="idEtude">Étude *</Label>
+          <Label htmlFor="idEtude">{t('groups.study')} *</Label>
           <select
             name="idEtude"
             id="idEtude"
@@ -267,10 +269,10 @@ const GroupeForm = () => {
             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             required
           >
-            <option value="">-- Sélectionner une étude --</option>
+            <option value="">{t('groups.selectStudy')}</option>
             {etudes.map((etude) => (
               <option key={etude.idEtude} value={etude.idEtude}>
-                {etude.ref || `Étude #${etude.idEtude}`}
+                {etude.ref || `${t('groups.study')} #${etude.idEtude}`}
               </option>
             ))}
           </select>
@@ -278,7 +280,7 @@ const GroupeForm = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <Label htmlFor="ageMinimum">Âge minimum</Label>
+            <Label htmlFor="ageMinimum">{t('groups.ageMin')}</Label>
             <Input
               type="number"
               name="ageMinimum"
@@ -290,7 +292,7 @@ const GroupeForm = () => {
           </div>
 
           <div>
-            <Label htmlFor="ageMaximum">Âge maximum</Label>
+            <Label htmlFor="ageMaximum">{t('groups.ageMax')}</Label>
             <Input
               type="number"
               name="ageMaximum"
@@ -304,7 +306,7 @@ const GroupeForm = () => {
 
         <div>
           <Label className="mb-2">
-            Ethnies
+            {t('groups.ethnicities')}
           </Label>
           <div className="space-y-2">
             {ethniesDisponibles.map((ethnieOption) => (
@@ -326,14 +328,14 @@ const GroupeForm = () => {
           </div>
           {Array.isArray(groupe.ethnie) && groupe.ethnie.length > 0 && (
             <p className="text-xs text-muted-foreground mt-1">
-              {groupe.ethnie.length} ethnie(s) sélectionnée(s)
+              {t('groups.ethnicitiesSelected', { count: groupe.ethnie.length })}
             </p>
           )}
         </div>
 
         <div>
           <Label htmlFor="description">
-            Description
+            {t('groups.description')}
           </Label>
           <Textarea
             name="description"
@@ -346,7 +348,7 @@ const GroupeForm = () => {
 
         <div>
           <Label htmlFor='nbSujet'>
-            Nombre de sujets
+            {t('groups.subjectCount')}
           </Label>
           <Input
             type='number'
@@ -360,7 +362,7 @@ const GroupeForm = () => {
 
         <div>
           <Label htmlFor='iv'>
-            Indemnité Volontaire
+            {t('groups.volunteerCompensation')}
           </Label>
           <Input
             type='number'
@@ -378,7 +380,7 @@ const GroupeForm = () => {
             onClick={() => navigate('/groupes')}
             variant="secondary"
           >
-            Annuler
+            {t('common.cancel')}
           </Button>
           <Button
             type="submit"
@@ -387,10 +389,10 @@ const GroupeForm = () => {
             {isLoading ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                {isEditMode ? 'Modification...' : 'Création...'}
+                {isEditMode ? t('groups.updating') : t('groups.creating')}
               </>
             ) : (
-              isEditMode ? 'Modifier' : 'Créer'
+              isEditMode ? t('common.update') : t('common.create')
             )}
           </Button>
         </div>

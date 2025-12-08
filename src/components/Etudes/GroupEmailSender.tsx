@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import api from '../../services/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -28,6 +29,7 @@ interface GroupEmailSenderProps {
 }
 
 const GroupEmailSender = ({ studyId, studyRef, studyTitle, onClose }: GroupEmailSenderProps) => {
+  const { t } = useTranslation();
   const [volunteers, setVolunteers] = useState<Volunteer[]>([]);
   const [selectedVolunteers, setSelectedVolunteers] = useState(new Set<string>());
   const [emailData, setEmailData] = useState({
@@ -78,12 +80,12 @@ const GroupEmailSender = ({ studyId, studyRef, studyTitle, onClose }: GroupEmail
         // Initialiser le sujet avec la référence de l'étude
         setEmailData(prev => ({
           ...prev,
-          subject: `Information étude ${studyRef || studyId}${studyTitle ? ` - ${studyTitle}` : ''}`
+          subject: `${t('groupEmail.studyInfo')} ${studyRef || studyId}${studyTitle ? ` - ${studyTitle}` : ''}`
         }));
 
       } catch (error) {
         console.error('Erreur lors du chargement des volontaires:', error);
-        setError('Impossible de charger la liste des volontaires.');
+        setError(t('groupEmail.loadVolunteersError'));
       } finally {
         setIsLoadingVolunteers(false);
       }
@@ -126,17 +128,17 @@ const GroupEmailSender = ({ studyId, studyRef, studyTitle, onClose }: GroupEmail
   };
 
   const generateMailtoLink = () => {
-    const selectedVolunteerData = volunteers.filter(v => 
+    const selectedVolunteerData = volunteers.filter(v =>
       selectedVolunteers.has(String(v.idVolontaire))
     );
-    
+
     if (selectedVolunteerData.length === 0) {
-      setError('Veuillez sélectionner au moins un volontaire.');
+      setError(t('groupEmail.selectAtLeastOneVolunteer'));
       return null;
     }
 
     if (!emailData.subject.trim()) {
-      setError('Veuillez remplir le sujet.');
+      setError(t('groupEmail.fillSubject'));
       return null;
     }
 
@@ -180,7 +182,7 @@ const GroupEmailSender = ({ studyId, studyRef, studyTitle, onClose }: GroupEmail
       <Card className="max-w-4xl mx-auto">
         <CardContent className="flex justify-center items-center h-32 py-6">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <span className="ml-2">Chargement des volontaires...</span>
+          <span className="ml-2">{t('groupEmail.loadingVolunteers')}</span>
         </CardContent>
       </Card>
     );
@@ -190,7 +192,7 @@ const GroupEmailSender = ({ studyId, studyRef, studyTitle, onClose }: GroupEmail
     <Card className="max-w-4xl mx-auto">
       <CardHeader>
         <div className="flex justify-between items-center">
-          <CardTitle>Composer un email de groupe</CardTitle>
+          <CardTitle>{t('groupEmail.composeGroupEmail')}</CardTitle>
           <Button
             variant="ghost"
             size="icon"
@@ -209,7 +211,7 @@ const GroupEmailSender = ({ studyId, studyRef, studyTitle, onClose }: GroupEmail
 
         {/* Sujet */}
         <div className="space-y-2">
-          <Label htmlFor="subject">Sujet *</Label>
+          <Label htmlFor="subject">{t('groupEmail.subject')} *</Label>
           <Input
             type="text"
             id="subject"
@@ -217,23 +219,23 @@ const GroupEmailSender = ({ studyId, studyRef, studyTitle, onClose }: GroupEmail
             value={emailData.subject}
             onChange={handleInputChange}
             required
-            placeholder="Sujet de l'email"
+            placeholder={t('groupEmail.subjectPlaceholder')}
           />
         </div>
 
         {/* Message */}
         <div className="space-y-2">
-          <Label htmlFor="message">Message (optionnel)</Label>
+          <Label htmlFor="message">{t('groupEmail.messageOptional')}</Label>
           <Textarea
             id="message"
             name="message"
             value={emailData.message}
             onChange={handleInputChange}
             rows={6}
-            placeholder="Rédigez votre message ici..."
+            placeholder={t('groupEmail.messagePlaceholder')}
           />
           <p className="text-xs text-muted-foreground">
-            Le message sera pré-rempli dans Outlook. Vous pourrez le modifier avant l'envoi.
+            {t('groupEmail.messageHint')}
           </p>
         </div>
 
@@ -241,7 +243,7 @@ const GroupEmailSender = ({ studyId, studyRef, studyTitle, onClose }: GroupEmail
         <div className="space-y-3">
           <div className="flex justify-between items-center">
             <Label>
-              Destinataires ({volunteers.length} volontaires disponibles)
+              {t('groupEmail.recipients')} ({volunteers.length} {t('groupEmail.volunteersAvailable')})
             </Label>
             <Button
               type="button"
@@ -249,14 +251,14 @@ const GroupEmailSender = ({ studyId, studyRef, studyTitle, onClose }: GroupEmail
               onClick={handleSelectAll}
               className="h-auto p-0"
             >
-              {selectedVolunteers.size === volunteers.length ? 'Désélectionner tout' : 'Sélectionner tout'}
+              {selectedVolunteers.size === volunteers.length ? t('common.deselectAll') : t('common.selectAll')}
             </Button>
           </div>
-          
+
           <div className="max-h-60 overflow-y-auto border rounded-lg p-3 bg-muted/30">
             {volunteers.length === 0 ? (
               <p className="text-muted-foreground text-center py-4">
-                Aucun volontaire avec email trouvé pour cette étude.
+                {t('groupEmail.noVolunteerWithEmail')}
               </p>
             ) : (
               <div className="space-y-2">
@@ -279,7 +281,7 @@ const GroupEmailSender = ({ studyId, studyRef, studyTitle, onClose }: GroupEmail
                       </span>
                       {volunteer.numsujet && (
                         <Badge variant="secondary" className="ml-2">
-                          Sujet #{volunteer.numsujet}
+                          {t('groupEmail.subject')} #{volunteer.numsujet}
                         </Badge>
                       )}
                     </Label>
@@ -288,15 +290,15 @@ const GroupEmailSender = ({ studyId, studyRef, studyTitle, onClose }: GroupEmail
               </div>
             )}
           </div>
-          
+
           {selectedVolunteers.size > 0 && (
             <Alert>
               <AlertDescription>
                 <p className="font-medium mb-1">
-                  {selectedVolunteers.size} volontaire(s) sélectionné(s)
+                  {selectedVolunteers.size} {t('groupEmail.volunteersSelected')}
                 </p>
                 <p className="text-xs break-all">
-                  <strong>Emails :</strong> {getSelectedEmails()}
+                  <strong>{t('groupEmail.emails')}:</strong> {getSelectedEmails()}
                 </p>
               </AlertDescription>
             </Alert>
@@ -308,7 +310,7 @@ const GroupEmailSender = ({ studyId, studyRef, studyTitle, onClose }: GroupEmail
           <Alert className="bg-green-50 border-green-200 dark:bg-green-950 dark:border-green-900">
             <CheckCircle2 className="h-4 w-4 text-green-600" />
             <AlertDescription className="text-green-800 dark:text-green-200">
-              Prêt à ouvrir Outlook avec {selectedVolunteers.size} destinataire(s)
+              {t('groupEmail.readyToOpenOutlook', { count: selectedVolunteers.size })}
             </AlertDescription>
           </Alert>
         )}
@@ -322,7 +324,7 @@ const GroupEmailSender = ({ studyId, studyRef, studyTitle, onClose }: GroupEmail
             variant="outline"
             onClick={onClose}
           >
-            Annuler
+            {t('common.cancel')}
           </Button>
           <Button
             type="button"
@@ -330,7 +332,7 @@ const GroupEmailSender = ({ studyId, studyRef, studyTitle, onClose }: GroupEmail
             disabled={selectedVolunteers.size === 0 || !emailData.subject.trim()}
           >
             <Mail className="h-4 w-4 mr-2" />
-            Ouvrir dans Outlook ({selectedVolunteers.size})
+            {t('groupEmail.openInOutlook')} ({selectedVolunteers.size})
           </Button>
         </div>
       </CardContent>

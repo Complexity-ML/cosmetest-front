@@ -1,9 +1,13 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useTranslation } from "react-i18next";
 
-const NotesSection = ({ formData, onChange }: any) => (
+const NotesSection = ({ formData, onChange }: any) => {
+  const { t } = useTranslation();
+
+  return (
     <Card>
       <CardHeader>
-        <CardTitle>Notes et commentaires</CardTitle>
+        <CardTitle>{t('volunteers.notesAndComments')}</CardTitle>
       </CardHeader>
       <CardContent>
       <div>
@@ -11,7 +15,7 @@ const NotesSection = ({ formData, onChange }: any) => (
           htmlFor="notes"
           className="block text-sm font-medium text-gray-700 mb-1"
         >
-          Notes
+          {t('volunteers.notes')}
         </label>
         <textarea
           id="notes"
@@ -20,11 +24,12 @@ const NotesSection = ({ formData, onChange }: any) => (
           value={formData.notes}
           onChange={onChange}
           className="form-textarea block w-full"
-          placeholder="Commentaires, observations, études précédentes, etc."
+          placeholder={t('volunteers.notesAndComments')}
         />
       </div>
       </CardContent>
     </Card>
   );
-  
+};
+
 export default NotesSection;

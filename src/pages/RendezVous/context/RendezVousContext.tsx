@@ -48,8 +48,8 @@ export const RendezVousProvider = ({ children }: RendezVousProviderProps) => {
   const [studies, setStudies] = useState<Study[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<any>(null);
-  const [dataLoaded, setDataLoaded] = useState(false); // Flag pour savoir si les données sont chargées
 
+  // 🚀 Fonction stable avec useCallback pour éviter les re-renders
   const refresh = useCallback(async () => {
     setIsLoading(true);
     setError(null);
@@ -63,37 +63,29 @@ export const RendezVousProvider = ({ children }: RendezVousProviderProps) => {
 
       // Volontaires vides - chaque composant les chargera à la demande
       setVolunteers([]);
-      
+
       const studiesData = formatStudies(studiesResponse);
       setStudies(studiesData);
-      
-      setDataLoaded(true);
     } catch (err) {
       console.error('Erreur lors du rafraîchissement des données rendez-vous:', err);
       setError(err);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, []); // Aucune dépendance = fonction stable
 
+  // ✅ UN SEUL useEffect - chargement initial uniquement
   useEffect(() => {
-    // Ne charger qu'une seule fois au montage initial
-    if (!dataLoaded) {
-      console.log('🔄 useEffect déclenché - Premier chargement');
-      refresh();
-    }
-  }, []); // Enlever les dépendances pour ne charger qu'une fois
+    console.log('🔄 Chargement initial des études');
+    refresh();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Tableau vide = exécution une seule fois au montage
 
+  // 🔄 Pour forcer un rechargement explicite
   const requestRefresh = useCallback(() => {
-    setDataLoaded(false); // Forcer le rechargement
-  }, []);
-  
-  // Séparer la logique de refresh pour éviter les dépendances circulaires
-  useEffect(() => {
-    if (!dataLoaded) {
-      refresh();
-    }
-  }, [dataLoaded, refresh]);
+    console.log('🔄 Rechargement manuel demandé');
+    refresh();
+  }, [refresh]);
 
   const value = useMemo(
     () => ({

@@ -56,7 +56,7 @@ const photoService = {
       ];
 
       // Extensions possibles
-      const extensions = ['.jpg', '.JPG'];
+      const extensions = ['.jpg', '.JPG', '.jpeg', '.JPEG', '.png', '.PNG', '.pdf', '.PDF'];
 
       // Tester les variantes de base (sans chiffres d'abord)
       for (const nameVariant of nameVariants) {

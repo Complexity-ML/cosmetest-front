@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { ArrowUpDown } from 'lucide-react'
 import {
   Table,
@@ -36,6 +37,7 @@ interface VolontairesTableProps {
 type SortKey = keyof Volontaire
 
 const VolontairesTable = ({ volontaires, onArchive }: VolontairesTableProps) => {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   
   // État pour le tri
@@ -116,12 +118,21 @@ const VolontairesTable = ({ volontaires, onArchive }: VolontairesTableProps) => 
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead 
+              <TableHead
+                className="cursor-pointer hover:bg-accent"
+                onClick={() => requestSort('id')}
+              >
+                <div className="flex items-center">
+                  <span>ID</span>
+                  <ArrowUpDown className="ml-2 h-4 w-4" />
+                </div>
+              </TableHead>
+              <TableHead
                 className="cursor-pointer hover:bg-accent"
                 onClick={() => requestSort('nomVol')}
               >
                 <div className="flex items-center">
-                  <span>Nom</span>
+                  <span>{t('volunteers.lastName')}</span>
                   <ArrowUpDown className="ml-2 h-4 w-4" />
                 </div>
               </TableHead>
@@ -130,7 +141,7 @@ const VolontairesTable = ({ volontaires, onArchive }: VolontairesTableProps) => 
                 onClick={() => requestSort('prenomVol')}
               >
                 <div className="flex items-center">
-                  <span>Prénom</span>
+                  <span>{t('volunteers.firstName')}</span>
                   <ArrowUpDown className="ml-2 h-4 w-4" />
                 </div>
               </TableHead>
@@ -139,7 +150,7 @@ const VolontairesTable = ({ volontaires, onArchive }: VolontairesTableProps) => 
                 onClick={() => requestSort('sexe')}
               >
                 <div className="flex items-center">
-                  <span>Sexe</span>
+                  <span>{t('volunteers.gender')}</span>
                   <ArrowUpDown className="ml-2 h-4 w-4" />
                 </div>
               </TableHead>
@@ -148,7 +159,7 @@ const VolontairesTable = ({ volontaires, onArchive }: VolontairesTableProps) => 
                 onClick={() => requestSort('emailVol')}
               >
                 <div className="flex items-center">
-                  <span>Email</span>
+                  <span>{t('volunteers.email')}</span>
                   <ArrowUpDown className="ml-2 h-4 w-4" />
                 </div>
               </TableHead>
@@ -157,12 +168,12 @@ const VolontairesTable = ({ volontaires, onArchive }: VolontairesTableProps) => 
                 onClick={() => requestSort('typePeauVisage')}
               >
                 <div className="flex items-center">
-                  <span>Type peau</span>
+                  <span>{t('volunteers.skinType')}</span>
                   <ArrowUpDown className="ml-2 h-4 w-4" />
                 </div>
               </TableHead>
               <TableHead className="text-right">
-                Actions
+                {t('common.actions')}
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -170,14 +181,17 @@ const VolontairesTable = ({ volontaires, onArchive }: VolontairesTableProps) => 
             {sortedVolontaires.length > 0 ? (
               sortedVolontaires.map((volontaire, index) => {
                 const id = volontaire.id || volontaire.volontaireId || ''
-                const typePeau = volontaire.typePeauVisage || volontaire.typePeau || 'Non défini'
+                const typePeau = volontaire.typePeauVisage || volontaire.typePeau || t('volunteers.notDefined')
                 
                 return (
-                <TableRow 
-                  key={id || index} 
+                <TableRow
+                  key={id || index}
                   className="cursor-pointer"
                   onClick={() => id && handleRowClick(id)}
                 >
+                  <TableCell className="font-mono text-sm text-muted-foreground">
+                    {id}
+                  </TableCell>
                   <TableCell className="font-medium">
                     {volontaire.nomVol || volontaire.nom}
                   </TableCell>
@@ -212,7 +226,7 @@ const VolontairesTable = ({ volontaires, onArchive }: VolontairesTableProps) => 
                         onClick={handleEditClick}
                       >
                         <Link to={`/volontaires/${id}/edit`}>
-                          Modifier
+                          {t('common.edit')}
                         </Link>
                       </Button>
                       {!volontaire.archive ? (
@@ -222,11 +236,11 @@ const VolontairesTable = ({ volontaires, onArchive }: VolontairesTableProps) => 
                           onClick={(e) => id && handleArchiveClick(e, id)}
                           className="text-destructive hover:text-destructive"
                         >
-                          Archiver
+                          {t('common.archive')}
                         </Button>
                       ) : (
                         <Badge variant="secondary">
-                          Archivé
+                          {t('volunteers.archived')}
                         </Badge>
                       )}
                     </div>
@@ -235,8 +249,8 @@ const VolontairesTable = ({ volontaires, onArchive }: VolontairesTableProps) => 
               )})
             ) : (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground">
-                  Aucun volontaire trouvé
+                <TableCell colSpan={7} className="text-center text-muted-foreground">
+                  {t('volunteers.noVolunteers')}
                 </TableCell>
               </TableRow>
             )}

@@ -1,9 +1,13 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useTranslation } from "react-i18next";
 
-const ProblemesSection = ({ formData, onChange }: any) => (
+const ProblemesSection = ({ formData, onChange }: any) => {
+  const { t } = useTranslation();
+
+  return (
     <Card>
       <CardHeader>
-        <CardTitle>Problèmes spécifiques</CardTitle>
+        <CardTitle>{t('volunteers.specificProblems')}</CardTitle>
       </CardHeader>
       <CardContent>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -20,10 +24,10 @@ const ProblemesSection = ({ formData, onChange }: any) => (
             htmlFor="acne"
             className="ml-2 block text-sm font-medium text-gray-700"
           >
-            Acné
+            {t('volunteers.acne')}
           </label>
         </div>
-  
+
         <div className="flex items-center">
           <input
             type="checkbox"
@@ -37,10 +41,10 @@ const ProblemesSection = ({ formData, onChange }: any) => (
             htmlFor="couperoseRosacee"
             className="ml-2 block text-sm font-medium text-gray-700"
           >
-            Couperose / Rosacée
+            {t('volunteers.couperoseRosacea')}
           </label>
         </div>
-  
+
         <div className="flex items-center">
           <input
             type="checkbox"
@@ -54,10 +58,10 @@ const ProblemesSection = ({ formData, onChange }: any) => (
             htmlFor="dermiteSeborrheique"
             className="ml-2 block text-sm font-medium text-gray-700"
           >
-            Dermite séborrhéique
+            {t('volunteers.seborrheicDermatitis')}
           </label>
         </div>
-  
+
         <div className="flex items-center">
           <input
             type="checkbox"
@@ -71,10 +75,10 @@ const ProblemesSection = ({ formData, onChange }: any) => (
             htmlFor="eczema"
             className="ml-2 block text-sm font-medium text-gray-700"
           >
-            Eczéma
+            {t('volunteers.eczema')}
           </label>
         </div>
-  
+
         <div className="flex items-center">
           <input
             type="checkbox"
@@ -88,13 +92,13 @@ const ProblemesSection = ({ formData, onChange }: any) => (
             htmlFor="psoriasis"
             className="ml-2 block text-sm font-medium text-gray-700"
           >
-            Psoriasis
+            {t('volunteers.psoriasis')}
           </label>
         </div>
       </div>
       </CardContent>
     </Card>
   );
-
+};
 
 export default ProblemesSection;

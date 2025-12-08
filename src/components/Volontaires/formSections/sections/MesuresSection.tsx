@@ -1,14 +1,18 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useTranslation } from "react-i18next";
 
-const MesuresSection = ({ formData, onChange }: any) => (
+const MesuresSection = ({ formData, onChange }: any) => {
+  const { t } = useTranslation();
+
+  return (
     <Card>
       <CardHeader>
-        <CardTitle>Mesures et valeurs</CardTitle>
+        <CardTitle>{t('volunteers.measurementsAndScores')}</CardTitle>
       </CardHeader>
       <CardContent>
-  
+
       <h3 className="text-md font-medium text-gray-800 mt-2 mb-3">
-        Index d'hydratation
+        {t('volunteers.hydrationIndex')}
       </h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
@@ -16,7 +20,7 @@ const MesuresSection = ({ formData, onChange }: any) => (
             htmlFor="ihBrasDroit"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
-            IH Bras droit
+            {t('volunteers.hiRightArm')}
           </label>
           <input
             type="number"
@@ -28,13 +32,13 @@ const MesuresSection = ({ formData, onChange }: any) => (
             className="form-input block w-full"
           />
         </div>
-  
+
         <div>
           <label
             htmlFor="ihBrasGauche"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
-            IH Bras gauche
+            {t('volunteers.hiLeftArm')}
           </label>
           <input
             type="number"
@@ -47,9 +51,9 @@ const MesuresSection = ({ formData, onChange }: any) => (
           />
         </div>
       </div>
-  
+
       <h3 className="text-md font-medium text-gray-800 mt-6 mb-3">
-        Scores d'évaluation
+        {t('volunteers.evaluationScores')}
       </h3>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div>
@@ -69,7 +73,7 @@ const MesuresSection = ({ formData, onChange }: any) => (
             className="form-input block w-full"
           />
         </div>
-  
+
         <div>
           <label
             htmlFor="scorePog"
@@ -87,7 +91,7 @@ const MesuresSection = ({ formData, onChange }: any) => (
             className="form-input block w-full"
           />
         </div>
-  
+
         <div>
           <label
             htmlFor="scoreFront"
@@ -105,7 +109,7 @@ const MesuresSection = ({ formData, onChange }: any) => (
             className="form-input block w-full"
           />
         </div>
-  
+
         <div>
           <label
             htmlFor="scoreLion"
@@ -123,7 +127,7 @@ const MesuresSection = ({ formData, onChange }: any) => (
             className="form-input block w-full"
           />
         </div>
-  
+
         <div>
           <label
             htmlFor="scorePpd"
@@ -141,7 +145,7 @@ const MesuresSection = ({ formData, onChange }: any) => (
             className="form-input block w-full"
           />
         </div>
-  
+
         <div>
           <label
             htmlFor="scorePpg"
@@ -159,7 +163,7 @@ const MesuresSection = ({ formData, onChange }: any) => (
             className="form-input block w-full"
           />
         </div>
-  
+
         <div>
           <label
             htmlFor="scoreDod"
@@ -177,7 +181,7 @@ const MesuresSection = ({ formData, onChange }: any) => (
             className="form-input block w-full"
           />
         </div>
-  
+
         <div>
           <label
             htmlFor="scoreDog"
@@ -195,7 +199,7 @@ const MesuresSection = ({ formData, onChange }: any) => (
             className="form-input block w-full"
           />
         </div>
-  
+
         <div>
           <label
             htmlFor="scoreSngd"
@@ -213,7 +217,7 @@ const MesuresSection = ({ formData, onChange }: any) => (
             className="form-input block w-full"
           />
         </div>
-  
+
         <div>
           <label
             htmlFor="scoreSngg"
@@ -231,7 +235,7 @@ const MesuresSection = ({ formData, onChange }: any) => (
             className="form-input block w-full"
           />
         </div>
-  
+
         <div>
           <label
             htmlFor="scoreLevsup"
@@ -249,7 +253,7 @@ const MesuresSection = ({ formData, onChange }: any) => (
             className="form-input block w-full"
           />
         </div>
-  
+
         <div>
           <label
             htmlFor="scoreComlevd"
@@ -267,7 +271,7 @@ const MesuresSection = ({ formData, onChange }: any) => (
             className="form-input block w-full"
           />
         </div>
-  
+
         <div>
           <label
             htmlFor="scoreComlevg"
@@ -285,7 +289,7 @@ const MesuresSection = ({ formData, onChange }: any) => (
             className="form-input block w-full"
           />
         </div>
-  
+
         <div>
           <label
             htmlFor="scorePtose"
@@ -303,7 +307,7 @@ const MesuresSection = ({ formData, onChange }: any) => (
             className="form-input block w-full"
           />
         </div>
-  
+
         <div>
           <label
             htmlFor="ita"
@@ -322,9 +326,9 @@ const MesuresSection = ({ formData, onChange }: any) => (
           />
         </div>
       </div>
-  
+
       <h3 className="text-md font-medium text-gray-800 mt-6 mb-3">
-        Autres
+        {t('volunteers.others')}
       </h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
@@ -332,7 +336,7 @@ const MesuresSection = ({ formData, onChange }: any) => (
             htmlFor="nbCigarettesJour"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
-            Nombre de cigarettes par jour
+            {t('volunteers.cigarettesPerDay')}
           </label>
           <input
             type="text"
@@ -347,6 +351,6 @@ const MesuresSection = ({ formData, onChange }: any) => (
       </CardContent>
     </Card>
   );
-  
+};
 
 export default MesuresSection;

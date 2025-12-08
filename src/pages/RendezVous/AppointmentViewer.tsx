@@ -1,4 +1,5 @@
 ﻿import { useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { AppointmentDetailsCard, AppointmentActions } from '../../components/RendezVous/AppointmentComponents/index';
 import { VolunteerAssignmentCard } from '../../components/RendezVous/AssignmentComponents/index';
 import useAppointmentDetails from './hooks/useAppointmentDetails';
@@ -23,6 +24,7 @@ interface AppointmentViewerProps {
 }
 
 const AppointmentViewer: React.FC<AppointmentViewerProps> = ({ appointment, onEdit, onBack, onRefresh }) => {
+  const { t } = useTranslation();
   const {
     appointment: currentAppointment,
     group,
@@ -54,7 +56,7 @@ const AppointmentViewer: React.FC<AppointmentViewerProps> = ({ appointment, onEd
   );
 
   const handleDelete = useCallback(async () => {
-    const confirmation = window.confirm('Voulez-vous vraiment supprimer ce rendez-vous ?');
+    const confirmation = window.confirm(t('appointments.deleteConfirm'));
     if (!confirmation) {
       return;
     }
@@ -62,7 +64,7 @@ const AppointmentViewer: React.FC<AppointmentViewerProps> = ({ appointment, onEd
     await deleteAppointment();
     onRefresh?.();
     onBack?.();
-  }, [deleteAppointment, onBack, onRefresh]);
+  }, [deleteAppointment, onBack, onRefresh, t]);
 
   if (loading && !currentAppointment) {
     return (
@@ -75,14 +77,14 @@ const AppointmentViewer: React.FC<AppointmentViewerProps> = ({ appointment, onEd
   if (error) {
     return (
       <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
-        <p className="font-medium">Une erreur est survenue lors du chargement du rendez-vous.</p>
-        <p className="text-sm mt-1">{error.message ?? 'Erreur inconnue'}</p>
+        <p className="font-medium">{t('appointments.loadError')}</p>
+        <p className="text-sm mt-1">{error.message ?? t('errors.unknownError')}</p>
         <button
           type="button"
           onClick={() => window.location.reload()}
           className="mt-4 px-3 py-1 border border-red-400 rounded-md text-sm"
         >
-          Recharger la page
+          {t('appointments.reloadPage')}
         </button>
       </div>
     );
@@ -91,7 +93,7 @@ const AppointmentViewer: React.FC<AppointmentViewerProps> = ({ appointment, onEd
   if (!currentAppointment) {
     return (
       <div className="bg-white border border-gray-200 rounded-lg p-6 text-center text-gray-500">
-        Aucun rendez-vous sélectionné.
+        {t('appointments.noAppointmentSelected')}
       </div>
     );
   }

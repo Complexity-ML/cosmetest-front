@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import etudeService from '../../services/etudeService'
 import { usePagination } from '../../hooks/usePagination'
 import { formatDate } from '../../utils/dateUtils'
@@ -13,6 +14,7 @@ import { Loader2, Plus, Search } from 'lucide-react'
 import type { Etude } from '../../types/types'
 
 const EtudesPage = () => {
+  const { t } = useTranslation()
   const [etudes, setEtudes] = useState<Etude[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [isLoading, setIsLoading] = useState(true)
@@ -45,7 +47,7 @@ const EtudesPage = () => {
         updateTotal(response.totalElements)
       } catch (error) {
         console.error('Erreur lors du chargement des études:', error)
-        setError('Impossible de charger les études. Veuillez réessayer plus tard.')
+        setError(t('studies.loadError'))
       } finally {
         setIsLoading(false)
       }
@@ -82,28 +84,28 @@ const EtudesPage = () => {
     
     switch (status) {
       case 'EN_COURS':
-        return <Badge variant="default" className="bg-green-500">En cours</Badge>
+        return <Badge variant="default" className="bg-green-500">{t('studies.ongoing')}</Badge>
       case 'A_VENIR':
-        return <Badge variant="secondary">À venir</Badge>
+        return <Badge variant="secondary">{t('studies.upcoming')}</Badge>
       case 'TERMINEE':
-        return <Badge variant="outline">Terminée</Badge>
+        return <Badge variant="outline">{t('studies.completed')}</Badge>
       case 'ANNULEE':
-        return <Badge variant="destructive">Annulée</Badge>
+        return <Badge variant="destructive">{t('studies.cancelled')}</Badge>
       default:
-        return <Badge variant="outline">Inconnu</Badge>
+        return <Badge variant="outline">{t('studies.unknown')}</Badge>
     }
   }
   
   const handleDelete = async (e: React.MouseEvent, id: number) => {
     e.stopPropagation() // Empêcher la propagation du clic vers la ligne
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer cette étude ?')) {
+    if (window.confirm(t('studies.deleteConfirm'))) {
       try {
         await etudeService.delete(id)
         // Rafraîchir la liste après suppression
         setEtudes(etudes.filter(etude => etude.idEtude !== id))
       } catch (error) {
         console.error('Erreur lors de la suppression:', error)
-        alert('Une erreur est survenue lors de la suppression de l\'étude')
+        alert(t('studies.deleteError'))
       }
     }
   }
@@ -115,11 +117,11 @@ const EtudesPage = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-800">Gestion des Études</h1>
+        <h1 className="text-2xl font-bold text-gray-800">{t('studies.title')}</h1>
         <Button asChild>
           <Link to="/etudes/nouvelle">
             <Plus className="h-4 w-4 mr-2" />
-            Nouvelle étude
+            {t('studies.addStudy')}
           </Link>
         </Button>
       </div>
@@ -129,7 +131,7 @@ const EtudesPage = () => {
           <div className="relative">
             <Input
               type="text"
-              placeholder="Rechercher une étude..."
+              placeholder={t('studies.searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pr-10"
@@ -161,12 +163,12 @@ const EtudesPage = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Réf.</TableHead>
-                    <TableHead>Titre</TableHead>
-                    <TableHead>Début</TableHead>
-                    <TableHead>Fin</TableHead>
-                    <TableHead>Statut</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead>{t('studies.reference')}</TableHead>
+                    <TableHead>{t('studies.title')}</TableHead>
+                    <TableHead>{t('studies.startDate')}</TableHead>
+                    <TableHead>{t('studies.endDate')}</TableHead>
+                    <TableHead>{t('studies.status')}</TableHead>
+                    <TableHead className="text-right">{t('common.actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -191,13 +193,13 @@ const EtudesPage = () => {
                               className="text-primary hover:text-primary/80"
                               onClick={handleEditClick}
                             >
-                              Modifier
+                              {t('common.edit')}
                             </Link>
                             <button
                               onClick={(e) => etude.idEtude && handleDelete(e, etude.idEtude)}
                               className="text-destructive hover:text-destructive/80"
                             >
-                              Supprimer
+                              {t('common.delete')}
                             </button>
                           </div>
                         </TableCell>
@@ -206,7 +208,7 @@ const EtudesPage = () => {
                   ) : (
                     <TableRow>
                       <TableCell colSpan={6} className="text-center text-muted-foreground h-32">
-                        Aucune étude trouvée
+                        {t('studies.noStudies')}
                       </TableCell>
                     </TableRow>
                   )}
@@ -219,7 +221,7 @@ const EtudesPage = () => {
             <Card>
               <CardContent className="flex flex-col sm:flex-row justify-between items-center py-4">
                 <p className="text-sm text-muted-foreground mb-4 sm:mb-0">
-                  Affichage de {page * size + 1} à {Math.min((page + 1) * size, page * size + etudes.length)} études
+                  {t('pagination.showing')} {page * size + 1} {t('pagination.to')} {Math.min((page + 1) * size, page * size + etudes.length)} {t('sidebar.studies').toLowerCase()}
                 </p>
                 <div className="flex space-x-2">
                   <Button
@@ -228,7 +230,7 @@ const EtudesPage = () => {
                     variant="outline"
                     size="sm"
                   >
-                    Précédent
+                    {t('pagination.previous')}
                   </Button>
                   
                   <div className="hidden sm:flex space-x-1">
@@ -254,7 +256,7 @@ const EtudesPage = () => {
                     variant="outline"
                     size="sm"
                   >
-                    Suivant
+                    {t('pagination.next')}
                   </Button>
                 </div>
               </CardContent>

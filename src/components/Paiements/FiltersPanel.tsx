@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -28,6 +29,8 @@ interface FiltersPanelProps {
   setShowOnlyUnpaid: (value: boolean) => void;
   showAnnules: boolean;
   setShowAnnules: (value: boolean) => void;
+  showCompleted6WeeksUnpaid: boolean;
+  setShowCompleted6WeeksUnpaid: (value: boolean) => void;
   allPaiementsLoaded: boolean;
   paiementStatusMap?: Record<string, PaiementStatusConfig>;
 }
@@ -46,20 +49,24 @@ const FiltersPanel: React.FC<FiltersPanelProps> = ({
   setShowOnlyUnpaid,
   showAnnules,
   setShowAnnules,
+  showCompleted6WeeksUnpaid,
+  setShowCompleted6WeeksUnpaid,
   allPaiementsLoaded,
   paiementStatusMap = {},
 }) => {
+  const { t } = useTranslation();
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Filtres</CardTitle>
+        <CardTitle>{t('common.filter')}</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div className="space-y-2">
             <Label htmlFor="statut-select">
-              Statut de paiement
-              <span className="text-xs text-muted-foreground ml-1">(filtre les etudes)</span>
+              {t('payments.status')}
+              <span className="text-xs text-muted-foreground ml-1">({t('payments.filterByStudy')})</span>
             </Label>
             <Select
               value={statutPaiement}
@@ -67,10 +74,10 @@ const FiltersPanel: React.FC<FiltersPanelProps> = ({
               disabled={statutPaiement !== 'all' && !allPaiementsLoaded}
             >
               <SelectTrigger id="statut-select">
-                <SelectValue placeholder="Tous les statuts" />
+                <SelectValue placeholder={t('payments.allStatuses')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Tous les statuts</SelectItem>
+                <SelectItem value="all">{t('payments.allStatuses')}</SelectItem>
                 {Object.entries(paiementStatusMap).map(([value, config]) => (
                   <SelectItem key={value} value={value}>
                     {config.label}
@@ -82,7 +89,7 @@ const FiltersPanel: React.FC<FiltersPanelProps> = ({
 
           <div className="space-y-2">
             <Label htmlFor="etude-select">
-              Etude <span className="text-red-500">*</span>
+              {t('payments.study')} <span className="text-red-500">*</span>
             </Label>
             <Select
               value={selectedEtude}
@@ -90,12 +97,12 @@ const FiltersPanel: React.FC<FiltersPanelProps> = ({
             >
               <SelectTrigger id="etude-select">
                 <SelectValue
-                  placeholder={etudesFiltrees.length === 0 ? '-- Aucune etude correspondante --' : '-- Selectionnez une etude --'}
+                  placeholder={etudesFiltrees.length === 0 ? `-- ${t('payments.noMatchingStudy')} --` : `-- ${t('payments.selectStudy')} --`}
                 />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">
-                  {etudesFiltrees.length === 0 ? '-- Aucune etude correspondante --' : '-- Selectionnez une etude --'}
+                  {etudesFiltrees.length === 0 ? `-- ${t('payments.noMatchingStudy')} --` : `-- ${t('payments.selectStudy')} --`}
                 </SelectItem>
                 {etudesFiltrees.map((etude) => (
                   <SelectItem key={etude.idEtude} value={String(etude.idEtude)}>
@@ -111,8 +118,8 @@ const FiltersPanel: React.FC<FiltersPanelProps> = ({
 
           <div className="space-y-2">
             <Label htmlFor="date-debut">
-              Date de debut
-              <span className="text-xs text-muted-foreground ml-1">(filtre les etudes)</span>
+              {t('payments.startDate')}
+              <span className="text-xs text-muted-foreground ml-1">({t('payments.filterByStudy')})</span>
             </Label>
             <Input
               type="date"
@@ -124,8 +131,8 @@ const FiltersPanel: React.FC<FiltersPanelProps> = ({
 
           <div className="space-y-2">
             <Label htmlFor="date-fin">
-              Date de fin
-              <span className="text-xs text-muted-foreground ml-1">(filtre les etudes)</span>
+              {t('payments.endDate')}
+              <span className="text-xs text-muted-foreground ml-1">({t('payments.filterByStudy')})</span>
             </Label>
             <Input
               type="date"
@@ -136,19 +143,33 @@ const FiltersPanel: React.FC<FiltersPanelProps> = ({
           </div>
         </div>
 
-        <div className="mt-4 flex items-center space-x-6">
+        <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2">
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="completed-6weeks-unpaid"
+              checked={showCompleted6WeeksUnpaid}
+              onCheckedChange={setShowCompleted6WeeksUnpaid}
+            />
+            <Label
+              htmlFor="completed-6weeks-unpaid"
+              className="text-sm font-normal cursor-pointer"
+            >
+              {t('payments.showStudiesCompleted6Weeks')}
+            </Label>
+          </div>
+
           <div className="flex items-center space-x-2">
             <Checkbox
               id="only-unpaid"
               checked={showOnlyUnpaid}
               onCheckedChange={setShowOnlyUnpaid}
-              disabled={!selectedEtude}
+              disabled={!selectedEtude || selectedEtude === 'none'}
             />
             <Label
               htmlFor="only-unpaid"
               className="text-sm font-normal cursor-pointer"
             >
-              Afficher seulement les paiements non effectues
+              {t('payments.showOnlyUnpaid')}
             </Label>
           </div>
 
@@ -157,13 +178,13 @@ const FiltersPanel: React.FC<FiltersPanelProps> = ({
               id="show-annules"
               checked={showAnnules}
               onCheckedChange={setShowAnnules}
-              disabled={!selectedEtude}
+              disabled={!selectedEtude || selectedEtude === 'none'}
             />
             <Label
               htmlFor="show-annules"
               className="text-sm font-normal cursor-pointer"
             >
-              Afficher les volontaires annules
+              {t('payments.showCancelled')}
             </Label>
           </div>
         </div>

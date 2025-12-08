@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 interface AppointmentFilterProps {
   searchQuery: string;
   setSearchQuery: (query: string) => void;
@@ -9,6 +11,7 @@ interface AppointmentFilterProps {
   formatDate: (date: string) => string;
   selectedCount: number;
   totalCount: number;
+  availableCount: number;
   onSelectAll: () => void;
   disabled?: boolean;
 }
@@ -24,14 +27,17 @@ const AppointmentFilter = ({
   formatDate,
   selectedCount,
   totalCount,
+  availableCount,
   onSelectAll,
   disabled = false
 }: AppointmentFilterProps) => {
+  const { t } = useTranslation();
+
   return (
     <div className="p-4 border-b border-gray-200">
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-semibold text-gray-800">
-          Rendez-vous disponibles ({totalCount})
+          {t('appointments.availableAppointments')} ({availableCount} {t('appointments.outOf')} {totalCount})
           {selectedDate && <span className="text-blue-600 ml-2">- {formatDate(selectedDate)}</span>}
         </h3>
         <select
@@ -39,16 +45,16 @@ const AppointmentFilter = ({
           value={sortOption}
           onChange={(e) => setSortOption(e.target.value)}
         >
-          <option value="time">Trier par heure</option>
-          <option value="status">Puis par statut</option>
-          <option value="comment">Puis par commentaire</option>
+          <option value="time">{t('appointments.sortByTime')}</option>
+          <option value="status">{t('appointments.thenByStatus')}</option>
+          <option value="comment">{t('appointments.thenByComment')}</option>
         </select>
       </div>
 
       {/* Sélecteur de date */}
       <div className="mb-4">
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          Filtrer par date
+          {t('appointments.filterByDate')}
         </label>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
           <button
@@ -59,7 +65,7 @@ const AppointmentFilter = ({
                 : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
             }`}
           >
-            Toutes les dates
+            {t('appointments.allDates')}
           </button>
           {availableDates.map((date: string) => (
             <button
@@ -80,7 +86,7 @@ const AppointmentFilter = ({
       <div className="mb-4">
         <input
           type="text"
-          placeholder="Rechercher par date, heure, statut ou commentaire..."
+          placeholder={t('appointments.searchPlaceholderAppointments')}
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
@@ -89,14 +95,14 @@ const AppointmentFilter = ({
 
       <div className="flex justify-between items-center">
         <span className="text-sm text-gray-600">
-          {selectedCount} sélectionnés
+          {selectedCount} {t('appointments.selected')}
         </span>
         <button
           onClick={onSelectAll}
           className="text-sm px-3 py-1 border border-gray-300 rounded hover:bg-gray-100"
           disabled={disabled || selectedCount === 0}
         >
-          Tout désélectionner
+          {t('appointments.deselectAll')}
         </button>
       </div>
     </div>

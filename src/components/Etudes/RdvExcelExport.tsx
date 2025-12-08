@@ -141,38 +141,60 @@ const RdvExcelExport: React.FC<RdvExcelExportProps> = ({
 
       // 7. Créer les en-têtes dynamiques
       const headers = [
-        'ID Volontaire',
+        'Ligne',
+        'Num Sujet',
+        'Statut',
         'Volontaire',
         'Téléphone',
-        'Email',
+        'Date',
+        'Heure',
         'Phototype',
-        'Num Sujet',
-        'Statut'
+        'Email'
       ];
 
-      // Ajouter T0, T1, T2... en fonction du nombre max de passages
-      for (let i = 0; i < maxPassages; i++) {
+      // Ajouter T1, T2, T3... pour les passages supplémentaires (si plus d'un passage)
+      for (let i = 1; i < maxPassages; i++) {
         headers.push(`T${i} Date`);
         headers.push(`T${i} Heure`);
       }
 
       // 8. Créer les lignes de données
       const dataRows: any[][] = [];
+      let lineNumber = 1; // Compteur de ligne
 
       Object.entries(rdvsByVolunteer).forEach(([volunteerId, volunteerRdvs]: [string, any[]]) => {
         const row: any[] = [];
 
-        // Informations du volontaire
-        row.push(volunteerId);
-        row.push(getNomVolontaire(volunteerRdvs[0])); // Utiliser le premier RDV pour récupérer le nom
-        row.push(getVolunteerInfo(Number(volunteerId), 'telPortable')); // Téléphone
-        row.push(getVolunteerInfo(Number(volunteerId), 'email')); // Email  
-        row.push(getVolunteerInfo(Number(volunteerId), 'phototype')); // Phototype
-        row.push(getAssociationInfo(Number(volunteerId), 'numsujet')); // Num Sujet
-        row.push(getAssociationInfo(Number(volunteerId), 'statut')); // Statut
+        // A: Nombre de ligne
+        row.push(lineNumber++);
 
-        // Ajouter les données de chaque passage T0, T1, T2...
-        for (let i = 0; i < maxPassages; i++) {
+        // B: Num Sujet
+        row.push(getAssociationInfo(Number(volunteerId), 'numsujet'));
+
+        // C: Statut (vide - retrait du mot "inscrit")
+        const statut = getAssociationInfo(Number(volunteerId), 'statut');
+        row.push(statut && statut.toUpperCase() === 'INSCRIT' ? '' : statut);
+
+        // D: Nom du volontaire
+        row.push(getNomVolontaire(volunteerRdvs[0]));
+
+        // E: Téléphone
+        row.push(getVolunteerInfo(Number(volunteerId), 'telPortable'));
+
+        // F: Date du premier RDV (T0)
+        row.push(volunteerRdvs[0] ? formatDate(volunteerRdvs[0].date, 'dd/MM/yyyy') : '');
+
+        // G: Heure du premier RDV (T0)
+        row.push(volunteerRdvs[0] ? volunteerRdvs[0].heure || '' : '');
+
+        // H: Phototype
+        row.push(getVolunteerInfo(Number(volunteerId), 'phototype'));
+
+        // I: Email
+        row.push(getVolunteerInfo(Number(volunteerId), 'email'));
+
+        // Ajouter les données des passages supplémentaires T1, T2, T3...
+        for (let i = 1; i < maxPassages; i++) {
           if (i < volunteerRdvs.length) {
             const rdv = volunteerRdvs[i];
             row.push(formatDate(rdv.date, 'dd/MM/yyyy'));
@@ -195,18 +217,32 @@ const RdvExcelExport: React.FC<RdvExcelExportProps> = ({
       unassignedRdvs.forEach(rdv => {
         const row = [];
 
-        // Informations du volontaire (vides pour non assigné)
-        row.push('');
-        row.push('Non assigné');
-        row.push('');
-        row.push('');
-        row.push('');
-        row.push(''); // Num Sujet
-        row.push(''); // Statut
+        // A: Nombre de ligne
+        row.push(lineNumber++);
 
-        // Ajouter les données du RDV dans T0
+        // B: Num Sujet
+        row.push('');
+
+        // C: Statut
+        row.push('');
+
+        // D: Volontaire
+        row.push('Non assigné');
+
+        // E: Téléphone
+        row.push('');
+
+        // F: Date
         row.push(formatDate(rdv.date, 'dd/MM/yyyy'));
+
+        // G: Heure
         row.push(rdv.heure || '');
+
+        // H: Phototype
+        row.push('');
+
+        // I: Email
+        row.push('');
 
         // Remplir les autres passages avec des cellules vides
         for (let i = 1; i < maxPassages; i++) {
@@ -334,17 +370,19 @@ const RdvExcelExport: React.FC<RdvExcelExportProps> = ({
 
       // 16. Définir la largeur des colonnes
       const colWidths = [
-        { width: 25 }, // ID Volontaire (largeur augmentée pour la ligne d'étude)
-        { width: 30 }, // Volontaire
-        { width: 15 }, // Téléphone
-        { width: 25 }, // Email
-        { width: 15 }, // Phototype
-        { width: 12 }, // Num Sujet
-        { width: 12 }  // Statut
+        { width: 8 },  // A: Ligne
+        { width: 12 }, // B: Num Sujet
+        { width: 12 }, // C: Statut
+        { width: 30 }, // D: Volontaire
+        { width: 15 }, // E: Téléphone
+        { width: 12 }, // F: Date
+        { width: 8 },  // G: Heure
+        { width: 15 }, // H: Phototype
+        { width: 25 }  // I: Email
       ];
 
-      // Ajouter les largeurs pour T0, T1, T2...
-      for (let i = 0; i < maxPassages; i++) {
+      // Ajouter les largeurs pour T1, T2, T3...
+      for (let i = 1; i < maxPassages; i++) {
         colWidths.push({ width: 12 }); // Date
         colWidths.push({ width: 8 });  // Heure
       }

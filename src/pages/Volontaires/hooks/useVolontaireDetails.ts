@@ -30,6 +30,7 @@ interface Photo {
   url: string;
   nom: string;
   alt?: string;
+  isPdf?: boolean;
 }
 
 interface AnnulationEtude {
@@ -39,6 +40,9 @@ interface AnnulationEtude {
   nomEtude: string;
   dateEtude: string | null;
   typeEtude: string | null;
+  motif?: string;
+  commentaire?: string;
+  annulePar?: 'COSMETEST' | 'VOLONTAIRE' | string;
   [key: string]: any;
 }
 
@@ -106,12 +110,17 @@ export const useVolontaireDetails = ({ id, navigate }: UseVolontaireDetailsParam
           try {
             const etude = await etudeService.getById(annulation.idEtude);
 
+            // Log pour déboguer le format de date
+            console.log('Date annulation brute:', annulation.dateAnnulation, 'Type:', typeof annulation.dateAnnulation);
+
             return {
               ...annulation,
               referenceEtude: etude?.reference || etude?.ref || `REF-${annulation.idEtude}`,
               nomEtude: etude?.nom || etude?.titre || 'étude inconnue',
               dateEtude: etude?.dateDebut || etude?.date,
               typeEtude: etude?.type,
+              motif: annulation.commentaire || annulation.motif,
+              annulePar: annulation.annulePar,
             };
           } catch (fetchError) {
             console.warn(`Impossible de récupérer l'étude ${annulation.idEtude}:`, fetchError);
@@ -121,6 +130,8 @@ export const useVolontaireDetails = ({ id, navigate }: UseVolontaireDetailsParam
               nomEtude: 'étude inconnue',
               dateEtude: null,
               typeEtude: null,
+              motif: annulation.commentaire || annulation.motif,
+              annulePar: annulation.annulePar,
             };
           }
         })

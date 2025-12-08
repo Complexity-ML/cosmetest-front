@@ -1,14 +1,18 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useTranslation } from "react-i18next";
 
-const MarquesCutaneesSection = ({ formData, onChange }: any) => (
+const MarquesCutaneesSection = ({ formData, onChange }: any) => {
+  const { t } = useTranslation();
+
+  return (
     <Card>
       <CardHeader>
-        <CardTitle>Marques cutanées</CardTitle>
+        <CardTitle>{t('volunteers.skinMarks')}</CardTitle>
       </CardHeader>
       <CardContent>
-  
+
       <h3 className="text-md font-medium text-gray-800 mt-6 mb-3">
-        Caractéristiques
+        {t('volunteers.characteristics')}
       </h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="flex items-center">
@@ -24,10 +28,10 @@ const MarquesCutaneesSection = ({ formData, onChange }: any) => (
             htmlFor="cicatrices"
             className="ml-2 block text-sm font-medium text-gray-700"
           >
-            Cicatrices
+            {t('volunteers.scars')}
           </label>
         </div>
-  
+
         <div className="flex items-center">
           <input
             type="checkbox"
@@ -41,10 +45,10 @@ const MarquesCutaneesSection = ({ formData, onChange }: any) => (
             htmlFor="tatouages"
             className="ml-2 block text-sm font-medium text-gray-700"
           >
-            Tatouages
+            {t('volunteers.tattoos')}
           </label>
         </div>
-  
+
         <div className="flex items-center">
           <input
             type="checkbox"
@@ -58,13 +62,13 @@ const MarquesCutaneesSection = ({ formData, onChange }: any) => (
             htmlFor="piercings"
             className="ml-2 block text-sm font-medium text-gray-700"
           >
-            Piercings
+            {t('volunteers.piercings')}
           </label>
         </div>
       </div>
-  
+
       <h3 className="text-md font-medium text-gray-800 mt-6 mb-3">
-        Taches pigmentaires
+        {t('volunteers.pigmentSpots')}
       </h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="flex items-center">
@@ -80,10 +84,10 @@ const MarquesCutaneesSection = ({ formData, onChange }: any) => (
             htmlFor="tachesPigmentairesVisage"
             className="ml-2 block text-sm font-medium text-gray-700"
           >
-            Visage
+            {t('volunteers.face')}
           </label>
         </div>
-  
+
         <div className="flex items-center">
           <input
             type="checkbox"
@@ -97,10 +101,10 @@ const MarquesCutaneesSection = ({ formData, onChange }: any) => (
             htmlFor="tachesPigmentairesCou"
             className="ml-2 block text-sm font-medium text-gray-700"
           >
-            Cou
+            {t('volunteers.neck')}
           </label>
         </div>
-  
+
         <div className="flex items-center">
           <input
             type="checkbox"
@@ -114,10 +118,10 @@ const MarquesCutaneesSection = ({ formData, onChange }: any) => (
             htmlFor="tachesPigmentairesDecollete"
             className="ml-2 block text-sm font-medium text-gray-700"
           >
-            Décolleté
+            {t('volunteers.neckline')}
           </label>
         </div>
-  
+
         <div className="flex items-center">
           <input
             type="checkbox"
@@ -131,13 +135,13 @@ const MarquesCutaneesSection = ({ formData, onChange }: any) => (
             htmlFor="tachesPigmentairesMains"
             className="ml-2 block text-sm font-medium text-gray-700"
           >
-            Mains
+            {t('volunteers.hands')}
           </label>
         </div>
       </div>
-  
+
       <h3 className="text-md font-medium text-gray-800 mt-6 mb-3">
-        Vergetures
+        {t('volunteers.stretchMarks')}
       </h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="flex items-center">
@@ -153,10 +157,10 @@ const MarquesCutaneesSection = ({ formData, onChange }: any) => (
             htmlFor="vergeturesJambes"
             className="ml-2 block text-sm font-medium text-gray-700"
           >
-            Jambes
+            {t('volunteers.legs')}
           </label>
         </div>
-  
+
         <div className="flex items-center">
           <input
             type="checkbox"
@@ -170,10 +174,10 @@ const MarquesCutaneesSection = ({ formData, onChange }: any) => (
             htmlFor="vergeturesFessesHanches"
             className="ml-2 block text-sm font-medium text-gray-700"
           >
-            Fesses/Hanches
+            {t('volunteers.buttocksHips')}
           </label>
         </div>
-  
+
         <div className="flex items-center">
           <input
             type="checkbox"
@@ -187,10 +191,10 @@ const MarquesCutaneesSection = ({ formData, onChange }: any) => (
             htmlFor="vergeturesVentreTaille"
             className="ml-2 block text-sm font-medium text-gray-700"
           >
-            Ventre/Taille
+            {t('volunteers.bellyWaist')}
           </label>
         </div>
-  
+
         <div className="flex items-center">
           <input
             type="checkbox"
@@ -204,12 +208,13 @@ const MarquesCutaneesSection = ({ formData, onChange }: any) => (
             htmlFor="vergeturesPoitrineDecollete"
             className="ml-2 block text-sm font-medium text-gray-700"
           >
-            Poitrine/Décolleté
+            {t('volunteers.chestNeckline')}
           </label>
         </div>
       </div>
       </CardContent>
     </Card>
   );
-  
+};
+
 export default MarquesCutaneesSection;

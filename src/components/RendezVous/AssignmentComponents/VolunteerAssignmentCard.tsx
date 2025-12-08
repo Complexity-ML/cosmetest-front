@@ -1,5 +1,5 @@
 ﻿import { useEffect, useMemo, useRef, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
+import { useTranslation } from 'react-i18next';
 import { Button } from '../../ui/button';
 import { Input } from '../../ui/input';
 
@@ -74,29 +74,28 @@ const VolunteerAssignmentCard = ({ volunteer, volunteers, assigning, onAssign, o
     setSelectorOpen(false);
   };
 
+  const { t } = useTranslation();
   const volunteerId = getVolunteerId(volunteer);
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle>Volontaire</CardTitle>
-          {volunteer && (
-            <Button
-              type="button"
-              onClick={onUnassign}
-              disabled={assigning}
-              variant="ghost"
-              size="sm"
-              className="text-red-600 hover:text-red-700"
-            >
-              Désassigner
-            </Button>
-          )}
-        </div>
-      </CardHeader>
+    <div className="bg-white p-6 rounded-lg border border-gray-200">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold text-gray-900">{t('appointments.volunteer')}</h3>
+        {volunteer && (
+          <Button
+            type="button"
+            onClick={onUnassign}
+            disabled={assigning}
+            variant="ghost"
+            size="sm"
+            className="text-red-600 hover:text-red-700"
+          >
+            {t('appointments.unassign')}
+          </Button>
+        )}
+      </div>
 
-      <CardContent>
+      <div>
         {volunteer ? (
           <div className="space-y-2">
             <p className="text-sm text-gray-700">
@@ -104,10 +103,10 @@ const VolunteerAssignmentCard = ({ volunteer, volunteers, assigning, onAssign, o
               {volunteer.prenom} {volunteer.nom}
             </p>
             {volunteer.email && <p className="text-xs text-gray-500">{volunteer.email}</p>}
-            <div className="text-xs text-gray-500">Identifiant : {volunteerId}</div>
+            <div className="text-xs text-gray-500">{t('volunteers.identifier')} : {volunteerId}</div>
           </div>
         ) : (
-          <p className="text-sm text-gray-500">Aucun volontaire assigné à ce rendez-vous.</p>
+          <p className="text-sm text-gray-500">{t('appointments.noVolunteerAssignedToAppointment')}</p>
         )}
 
         <div className="flex flex-col gap-2 mt-4" ref={selectorRef}>
@@ -117,7 +116,7 @@ const VolunteerAssignmentCard = ({ volunteer, volunteers, assigning, onAssign, o
             variant="outline"
             disabled={assigning}
           >
-            {volunteer ? 'Changer de volontaire' : 'Assigner un volontaire'}
+            {volunteer ? t('appointments.changeVolunteer') : t('appointments.assignVolunteer')}
           </Button>
 
           {isSelectorOpen && (
@@ -127,13 +126,13 @@ const VolunteerAssignmentCard = ({ volunteer, volunteers, assigning, onAssign, o
                   type="text"
                   value={searchTerm}
                   onChange={(event) => setSearchTerm(event.target.value)}
-                  placeholder="Rechercher un volontaire"
+                  placeholder={t('appointments.searchVolunteerPlaceholder')}
                 />
               </div>
 
               <div className="max-h-48 overflow-y-auto border border-gray-100 rounded-md divide-y">
                 {filteredVolunteers.length === 0 ? (
-                  <div className="p-3 text-sm text-gray-500 text-center">Aucun résultat</div>
+                  <div className="p-3 text-sm text-gray-500 text-center">{t('common.noResults')}</div>
                 ) : (
                   filteredVolunteers.map((item) => {
                     const id = getVolunteerId(item);
@@ -164,7 +163,7 @@ const VolunteerAssignmentCard = ({ volunteer, volunteers, assigning, onAssign, o
                   disabled={!selectedVolunteerId || assigning}
                   className="flex-1"
                 >
-                  Assigner
+                  {t('appointments.assign')}
                 </Button>
                 <Button
                   type="button"
@@ -172,14 +171,14 @@ const VolunteerAssignmentCard = ({ volunteer, volunteers, assigning, onAssign, o
                   variant="outline"
                   className="flex-1"
                 >
-                  Annuler
+                  {t('common.cancel')}
                 </Button>
               </div>
             </div>
           )}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 

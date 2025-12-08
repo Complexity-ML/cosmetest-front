@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import volontaireService from '../../../services/volontaireService';
 import { timeToMinutes, normalizeTime } from '../../../utils/timeUtils';
 
@@ -50,6 +51,7 @@ const EnhancedAppointmentsPanel: React.FC<EnhancedAppointmentsPanelProps> = ({
   onUnassignSingle,
   onSwitch,
 }) => {
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOption, setSortOption] = useState('time');
   const [selectedDate, setSelectedDate] = useState('');
@@ -91,12 +93,12 @@ const EnhancedAppointmentsPanel: React.FC<EnhancedAppointmentsPanelProps> = ({
         year: 'numeric'
       });
     } catch (err) {
-      return dateString || 'Date inconnue';
+      return dateString || t('appointments.dateUnknown');
     }
   };
 
   const formatTime = (timeString: string): string => {
-    return timeString || 'Heure inconnue';
+    return timeString || t('appointments.timeUnknown');
   };
 
   const getStatusColor = (status?: string): string => {
@@ -176,7 +178,7 @@ const EnhancedAppointmentsPanel: React.FC<EnhancedAppointmentsPanelProps> = ({
 
     const groups: Record<string, Appointment[]> = {};
     filteredAppointments.forEach(rdv => {
-      const time = rdv.heure ? normalizeTime(rdv.heure) : 'Heure inconnue';
+      const time = rdv.heure ? normalizeTime(rdv.heure) : t('appointments.timeUnknown');
       if (!groups[time]) {
         groups[time] = [];
       }
@@ -240,9 +242,9 @@ const EnhancedAppointmentsPanel: React.FC<EnhancedAppointmentsPanelProps> = ({
                         onSwitch(rdv);
                       }}
                       className="text-purple-600 hover:text-purple-800 text-xs px-2 py-1 border border-purple-300 rounded hover:bg-purple-50 transition-colors"
-                      title="Échanger avec un autre rendez-vous"
+                      title={t('appointments.switchWith')}
                     >
-                      ⇄ Échanger
+                      {t('appointments.switch')}
                     </button>
                   )}
                   <button
@@ -253,9 +255,9 @@ const EnhancedAppointmentsPanel: React.FC<EnhancedAppointmentsPanelProps> = ({
                       }
                     }}
                     className="text-red-600 hover:text-red-800 text-xs px-2 py-1 border border-red-300 rounded hover:bg-red-50 transition-colors"
-                    title="Désassigner ce volontaire du rendez-vous"
+                    title={t('appointments.unassignTooltip')}
                   >
-                    ✕ Désassigner
+                    {t('appointments.unassign')}
                   </button>
                 </>
               )}
@@ -268,9 +270,9 @@ const EnhancedAppointmentsPanel: React.FC<EnhancedAppointmentsPanelProps> = ({
                   const last = volunteerInfo.nomVol || volunteerInfo.nom || volunteerInfo.lastName || '';
                   const civ = volunteerInfo.civilite ? `${volunteerInfo.civilite} ` : '';
                   const label = `${civ}${first} ${last}`.trim();
-                  return <span>👤 {label || 'Volontaire'}</span>;
+                  return <span>👤 {label || t('appointments.volunteer')}</span>;
                 })()}
-                <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Assigné</span>
+                <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">{t('appointments.assigned')}</span>
               </div>
             ) : rdv.idVolontaire || rdv.volontaire ? (
               <div className="text-sm text-orange-600 mb-1 flex items-center justify-between">
@@ -278,15 +280,15 @@ const EnhancedAppointmentsPanel: React.FC<EnhancedAppointmentsPanelProps> = ({
                   const first = rdv.prenomVol || rdv.prenomVolontaire || rdv.volontaire?.prenomVol || rdv.volontaire?.prenom || '';
                   const last = rdv.nomVol || rdv.nomVolontaire || rdv.volontaire?.nomVol || rdv.volontaire?.nom || '';
                   const idPart = rdv.idVolontaire || rdv.volontaire?.id;
-                  const label = (first || last) ? `${first} ${last}`.trim() : `Volontaire ID: ${idPart}`;
+                  const label = (first || last) ? `${first} ${last}`.trim() : `${t('appointments.volunteer')} ID: ${idPart}`;
                   return <span>👤 {label}</span>;
                 })()}
-                <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded">En cours de chargement</span>
+                <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded">{t('appointments.loadingInProgress')}</span>
               </div>
             ) : (
               <div className="text-sm text-gray-500 mb-1 flex items-center justify-between">
-                <span>👤 Non assigné</span>
-                <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">Disponible</span>
+                <span>👤 {t('appointments.notAssigned')}</span>
+                <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">{t('appointments.available')}</span>
               </div>
             )}
 
@@ -307,7 +309,7 @@ const EnhancedAppointmentsPanel: React.FC<EnhancedAppointmentsPanelProps> = ({
       <div className="p-4 border-b border-gray-200">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-semibold text-gray-800">
-            Rendez-vous ({filteredAppointments.length})
+            {t('appointments.appointmentsCount')} ({filteredAppointments.length})
             {selectedDate && <span className="text-blue-600 ml-2">- {formatDate(selectedDate)}</span>}
           </h2>
           <select
@@ -315,16 +317,16 @@ const EnhancedAppointmentsPanel: React.FC<EnhancedAppointmentsPanelProps> = ({
             value={sortOption}
             onChange={(e) => setSortOption(e.target.value)}
           >
-            <option value="time">Trier par heure</option>
-            <option value="status">Puis par statut</option>
-            <option value="comment">Puis par commentaire</option>
+            <option value="time">{t('appointments.sortByTime')}</option>
+            <option value="status">{t('appointments.thenByStatus')}</option>
+            <option value="comment">{t('appointments.thenByComment')}</option>
           </select>
         </div>
 
         {/* Sélecteur de date */}
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Filtrer par date
+            {t('appointments.filterByDate')}
           </label>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
             <button
@@ -335,7 +337,7 @@ const EnhancedAppointmentsPanel: React.FC<EnhancedAppointmentsPanelProps> = ({
                   : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
               }`}
             >
-              Toutes les dates
+              {t('appointments.allDates')}
             </button>
             {availableDates.map(date => (
               <button
@@ -356,7 +358,7 @@ const EnhancedAppointmentsPanel: React.FC<EnhancedAppointmentsPanelProps> = ({
         <div className="mb-4">
           <input
             type="text"
-            placeholder="Rechercher par date, heure, statut ou commentaire..."
+            placeholder={t('appointments.searchPlaceholderAppointments')}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -365,14 +367,14 @@ const EnhancedAppointmentsPanel: React.FC<EnhancedAppointmentsPanelProps> = ({
 
         <div className="flex justify-between items-center">
           <span className="text-sm text-gray-600">
-            {selectedAppointments.length} sélectionnés
+            {selectedAppointments.length} {t('appointments.selected')}
           </span>
           <button
             onClick={onSelectAllAppointments}
             className="text-sm px-3 py-1 border border-gray-300 rounded hover:bg-gray-100"
             disabled={filteredAppointments.length === 0}
           >
-            Sélectionner tous
+            {t('appointments.selectAll')}
           </button>
         </div>
       </div>
@@ -381,7 +383,7 @@ const EnhancedAppointmentsPanel: React.FC<EnhancedAppointmentsPanelProps> = ({
       <div className="p-4 max-h-96 overflow-y-auto">
         {filteredAppointments.length === 0 ? (
           <div className="text-center text-gray-500 py-8">
-            Aucun rendez-vous trouvé
+            {t('appointments.noAppointmentsFound')}
           </div>
         ) : selectedDate && groupedAppointments ? (
           // Affichage groupé par heure quand une date est sélectionnée
@@ -389,7 +391,7 @@ const EnhancedAppointmentsPanel: React.FC<EnhancedAppointmentsPanelProps> = ({
             {groupedAppointments.map(([time, appointments]) => (
               <div key={time}>
                 <h4 className="font-medium text-gray-700 mb-2 border-b pb-1">
-                  🕐 {time} ({appointments.length} RDV)
+                  🕐 {time} ({appointments.length} {t('appointments.rdvLabel')})
                 </h4>
                 <div className="space-y-2 ml-4">
                   {appointments.map(rdv => (

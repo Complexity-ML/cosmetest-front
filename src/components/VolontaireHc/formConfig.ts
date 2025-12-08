@@ -18,278 +18,282 @@ export interface FormSection {
 }
 
 /**
- * Configuration des sections du formulaire des habitudes cosmétiques
+ * Fonction pour obtenir les sections du formulaire avec traductions
+ * @param t - Fonction de traduction de react-i18next
  */
-export const FORM_SECTIONS: FormSection[] = [
+export const getFormSections = (t: (key: string) => string): FormSection[] => [
   {
-    title: 'Habitudes d\'achat',
+    title: t('habitsCosmetiques.shoppingHabits'),
     icon: 'shopping-bag',
     groups: [
       {
-        title: 'Lieux d\'achat',
+        title: t('habitsCosmetiques.purchaseLocations'),
         items: [
-          { id: 'achatPharmacieParapharmacie', label: 'Pharmacie/Parapharmacie' },
-          { id: 'achatGrandesSurfaces', label: 'Grandes surfaces' },
-          { id: 'achatInstitutParfumerie', label: 'Institut/Parfumerie' },
-          { id: 'achatInternet', label: 'Internet' }
+          { id: 'achatPharmacieParapharmacie', label: t('habitsCosmetiques.pharmacyParapharmacy') },
+          { id: 'achatGrandesSurfaces', label: t('habitsCosmetiques.supermarkets') },
+          { id: 'achatInstitutParfumerie', label: t('habitsCosmetiques.institutePerfumery') },
+          { id: 'achatInternet', label: t('habitsCosmetiques.internet') }
         ]
       },
       {
-        title: 'Produits bio',
+        title: t('habitsCosmetiques.organicProducts'),
         items: [
-          { id: 'produitsBio', label: 'Utilisation de produits bio' }
+          { id: 'produitsBio', label: t('habitsCosmetiques.useOrganicProducts') }
         ]
       }
     ]
   },
   {
-    title: 'Épilation',
+    title: t('habitsCosmetiques.hairRemoval'),
     icon: 'scissors',
     groups: [
       {
-        title: 'Méthodes utilisées',
+        title: t('habitsCosmetiques.methodsUsed'),
         items: [
-          { id: 'rasoir', label: 'Rasoir' },
-          { id: 'epilateurElectrique', label: 'Épilateur électrique' },
-          { id: 'cire', label: 'Cire' },
-          { id: 'cremeDepilatoire', label: 'Crème dépilatoire' }
+          { id: 'rasoir', label: t('habitsCosmetiques.razor') },
+          { id: 'epilateurElectrique', label: t('habitsCosmetiques.electricEpilator') },
+          { id: 'cire', label: t('habitsCosmetiques.wax') },
+          { id: 'cremeDepilatoire', label: t('habitsCosmetiques.depilatoryCream') }
         ]
       },
       {
-        title: 'Méthodes professionnelles',
+        title: t('habitsCosmetiques.professionalMethods'),
         items: [
-          { id: 'institut', label: 'Institut' },
-          { id: 'epilationDefinitive', label: 'Épilation définitive' }
+          { id: 'institut', label: t('habitsCosmetiques.institute') },
+          { id: 'epilationDefinitive', label: t('habitsCosmetiques.permanentHairRemoval') }
         ]
       }
     ]
   },
   {
-    title: 'Soins du visage',
+    title: t('habitsCosmetiques.facialCare'),
     icon: 'droplet',
     groups: [
       {
-        title: 'Soins de base',
+        title: t('habitsCosmetiques.basicCare'),
         items: [
-          { id: 'soinHydratantVisage', label: 'Hydratant' },
-          { id: 'soinNourissantVisage', label: 'Nourrissant' },
-          { id: 'soinMatifiantVisage', label: 'Matifiant' }
+          { id: 'soinHydratantVisage', label: t('habitsCosmetiques.moisturizing') },
+          { id: 'soinNourissantVisage', label: t('habitsCosmetiques.nourishing') },
+          { id: 'soinMatifiantVisage', label: t('habitsCosmetiques.mattifying') }
         ]
       },
       {
-        title: 'Soins spécifiques',
+        title: t('habitsCosmetiques.specificCare'),
         items: [
-          { id: 'soinAntiAgeVisage', label: 'Anti-âge' },
-          { id: 'soinAntiRidesVisage', label: 'Anti-rides' },
-          { id: 'soinAntiTachesVisage', label: 'Anti-taches' },
-          { id: 'soinAntiRougeursVisage', label: 'Anti-rougeurs' },
-          { id: 'soinEclatDuTeint', label: 'Éclat du teint' },
-          { id: 'soinRaffermissantVisage', label: 'Raffermissant' },
-          { id: 'gommageVisage', label: 'Gommage' },
-          { id: 'masqueVisage', label: 'Masque' }
+          { id: 'soinAntiAgeVisage', label: t('habitsCosmetiques.antiAging') },
+          { id: 'soinAntiRidesVisage', label: t('habitsCosmetiques.antiWrinkle') },
+          { id: 'soinAntiTachesVisage', label: t('habitsCosmetiques.antiSpot') },
+          { id: 'soinAntiRougeursVisage', label: t('habitsCosmetiques.antiRedness') },
+          { id: 'soinEclatDuTeint', label: t('habitsCosmetiques.radiance') },
+          { id: 'soinRaffermissantVisage', label: t('habitsCosmetiques.firming') },
+          { id: 'gommageVisage', label: t('habitsCosmetiques.exfoliatingFace') },
+          { id: 'masqueVisage', label: t('habitsCosmetiques.faceMask') }
         ]
       },
       {
-        title: 'Zones spécifiques',
+        title: t('habitsCosmetiques.specificAreas'),
         items: [
-          { id: 'soinContourDesYeux', label: 'Contour des yeux' },
-          { id: 'soinContourDesLevres', label: 'Contour des lèvres' },
+          { id: 'soinContourDesYeux', label: t('habitsCosmetiques.eyeContour') },
+          { id: 'soinContourDesLevres', label: t('habitsCosmetiques.lipContour') },
         ]
       }
     ]
   },
   {
-    title: 'Démaquillage et nettoyage',
+    title: t('habitsCosmetiques.makeupRemovalCleansing'),
     icon: 'droplet',
     groups: [
       {
         items: [
-          { id: 'demaquillantVisage', label: 'Démaquillant visage' },
-          { id: 'demaquillantYeux', label: 'Démaquillant yeux' },
-          { id: 'demaquillantWaterproof', label: 'Démaquillant waterproof' },
-          { id: 'gelNettoyant', label: 'Gel nettoyant' },
-          { id: 'lotionMicellaire', label: 'Lotion micellaire' },
-          { id: 'tonique', label: 'Tonique' }
+          { id: 'demaquillantVisage', label: t('habitsCosmetiques.faceMakeupRemover') },
+          { id: 'demaquillantYeux', label: t('habitsCosmetiques.eyeMakeupRemover') },
+          { id: 'demaquillantWaterproof', label: t('habitsCosmetiques.waterproofMakeupRemover') },
+          { id: 'gelNettoyant', label: t('habitsCosmetiques.cleansingGel') },
+          { id: 'lotionMicellaire', label: t('habitsCosmetiques.micellarWater') },
+          { id: 'tonique', label: t('habitsCosmetiques.toner') }
         ]
       }
     ]
   },
   {
-    title: 'Soins du corps',
+    title: t('habitsCosmetiques.bodyCare'),
     icon: 'droplet',
     groups: [
       {
         items: [
-          { id: 'soinHydratantCorps', label: 'Hydratant corps' },
-          { id: 'soinNourrissantCorps', label: 'Nourrissant corps' },
-          { id: 'soinRaffermissantCorps', label: 'Raffermissant corps' },
-          { id: 'soinAmincissant', label: 'Amincissant' },
-          { id: 'soinAntiCellulite', label: 'Anti-cellulite' },
-          { id: 'soinAntiVergetures', label: 'Anti-vergetures' },
-          { id: 'soinAntiAgeCorps', label: 'Anti-âge corps' },
-          { id: 'gommageCorps', label: 'Gommage corps' },
-          { id: 'masqueCorps', label: 'Masque corps' }
+          { id: 'soinHydratantCorps', label: t('habitsCosmetiques.moisturizingBody') },
+          { id: 'soinNourrissantCorps', label: t('habitsCosmetiques.nourishingBody') },
+          { id: 'soinRaffermissantCorps', label: t('habitsCosmetiques.firmingBody') },
+          { id: 'soinAmincissant', label: t('habitsCosmetiques.slimming') },
+          { id: 'soinAntiCellulite', label: t('habitsCosmetiques.antiCellulite') },
+          { id: 'soinAntiVergetures', label: t('habitsCosmetiques.antiStretchMarks') },
+          { id: 'soinAntiAgeCorps', label: t('habitsCosmetiques.antiAgingBody') },
+          { id: 'gommageCorps', label: t('habitsCosmetiques.bodyExfoliating') },
+          { id: 'masqueCorps', label: t('habitsCosmetiques.bodyMask') }
         ]
       }
     ]
   },
   {
-    title: 'Soins spécifiques',
+    title: t('habitsCosmetiques.specificBodyParts'),
     icon: 'droplet',
     groups: [
       {
         items: [
-          { id: 'soinHydratantMains', label: 'Hydratant mains' },
-          { id: 'soinNourrissantMains', label: 'Nourrissant mains' },
-          { id: 'soinAntiAgeMains', label: 'Anti-âge mains' },
-          { id: 'soinAntiTachesMains', label: 'Anti-taches mains' },
-          { id: 'soinPieds', label: 'Soin pieds' },
-          { id: 'soinOngles', label: 'Soin ongles' }
+          { id: 'soinHydratantMains', label: t('habitsCosmetiques.handMoisturizer') },
+          { id: 'soinNourrissantMains', label: t('habitsCosmetiques.handNourishing') },
+          { id: 'soinAntiAgeMains', label: t('habitsCosmetiques.handAntiAging') },
+          { id: 'soinAntiTachesMains', label: t('habitsCosmetiques.handAntiSpot') },
+          { id: 'soinPieds', label: t('habitsCosmetiques.footCare') },
+          { id: 'soinOngles', label: t('habitsCosmetiques.nailCare') }
         ]
       }
     ]
   },
   {
-    title: 'Produits d\'hygiène',
+    title: t('habitsCosmetiques.hygieneProducts'),
     icon: 'droplet',
     groups: [
       {
         items: [
-          { id: 'gelDouche', label: 'Gel douche' },
-          { id: 'laitDouche', label: 'Lait douche' },
-          { id: 'savon', label: 'Savon' },
-          { id: 'produitsBain', label: 'Produits bain' },
-          { id: 'nettoyantIntime', label: 'Nettoyant intime' },
-          { id: 'deodorant', label: 'Déodorant' },
-          { id: 'antiTranspirant', label: 'Anti-transpirant' }
+          { id: 'gelDouche', label: t('habitsCosmetiques.showerGel') },
+          { id: 'laitDouche', label: t('habitsCosmetiques.showerMilk') },
+          { id: 'savon', label: t('habitsCosmetiques.soap') },
+          { id: 'produitsBain', label: t('habitsCosmetiques.bathProducts') },
+          { id: 'nettoyantIntime', label: t('habitsCosmetiques.intimateCleanser') },
+          { id: 'deodorant', label: t('habitsCosmetiques.deodorant') },
+          { id: 'antiTranspirant', label: t('habitsCosmetiques.antiperspirant') }
         ]
       }
     ]
   },
   {
-    title: 'Soins capillaires',
+    title: t('habitsCosmetiques.hairCare'),
     icon: 'droplet',
     groups: [
       {
         items: [
-          { id: 'shampoing', label: 'Shampooing' },
-          { id: 'apresShampoing', label: 'Après-shampooing' },
-          { id: 'masqueCapillaire', label: 'Masque capillaire' },
-          { id: 'produitCoiffantFixant', label: 'Produit coiffant' },
-          { id: 'colorationMeches', label: 'Coloration/mèches' },
-          { id: 'permanente', label: 'Permanente' },
-          { id: 'lissageDefrisage', label: 'Lissage/défrisage' },
-          { id: 'extensionsCapillaires', label: 'Extensions capillaires' }
+          { id: 'shampoing', label: t('habitsCosmetiques.shampoo') },
+          { id: 'apresShampoing', label: t('habitsCosmetiques.conditioner') },
+          { id: 'masqueCapillaire', label: t('habitsCosmetiques.hairMask') },
+          { id: 'produitCoiffantFixant', label: t('habitsCosmetiques.stylingProduct') },
+          { id: 'colorationMeches', label: t('habitsCosmetiques.coloringHighlights') },
+          { id: 'permanente', label: t('habitsCosmetiques.perm') },
+          { id: 'lissageDefrisage', label: t('habitsCosmetiques.straighteningRelaxing') },
+          { id: 'extensionsCapillaires', label: t('habitsCosmetiques.hairExtensions') }
         ]
       }
     ]
   },
   {
-    title: 'Maquillage visage',
+    title: t('habitsCosmetiques.faceMakeup'),
     icon: 'brush',
     groups: [
       {
         items: [
-          { id: 'fondDeTeint', label: 'Fond de teint' },
-          { id: 'poudreLibre', label: 'Poudre libre' },
-          { id: 'blushFardAJoues', label: 'Blush/fard à joues' },
-          { id: 'correcteurTeint', label: 'Correcteur teint' },
-          { id: 'anticerne', label: 'Anticerne' },
-          { id: 'baseMaquillage', label: 'Base maquillage' },
-          { id: 'cremeTeintee', label: 'Crème teintée' }
+          { id: 'fondDeTeint', label: t('habitsCosmetiques.foundation') },
+          { id: 'poudreLibre', label: t('habitsCosmetiques.loosePowder') },
+          { id: 'blushFardAJoues', label: t('habitsCosmetiques.blush') },
+          { id: 'correcteurTeint', label: t('habitsCosmetiques.concealer') },
+          { id: 'anticerne', label: t('habitsCosmetiques.underEyeConcealer') },
+          { id: 'baseMaquillage', label: t('habitsCosmetiques.primer') },
+          { id: 'cremeTeintee', label: t('habitsCosmetiques.tintedCream') }
         ]
       }
     ]
   },
   {
-    title: 'Maquillage yeux',
+    title: t('habitsCosmetiques.eyeMakeup'),
     icon: 'brush',
     groups: [
       {
         items: [
-          { id: 'mascara', label: 'Mascara' },
-          { id: 'mascaraWaterproof', label: 'Mascara waterproof' },
-          { id: 'crayonsYeux', label: 'Crayons yeux' },
-          { id: 'eyeliner', label: 'Eyeliner' },
-          { id: 'fardAPaupieres', label: 'Fard à paupières' },
-          { id: 'maquillageDesSourcils', label: 'Maquillage sourcils' },
-          { id: 'fauxCils', label: 'Faux cils' }
+          { id: 'mascara', label: t('habitsCosmetiques.mascara') },
+          { id: 'mascaraWaterproof', label: t('habitsCosmetiques.waterproofMascara') },
+          { id: 'crayonsYeux', label: t('habitsCosmetiques.eyePencils') },
+          { id: 'eyeliner', label: t('habitsCosmetiques.eyeliner') },
+          { id: 'fardAPaupieres', label: t('habitsCosmetiques.eyeshadow') },
+          { id: 'maquillageDesSourcils', label: t('habitsCosmetiques.eyebrowMakeup') },
+          { id: 'fauxCils', label: t('habitsCosmetiques.falseLashes') }
         ]
       }
     ]
   },
   {
-    title: 'Maquillage lèvres et ongles',
+    title: t('habitsCosmetiques.lipsNailsMakeup'),
     icon: 'brush',
     groups: [
       {
         items: [
-          { id: 'rougeALevres', label: 'Rouge à lèvres' },
-          { id: 'gloss', label: 'Gloss' },
-          { id: 'crayonLevres', label: 'Crayon lèvres' },
-          { id: 'vernisAOngles', label: 'Vernis à ongles' },
-          { id: 'dissolvantOngles', label: 'Dissolvant' },
-          { id: 'fauxOngles', label: 'Faux ongles' },
-          { id: 'manucures', label: 'Manucures' }
+          { id: 'rougeALevres', label: t('habitsCosmetiques.lipstick') },
+          { id: 'gloss', label: t('habitsCosmetiques.lipGloss') },
+          { id: 'crayonLevres', label: t('habitsCosmetiques.lipLiner') },
+          { id: 'vernisAOngles', label: t('habitsCosmetiques.nailPolish') },
+          { id: 'dissolvantOngles', label: t('habitsCosmetiques.nailPolishRemover') },
+          { id: 'fauxOngles', label: t('habitsCosmetiques.falseNails') },
+          { id: 'manucures', label: t('habitsCosmetiques.manicures') }
         ]
       }
     ]
   },
   {
-    title: 'Maquillage permanent',
+    title: t('habitsCosmetiques.permanentMakeup'),
     icon: 'brush',
     groups: [
       {
         items: [
-          { id: 'maquillagePermanentYeux', label: 'Yeux' },
-          { id: 'maquillagePermanentLevres', label: 'Lèvres' },
-          { id: 'maquillagePermanentSourcils', label: 'Sourcils' }
+          { id: 'maquillagePermanentYeux', label: t('habitsCosmetiques.permanentEyes') },
+          { id: 'maquillagePermanentLevres', label: t('habitsCosmetiques.permanentLips') },
+          { id: 'maquillagePermanentSourcils', label: t('habitsCosmetiques.permanentEyebrows') }
         ]
       }
     ]
   },
   {
-    title: 'Solaire',
+    title: t('habitsCosmetiques.sunCare'),
     icon: 'droplet',
     groups: [
       {
         items: [
-          { id: 'protecteurSolaireVisage', label: 'Protecteur visage' },
-          { id: 'protecteurSolaireCorps', label: 'Protecteur corps' },
-          { id: 'protecteurSolaireLevres', label: 'Protecteur lèvres' },
-          { id: 'soinApresSoleil', label: 'Soin après-soleil' },
-          { id: 'autobronzant', label: 'Autobronzant' }
+          { id: 'protecteurSolaireVisage', label: t('habitsCosmetiques.faceSunscreen') },
+          { id: 'protecteurSolaireCorps', label: t('habitsCosmetiques.bodySunscreen') },
+          { id: 'protecteurSolaireLevres', label: t('habitsCosmetiques.lipSunscreen') },
+          { id: 'soinApresSoleil', label: t('habitsCosmetiques.afterSun') },
+          { id: 'autobronzant', label: t('habitsCosmetiques.selfTanner') }
         ]
       }
     ]
   },
   {
-    title: 'Parfums',
+    title: t('habitsCosmetiques.fragrances'),
     icon: 'droplet',
     groups: [
       {
         items: [
-          { id: 'parfum', label: 'Parfum' },
-          { id: 'eauDeToilette', label: 'Eau de toilette' }
+          { id: 'parfum', label: t('habitsCosmetiques.perfume') },
+          { id: 'eauDeToilette', label: t('habitsCosmetiques.eauDeToilette') }
         ]
       }
     ]
   },
   {
-    title: 'Produits pour hommes',
+    title: t('habitsCosmetiques.mensProducts'),
     icon: 'user',
     groups: [
       {
         items: [
-          { id: 'apresRasage', label: 'Après-rasage' },
-          { id: 'gelARaser', label: 'Gel à raser' },
-          { id: 'mousseARaser', label: 'Mousse à raser' },
-          { id: 'tondeuseBarbe', label: 'Tondeuse barbe' },
-          { id: 'ombreBarbe', label: 'Ombre barbe' },
-          { id: 'rasoirElectrique', label: 'Rasoir électrique' },
-          { id: 'rasoirMecanique', label: 'Rasoir mécanique' }
+          { id: 'apresRasage', label: t('habitsCosmetiques.aftershave') },
+          { id: 'gelARaser', label: t('habitsCosmetiques.shavingGel') },
+          { id: 'mousseARaser', label: t('habitsCosmetiques.shavingFoam') },
+          { id: 'tondeuseBarbe', label: t('habitsCosmetiques.beardTrimmer') },
+          { id: 'ombreBarbe', label: t('habitsCosmetiques.beardShading') },
+          { id: 'rasoirElectrique', label: t('habitsCosmetiques.electricShaver') },
+          { id: 'rasoirMecanique', label: t('habitsCosmetiques.mechanicalRazor') }
         ]
       }
     ]
   }
 ];
+
+// Export pour la compatibilité avec l'ancien code
+export const FORM_SECTIONS = getFormSections((key: string) => key);

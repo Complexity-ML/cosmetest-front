@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Mail, Copy, Download, Eye } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import emailService from '../../services/emailService';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -36,6 +37,7 @@ const BulkEmailModal: React.FC<BulkEmailModalProps> = ({
   selectedVolontaires = [],
   onEmailSent
 }) => {
+  const { t } = useTranslation();
   const [emailData, setEmailData] = useState<EmailData>({
     subject: '',
     message: '',
@@ -58,16 +60,16 @@ const BulkEmailModal: React.FC<BulkEmailModalProps> = ({
     }
 
     if (selectedVolontaires.length === 0) {
-      setError('Aucun volontaire sélectionné');
+      setError(t('reports.email.noVolunteerSelected'));
       return;
     }
 
     try {
       // Si trop de destinataires, diviser en groupes
-      if (selectedVolontaires.length > 100) {
-        const groups = emailService.splitIntoGroups(selectedVolontaires, 100);
+      if (selectedVolontaires.length > 130) {
+        const groups = emailService.splitIntoGroups(selectedVolontaires, 130);
 
-        if (confirm(`${selectedVolontaires.length} destinataires seront divisés en ${groups.length} fichiers .eml. Continuer ?`)) {
+        if (confirm(t('reports.email.splitConfirm', { count: selectedVolontaires.length, groups: groups.length }))) {
           groups.forEach((group, index) => {
             emailService.openOutlookWithRecipients(group, {
               ...emailData,
@@ -104,22 +106,34 @@ const BulkEmailModal: React.FC<BulkEmailModalProps> = ({
     setError('');
 
     if (selectedVolontaires.length === 0) {
-      setError('Aucun volontaire sélectionné');
+      setError(t('reports.email.noVolunteerSelected'));
       return;
     }
 
     try {
-      const emailsList = selectedVolontaires.map(vol => vol.email).filter(email => email);
+      // Filtrer les emails valides et exclure "non défini", "undefined", etc.
+      const emailsList = selectedVolontaires
+        .map(vol => vol.email)
+        .filter(email => {
+          if (!email) return false;
+          const emailLower = String(email).toLowerCase().trim();
+          // Exclure les valeurs comme "non défini", "undefined", "null", etc.
+          return emailLower !== 'non défini' &&
+                 emailLower !== 'non defini' &&
+                 emailLower !== 'undefined' &&
+                 emailLower !== 'null' &&
+                 emailLower !== '';
+        });
 
       if (emailsList.length === 0) {
-        setError('Aucune adresse email trouvée');
+        setError(t('reports.email.noEmailFound'));
         return;
       }
 
-      // Diviser en groupes de 100
+      // Diviser en groupes de 130
       const groups = [];
-      for (let i = 0; i < emailsList.length; i += 100) {
-        groups.push(emailsList.slice(i, i + 100));
+      for (let i = 0; i < emailsList.length; i += 130) {
+        groups.push(emailsList.slice(i, i + 130));
       }
 
       // Créer les fichiers TXT
@@ -145,7 +159,7 @@ const BulkEmailModal: React.FC<BulkEmailModalProps> = ({
         window.URL.revokeObjectURL(url);
       });
 
-      alert(`${groups.length} fichiers TXT créés avec ${emailsList.length} adresses email au total.`);
+      alert(t('reports.email.txtFilesCreated', { count: groups.length, total: emailsList.length }));
 
       onEmailSent && onEmailSent({
         count: emailsList.length,
@@ -172,7 +186,7 @@ const BulkEmailModal: React.FC<BulkEmailModalProps> = ({
     }
 
     if (selectedVolontaires.length === 0) {
-      setError('Aucun volontaire sélectionné');
+      setError(t('reports.email.noVolunteerSelected'));
       return;
     }
 
@@ -191,7 +205,7 @@ const BulkEmailModal: React.FC<BulkEmailModalProps> = ({
       handleClose();
     } catch (err) {
       console.error('Erreur envoi email:', err);
-      setError('Erreur lors de l\'envoi des emails. Veuillez réessayer.');
+      setError(t('reports.email.sendingError'));
     } finally {
       setSending(false);
     }
@@ -223,32 +237,9 @@ const BulkEmailModal: React.FC<BulkEmailModalProps> = ({
 
   const insertTemplate = (template: 'etude' | 'rappel' | 'suivi') => {
     const templates = {
-      etude: `Bonjour {{prenom}} {{nom}},
-
-Nous avons une nouvelle étude cosmétique qui pourrait vous intéresser.
-
-Votre profil correspond parfaitement aux critères recherchés pour cette étude.
-
-Pour plus d'informations, n'hésitez pas à nous contacter.
-
-Cordialement,
-L'équipe CosmeTest`,
-      rappel: `Bonjour {{prenom}} {{nom}},
-
-Nous souhaitons vous rappeler votre participation à notre étude cosmétique.
-
-Merci de confirmer votre disponibilité dans les plus brefs délais.
-
-Cordialement,
-L'équipe CosmeTest`,
-      suivi: `Bonjour {{prenom}} {{nom}},
-
-Nous espérons que vous allez bien.
-
-Suite à votre participation à notre dernière étude, nous aimerions avoir vos retours.
-
-Cordialement,
-L'équipe CosmeTest`
+      etude: t('reports.email.studyEmailTemplate'),
+      rappel: t('reports.email.reminderEmailTemplate'),
+      suivi: t('reports.email.followUpEmailTemplate')
     };
 
     setEmailData(prev => ({
@@ -262,7 +253,7 @@ L'équipe CosmeTest`
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            Envoi groupé d'emails ({selectedVolontaires.length} destinataires)
+            {t('reports.email.bulkEmailTitle', { count: selectedVolontaires.length })}
           </DialogTitle>
         </DialogHeader>
 
@@ -276,7 +267,7 @@ L'équipe CosmeTest`
           <form onSubmit={handleApiSend} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="senderName">Nom de l'expéditeur</Label>
+                <Label htmlFor="senderName">{t('reports.email.senderName')}</Label>
                 <Input
                   id="senderName"
                   value={emailData.senderName}
@@ -285,7 +276,7 @@ L'équipe CosmeTest`
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="senderEmail">Email de l'expéditeur</Label>
+                <Label htmlFor="senderEmail">{t('reports.email.senderEmail')}</Label>
                 <Input
                   id="senderEmail"
                   type="email"
@@ -297,7 +288,7 @@ L'équipe CosmeTest`
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="subject">Sujet *</Label>
+              <Label htmlFor="subject">{t('reports.email.subjectRequired')}</Label>
               <Input
                 id="subject"
                 required
@@ -309,7 +300,7 @@ L'équipe CosmeTest`
 
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <Label htmlFor="message">Message *</Label>
+                <Label htmlFor="message">{t('reports.email.messageRequired')}</Label>
                 <div className="flex gap-2">
                   <Button
                     type="button"
@@ -317,7 +308,7 @@ L'équipe CosmeTest`
                     size="sm"
                     onClick={() => insertTemplate('etude')}
                   >
-                    Modèle Étude
+                    {t('reports.email.studyTemplate')}
                   </Button>
                   <Button
                     type="button"
@@ -325,7 +316,7 @@ L'équipe CosmeTest`
                     size="sm"
                     onClick={() => insertTemplate('rappel')}
                   >
-                    Modèle Rappel
+                    {t('reports.email.reminderTemplate')}
                   </Button>
                   <Button
                     type="button"
@@ -333,7 +324,7 @@ L'équipe CosmeTest`
                     size="sm"
                     onClick={() => insertTemplate('suivi')}
                   >
-                    Modèle Suivi
+                    {t('reports.email.followUpTemplate')}
                   </Button>
                 </div>
               </div>
@@ -343,16 +334,16 @@ L'équipe CosmeTest`
                 value={emailData.message}
                 onChange={(e) => setEmailData(prev => ({ ...prev, message: e.target.value }))}
                 rows={10}
-                placeholder="Votre message ici... Utilisez {{nom}} et {{prenom}} pour personnaliser"
+                placeholder={t('reports.email.messageTemplate')}
               />
               <p className="text-xs text-muted-foreground">
-                Variables disponibles: {'{nom}'}, {'{prenom}'}, {'{email}'}
+                {t('reports.email.variablesInfo')}
               </p>
             </div>
 
             <Card>
               <CardContent className="pt-6">
-                <h4 className="font-medium text-sm mb-2">Destinataires ({selectedVolontaires.length})</h4>
+                <h4 className="font-medium text-sm mb-2">{t('reports.email.recipientsTitle')} ({selectedVolontaires.length})</h4>
                 <div className="max-h-32 overflow-y-auto text-sm text-muted-foreground space-y-1">
                   {selectedVolontaires.slice(0, 10).map((vol) => (
                     <div key={vol.id} className="flex justify-between py-1">
@@ -362,7 +353,7 @@ L'équipe CosmeTest`
                   ))}
                   {selectedVolontaires.length > 10 && (
                     <div className="text-xs mt-2">
-                      ... et {selectedVolontaires.length - 10} autres destinataires
+                      {t('reports.email.andOthers', { count: selectedVolontaires.length - 10 })}
                     </div>
                   )}
                 </div>
@@ -377,7 +368,7 @@ L'équipe CosmeTest`
                   onClick={handlePreview}
                 >
                   <Eye className="w-4 h-4 mr-2" />
-                  Aperçu
+                  {t('reports.email.preview')}
                 </Button>
                 <Button
                   type="button"
@@ -385,14 +376,14 @@ L'équipe CosmeTest`
                   onClick={async () => {
                     try {
                       await emailService.copyEmailsToClipboard(selectedVolontaires);
-                      alert('Emails copiés dans le presse-papiers !');
+                      alert(t('reports.email.emailsCopied'));
                     } catch (err) {
-                      alert('Erreur lors de la copie des emails');
+                      alert(t('reports.email.emailsCopyError'));
                     }
                   }}
                 >
                   <Copy className="w-4 h-4 mr-2" />
-                  Copier emails
+                  {t('reports.email.copyEmails')}
                 </Button>
                 <Button
                   type="button"
@@ -400,7 +391,7 @@ L'équipe CosmeTest`
                   onClick={handleCreateTxtFiles}
                 >
                   <Download className="w-4 h-4 mr-2" />
-                  Fichiers TXT (100/batch)
+                  {t('reports.email.txtFiles')}
                 </Button>
               </div>
               <div className="flex gap-2">
@@ -409,27 +400,27 @@ L'équipe CosmeTest`
                   variant="outline"
                   onClick={handleClose}
                 >
-                  Annuler
+                  {t('common.cancel')}
                 </Button>
                 <Button
                   type="button"
                   onClick={handleOutlookSend}
                 >
                   <Mail className="w-4 h-4 mr-2" />
-                  Télécharger brouillon ({selectedVolontaires.length})
+                  {t('reports.email.downloadDraft')} ({selectedVolontaires.length})
                 </Button>
               </div>
             </div>
           </form>
         ) : (
           <div className="space-y-4">
-            <h4 className="font-medium">Aperçu de l'email</h4>
+            <h4 className="font-medium">{t('reports.email.emailPreviewTitle')}</h4>
             <Card>
               <CardContent className="pt-6">
                 <div className="border-b pb-3 mb-3 space-y-1">
-                  <div className="text-sm text-muted-foreground">De: {previewVolontaire?.sender}</div>
-                  <div className="text-sm text-muted-foreground">À: {previewVolontaire?.recipient}</div>
-                  <div className="font-medium mt-2">Sujet: {previewVolontaire?.subject}</div>
+                  <div className="text-sm text-muted-foreground">{t('reports.email.from')} {previewVolontaire?.sender}</div>
+                  <div className="text-sm text-muted-foreground">{t('reports.email.to')} {previewVolontaire?.recipient}</div>
+                  <div className="font-medium mt-2">{t('reports.email.subject')}: {previewVolontaire?.subject}</div>
                 </div>
                 <div className="whitespace-pre-wrap text-sm">
                   {previewVolontaire?.message}
@@ -442,33 +433,33 @@ L'équipe CosmeTest`
                   variant="secondary"
                   onClick={() => setShowPreview(false)}
                 >
-                  Modifier
+                  {t('reports.email.modify')}
                 </Button>
                 <Button
                   variant="secondary"
                   onClick={async () => {
                     try {
                       await emailService.copyEmailsToClipboard(selectedVolontaires);
-                      alert('Emails copiés dans le presse-papiers !');
+                      alert(t('reports.email.emailsCopied'));
                     } catch (err) {
-                      alert('Erreur lors de la copie des emails');
+                      alert(t('reports.email.emailsCopyError'));
                     }
                   }}
                 >
                   <Copy className="w-4 h-4 mr-2" />
-                  Copier emails
+                  {t('reports.email.copyEmails')}
                 </Button>
                 <Button
                   variant="secondary"
                   onClick={handleCreateTxtFiles}
                 >
                   <Download className="w-4 h-4 mr-2" />
-                  Fichiers TXT (100/batch)
+                  {t('reports.email.txtFiles')}
                 </Button>
               </div>
               <Button onClick={handleOutlookSend}>
                 <Mail className="w-4 h-4 mr-2" />
-                Télécharger brouillon
+                {t('reports.email.downloadDraft')}
               </Button>
             </div>
           </div>

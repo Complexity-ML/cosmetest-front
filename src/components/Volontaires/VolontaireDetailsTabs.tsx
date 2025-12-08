@@ -1,24 +1,6 @@
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-
-const DETAILS_TABS = [
-  { id: "info", label: "Informations personnelles" },
-  { id: "caracteristiques", label: "Caracteristiques" },
-  { id: "peau", label: "Peau" },
-  { id: "cheveux", label: "Cheveux" },
-  { id: "cils", label: "Cils" },
-  { id: "marques", label: "Marques cutanees" },
-  { id: "problemes", label: "Problemes specifiques" },
-  { id: "medical", label: "Informations medicales" },
-  { id: "mesures", label: "Mesures" },
-  { id: "rib", label: "RIB" },
-  { id: "evaluation", label: "Evaluation" },
-  { id: "notes", label: "Notes" },
-  { id: "rdvs", label: "Rendez-vous" },
-  { id: "etudes", label: "Etudes" },
-  { id: "assignation", label: "Assignation RDV" },
-  { id: "photos", label: "Photos" },
-];
+import { useTranslation } from 'react-i18next';
 
 interface VolontaireDetailsTabsProps {
   activeTab: string;
@@ -33,6 +15,26 @@ const VolontaireDetailsTabs: React.FC<VolontaireDetailsTabsProps> = ({
   rdvCount = 0,
   etudesCount = 0
 }) => {
+  const { t } = useTranslation();
+
+  const DETAILS_TABS = [
+    { id: "info", label: t('volunteers.personalInformation') },
+    { id: "caracteristiques", label: t('volunteers.characteristics') },
+    { id: "peau", label: t('volunteers.skin') },
+    { id: "cheveux", label: t('volunteers.hair') },
+    { id: "cils", label: t('volunteers.eyelashes') },
+    { id: "marques", label: t('volunteers.skinMarks') },
+    { id: "problemes", label: t('volunteers.specificProblems') },
+    { id: "medical", label: t('volunteers.medicalInformation') },
+    { id: "mesures", label: t('volunteers.measurements') },
+    { id: "rib", label: t('volunteers.bankDetails') },
+    { id: "evaluation", label: t('volunteers.evaluation') },
+    { id: "notes", label: t('volunteers.comments') },
+    { id: "rdvs", label: t('appointments.title') },
+    { id: "etudes", label: t('studies.studies') },
+    { id: "assignation", label: t('volunteers.rdvAssignment') },
+    { id: "photos", label: t('volunteers.photos') },
+  ];
   const getLabel = (id: string, baseLabel: string) => {
     if (id === "rdvs" && rdvCount > 0) {
       return (
@@ -70,5 +72,4 @@ const VolontaireDetailsTabs: React.FC<VolontaireDetailsTabsProps> = ({
   );
 };
 
-export { DETAILS_TABS };
 export default VolontaireDetailsTabs;

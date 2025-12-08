@@ -12,18 +12,19 @@ const isValidId = (id: any): boolean => {
 };
 
 // Fonction pour transformer les données du volontaire dans un format normalisé
+// Note: Le backend peut renvoyer soit nomVol/prenomVol soit nom/prenom (via ReflectionUtils)
 const transformVolontaireData = (data: VolontaireData | null): VolontaireTransformed | null => {
   if (!data) return null;
 
   return {
-    id: data.idVol || data.volontaireId,
-    nom: data.nomVol,
-    prenom: data.prenomVol,
-    email: data.emailVol,
+    id: data.idVol || data.volontaireId || (data as any).id,
+    nom: data.nomVol || (data as any).nom,
+    prenom: data.prenomVol || (data as any).prenom,
+    email: data.emailVol || (data as any).email,
     sexe: data.sexe,
-    adresseVol: data.adresseVol,
-    codePostal: data.cpVol,
-    ville: data.villeVol,
+    adresseVol: data.adresseVol || (data as any).adresse,
+    codePostal: data.cpVol || (data as any).cp,
+    ville: data.villeVol || (data as any).ville,
     dateNaissance: data.dateNaissance,
     dateI: data.dateI, // Date d'inclusion
     archive: data.archive,
@@ -31,12 +32,12 @@ const transformVolontaireData = (data: VolontaireData | null): VolontaireTransfo
     ethnie: data.ethnie,
 
     // Informations personnelles
-    titre: data.titreVol,
-    telephone: data.telPortableVol,
-    telephoneDomicile: data.telDomicileVol,
+    titre: data.titreVol || (data as any).titre,
+    telephone: data.telPortableVol || (data as any).telPortable,
+    telephoneDomicile: data.telDomicileVol || (data as any).telDomicile,
 
     // Adresse
-    pays: data.paysVol,
+    pays: data.paysVol || (data as any).pays,
 
     // Caractéristiques physiques
     taille: data.taille,

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import MatchingSystem from '../../components/Rapports/MatchingSystem';
 
 // Icônes simples
@@ -27,36 +28,37 @@ const ClipboardIcon = () => (
 );
 
 const RapportsPage = () => {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('matching');
 
   // Types de rapports disponibles
   const rapportTypes = [
     {
       id: 'matching',
-      title: 'Matching Volontaires',
+      title: t('reports.matchingVolunteers'),
       icon: <UsersIcon />,
-      description: 'Trouvez les volontaires les plus adaptés selon vos critères de maquillage et profil démographique.',
+      description: t('reports.matchingDesc'),
       available: true
     },
     {
       id: 'stats',
-      title: 'Statistiques',
+      title: t('reports.statistics'),
       icon: <ChartIcon />,
-      description: 'Analyse des données des volontaires et tendances cosmétiques.',
+      description: t('reports.statisticsDesc'),
       available: false
     },
     {
       id: 'activity',
-      title: 'Activité Études',
+      title: t('reports.studiesActivity'),
       icon: <ClipboardIcon />,
-      description: 'Suivi des études en cours et historique des participations.',
+      description: t('reports.studiesActivityDesc'),
       available: false
     },
     {
       id: 'planning',
-      title: 'Planning',
+      title: t('reports.planning'),
       icon: <CalendarIcon />,
-      description: 'Gestion des créneaux et disponibilités.',
+      description: t('reports.planningDesc'),
       available: false
     }
   ];
@@ -78,7 +80,7 @@ const RapportsPage = () => {
               {rapportTypes.find(r => r.id === activeTab)?.title}
             </h2>
             <p className="text-gray-500 mb-6">
-              Ce module sera disponible dans une prochaine version.
+              {t('reports.comingSoon')}
             </p>
             <div className="bg-gray-50 p-4 rounded-lg max-w-md mx-auto">
               <p className="text-sm text-gray-600">
@@ -100,10 +102,10 @@ const RapportsPage = () => {
         <div className="mb-8">
           <div className="flex items-center mb-4">
             <ChartIcon />
-            <h1 className="ml-3 text-2xl font-bold text-gray-900">Centre de Rapports</h1>
+            <h1 className="ml-3 text-2xl font-bold text-gray-900">{t('reports.title')}</h1>
           </div>
           <p className="text-gray-600">
-            Outils d'analyse et de matching pour optimiser la gestion de vos volontaires et études cosmétiques.
+            {t('reports.subtitle')}
           </p>
         </div>
 
@@ -126,7 +128,7 @@ const RapportsPage = () => {
                   {type.title}
                   {!type.available && (
                     <span className="ml-2 text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full">
-                      Bientôt
+                      {t('reports.soon')}
                     </span>
                   )}
                 </button>
@@ -164,7 +166,7 @@ const RapportsPage = () => {
                 {!type.available && (
                   <div className="mt-2">
                     <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">
-                      En développement
+                      {t('reports.inDevelopment')}
                     </span>
                   </div>
                 )}

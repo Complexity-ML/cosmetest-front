@@ -1,4 +1,5 @@
 ﻿import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { GroupeData } from '../../../types/etude.types';
 
 interface AssignmentSummaryProps {
@@ -26,6 +27,7 @@ const AssignmentSummary: React.FC<AssignmentSummaryProps> = ({
   onReset,
   onSubmit,
 }) => {
+  const { t } = useTranslation();
   if (!visible) {
     return null;
   }
@@ -43,26 +45,26 @@ const AssignmentSummary: React.FC<AssignmentSummaryProps> = ({
           <h3
             className={`text-lg font-semibold ${isAssignMode ? 'text-blue-800' : 'text-red-800'}`}
           >
-            {isAssignMode ? 'Assignation en cours' : 'Désassignation en cours'}
+            {isAssignMode ? t('appointments.assignInProgress') : t('appointments.unassignInProgress')}
           </h3>
           <p className={`text-sm ${isAssignMode ? 'text-blue-600' : 'text-red-600'}`}>
-            {selectedAppointmentsCount} rendez-vous
-            {isAssignMode && ` • ${selectedVolunteersCount} volontaires`}
+            {selectedAppointmentsCount} {t('appointments.list')}
+            {isAssignMode && ` • ${selectedVolunteersCount} ${t('volunteers.title').toLowerCase()}`}
             {isAssignMode && selectedGroupeId && (
               <span>
-                {' • Groupe : '}
+                {' • '}{t('groups.group')} {': '}
                 {selectedGroupeDetails?.intitule ?? `#${selectedGroupeId}`}
                 {selectedGroupeDetails?.iv ? (
-                  <span className="text-green-600 font-medium"> (IV : {selectedGroupeDetails.iv}€)</span>
+                  <span className="text-green-600 font-medium"> ({t('studies.visitAllowance')} : {selectedGroupeDetails.iv}€)</span>
                 ) : null}
               </span>
             )}
           </p>
           {isAssignMode && assignmentMode === 'auto' && selectedAppointmentsCount > 0 && selectedVolunteersCount > 0 && (
             <p className={`text-xs mt-1 ${isAssignMode ? 'text-blue-500' : 'text-red-500'}`}>
-              {Math.min(selectedAppointmentsCount, selectedVolunteersCount)} assignation(s) seront effectuée(s)
+              {Math.min(selectedAppointmentsCount, selectedVolunteersCount)} {t('appointments.assignmentsWillBeMade')}
               {selectedGroupeDetails?.iv ? (
-                <span className="text-green-600"> avec IV de {selectedGroupeDetails.iv}€ chacune</span>
+                <span className="text-green-600"> {t('appointments.withAllowanceEach', { amount: selectedGroupeDetails.iv })}</span>
               ) : null}
             </p>
           )}
@@ -77,7 +79,7 @@ const AssignmentSummary: React.FC<AssignmentSummaryProps> = ({
                 : 'border-red-300 text-red-700 hover:bg-red-100'
             }`}
           >
-            Réinitialiser
+            {t('common.reset')}
           </button>
           <button
             type="button"
@@ -91,7 +93,7 @@ const AssignmentSummary: React.FC<AssignmentSummaryProps> = ({
                   : 'bg-red-600 hover:bg-red-700'
             }`}
           >
-            {loading ? (isAssignMode ? 'Assignation...' : 'Désassignation...') : isAssignMode ? 'Assigner' : 'Désassigner'}
+            {loading ? (isAssignMode ? t('appointments.assigning') : t('appointments.unassigning')) : isAssignMode ? t('appointments.assign') : t('appointments.unassign')}
           </button>
         </div>
       </div>

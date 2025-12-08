@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import groupeService from '../../services/groupeService'
 import etudeService from '../../services/etudeService'
 import { usePagination } from '../../hooks/usePagination'
@@ -18,6 +19,7 @@ interface EtudesCache {
 }
 
 const GroupesPage = () => {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [groupes, setGroupes] = useState<Groupe[]>([])
   const [etudes, setEtudes] = useState<EtudesCache>({}) // Cache pour stocker les informations des études
@@ -77,12 +79,12 @@ const GroupesPage = () => {
   
   // Fonction pour obtenir la référence d'une étude
   const getEtudeReference = (idEtude: number | undefined): string => {
-    if (!idEtude) return 'Non spécifiée';
-    
+    if (!idEtude) return t('groups.notSpecified');
+
     const etude = etudes[idEtude];
-    if (!etude) return `Étude #${idEtude}`;
-    
-    return etude.ref || etude.titre || `Étude #${idEtude}`;
+    if (!etude) return `${t('studies.studies')} #${idEtude}`;
+
+    return etude.ref || etude.titre || `${t('studies.studies')} #${idEtude}`;
   };
   
   // Fonction pour rechercher l'ID d'une étude à partir de sa référence
@@ -106,7 +108,7 @@ const GroupesPage = () => {
       handleFilterByEtude(etudeId);
     } else if (etudeRefFilter.trim()) {
       // Notification à l'utilisateur si aucune étude n'est trouvée
-      alert(`Aucune étude trouvée avec la référence "${etudeRefFilter}"`);
+      alert(`${t('groups.noGroups')} "${etudeRefFilter}"`);
     }
   };
   
@@ -170,7 +172,7 @@ const GroupesPage = () => {
         updateTotal(totalElements);
       } catch (error) {
         console.error('Erreur lors du chargement des groupes:', error)
-        setError('Impossible de charger les groupes. Veuillez réessayer plus tard.')
+        setError(t('groups.loadError'))
       } finally {
         setIsLoading(false)
       }
@@ -230,14 +232,14 @@ const GroupesPage = () => {
   }
 
   const handleDelete = async (id: number): Promise<void> => {
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer ce groupe ?')) {
+    if (window.confirm(t('groups.deleteConfirm'))) {
       try {
         await groupeService.delete(id)
         // Rafraîchir la liste après suppression
         setGroupes(groupes.filter(groupe => (groupe.idGroupe || groupe.id) !== id))
       } catch (error) {
         console.error('Erreur lors de la suppression:', error)
-        alert('Une erreur est survenue lors de la suppression du groupe')
+        alert(t('groups.deleteError'))
       }
     }
   }
@@ -245,11 +247,11 @@ const GroupesPage = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-800">Gestion des Groupes</h1>
+        <h1 className="text-2xl font-bold text-gray-800">{t('groups.title')}</h1>
         <Button asChild>
           <Link to="/groupes/nouveau">
             <Plus className="h-4 w-4 mr-2" />
-            Nouveau groupe
+            {t('groups.newGroup')}
           </Link>
         </Button>
       </div>
@@ -262,7 +264,7 @@ const GroupesPage = () => {
               <div className="relative flex gap-2">
                 <Input
                   type="text"
-                  placeholder="Référence d'étude..."
+                  placeholder={t('groups.searchByReference')}
                   value={etudeRefFilter}
                   onChange={(e) => setEtudeRefFilter(e.target.value)}
                   list="etudes-refs"
@@ -274,7 +276,7 @@ const GroupesPage = () => {
                   ))}
                 </datalist>
                 <Button type="submit" variant="outline">
-                  Filtrer par étude
+                  {t('groups.filterByStudy')}
                 </Button>
               </div>
             </form>
@@ -283,7 +285,7 @@ const GroupesPage = () => {
             <form onSubmit={handleFilterByAge} className="flex flex-1 gap-2">
               <Input
                 type="number"
-                placeholder="Âge min"
+                placeholder={t('groups.minAge')}
                 min="0"
                 value={ageMinFilter}
                 onChange={(e) => setAgeMinFilter(e.target.value)}
@@ -291,14 +293,14 @@ const GroupesPage = () => {
               />
               <Input
                 type="number"
-                placeholder="Âge max"
+                placeholder={t('groups.maxAge')}
                 min="0"
                 value={ageMaxFilter}
                 onChange={(e) => setAgeMaxFilter(e.target.value)}
                 className="w-1/3"
               />
               <Button type="submit" variant="outline">
-                Filtrer par âge
+                {t('groups.filterByAge')}
               </Button>
             </form>
             
@@ -308,7 +310,7 @@ const GroupesPage = () => {
               variant="secondary"
               disabled={!etudeFilter && !etudeRefFilter && !ageMinFilter && !ageMaxFilter && !ethnieFilter}
             >
-              Réinitialiser
+              {t('common.reset')}
             </Button>
           </div>
           
@@ -317,9 +319,8 @@ const GroupesPage = () => {
             <div className="mt-3 flex flex-wrap gap-2">
               {etudeFilter && (
                 <Badge variant="secondary" className="gap-1">
-                  Étude: {getEtudeReference(parseInt(etudeFilter, 10))}
-                  <button 
-                    onClick={() => {setEtudeFilter(''); setEtudeRefFilter('');}} 
+                  {t('groups.study')}: {getEtudeReference(parseInt(etudeFilter, 10))}
+                  <button                     onClick={() => {setEtudeFilter(''); setEtudeRefFilter('');}} 
                     className="ml-1 hover:bg-secondary-foreground/20 rounded-full"
                   >
                     <X className="h-3 w-3" />
@@ -328,7 +329,7 @@ const GroupesPage = () => {
               )}
               {(ageMinFilter || ageMaxFilter) && (
                 <Badge variant="secondary" className="gap-1">
-                  Âge: {ageMinFilter || '0'} - {ageMaxFilter || '∞'}
+                  {t('groups.ageRange')}: {ageMinFilter || '0'} - {ageMaxFilter || '∞'}
                   <button 
                     onClick={() => {
                       setAgeMinFilter('');
@@ -342,7 +343,7 @@ const GroupesPage = () => {
               )}
               {ethnieFilter && (
                 <Badge variant="secondary" className="gap-1">
-                  Ethnie: {ethnieFilter}
+                  {t('groups.ethnicity')}: {ethnieFilter}
                   <button 
                     onClick={() => setEthnieFilter('')} 
                     className="ml-1 hover:bg-secondary-foreground/20 rounded-full"
@@ -373,13 +374,13 @@ const GroupesPage = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Nom</TableHead>
-                    <TableHead>Étude</TableHead>
-                    <TableHead>Âge min</TableHead>
-                    <TableHead>Âge max</TableHead>
-                    <TableHead>Ethnie</TableHead>
-                    <TableHead>Participants</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead>{t('groups.name')}</TableHead>
+                    <TableHead>{t('groups.study')}</TableHead>
+                    <TableHead>{t('groups.minAge')}</TableHead>
+                    <TableHead>{t('groups.maxAge')}</TableHead>
+                    <TableHead>{t('groups.ethnicity')}</TableHead>
+                    <TableHead>{t('groups.participants')}</TableHead>
+                    <TableHead className="text-right">{t('common.actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -426,13 +427,13 @@ const GroupesPage = () => {
                               to={`/groupes/${groupe.idGroupe || groupe.id}`}
                               className="text-primary hover:text-primary/80"
                             >
-                              Détails
+                              {t('common.details')}
                             </Link>
                             <Link
                               to={`/groupes/${groupe.idGroupe || groupe.id}/edit`}
                               className="text-primary hover:text-primary/80"
                             >
-                              Modifier
+                              {t('common.edit')}
                             </Link>
                             <button
                               onClick={() => {
@@ -442,7 +443,7 @@ const GroupesPage = () => {
                               className="text-destructive hover:text-destructive/80"
                               disabled={!groupe.idGroupe && !groupe.id}
                             >
-                              Supprimer
+                              {t('common.delete')}
                             </button>
                           </div>
                         </TableCell>
@@ -451,7 +452,7 @@ const GroupesPage = () => {
                   ) : (
                     <TableRow>
                       <TableCell colSpan={7} className="text-center text-muted-foreground h-32">
-                        Aucun groupe trouvé
+                        {t('groups.noGroups')}
                       </TableCell>
                     </TableRow>
                   )}
@@ -464,7 +465,7 @@ const GroupesPage = () => {
             <Card>
               <CardContent className="flex flex-col sm:flex-row justify-between items-center py-4">
                 <p className="text-sm text-muted-foreground mb-4 sm:mb-0">
-                  Affichage de {page * size + 1} à {Math.min((page + 1) * size, page * size + groupes.length)} groupes
+                  {t('pagination.showing')} {page * size + 1} {t('pagination.to')} {Math.min((page + 1) * size, page * size + groupes.length)} {t('groups.title').toLowerCase()}
                 </p>
                 <div className="flex space-x-2">
                   <Button
@@ -473,9 +474,9 @@ const GroupesPage = () => {
                     variant="outline"
                     size="sm"
                   >
-                    Précédent
+                    {t('pagination.previous')}
                   </Button>
-                  
+
                   <div className="hidden sm:flex space-x-1">
                     {[...Array(Math.min(5, pageCount)).keys()]
                       .map(i => page < 2 ? i : page > pageCount - 3 ? pageCount - 5 + i : page - 2 + i)
@@ -492,14 +493,14 @@ const GroupesPage = () => {
                         </Button>
                       ))}
                   </div>
-                  
+
                   <Button
                     onClick={nextPage}
                     disabled={page >= pageCount - 1}
                     variant="outline"
                     size="sm"
                   >
-                    Suivant
+                    {t('pagination.next')}
                   </Button>
                 </div>
               </CardContent>

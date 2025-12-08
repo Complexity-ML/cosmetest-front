@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { CheckCircle2, Loader2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -33,6 +34,7 @@ const MassActionsPanel: React.FC<MassActionsPanelProps> = ({
   statistics,
   onMarkAll,
 }) => {
+  const { t } = useTranslation();
   const { unpaidCount, allPaidCount, annulesCount } = useMemo(() => {
     const actifs = (paiements || []).filter(p => !isVolontaireAnnule?.(p.idVolontaire, p.idEtude));
     return {
@@ -49,13 +51,13 @@ const MassActionsPanel: React.FC<MassActionsPanelProps> = ({
       <CardContent className="p-4">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-medium text-gray-900 mb-1">Actions en masse</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-1">{t('payments.massActions')}</h3>
             <p className="text-sm text-muted-foreground">
-              Etude: <span className="font-medium">{selectedEtudeRef || '-'}</span>
-              <span className="ml-2">• {unpaidCount} non paye{unpaidCount !== 1 ? 's' : ''}</span>
-              <span className="ml-2">• {allPaidCount} paye{allPaidCount !== 1 ? 's' : ''}</span>
+              {t('payments.study')}: <span className="font-medium">{selectedEtudeRef || '-'}</span>
+              <span className="ml-2">• {t('payments.unpaidCount', { count: unpaidCount })}</span>
+              <span className="ml-2">• {t('payments.paidCount', { count: allPaidCount })}</span>
               {annulesCount > 0 && (
-                <span className="ml-2 text-red-600">• {annulesCount} annule{annulesCount !== 1 ? 's' : ''}</span>
+                <span className="ml-2 text-red-600">• {t('payments.cancelledCount', { count: annulesCount })}</span>
               )}
             </p>
           </div>
@@ -63,7 +65,7 @@ const MassActionsPanel: React.FC<MassActionsPanelProps> = ({
           <div className="flex items-center space-x-3">
             {unpaidCount === 0 && (
               <Badge variant="secondary" className="bg-green-50 text-green-600 border-green-200">
-                Tous les paiements actifs sont deja payes
+                {t('payments.allActivePaymentsPaid')}
               </Badge>
             )}
 
@@ -74,12 +76,12 @@ const MassActionsPanel: React.FC<MassActionsPanelProps> = ({
               {isMassUpdating ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Mise a jour...
+                  {t('common.updating')}
                 </>
               ) : (
                 <>
                   <CheckCircle2 className="h-4 w-4 mr-2" />
-                  Marquer tout comme paye
+                  {t('payments.markAllAsPaid')}
                   {unpaidCount > 0 && (
                     <Badge variant="secondary" className="ml-2 bg-blue-500 text-white text-xs">
                       {unpaidCount}
@@ -96,7 +98,7 @@ const MassActionsPanel: React.FC<MassActionsPanelProps> = ({
             <Separator className="my-3" />
             <Alert variant="destructive" className="bg-red-50 border-red-200">
               <AlertDescription className="text-red-700">
-                <strong>Information importante :</strong> {annulesCount} volontaire{annulesCount !== 1 ? 's' : ''} annule{annulesCount !== 1 ? 's' : ''} exclu{annulesCount !== 1 ? 's' : ''} des actions de paiement.
+                <strong>{t('common.importantInfo')}:</strong> {t('payments.cancelledVolunteersExcluded', { count: annulesCount })}
               </AlertDescription>
             </Alert>
           </>

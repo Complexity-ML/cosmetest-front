@@ -1,15 +1,8 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import rdvService from '../../../services/rdvService';
-import etudeVolontaireService from '../../../services/etudeVolontaireService';
+import volontaireService from '../../../services/volontaireService';
 import groupeService from '../../../services/groupeService';
-
-interface Volunteer {
-  id?: number;
-  volontaireId?: number;
-  nom?: string;
-  prenom?: string;
-  [key: string]: any;
-}
 
 interface Appointment {
   idRdv?: number;
@@ -23,11 +16,20 @@ interface Appointment {
   idGroupe?: number;
   volontaire?: {
     id?: number;
+    idVol?: number;
+    nom?: string;
+    prenom?: string;
     [key: string]: any;
   };
   groupe?: {
     id?: number;
     idGroupe?: number;
+    nom?: string;
+    [key: string]: any;
+  };
+  etude?: {
+    ref?: string;
+    titre?: string;
     [key: string]: any;
   };
   [key: string]: any;
@@ -35,24 +37,27 @@ interface Appointment {
 
 interface AppointmentEditorProps {
   appointment: Appointment;
-  volunteers: Volunteer[];
+  volunteers?: any[];
   onBack: () => void;
   onSuccess: () => void;
 }
 
 const AppointmentEditor = ({
   appointment,
-  volunteers,
   onBack,
   onSuccess
 }: AppointmentEditorProps) => {
+  const { t } = useTranslation();
   const [date, setDate] = useState<string>('');
   const [time, setTime] = useState<string>('');
+  const [duree, setDuree] = useState<string>('');
   const [status, setStatus] = useState<string>('PLANIFIE');
   const [comments, setComments] = useState<string>('');
-  const [selectedVolunteerId, setSelectedVolunteerId] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [volontaireNom, setVolontaireNom] = useState<string>('');
+  const [groupeNom, setGroupeNom] = useState<string>('');
+  const [selectedGroupeId, setSelectedGroupeId] = useState<number | null>(null);
 
   // Initialiser les valeurs du formulaire avec celles du rendez-vous
   useEffect(() => {
@@ -78,16 +83,99 @@ const AppointmentEditor = ({
         setComments(appointment.commentaires);
       }
 
-      if (appointment.volontaire && appointment.volontaire.id) {
-        setSelectedVolunteerId(appointment.volontaire.id.toString());
+      if (appointment.duree) {
+        setDuree(appointment.duree.toString());
       }
     }
   }, [appointment]);
 
+  // Charger le nom du volontaire via son ID
+  useEffect(() => {
+    const volId = appointment?.idVolontaire;
+    if (volId) {
+      volontaireService.getById(volId)
+        .then((res) => {
+          // Le service retourne { data: transformedData } où nomVol->nom, prenomVol->prenom
+          const v = res?.data;
+          if (v) {
+            const nom = v.nom || '';
+            const prenom = v.prenom || '';
+            if (nom || prenom) {
+              setVolontaireNom(`${nom} ${prenom} (ID: ${volId})`.trim());
+            } else {
+              setVolontaireNom(`Volontaire ID: ${volId}`);
+            }
+          } else {
+            setVolontaireNom(`Volontaire ID: ${volId}`);
+          }
+        })
+        .catch((err) => {
+          console.error('Erreur chargement volontaire:', err);
+          setVolontaireNom(`Volontaire ID: ${volId}`);
+        });
+    }
+  }, [appointment?.idVolontaire]);
+
+  // Charger le nom du groupe via son ID ou via l'étude
+  useEffect(() => {
+    // D'abord, vérifier si le groupe est déjà dans l'appointment
+    if (appointment?.groupe?.nom) {
+      setGroupeNom(appointment.groupe.nom);
+      setSelectedGroupeId(appointment.groupe.idGroupe || appointment.groupe.id || appointment.idGroupe || null);
+      return;
+    }
+
+    const groupeId = appointment?.idGroupe;
+    const etudeId = appointment?.idEtude;
+
+    // Si on a un idGroupe, charger directement le groupe
+    if (groupeId) {
+      setSelectedGroupeId(groupeId);
+      groupeService.getById(groupeId)
+        .then((data) => {
+          if (data) {
+            const nom = data.nom || data.intitule || '';
+            if (nom) {
+              setGroupeNom(nom);
+            } else {
+              setGroupeNom(`Groupe ID: ${groupeId}`);
+            }
+          } else {
+            setGroupeNom(`Groupe ID: ${groupeId}`);
+          }
+        })
+        .catch((err) => {
+          console.error('Erreur chargement groupe:', err);
+          setGroupeNom(`Groupe ID: ${groupeId}`);
+        });
+    }
+    // Sinon, charger les groupes de l'étude et prendre le premier
+    else if (etudeId) {
+      groupeService.getGroupesByIdEtude(etudeId)
+        .then((groupes) => {
+          if (groupes && groupes.length > 0) {
+            // Prendre le premier groupe de l'étude
+            const premier = groupes[0];
+            const nom = premier.nom || premier.intitule || '';
+            const id = premier.idGroupe || premier.id;
+            if (nom) {
+              setGroupeNom(nom);
+            }
+            if (id) {
+              setSelectedGroupeId(id);
+            }
+          }
+        })
+        .catch((err) => {
+          console.error('Erreur chargement groupes de l\'étude:', err);
+        });
+    }
+  }, [appointment?.idGroupe, appointment?.groupe?.nom, appointment?.idEtude]);
+
   // Mettre à jour le rendez-vous
   const handleSubmit = async () => {
     if (!date) {
-      setError('La date est obligatoire');
+      setError(t('validation.dateRequired'));
       return;
     }
 
@@ -100,63 +188,21 @@ const AppointmentEditor = ({
         idRdv: appointment.idRdv,
         date,
         heure: time,
+        duree: duree ? parseInt(duree, 10) : null,
         etat: status,
         commentaires: comments,
-        idVolontaire: selectedVolunteerId || null
+        idVolontaire: appointment.idVolontaire || null,
+        idGroupe: selectedGroupeId || appointment.idGroupe || null
       };
-
-      // Gérer l'association étude-volontaire selon sélection
-      try {
-        const previousVolunteerId = appointment.volontaire?.id || appointment.idVolontaire || null;
-        const groupId = appointment.groupe?.id || appointment.groupe?.idGroupe || appointment.idGroupe || null;
-
-        if (!selectedVolunteerId && previousVolunteerId && appointment.idEtude) {
-          // Désassignation: supprimer l'association
-          try {
-            await etudeVolontaireService.desassignerVolontaireDEtude(appointment.idEtude, previousVolunteerId);
-          } catch (e: any) {
-            console.warn('Impossible de supprimer association étude-volontaire (désassignation):', e?.message || e);
-          }
-        }
-
-        if (selectedVolunteerId && appointment.idEtude) {
-          // Assigner: garantir/creer l'association
-          let ivGroupe = 0;
-          if (groupId) {
-            try {
-              const groupeDetails = await groupeService.getById(groupId);
-              if (groupeDetails && groupeDetails.iv !== undefined) {
-                ivGroupe = parseInt(groupeDetails.iv, 10) || 0;
-              }
-            } catch (e: any) {
-              console.warn("Impossible de récupérer l'IV du groupe, utilisation de 0:", e?.message || e);
-            }
-          }
-          try {
-            await etudeVolontaireService.assignerVolontaireAEtude(
-              appointment.idEtude,
-              parseInt(selectedVolunteerId, 10),
-              ivGroupe,
-              groupId || 0,
-              'INSCRIT'
-            );
-          } catch (e: any) {
-            console.warn('Association étude-volontaire non créée (peut déjà exister):', e?.message || e);
-          }
-        }
-      } catch (assocErr: any) {
-        console.warn('Gestion association étude-volontaire: problème non bloquant', assocErr?.message || assocErr);
-      }
 
       // Utiliser le service RDV pour mettre à jour le rendez-vous
       if (!appointment.idEtude || !appointment.idRdv) {
-        throw new Error('Identifiants de rendez-vous manquants');
+        throw new Error(t('appointments.missingAppointmentIds'));
       }
-      
-      const response = await rdvService.update(appointment.idEtude, appointment.idRdv, updatedData);
-      if (!response || (response.error && response.error.message)) {
-        throw new Error(response.error?.message || 'Erreur lors de la mise à jour');
-      }
+
+      // rdvService.update lance une erreur en cas d'échec, pas besoin de vérifier la réponse
+      await rdvService.update(appointment.idEtude, appointment.idRdv, updatedData);
+
       if (onSuccess) {
         onSuccess();
       } else {
@@ -164,7 +210,7 @@ const AppointmentEditor = ({
       }
 
     } catch (err: any) {
-      setError('Erreur lors de la mise à jour du rendez-vous: ' + (err?.message || 'Erreur inconnue'));
+      setError(t('appointments.updateErrorDetail') + ': ' + (err?.message || t('errors.unknown')));
       console.error(err);
     } finally {
       setIsSubmitting(false);
@@ -187,14 +233,14 @@ const AppointmentEditor = ({
   const timeOptions = generateTimeOptions();
 
   return (
-    <div className="bg-white shadow-md rounded-lg p-6 max-w-4xl mx-auto">
+    <div>
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-bold text-gray-800">Modifier le rendez-vous</h2>
+        <h2 className="text-xl font-bold text-gray-800">{t('appointments.editAppointment')}</h2>
         <button
           onClick={onBack}
           className="text-blue-600 hover:text-blue-800"
         >
-          &lt; Retour
+          &lt; {t('common.back')}
         </button>
       </div>
 
@@ -209,51 +255,45 @@ const AppointmentEditor = ({
           {/* Étude et groupe (en lecture seule) */}
           <div>
             <label className="block text-gray-700 font-medium mb-2">
-              Étude
+              {t('appointments.study')}
             </label>
             <input
               type="text"
               className="w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-100"
-              value={appointment.etude ? `${appointment.etude.ref} - ${appointment.etude.titre}` : 'Non spécifiée'}
+              value={appointment.etude ? `${appointment.etude.ref} - ${appointment.etude.titre}` : t('dates.notSpecified')}
               disabled
             />
           </div>
 
           <div>
             <label className="block text-gray-700 font-medium mb-2">
-              Groupe
+              {t('groups.group')}
             </label>
             <input
               type="text"
               className="w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-100"
-              value={appointment.groupe ? appointment.groupe.nom : 'Non spécifié'}
+              value={groupeNom || t('dates.notSpecified')}
               disabled
             />
           </div>
 
-          {/* Sélection de volontaire */}
+          {/* Volontaire (en lecture seule) */}
           <div>
             <label className="block text-gray-700 font-medium mb-2">
-              Volontaire
+              {t('appointments.volunteer')}
             </label>
-            <select
-              className="w-full border border-gray-300 rounded-md px-3 py-2"
-              value={selectedVolunteerId}
-              onChange={(e) => setSelectedVolunteerId(e.target.value)}
-            >
-              <option value="">Aucun (RDV sans volontaire)</option>
-              {volunteers.map(volunteer => (
-                <option key={volunteer.id} value={volunteer.id}>
-                  {volunteer.nom} {volunteer.prenom}
-                </option>
-              ))}
-            </select>
+            <input
+              type="text"
+              className="w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-100"
+              value={volontaireNom || t('appointments.noVolunteer')}
+              disabled
+            />
           </div>
 
           {/* Date */}
           <div>
             <label className="block text-gray-700 font-medium mb-2">
-              Date
+              {t('appointments.date')}
             </label>
             <input
               type="date"
@@ -266,35 +306,50 @@ const AppointmentEditor = ({
           {/* Heure */}
           <div>
             <label className="block text-gray-700 font-medium mb-2">
-              Heure
+              {t('appointments.time')}
             </label>
             <select
               className="w-full border border-gray-300 rounded-md px-3 py-2"
               value={time}
               onChange={(e) => setTime(e.target.value)}
             >
-              <option value="">Sélectionner une heure</option>
+              <option value="">{t('appointments.selectTime')}</option>
               {timeOptions.map((timeOption, index) => (
                 <option key={index} value={timeOption}>{timeOption}</option>
               ))}
             </select>
           </div>
 
+          {/* Durée */}
+          <div>
+            <label className="block text-gray-700 font-medium mb-2">
+              {t('appointments.duration')} (min)
+            </label>
+            <input
+              type="number"
+              className="w-full border border-gray-300 rounded-md px-3 py-2"
+              value={duree}
+              onChange={(e) => setDuree(e.target.value)}
+              min="0"
+              placeholder="Ex: 30"
+            />
+          </div>
+
           {/* Statut */}
           <div>
             <label className="block text-gray-700 font-medium mb-2">
-              État
+              {t('appointments.status')}
             </label>
             <select
               className="w-full border border-gray-300 rounded-md px-3 py-2"
               value={status}
               onChange={(e) => setStatus(e.target.value)}
             >
-              <option value="PLANIFIE">Planifié</option>
-              <option value="CONFIRME">Confirmé</option>
-              <option value="EN_ATTENTE">En attente</option>
-              <option value="ANNULE">Annulé</option>
-              <option value="COMPLETE">Complété</option>
+              <option value="PLANIFIE">{t('appointments.scheduled')}</option>
+              <option value="CONFIRME">{t('appointments.confirmed')}</option>
+              <option value="EN_ATTENTE">{t('appointments.pending')}</option>
+              <option value="ANNULE">{t('appointments.cancelled')}</option>
+              <option value="COMPLETE">{t('appointments.completed')}</option>
             </select>
           </div>
         </div>
@@ -302,7 +357,7 @@ const AppointmentEditor = ({
         {/* Commentaires */}
         <div>
           <label className="block text-gray-700 font-medium mb-2">
-            Commentaires
+            {t('appointments.comments')}
           </label>
           <textarea
             className="w-full border border-gray-300 rounded-md px-3 py-2 min-h-[100px]"
@@ -317,7 +372,7 @@ const AppointmentEditor = ({
             disabled={isSubmitting}
             className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50"
           >
-            {isSubmitting ? 'Sauvegarde en cours...' : 'Enregistrer les modifications'}
+            {isSubmitting ? t('appointments.savingInProgress') : t('appointments.saveChanges')}
           </button>
         </div>
       </div>

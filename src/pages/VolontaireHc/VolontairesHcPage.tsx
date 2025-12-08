@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import volontaireService from '../../services/volontaireService'
 import { usePagination } from '../../hooks/usePagination'
 import { Search, Plus } from 'lucide-react'
@@ -12,6 +13,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 
 const VolontairesHcPage = () => {
+  const { t } = useTranslation()
   const [volontaires, setVolontaires] = useState([])
   const [searchQuery, setSearchQuery] = useState('')
   const [isLoading, setIsLoading] = useState(true)
@@ -39,7 +41,7 @@ const VolontairesHcPage = () => {
 
       } catch (error) {
         console.error('Erreur lors du chargement des volontaires:', error);
-        setError('Impossible de charger les volontaires. Veuillez réessayer plus tard.');
+        setError(t('volunteers.loadError'));
       } finally {
         setIsLoading(false);
       }
@@ -55,7 +57,7 @@ const VolontairesHcPage = () => {
   }
 
   const handleDeleteVolontaire = async (id: string | number) => {
-    if (window.confirm("Êtes-vous sûr de vouloir archiver ce volontaire ?")) {
+    if (window.confirm(t('volunteers.archiveConfirm'))) {
       try {
         await volontaireService.archive(id);
 
@@ -72,7 +74,7 @@ const VolontairesHcPage = () => {
 
       } catch (error) {
         console.error("Erreur lors de l'archivage du volontaire:", error);
-        alert("Erreur lors de l'archivage du volontaire.");
+        alert(t('volunteers.archiveError'));
       }
     }
   };
@@ -81,11 +83,11 @@ const VolontairesHcPage = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Gestion des Volontaires - Habitudes Cosmétiques</h1>
+        <h1 className="text-2xl font-bold">{t('volunteers.hcManagement')}</h1>
         <Button asChild>
           <Link to="/volontaires-hc/nouveau">
             <Plus className="mr-2 h-4 w-4" />
-            Ajouter
+            {t('common.add')}
           </Link>
         </Button>
       </div>
@@ -94,12 +96,12 @@ const VolontairesHcPage = () => {
         <CardContent className="pt-6">
           <form onSubmit={handleSearch} className="flex flex-col space-y-4 sm:flex-row sm:space-y-0 sm:space-x-4 sm:items-end">
             <div className="flex-grow space-y-2">
-              <Label htmlFor="searchQuery">Rechercher</Label>
+              <Label htmlFor="searchQuery">{t('common.search')}</Label>
               <div className="relative">
                 <Input
                   id="searchQuery"
                   type="text"
-                  placeholder="Nom, prénom, email..."
+                  placeholder={t('volunteers.searchPlaceholder')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pr-10"
@@ -122,12 +124,12 @@ const VolontairesHcPage = () => {
                 onCheckedChange={(checked) => setIncludeArchived(checked as boolean)}
               />
               <Label htmlFor="includeArchived" className="font-normal">
-                Inclure les archivés
+                {t('volunteers.includeArchived')}
               </Label>
             </div>
 
             <Button type="submit">
-              Rechercher
+              {t('common.search')}
             </Button>
           </form>
         </CardContent>
@@ -154,9 +156,9 @@ const VolontairesHcPage = () => {
             <Card>
               <CardContent className="flex flex-col sm:flex-row justify-between items-center py-4">
                 <p className="text-sm text-muted-foreground mb-4 sm:mb-0">
-                  Affichage de <span className="font-semibold">{page * size + 1}</span>
-                  à <span className="font-semibold">{Math.min((page + 1) * size, total)}</span>
-                  sur <span className="font-semibold">{total}</span> volontaires
+                  {t('pagination.showing')} <span className="font-semibold">{page * size + 1}</span>
+                  {t('pagination.to')} <span className="font-semibold">{Math.min((page + 1) * size, total)}</span>
+                  {t('pagination.of')} <span className="font-semibold">{total}</span> {t('volunteers.title').toLowerCase()}
                 </p>
                 <div className="flex space-x-2">
                   <Button
@@ -165,7 +167,7 @@ const VolontairesHcPage = () => {
                     variant="outline"
                     size="sm"
                   >
-                    &laquo; Précédent
+                    &laquo; {t('pagination.previous')}
                   </Button>
 
                   <div className="hidden sm:flex space-x-1">
@@ -191,7 +193,7 @@ const VolontairesHcPage = () => {
                     variant="outline"
                     size="sm"
                   >
-                    Suivant &raquo;
+                    {t('pagination.next')} &raquo;
                   </Button>
                 </div>
               </CardContent>

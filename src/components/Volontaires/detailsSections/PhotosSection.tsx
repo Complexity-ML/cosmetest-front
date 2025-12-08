@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import VolontairePhoto from '../VolontairePhoto';
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
@@ -12,7 +13,7 @@ interface PhotosSectionProps {
   isUploadingPhoto: boolean;
   photoUploadError: string | null;
   onPhotoUpload: (event: React.ChangeEvent<HTMLInputElement>) => void;
-  onPhotoSelect: (photo: { url: string; alt: string }) => void;
+  onPhotoSelect: (photo: { url: string; alt: string; isPdf?: boolean }) => void;
 }
 
 const PhotosSection = ({
@@ -21,11 +22,14 @@ const PhotosSection = ({
   photoUploadError,
   onPhotoUpload,
   onPhotoSelect,
-}: PhotosSectionProps) => (
+}: PhotosSectionProps) => {
+  const { t } = useTranslation();
+
+  return (
   <Card>
     <CardHeader>
       <div className="flex justify-between items-center">
-        <CardTitle>Photos du volontaire</CardTitle>
+        <CardTitle>{t('volunteers.volunteerPhotos')}</CardTitle>
         <div>
           <label htmlFor="photo-upload">
             <Button
@@ -34,13 +38,13 @@ const PhotosSection = ({
               disabled={isUploadingPhoto}
               className="cursor-pointer"
             >
-              <span>{isUploadingPhoto ? 'Envoi en cours...' : 'Ajouter une photo'}</span>
+              <span>{isUploadingPhoto ? t('volunteers.uploadingPhoto') : t('volunteers.addPhoto')}</span>
             </Button>
           </label>
           <input
             id="photo-upload"
             type="file"
-            accept="image/jpeg,image/jpg"
+            accept="image/jpeg,image/jpg,image/png,application/pdf"
             className="hidden"
             onChange={onPhotoUpload}
             disabled={isUploadingPhoto}
@@ -57,13 +61,13 @@ const PhotosSection = ({
       )}
 
       <p className="text-sm text-brand-cyan">
-        Photos disponibles pour ce volontaire
+        {t('volunteers.availablePhotos')}
       </p>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="overflow-hidden">
           <CardHeader className="p-3 bg-gray-50">
-            <CardTitle className="text-sm font-medium">Photo de face</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('volunteers.frontPhoto')}</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             <div className="aspect-square">
@@ -76,7 +80,8 @@ const PhotosSection = ({
                 onPhotoClick={(photo) =>
                   onPhotoSelect({
                     url: photo.url,
-                    alt: 'Photo de face de ' + volontaire.nomVol,
+                    alt: t('volunteers.frontPhotoOf') + ' ' + volontaire.nomVol,
+                    isPdf: photo.isPdf,
                   })
                 }
               />
@@ -86,7 +91,7 @@ const PhotosSection = ({
 
         <Card className="overflow-hidden">
           <CardHeader className="p-3 bg-gray-50">
-            <CardTitle className="text-sm font-medium">Photo de profil droit</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('volunteers.rightProfilePhoto')}</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             <div className="aspect-square">
@@ -99,7 +104,8 @@ const PhotosSection = ({
                 onPhotoClick={(photo) =>
                   onPhotoSelect({
                     url: photo.url,
-                    alt: 'Photo de profil droit de ' + volontaire.nomVol,
+                    alt: t('volunteers.rightProfilePhotoOf') + ' ' + volontaire.nomVol,
+                    isPdf: photo.isPdf,
                   })
                 }
               />
@@ -109,7 +115,7 @@ const PhotosSection = ({
 
         <Card className="overflow-hidden">
           <CardHeader className="p-3 bg-gray-50">
-            <CardTitle className="text-sm font-medium">Photo de profil gauche</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('volunteers.leftProfilePhoto')}</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             <div className="aspect-square">
@@ -122,7 +128,8 @@ const PhotosSection = ({
                 onPhotoClick={(photo) =>
                   onPhotoSelect({
                     url: photo.url,
-                    alt: 'Photo de profil gauche de ' + volontaire.nomVol,
+                    alt: t('volunteers.leftProfilePhotoOf') + ' ' + volontaire.nomVol,
+                    isPdf: photo.isPdf,
                   })
                 }
               />
@@ -132,6 +139,7 @@ const PhotosSection = ({
       </div>
     </CardContent>
   </Card>
-);
+  );
+};
 
 export default PhotosSection;

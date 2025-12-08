@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import rdvService from '../../services/rdvService';
 import volontaireService from '../../services/volontaireService';
 import { ArrowLeftRight, Search, CheckCircle2, Calendar, Filter } from 'lucide-react';
 import { RendezVous, Volontaire } from '../../types/types';
 import { Button } from '../ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Input } from '../ui/input';
 import { Badge } from '../ui/badge';
@@ -24,6 +24,7 @@ interface AppointmentSwitcherProps {
  * Click on RDV1 → Click on RDV2 → Switch!
  */
 const AppointmentSwitcher: React.FC<AppointmentSwitcherProps> = ({ onClose, onSwitchComplete, preSelectedRdv = null, etudeId = null }) => {
+  const { t } = useTranslation();
   const [selectedRdvs, setSelectedRdvs] = useState<RendezVous[]>(preSelectedRdv ? [preSelectedRdv] : []);
   const [appointments, setAppointments] = useState<RendezVous[]>([]);
   const [loading, setLoading] = useState(false);
@@ -89,7 +90,7 @@ const AppointmentSwitcher: React.FC<AppointmentSwitcherProps> = ({ onClose, onSw
     }
   };
 
-  const formatTime = (timeString: string | undefined): string => timeString || 'Non spécifiée';
+  const formatTime = (timeString: string | undefined): string => timeString || t('appointments.timeNotSpecified');
 
   const getRdvId = (rdv: RendezVous): number | undefined => rdv?.idRdv || rdv?.id;
 
@@ -151,7 +152,7 @@ const AppointmentSwitcher: React.FC<AppointmentSwitcherProps> = ({ onClose, onSw
       return `${prenomDirect} ${nomDirect}`.trim();
     }
 
-    return `Volontaire ID: ${getVolunteerId(rdv)}`;
+    return `${t('appointments.volunteerID')}: ${getVolunteerId(rdv)}`;
   };
 
   const handleSelectRdv = (rdv: RendezVous) => {
@@ -176,12 +177,12 @@ const AppointmentSwitcher: React.FC<AppointmentSwitcherProps> = ({ onClose, onSw
     const vol2Id = getVolunteerId(rdv2);
 
     if (vol1Id === vol2Id) {
-      alert('Les deux rendez-vous ont le même volontaire !');
+      alert(t('appointments.bothAppointmentsSameVolunteer'));
       return;
     }
 
     if (!window.confirm(
-      `Échanger ?\n\n` +
+      `${t('appointments.confirmSwitch')}\n\n` +
       `${getVolunteerName(rdv1)} (${formatDate(rdv1.date || '')} ${formatTime(rdv1.heure)})\n` +
       `↕\n` +
       `${getVolunteerName(rdv2)} (${formatDate(rdv2.date || '')} ${formatTime(rdv2.heure)})`
@@ -233,7 +234,7 @@ const AppointmentSwitcher: React.FC<AppointmentSwitcherProps> = ({ onClose, onSw
         commentaires: (rdv1 as any).commentaires
       });
 
-      alert('✓ Rendez-vous échangés avec succès !');
+      alert(t('appointments.appointmentsSwitchedSuccess'));
 
       if (onSwitchComplete) {
         onSwitchComplete();
@@ -242,7 +243,7 @@ const AppointmentSwitcher: React.FC<AppointmentSwitcherProps> = ({ onClose, onSw
 
     } catch (err) {
       console.error('Switch error:', err);
-      alert('Erreur lors de l\'échange des rendez-vous.');
+      alert(t('appointments.errorSwitchingAppointments'));
     } finally {
       setLoading(false);
     }
@@ -379,21 +380,21 @@ const AppointmentSwitcher: React.FC<AppointmentSwitcherProps> = ({ onClose, onSw
     }, [rdv]);
 
     return (
-      <Card className="flex-1 border-2 border-blue-500 shadow-sm">
-        <CardHeader className="p-3">
+      <div className="flex-1 border-2 border-blue-500 shadow-sm rounded-lg">
+        <div className="p-3">
           <Badge className="w-fit mb-2" variant="default">#{selectionNum}</Badge>
-          <CardTitle className="text-sm font-medium">
+          <div className="text-sm font-medium">
             {loadingVol ? (
               <Skeleton className="h-5 w-40" />
             ) : (
               getVolunteerName(rdv, volunteerInfo)
             )}
-          </CardTitle>
-          <CardDescription className="text-xs">
+          </div>
+          <div className="text-xs text-muted-foreground">
             {formatDate(rdv.date || '')} à {formatTime(rdv.heure)}
-          </CardDescription>
-        </CardHeader>
-      </Card>
+          </div>
+        </div>
+      </div>
     );
   };
 
@@ -424,68 +425,68 @@ const AppointmentSwitcher: React.FC<AppointmentSwitcherProps> = ({ onClose, onSw
     }, [rdv]);
 
     return (
-      <Card
+      <div
         key={getRdvId(rdv)}
         onClick={onClick}
-        className={`cursor-pointer transition-all hover:shadow-md ${
+        className={`cursor-pointer transition-all hover:shadow-lg rounded-lg min-h-[80px] ${
           selected
-            ? 'border-2 border-blue-500 bg-blue-50 shadow-md'
-            : 'border-2 border-gray-200 hover:border-blue-300'
+            ? 'border-3 border-blue-600 bg-blue-50 shadow-lg'
+            : 'border-2 border-gray-300 hover:border-blue-400 hover:bg-gray-50'
         }`}
       >
-        <CardContent className="p-4">
-          <div className="flex items-start justify-between">
+        <div className="p-4 sm:p-5">
+          <div className="flex items-start justify-between gap-3">
             <div className="flex-1">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 mb-2">
                 {selected && (
-                  <Badge variant="default" className="flex-shrink-0">
-                    {selectionNum}
+                  <Badge variant="default" className="flex-shrink-0 text-base px-2 py-1">
+                    #{selectionNum}
                   </Badge>
                 )}
-                <div className="font-semibold text-gray-900">
+                <div className="font-bold text-base sm:text-lg text-gray-900">
                   {loadingVol ? (
-                    <Skeleton className="h-5 w-48" />
+                    <Skeleton className="h-6 w-48" />
                   ) : (
                     getVolunteerName(rdv, volunteerInfo)
                   )}
                 </div>
               </div>
-              <div className="text-sm text-gray-600 mt-2 ml-8">
-                <span className="inline-flex items-center gap-1">
+              <div className="text-base sm:text-lg text-gray-700 mt-2 font-medium">
+                <span className="inline-flex items-center gap-2">
                   📅 {formatDate(rdv.date || '')} • 🕐 {formatTime(rdv.heure)}
                 </span>
               </div>
               {(rdv as any).commentaires && (
-                <div className="text-xs text-gray-500 italic mt-2 ml-8 p-2 bg-gray-50 rounded">
+                <div className="text-sm text-gray-600 italic mt-3 p-3 bg-gray-100 rounded border-l-4 border-gray-300">
                   💬 {(rdv as any).commentaires}
                 </div>
               )}
             </div>
             {selected && (
-              <CheckCircle2 className="text-blue-600 flex-shrink-0" size={24} />
+              <CheckCircle2 className="text-blue-600 flex-shrink-0" size={32} strokeWidth={3} />
             )}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   };
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col p-0">
+      <DialogContent className="max-w-full sm:max-w-4xl lg:max-w-5xl max-h-[95vh] overflow-hidden flex flex-col p-0 w-[98vw] sm:w-auto">
         {/* Header */}
-        <DialogHeader className="p-6 pb-4 bg-gradient-to-r from-blue-50 to-purple-50">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <ArrowLeftRight className="text-blue-600" size={24} />
+        <DialogHeader className="p-4 sm:p-6 pb-3 sm:pb-4 bg-gradient-to-r from-blue-50 to-purple-50">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="p-1.5 sm:p-2 bg-blue-100 rounded-lg">
+              <ArrowLeftRight className="text-blue-600" size={20} />
             </div>
             <div>
-              <DialogTitle className="text-xl">Échanger des rendez-vous</DialogTitle>
-              <CardDescription className="text-sm mt-1">
-                {selectedRdvs.length === 0 && "Sélectionnez 2 rendez-vous"}
-                {selectedRdvs.length === 1 && "Sélectionnez le 2ème rendez-vous"}
-                {selectedRdvs.length === 2 && "Prêt à échanger !"}
-              </CardDescription>
+              <DialogTitle className="text-lg sm:text-xl">{t('appointments.switchAppointments')}</DialogTitle>
+              <p className="text-sm text-muted-foreground mt-1">
+                {selectedRdvs.length === 0 && t('appointments.selectTwoAppointments')}
+                {selectedRdvs.length === 1 && t('appointments.selectSecondAppointment')}
+                {selectedRdvs.length === 2 && t('appointments.readyToSwitch')}
+              </p>
             </div>
           </div>
         </DialogHeader>
@@ -494,9 +495,9 @@ const AppointmentSwitcher: React.FC<AppointmentSwitcherProps> = ({ onClose, onSw
 
         {/* Selection Summary */}
         {selectedRdvs.length > 0 && (
-          <Card className="m-6 mb-0 border-2 border-blue-200 bg-blue-50">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-4">
+          <div className="mx-3 sm:mx-6 mb-0 border-2 border-blue-200 bg-blue-50 rounded-lg">
+            <div className="p-3 sm:p-4">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
                 {selectedRdvs.map((rdv, idx) => (
                   <React.Fragment key={getRdvId(rdv)}>
                     {idx > 0 && <ArrowLeftRight className="text-blue-600 flex-shrink-0" size={20} />}
@@ -506,26 +507,26 @@ const AppointmentSwitcher: React.FC<AppointmentSwitcherProps> = ({ onClose, onSw
                 {selectedRdvs.length === 1 && (
                   <>
                     <ArrowLeftRight className="text-gray-300 flex-shrink-0" size={20} />
-                    <Card className="flex-1 border-2 border-dashed border-gray-300">
-                      <CardContent className="p-8 text-center">
-                        <CardDescription className="text-sm">Cliquez sur un RDV</CardDescription>
-                      </CardContent>
-                    </Card>
+                    <div className="flex-1 border-2 border-dashed border-gray-300 rounded-lg">
+                      <div className="p-8 text-center">
+                        <p className="text-sm text-muted-foreground">{t('appointments.clickOnAppointment')}</p>
+                      </div>
+                    </div>
                   </>
                 )}
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         )}
 
         {/* Search & Filters */}
-        <div className="px-6 py-4 bg-gray-50 space-y-4 border-y">
+        <div className="px-3 sm:px-6 py-3 sm:py-4 bg-gray-50 space-y-3 sm:space-y-4 border-y">
           {/* Search Bar */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
             <Input
               type="text"
-              placeholder="Rechercher par volontaire, heure, commentaire..."
+              placeholder={t('appointments.searchByVolunteerTimeComment')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
@@ -537,10 +538,10 @@ const AppointmentSwitcher: React.FC<AppointmentSwitcherProps> = ({ onClose, onSw
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <Filter className="text-blue-600" size={16} />
-                <Label className="text-sm font-semibold text-gray-700">Filtrer par date</Label>
+                <Label className="text-sm font-semibold text-gray-700">{t('appointments.filterByDate')}</Label>
                 {selectedDate && (
                   <Badge variant="secondary" className="text-xs">
-                    {appointments.filter(rdv => rdv.date === selectedDate).length} RDV
+                    {appointments.filter(rdv => rdv.date === selectedDate).length} {t('appointments.rdv')}
                   </Badge>
                 )}
               </div>
@@ -552,7 +553,7 @@ const AppointmentSwitcher: React.FC<AppointmentSwitcherProps> = ({ onClose, onSw
                   className="gap-2"
                 >
                   <Calendar size={14} />
-                  Toutes les dates
+                  {t('appointments.allDates')}
                   <Badge variant={selectedDate === '' ? 'secondary' : 'outline'} className="ml-1">
                     {appointments.length}
                   </Badge>
@@ -586,30 +587,30 @@ const AppointmentSwitcher: React.FC<AppointmentSwitcherProps> = ({ onClose, onSw
           {loading ? (
             <div className="text-center py-8 space-y-4">
               <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent mx-auto"></div>
-              <p className="text-gray-600">Chargement des rendez-vous...</p>
+              <p className="text-gray-600">{t('appointments.loadingAppointments')}</p>
             </div>
           ) : appointments.length === 0 ? (
-            <Card className="border-red-200 bg-red-50">
-              <CardContent className="text-center py-8">
+            <div className="border border-red-200 bg-red-50 rounded-lg">
+              <div className="text-center py-8">
                 <div className="text-red-500 text-5xl mb-4">⚠️</div>
-                <CardTitle className="text-gray-700 mb-2">Aucun rendez-vous avec volontaire assigné</CardTitle>
-                <CardDescription>Assignez des volontaires avant d'échanger</CardDescription>
+                <h4 className="text-lg font-semibold text-gray-700 mb-2">{t('appointments.noAppointmentWithVolunteer')}</h4>
+                <p className="text-sm text-muted-foreground">{t('appointments.assignVolunteersBeforeSwitch')}</p>
                 <Badge variant="outline" className="mt-4">Étude ID: {etudeId}</Badge>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           ) : filteredAppointments.length === 0 ? (
-            <Card>
-              <CardContent className="text-center py-8">
-                <CardDescription className="mb-2">Aucun rendez-vous trouvé avec cette recherche</CardDescription>
+            <div className="border rounded-lg">
+              <div className="text-center py-8">
+                <p className="text-sm text-muted-foreground mb-2">{t('appointments.noAppointmentFoundWithSearch')}</p>
                 <Button
                   variant="link"
                   onClick={() => setSearchQuery('')}
                   size="sm"
                 >
-                  Réinitialiser la recherche
+                  {t('appointments.resetSearch')}
                 </Button>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           ) : (
             <div className="space-y-4">
               {/* Si pas de filtre de date et plusieurs dates, grouper par date */}
@@ -617,18 +618,18 @@ const AppointmentSwitcher: React.FC<AppointmentSwitcherProps> = ({ onClose, onSw
                 sortedDates.map((date) => (
                   <div key={date} className="space-y-3">
                     {/* Date header */}
-                    <Card className="sticky top-0 bg-gradient-to-r from-blue-100 to-purple-100 border-blue-300">
-                      <CardHeader className="p-3">
+                    <div className="sticky top-0 bg-gradient-to-r from-blue-100 to-purple-100 border border-blue-300 rounded-lg">
+                      <div className="p-3">
                         <div className="flex items-center justify-between">
-                          <CardTitle className="text-base flex items-center gap-2">
+                          <h4 className="text-base font-semibold flex items-center gap-2">
                             📅 {formatDate(date || '')}
-                          </CardTitle>
+                          </h4>
                           <Badge variant="default">
-                            {appointmentsByDate[date].length} RDV
+                            {appointmentsByDate[date].length} {t('appointments.rdv')}
                           </Badge>
                         </div>
-                      </CardHeader>
-                    </Card>
+                      </div>
+                    </div>
                     {/* Appointments for this date */}
                     <div className="grid gap-2">
                       {appointmentsByDate[date].map((rdv) => (
@@ -670,7 +671,7 @@ const AppointmentSwitcher: React.FC<AppointmentSwitcherProps> = ({ onClose, onSw
             onClick={() => setSelectedRdvs([])}
             disabled={loading || selectedRdvs.length === 0}
           >
-            Réinitialiser
+            {t('common.reset')}
           </Button>
           <Button
             onClick={handleSwitch}
@@ -681,12 +682,12 @@ const AppointmentSwitcher: React.FC<AppointmentSwitcherProps> = ({ onClose, onSw
             {loading ? (
               <>
                 <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
-                Échange en cours...
+                {t('appointments.switchInProgress')}
               </>
             ) : (
               <>
                 <ArrowLeftRight size={18} />
-                Échanger les RDV
+                {t('appointments.switchAppointmentsButton')}
               </>
             )}
           </Button>

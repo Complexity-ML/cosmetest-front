@@ -4,6 +4,7 @@ export interface DemographicsFilters {
   ageMin: number;
   ageMax: number;
   phototypes: string[];
+  ethnies: string[];
   sexe: string;
 }
 
@@ -37,6 +38,7 @@ export const createInitialFilters = (): Filters => ({
     ageMin: 18,
     ageMax: 65,
     phototypes: [],
+    ethnies: [],
     sexe: ''
   },
   makeup: {
@@ -93,6 +95,27 @@ export const normaliserSexe = (value: any): string => {
     return 'MASCULIN';
   }
   return normalized;
+};
+
+export const normaliserEthnie = (value: any): string => {
+  if (!value) return '';
+
+  const normalized = normaliserTexte(value);
+
+  // Map variations to standard values
+  const ethnicityMap: Record<string, string> = {
+    'CAUCASIEN': 'CAUCASIEN',
+    'CAUCASIENNE': 'CAUCASIEN',
+    'AFRICAIN': 'AFRICAIN',
+    'AFRICAINE': 'AFRICAIN',
+    'ASIATIQUE': 'ASIATIQUE',
+    'INDIENNE': 'INDIENNE',
+    'INDIEN': 'INDIENNE',
+    'ANTILLAISE': 'ANTILLAISE',
+    'ANTILLAIS': 'ANTILLAISE'
+  };
+
+  return ethnicityMap[normalized] || normalized;
 };
 
 export const isAffirmative = (value: any): boolean => {

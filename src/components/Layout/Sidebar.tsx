@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { NavLink, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   LayoutDashboard,
   Users,
@@ -41,6 +42,7 @@ const CosmeTestLogo: React.FC<{ isCollapsed: boolean }> = ({ isCollapsed }) => {
 
 const Sidebar: React.FC<SidebarProps> = ({ onToggle }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const { t } = useTranslation();
 
   const toggleSidebar = () => {
     const newCollapsedState = !isCollapsed;
@@ -54,54 +56,54 @@ const Sidebar: React.FC<SidebarProps> = ({ onToggle }) => {
   const getMenuItems = (): MenuItem[] => {
     const baseMenuItems: MenuItem[] = [
       {
-        label: 'Tableau de bord',
+        label: t('sidebar.dashboard'),
         icon: (isActive) => <LayoutDashboard className={cn("w-5 h-5", isActive && "text-blue-700")} />,
         path: '/dashboard'
       },
       {
-        label: 'Volontaires',
+        label: t('sidebar.volunteers'),
         icon: (isActive) => <Users className={cn("w-5 h-5", isActive && "text-blue-700")} />,
         path: '/volontaires',
         subItems: [
           {
-            label: 'Liste générale',
+            label: t('sidebar.generalList'),
             path: '/volontaires'
           },
           {
-            label: 'Habitudes cosmétiques',
+            label: t('sidebar.cosmeticHabits'),
             path: '/volontaires-hc'
           }
         ]
       },
       {
-        label: 'Études',
+        label: t('sidebar.studies'),
         icon: (isActive) => <FlaskConical className={cn("w-5 h-5", isActive && "text-blue-700")} />,
         path: '/etudes',
         subItems: [
           {
-            label: 'Groupes',
+            label: t('sidebar.groups'),
             path: '/groupes'
           },
         ]
       },
       {
-        label: 'Rendez-vous',
+        label: t('sidebar.appointments'),
         icon: (isActive) => <Calendar className={cn("w-5 h-5", isActive && "text-blue-700")} />,
         path: '/rdvs',
         subItems: [
           {
-            label: 'Assigner un volontaire',
+            label: t('sidebar.assignVolunteer'),
             path: '/rdvs/assigner'
           },
         ]
       },
       {
-        label: 'Rapports',
+        label: t('sidebar.reports'),
         icon: (isActive) => <FileText className={cn("w-5 h-5", isActive && "text-blue-700")} />,
         path: '/rapports'
       },
       {
-        label: 'Paiements',
+        label: t('sidebar.payments'),
         icon: (isActive) => <ShoppingBag className={cn("w-5 h-5", isActive && "text-blue-700")} />,
         path: '/paiements'
       }
@@ -132,7 +134,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onToggle }) => {
           size="icon"
           onClick={toggleSidebar}
           className="h-8 w-8 text-gray-500"
-          aria-label={isCollapsed ? "Déplier le menu" : "Replier le menu"}
+          aria-label={isCollapsed ? t('sidebar.expand') : t('sidebar.collapse')}
         >
           {isCollapsed ? (
             <ChevronRight className="w-5 h-5" />
@@ -210,7 +212,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onToggle }) => {
                 className="flex items-center text-blue-600 hover:text-blue-800 font-medium text-sm"
               >
                 <Plus className="w-4 h-4 mr-1" />
-                Créer une étude
+                {t('dashboard.createStudy')}
               </Link>
               <span className="text-gray-300">|</span>
               <Link
@@ -218,7 +220,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onToggle }) => {
                 className="flex items-center text-blue-600 hover:text-blue-800 font-medium text-sm"
               >
                 <CalendarPlus className="w-4 h-4 mr-1" />
-                Planifier un RDV
+                {t('dashboard.scheduleAppointment')}
               </Link>
             </>
           )}

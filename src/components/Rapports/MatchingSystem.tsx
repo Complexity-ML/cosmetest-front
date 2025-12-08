@@ -1,4 +1,5 @@
 ﻿import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import api from '../../services/api';
 import { SearchIcon, UserIcon } from './icons';
 import { EVALUATION_FIELDS } from './constants';
@@ -6,6 +7,7 @@ import {
   createInitialFilters,
   normaliserPhototype,
   normaliserSexe,
+  normaliserEthnie,
   parseEvaluation,
   calculerAge,
   calculerScoreMaquillage,
@@ -41,6 +43,7 @@ interface VolontaireResult {
 }
 
 const MatchingSystem = () => {
+  const { t } = useTranslation();
   const [filters, setFilters] = useState<Filters>(createInitialFilters());
   const [results, setResults] = useState<VolontaireResult[]>([]);
   const [loading, setLoading] = useState(false);
@@ -56,7 +59,7 @@ const MatchingSystem = () => {
 
   const stats = computeStats(results);
 
-  const formatNote = (note: any, fallback = 'Non renseigne'): string => (
+  const formatNote = (note: any, fallback = t('reports.matching.notProvided')): string => (
     Number.isFinite(note) ? `${Number(note).toFixed(1)}/5` : fallback
   );
 
@@ -91,6 +94,21 @@ const MatchingSystem = () => {
           phototypes: exists
             ? prev.demographics.phototypes.filter((type: string) => type !== phototype)
             : [...prev.demographics.phototypes, phototype]
+        }
+      };
+    });
+  };
+
+  const toggleEthnie = (ethnie: string) => {
+    setFilters((prev) => {
+      const exists = prev.demographics.ethnies.includes(ethnie);
+      return {
+        ...prev,
+        demographics: {
+          ...prev.demographics,
+          ethnies: exists
+            ? prev.demographics.ethnies.filter((e: string) => e !== ethnie)
+            : [...prev.demographics.ethnies, ethnie]
         }
       };
     });
@@ -165,7 +183,7 @@ const MatchingSystem = () => {
     setError('');
 
     if (filters.demographics.ageMin > filters.demographics.ageMax) {
-      setError("L'age minimum ne peut pas etre superieur a l'age maximum.");
+      setError(t('reports.matching.ageError'));
       setActiveTab('criteres');
       return;
     }
@@ -227,6 +245,9 @@ const MatchingSystem = () => {
       const phototypeSet = new Set(
         filters.demographics.phototypes.map((item: string) => normaliserPhototype(item))
       );
+      const ethnieSet = new Set(
+        filters.demographics.ethnies.map((item: string) => normaliserEthnie(item))
+      );
       const sexeCritere = normaliserSexe(filters.demographics.sexe);
       const hasMakeupCriteria = makeupSelectionCount > 0;
 
@@ -239,6 +260,7 @@ const MatchingSystem = () => {
 
           const age = calculerAge(volontaire.dateNaissance);
           const phototypeVolontaire = normaliserPhototype(volontaire.phototype);
+          const ethnieVolontaire = normaliserEthnie(volontaire.ethnie);
           const sexeVolontaire = normaliserSexe(volontaire.sexe);
 
           // Age filter - HARD FILTER
@@ -248,6 +270,11 @@ const MatchingSystem = () => {
 
           // Phototype filter - HARD FILTER
           if (phototypeSet.size > 0 && !phototypeSet.has(phototypeVolontaire)) {
+            return false;
+          }
+
+          // Ethnie filter - HARD FILTER
+          if (ethnieSet.size > 0 && !ethnieSet.has(ethnieVolontaire)) {
             return false;
           }
 
@@ -324,12 +351,12 @@ const MatchingSystem = () => {
 
           return {
             id: volontaire.idVol,
-            nom: volontaire.nomVol || 'Non defini',
-            prenom: volontaire.prenomVol || 'Non defini',
-            email: volontaire.emailVol || 'Non defini',
-            sexe: volontaire.sexe || 'Non defini',
+            nom: volontaire.nomVol || t('reports.matching.notDefined'),
+            prenom: volontaire.prenomVol || t('reports.matching.notDefined'),
+            email: volontaire.emailVol || t('reports.matching.notDefined'),
+            sexe: volontaire.sexe || t('reports.matching.notDefined'),
             age: Number.isFinite(age) ? age : null,
-            phototype: volontaire.phototype || 'Non defini',
+            phototype: volontaire.phototype || t('reports.matching.notDefined'),
             scoreMaquillage: Math.min(100, Math.round(scoreMaquillage)),
             scoreDemographique: Math.min(100, Math.round(scoreDemo)),
             scoreTotal: Math.min(100, Math.round(scoreTotal)),
@@ -345,21 +372,21 @@ const MatchingSystem = () => {
 
       if (!matches.length) {
         setActiveTab('criteres');
-        setError('Aucun volontaire ne correspond aux criteres selectionnes.');
+        setError(t('reports.matching.noVolunteerMatch'));
       } else {
         setActiveTab('resultats');
       }
     } catch (err) {
       console.error('Erreur lors du matching:', err);
-      setError('Erreur lors du matching des volontaires.');
+      setError(t('reports.matching.matchingError'));
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="p-6">
-      <div className="bg-white rounded-lg shadow">
+    <div className="space-y-6">
+      <div className="bg-white rounded-lg border border-gray-200">
         <div className="border-b border-gray-200">
           <nav className="flex -mb-px">
             <button
@@ -372,7 +399,7 @@ const MatchingSystem = () => {
             >
               <div className="flex items-center">
                 <SearchIcon />
-                <span className="ml-2">Criteres de matching</span>
+                <span className="ml-2">{t('reports.matching.matchingCriteria')}</span>
               </div>
             </button>
             <button
@@ -385,7 +412,7 @@ const MatchingSystem = () => {
             >
               <div className="flex items-center">
                 <UserIcon />
-                <span className="ml-2">Resultats ({results.length})</span>
+                <span className="ml-2">{t('reports.matching.resultsTab')} ({results.length})</span>
               </div>
             </button>
           </nav>
@@ -410,7 +437,8 @@ const MatchingSystem = () => {
                     ageMin: String(filters.demographics.ageMin),
                     ageMax: String(filters.demographics.ageMax),
                     sexe: filters.demographics.sexe,
-                    phototypes: filters.demographics.phototypes
+                    phototypes: filters.demographics.phototypes,
+                    ethnies: filters.demographics.ethnies
                   },
                   makeup: filters.makeup,
                   evaluations: Object.entries(filters.evaluations).reduce((acc, [key, val]) => ({
@@ -424,6 +452,7 @@ const MatchingSystem = () => {
                 onAgeChange={handleAgeChange}
                 onSexChange={handleSexChange}
                 onPhototypeToggle={togglePhototype}
+                onEthnieToggle={toggleEthnie}
                 onMakeupToggle={toggleMakeupOption}
                 onEvaluationChange={handleEvaluationThresholdChange}
                 onExecute={executerMatching}
@@ -451,13 +480,13 @@ const MatchingSystem = () => {
                     onClick={() => setActiveTab('criteres')}
                     className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
                   >
-                    Retour aux filtres
+                    {t('reports.matching.backToFilters')}
                   </button>
                   <button
                     onClick={() => handleContactAll(results)}
                     className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
                   >
-                    Contacter tous ({results.length})
+                    {t('reports.matching.contactAll')} ({results.length})
                   </button>
                 </div>
                 <ResultsTable 

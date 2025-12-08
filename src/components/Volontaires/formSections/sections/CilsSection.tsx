@@ -1,14 +1,18 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useTranslation } from "react-i18next";
 
-const CilsSection = ({ formData, onChange }: any) => (
+const CilsSection = ({ formData, onChange }: any) => {
+  const { t } = useTranslation();
+
+  return (
     <Card>
       <CardHeader>
-        <CardTitle>Cils & sourcils</CardTitle>
+        <CardTitle>{t('volunteers.eyelashesAndEyebrows')}</CardTitle>
       </CardHeader>
       <CardContent>
-  
+
       <h3 className="text-md font-medium text-gray-800 mt-2 mb-3">
-        Caractéristiques des cils
+        {t('volunteers.lashCharacteristics')}
       </h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
@@ -16,7 +20,7 @@ const CilsSection = ({ formData, onChange }: any) => (
             htmlFor="epaisseurCils"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
-            Épaisseur des cils
+            {t('volunteers.lashThickness')}
           </label>
           <select
             id="epaisseurCils"
@@ -25,19 +29,19 @@ const CilsSection = ({ formData, onChange }: any) => (
             onChange={onChange}
             className="form-select block w-full"
           >
-            <option value="">Sélectionner</option>
+            <option value="">{t('common.select')}</option>
             <option value="Fins">Fins</option>
             <option value="Moyens">Moyens</option>
             <option value="Épais">Épais</option>
           </select>
         </div>
-  
+
         <div>
           <label
             htmlFor="longueurCils"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
-            Longueur des cils
+            {t('volunteers.lashLength')}
           </label>
           <select
             id="longueurCils"
@@ -46,19 +50,19 @@ const CilsSection = ({ formData, onChange }: any) => (
             onChange={onChange}
             className="form-select block w-full"
           >
-            <option value="">Sélectionner</option>
+            <option value="">{t('common.select')}</option>
             <option value="Courts">Courts</option>
             <option value="Moyens">Moyens</option>
             <option value="Longs">Longs</option>
           </select>
         </div>
-  
+
         <div>
           <label
             htmlFor="courbureCils"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
-            Courbure des cils
+            {t('volunteers.lashCurvature')}
           </label>
           <select
             id="courbureCils"
@@ -67,14 +71,14 @@ const CilsSection = ({ formData, onChange }: any) => (
             onChange={onChange}
             className="form-select block w-full"
           >
-            <option value="">Sélectionner</option>
+            <option value="">{t('common.select')}</option>
             <option value="Droits">Droits</option>
             <option value="Légèrement courbés">Légèrement courbés</option>
             <option value="Très courbés">Très courbés</option>
           </select>
         </div>
       </div>
-  
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
         <div className="flex items-center">
           <input
@@ -89,10 +93,10 @@ const CilsSection = ({ formData, onChange }: any) => (
             htmlFor="cilsAbimes"
             className="ml-2 block text-sm font-medium text-gray-700"
           >
-            Cils abîmés
+            {t('volunteers.damagedLashes')}
           </label>
         </div>
-  
+
         <div className="flex items-center">
           <input
             type="checkbox"
@@ -106,10 +110,10 @@ const CilsSection = ({ formData, onChange }: any) => (
             htmlFor="cilsBroussailleux"
             className="ml-2 block text-sm font-medium text-gray-700"
           >
-            Cils broussailleux
+            {t('volunteers.bushyLashes')}
           </label>
         </div>
-  
+
         <div className="flex items-center">
           <input
             type="checkbox"
@@ -123,13 +127,13 @@ const CilsSection = ({ formData, onChange }: any) => (
             htmlFor="chuteDeCils"
             className="ml-2 block text-sm font-medium text-gray-700"
           >
-            Chute de cils
+            {t('volunteers.lashLoss')}
           </label>
         </div>
       </div>
-  
+
       <h3 className="text-md font-medium text-gray-800 mt-6 mb-3">
-        Sourcils
+        {t('volunteers.eyebrows')}
       </h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
@@ -137,7 +141,7 @@ const CilsSection = ({ formData, onChange }: any) => (
             htmlFor="caracteristiqueSourcils"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
-            Caractéristiques des sourcils
+            {t('volunteers.eyebrowCharacteristics')}
           </label>
           <select
             id="caracteristiqueSourcils"
@@ -146,7 +150,7 @@ const CilsSection = ({ formData, onChange }: any) => (
             onChange={onChange}
             className="form-select block w-full"
           >
-            <option value="">Sélectionner</option>
+            <option value="">{t('common.select')}</option>
             <option value="Fins">Fins</option>
             <option value="Moyens">Moyens</option>
             <option value="Épais">Épais</option>
@@ -155,9 +159,9 @@ const CilsSection = ({ formData, onChange }: any) => (
           </select>
         </div>
       </div>
-  
+
       <h3 className="text-md font-medium text-gray-800 mt-6 mb-3">
-        Lèvres
+        {t('volunteers.lips')}
       </h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
@@ -165,7 +169,7 @@ const CilsSection = ({ formData, onChange }: any) => (
             htmlFor="levres"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
-            Type de lèvres
+            {t('volunteers.lipType')}
           </label>
           <select
             id="levres"
@@ -174,7 +178,7 @@ const CilsSection = ({ formData, onChange }: any) => (
             onChange={onChange}
             className="form-select block w-full"
           >
-            <option value="">Sélectionner</option>
+            <option value="">{t('common.select')}</option>
             <option value="Fines">Fines</option>
             <option value="Moyennes">Moyennes</option>
             <option value="Pulpeuses">Pulpeuses</option>
@@ -185,6 +189,6 @@ const CilsSection = ({ formData, onChange }: any) => (
       </CardContent>
     </Card>
   );
-  
+};
 
 export default CilsSection;

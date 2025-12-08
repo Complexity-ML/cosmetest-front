@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import api from '../../services/api';
 
 // Types
@@ -111,6 +112,7 @@ const FilterPanelHc: React.FC<FilterPanelHcProps> = ({
   methodeEpilationFilter, setMethodeEpilationFilter, 
   onApplyFilters 
 }) => {
+  const { t } = useTranslation();
   const lieuAchatOptions = ['Tous', 'Pharmacie', 'Parapharmacie', 'Grande surface', 'Magasin bio', 'Internet', 'Autre'];
   const produitsBioOptions = ['Tous', 'Oui', 'Non', 'Parfois'];
   const epilationOptions = ['Tous', 'Rasoir', 'Épilateur électrique', 'Cire chaude', 'Cire froide', 'Crème dépilatoire', 'Laser', 'Autre'];
@@ -140,12 +142,12 @@ const FilterPanelHc: React.FC<FilterPanelHcProps> = ({
     <div className="bg-white p-4 rounded-lg shadow mb-6">
       <h3 className="font-medium text-gray-700 mb-4 flex items-center">
         <IconFilter width={18} height={18} className="mr-2" />
-        Filtres avancés
+        {t('panel.advancedFilters')}
       </h3>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Lieu d'achat</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">{t('panel.purchaseLocation')}</label>
           <select
             className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={localLieuAchat}
@@ -158,7 +160,7 @@ const FilterPanelHc: React.FC<FilterPanelHcProps> = ({
         </div>
         
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Utilisation produits bio</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">{t('panel.organicProducts')}</label>
           <select
             className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={localProduitsBio}
@@ -171,7 +173,7 @@ const FilterPanelHc: React.FC<FilterPanelHcProps> = ({
         </div>
         
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Méthode d'épilation</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">{t('panel.hairRemovalMethod')}</label>
           <select
             className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={localMethodeEpilation}
@@ -189,13 +191,13 @@ const FilterPanelHc: React.FC<FilterPanelHcProps> = ({
           onClick={handleResetFilters}
           className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800"
         >
-          Réinitialiser
+          {t('common.reset')}
         </button>
         <button
           onClick={handleApplyFilters}
           className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
-          Appliquer
+          {t('common.apply')}
         </button>
       </div>
     </div>
@@ -204,6 +206,7 @@ const FilterPanelHc: React.FC<FilterPanelHcProps> = ({
 
 // Composant principal PanelHcList
 const PanelHcList = () => {
+  const { t } = useTranslation();
   const location = useLocation();
   const [panelsHc, setPanelsHc] = useState<PanelHc[]>([]);
   const [loading, setLoading] = useState(true);
@@ -364,7 +367,7 @@ const PanelHcList = () => {
     <div className="space-y-4">
     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
       <div>
-        <h1 className="text-2xl font-bold text-gray-800">Panels</h1>
+        <h1 className="text-2xl font-bold text-gray-800">{t('panel.title')}</h1>
         
         {/* Switch pour basculer entre Panels et Panels HC */}
         <div className="mt-2 inline-flex bg-gray-100 rounded-lg p-1">
@@ -376,7 +379,7 @@ const PanelHcList = () => {
                 : 'text-gray-600 hover:text-gray-800'
             }`}
           >
-            Panels
+            {t('panel.title')}
           </Link>
           <Link
             to="/panels-hc"
@@ -386,18 +389,18 @@ const PanelHcList = () => {
                 : 'text-gray-600 hover:text-gray-800'
             }`}
           >
-            Habitudes Cosmétiques
+            {t('volunteers.cosmeticHabits')}
           </Link>
         </div>
         
-        <h2 className="text-sm text-gray-600 mt-1">Informations sur les habitudes cosmétiques des panels</h2>
+        <h2 className="text-sm text-gray-600 mt-1">{t('panel.subtitle', 'Informations sur les habitudes cosmétiques des panels')}</h2>
       </div>
       
       <Link
         to="/panels-hc/nouveau"
         className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
       >
-        Ajouter un panel HC
+        {t('common.add')}
       </Link>
     </div>
       
@@ -409,7 +412,7 @@ const PanelHcList = () => {
             </div>
             <input
               type="text"
-              placeholder="Rechercher par nom, prénom ou email..."
+              placeholder={t('volunteers.searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
@@ -422,7 +425,7 @@ const PanelHcList = () => {
           className="flex items-center px-4 py-2 border border-gray-300 rounded-md bg-white hover:bg-gray-50"
         >
           <IconFilter className="h-5 w-5 text-gray-400 mr-2" />
-          <span>Filtres</span>
+          <span>{t('common.filters')}</span>
         </button>
       </div>
       
@@ -449,8 +452,8 @@ const PanelHcList = () => {
       ) : panelsHc.length === 0 ? (
         <div className="bg-white p-8 rounded-lg shadow text-center">
           <IconClipboard className="h-12 w-12 mx-auto text-gray-400" />
-          <h3 className="mt-2 text-lg font-medium text-gray-900">Aucun panel HC trouvé</h3>
-          <p className="mt-1 text-gray-500">Aucun panel HC ne correspond à vos critères de recherche.</p>
+          <h3 className="mt-2 text-lg font-medium text-gray-900">{t('panel.noPanelFound')}</h3>
+          <p className="mt-1 text-gray-500">{t('panel.noMatchingCriteria')}</p>
         </div>
       ) : (
         <div className="bg-white shadow-md rounded-lg overflow-hidden">
@@ -459,19 +462,19 @@ const PanelHcList = () => {
               <thead className="bg-gray-50">
                 <tr>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Panel
+                    {t('panel.title')}
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Habitudes d'achat
+                    {t('panel.purchaseHabits')}
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Soins
+                    {t('panel.care')}
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Habitudes d'épilation
+                    {t('panel.hairRemovalHabits')}
                   </th>
                   <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
+                    {t('common.actions')}
                   </th>
                 </tr>
               </thead>
@@ -508,7 +511,7 @@ const PanelHcList = () => {
                         </div>
                           <div className="text-sm text-gray-500 flex items-center">
                             <IconLeaf className="h-4 w-4 mr-1 text-green-500" />
-                            Produits bio: {panelHc.produitsBio || 'Non spécifié'}
+                            {t('panel.organicProductsLabel')}: {panelHc.produitsBio || t('panel.notSpecified')}
                           </div>
                         </div>
                       </div>
@@ -517,15 +520,15 @@ const PanelHcList = () => {
                       <div className="text-sm text-gray-900">
                         <div className="flex items-center mb-1">
                           <IconBrush className="h-4 w-4 mr-1 text-blue-500" />
-                          Maquillage: {(panelHc.fondDeTeint === 'Oui' || panelHc.mascara === 'Oui') ? 'Oui' : 'Non spécifié'}
+                          {t('panel.makeup')}: {(panelHc.fondDeTeint === 'Oui' || panelHc.mascara === 'Oui') ? t('panel.yes') : t('panel.notSpecified')}
                         </div>
                         <div className="text-sm text-gray-500">
-                          Visage: {(panelHc.soinHydratantVisage === 'Oui') ? 'Hydratant' : 
-                                  (panelHc.soinAntiAgeVisage === 'Oui') ? 'Anti-âge' : 'Non spécifié'}
+                          {t('panel.face')}: {(panelHc.soinHydratantVisage === 'Oui') ? t('panel.moisturizing') : 
+                                  (panelHc.soinAntiAgeVisage === 'Oui') ? t('panel.antiAge') : t('panel.notSpecified')}
                         </div>
                         <div className="text-sm text-gray-500">
-                          Corps: {(panelHc.soinHydratantCorps === 'Oui') ? 'Hydratant' : 
-                                (panelHc.soinAntiCellulite === 'Oui') ? 'Anti-cellulite' : 'Non spécifié'}
+                          {t('panel.body')}: {(panelHc.soinHydratantCorps === 'Oui') ? t('panel.moisturizing') : 
+                                (panelHc.soinAntiCellulite === 'Oui') ? t('panel.antiCellulite') : t('panel.notSpecified')}
                         </div>
                       </div>
                     </td>
@@ -550,7 +553,7 @@ const PanelHcList = () => {
                           to={`/panels-hc/${panelHc.idPanel}`}
                           className="text-blue-600 hover:text-blue-900"
                         >
-                          Voir
+                          {t('common.view')}
                         </Link>
                         <Link
                           to={`/panels-hc/${panelHc.idPanel}/edit`}

@@ -1,8 +1,8 @@
 ﻿import { useState, lazy, Suspense, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import AppointmentViewer from './AppointmentViewer';
 import { useRendezVousContext } from './context/RendezVousContext';
 import { Button } from '../../components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { Alert, AlertDescription } from '../../components/ui/alert';
 import { Calendar, Plus, ListChecks, AlertCircle, Loader2 } from 'lucide-react';
@@ -51,6 +51,7 @@ interface ContextError {
 }
 
 const RendezVousLayout = () => {
+  const { t } = useTranslation();
   const context = useRendezVousContext() as any;
   
   // Mémoïser les données pour éviter les re-renders inutiles
@@ -66,6 +67,7 @@ const RendezVousLayout = () => {
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [selectedStudy, setSelectedStudy] = useState<Study | null>(null);
   const [selectedVolunteer, setSelectedVolunteer] = useState<Volunteer | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
 
   const handleAppointmentClick = (appointment: Appointment) => {
     if (!appointment.idEtude || !appointment.idRdv) {
@@ -82,18 +84,29 @@ const RendezVousLayout = () => {
 
   const handleEditClick = (appointment: Appointment) => {
     setSelectedAppointment(appointment);
-    setView('edit');
+    setIsEditing(true);
   };
 
   const handleBackClick = () => {
+    setIsEditing(false);
     setView('calendar');
     setSelectedAppointment(null);
+  };
+
+  const handleEditBackClick = () => {
+    setIsEditing(false);
   };
 
   const handleOperationSuccess = () => {
     requestRefresh();
+    setIsEditing(false);
     setView('calendar');
     setSelectedAppointment(null);
+  };
+
+  const handleEditSuccess = () => {
+    requestRefresh();
+    setIsEditing(false);
   };
 
   const handleRefresh = async () => {
@@ -102,98 +115,84 @@ const RendezVousLayout = () => {
 
   if (isLoading) {
     return (
-      <Card className="m-4">
-        <CardContent className="flex flex-col items-center justify-center py-12">
+      <div className="m-4 bg-white rounded-lg border border-gray-200 p-8">
+        <div className="flex flex-col items-center justify-center">
           <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
-          <p className="text-muted-foreground">Chargement des données...</p>
-        </CardContent>
-      </Card>
+          <p className="text-muted-foreground">{t('common.loading')}</p>
+        </div>
+      </div>
     );
   }
 
   if (error) {
     return (
-      <Card className="m-4">
-        <CardContent className="py-8">
-          <Alert variant="destructive">
-            <AlertCircle className="h-5 w-5" />
-            <AlertDescription className="ml-2">
-              {error.message || 'Erreur lors du chargement des données.'}
-            </AlertDescription>
-          </Alert>
-          <div className="flex justify-center mt-4">
-            <Button onClick={handleRefresh} variant="default">
-              Réessayer
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="m-4 bg-white rounded-lg border border-gray-200 p-8">
+        <Alert variant="destructive">
+          <AlertCircle className="h-5 w-5" />
+          <AlertDescription className="ml-2">
+            {error.message || t('appointments.loadError')}
+          </AlertDescription>
+        </Alert>
+        <div className="flex justify-center mt-4">
+          <Button onClick={handleRefresh} variant="default">
+            {t('errors.tryAgain')}
+          </Button>
+        </div>
+      </div>
     );
   }
 
   return (
     <div className="container mx-auto p-4 space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+      <div className="bg-white rounded-lg border border-gray-200">
+        <div className="border-b border-gray-200 px-6 py-4">
+          <h2 className="text-xl font-semibold flex items-center gap-2">
             <Calendar className="h-6 w-6" />
-            Gestion des Rendez-vous
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+            {t('appointments.title')}
+          </h2>
+        </div>
+        <div className="p-6">
           <Tabs value={view} onValueChange={setView} className="w-full">
             <TabsList className="grid w-full grid-cols-4 mb-6">
               <TabsTrigger value="calendar" className="flex items-center gap-2">
                 <Calendar className="h-4 w-4" />
-                Calendrier
+                {t('appointments.calendar')}
               </TabsTrigger>
               <TabsTrigger value="byStudy" className="flex items-center gap-2">
                 <ListChecks className="h-4 w-4" />
-                Par étude
+                {t('appointments.byStudy')}
               </TabsTrigger>
               <TabsTrigger value="create" className="flex items-center gap-2">
                 <Plus className="h-4 w-4" />
-                Créer un RDV
+                {t('appointments.createOne')}
               </TabsTrigger>
               <TabsTrigger value="createBatch" className="flex items-center gap-2">
                 <Plus className="h-4 w-4" />
-                Créer plusieurs
+                {t('appointments.createMultiple')}
               </TabsTrigger>
             </TabsList>
 
             <div className="mt-6">
-              {view === 'calendar' && (
-                <Suspense fallback={
-                  <div className="flex items-center justify-center py-12">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                  </div>
-                }>
+              <Suspense fallback={
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+              }>
+                {view === 'calendar' && (
                   <div className="space-y-4">
                     <AppointmentCalendar {...({ onAppointmentClick: handleAppointmentClick } as any)} />
                   </div>
-                </Suspense>
-              )}
+                )}
 
-              {view === 'byStudy' && (
-                <Suspense fallback={
-                  <div className="flex items-center justify-center py-12">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                  </div>
-                }>
+                {view === 'byStudy' && (
                   <div className="space-y-4">
                     <AppointmentsByStudy
                       {...({ studies, onAppointmentClick: handleAppointmentClick, onBack: handleBackClick } as any)}
                     />
                   </div>
-                </Suspense>
-              )}
+                )}
 
-              {view === 'create' && (
-                <Suspense fallback={
-                  <div className="flex items-center justify-center py-12">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                  </div>
-                }>
+                {view === 'create' && (
                   <div className="space-y-4">
                     <AppointmentCreator
                       volunteers={[]}
@@ -206,15 +205,9 @@ const RendezVousLayout = () => {
                       onSuccess={handleOperationSuccess}
                     />
                   </div>
-                </Suspense>
-              )}
+                )}
 
-              {view === 'createBatch' && (
-                <Suspense fallback={
-                  <div className="flex items-center justify-center py-12">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                  </div>
-                }>
+                {view === 'createBatch' && (
                   <div className="space-y-4">
                     <AppointmentBatchCreator
                       studies={studies as any}
@@ -224,12 +217,12 @@ const RendezVousLayout = () => {
                       onSuccess={handleOperationSuccess}
                     />
                   </div>
-                </Suspense>
-              )}
+                )}
+              </Suspense>
             </div>
           </Tabs>
 
-          {view === 'view' && selectedAppointment && (
+          {view === 'view' && selectedAppointment && !isEditing && (
             <div className="mt-6">
               <AppointmentViewer
                 appointment={selectedAppointment}
@@ -240,7 +233,7 @@ const RendezVousLayout = () => {
             </div>
           )}
 
-          {view === 'edit' && selectedAppointment && (
+          {view === 'view' && selectedAppointment && isEditing && (
             <Suspense fallback={
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -249,15 +242,15 @@ const RendezVousLayout = () => {
               <div className="mt-6">
                 <AppointmentEditor
                   appointment={selectedAppointment}
-                  volunteers={[]}
-                  onBack={handleBackClick}
-                  onSuccess={handleOperationSuccess}
+                  volunteers={volunteers}
+                  onBack={handleEditBackClick}
+                  onSuccess={handleEditSuccess}
                 />
               </div>
             </Suspense>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 };

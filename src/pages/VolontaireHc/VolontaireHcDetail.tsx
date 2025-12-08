@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import api from '../../services/api';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -19,7 +20,7 @@ import printSvg from '../../assets/icons/printer.svg';
 import plusSvg from '../../assets/icons/plus.svg';
 
 // Import de la configuration du formulaire pour réutiliser les sections
-import { FORM_SECTIONS } from '../../components/VolontaireHc/formConfig';
+import { getFormSections } from '../../components/VolontaireHc/formConfig';
 import { initializeFormDataWithNon, normalizeFormData } from '../../components/VolontaireHc/initializers';
 
 // Composants d'icônes
@@ -137,6 +138,7 @@ const getIconComponent = (iconName: any) => {
 
 // Composant principal VolontaireHcDetail
 const VolontaireHcDetail = () => {
+  const { t } = useTranslation();
   const { idVol } = useParams();
   const navigate = useNavigate();
   const [volontaireHc, setVolontaireHc] = useState<any>(null);
@@ -157,7 +159,7 @@ const VolontaireHcDetail = () => {
         const numericId = parseInt(idVol || '', 10);
 
         if (isNaN(numericId)) {
-          throw new Error("ID du volontaire invalide");
+          throw new Error(t('volunteers.invalidId'));
         }
 
         // Récupérer les informations du volontaire d'abord
@@ -170,7 +172,7 @@ const VolontaireHcDetail = () => {
           }
         } catch (volErr) {
           console.error('Erreur lors de la récupération des informations du volontaire:', volErr);
-          throw new Error("Impossible de trouver le volontaire");
+          throw new Error(t('volunteers.notFound'));
         }
 
         // Si on a réussi à récupérer les infos du volontaire, créer une entrée vide si elle n'existe pas
@@ -223,7 +225,7 @@ const VolontaireHcDetail = () => {
             } else {
               // Pour d'autres erreurs, on note simplement l'erreur mais on continue
               setDataFetchError(true);
-              setError("Erreur lors du chargement des habitudes cosmétiques.");
+              setError(t('volunteers.loadHcError'));
               
               // Créer un objet de données initial vide comme fallback
               const initialData = initializeFormDataWithNon(numericId);
@@ -233,14 +235,14 @@ const VolontaireHcDetail = () => {
         }
       } catch (err) {
         console.error('Erreur lors du chargement des données:', err);
-        setError("Impossible de charger les données. Veuillez réessayer.");
+        setError(t('common.loadError'));
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, [idVol]);
+  }, [idVol, t]);
 
   const handlePrint = () => {
     window.print();
@@ -251,9 +253,9 @@ const VolontaireHcDetail = () => {
     try {
       setLoading(true);
       const numericId = parseInt(idVol || '', 10);
-      
+
       if (isNaN(numericId)) {
-        throw new Error("ID du volontaire invalide");
+        throw new Error(t('volunteers.invalidId'));
       }
       
       // Créer l'objet avec des données initiales (tout à "non")
@@ -266,7 +268,7 @@ const VolontaireHcDetail = () => {
       navigate(0);
     } catch (err) {
       console.error('Erreur lors de la création d\'une entrée vide:', err);
-      setError("Erreur lors de la création des habitudes cosmétiques.");
+      setError(t('volunteers.loadHcError'));
     } finally {
       setLoading(false);
     }
@@ -283,7 +285,7 @@ const VolontaireHcDetail = () => {
       navigate('/volontaires-hc');
     } catch (err) {
       console.error('Erreur lors de la suppression:', err);
-      setError("Erreur lors de la suppression des habitudes cosmétiques.");
+      setError(t('common.deleteError'));
     }
   };
 
@@ -305,7 +307,7 @@ const VolontaireHcDetail = () => {
         <div className="mt-4">
           <Link to="/volontaires-hc" className="text-blue-600 hover:text-blue-800 flex items-center">
             <IconArrowLeft width={16} height={16} className="mr-1" />
-            Retour à la liste
+            {t('common.backToList')}
           </Link>
         </div>
       </div>
@@ -320,14 +322,14 @@ const VolontaireHcDetail = () => {
           <div className="flex items-center mb-4 sm:mb-0">
             <Link to="/volontaires-hc" className="text-blue-600 hover:text-blue-800 flex items-center mr-4">
               <IconArrowLeft width={16} height={16} className="mr-1" />
-              Retour
+              {t('common.back')}
             </Link>
-            <h1 className="text-2xl font-bold text-gray-800">Habitudes cosmétiques</h1>
+            <h1 className="text-2xl font-bold text-gray-800">{t('volunteers.cosmeticHabits')}</h1>
           </div>
         </div>
 
         <DetailSection
-          title="Informations du volontaire"
+          title={t('volunteers.volunteerInformation')}
           icon={<IconUser width={20} height={20} className="text-blue-600" />}
         >
           <div className="flex items-start">
@@ -338,16 +340,16 @@ const VolontaireHcDetail = () => {
               <h2 className="text-xl font-semibold">{volontaireInfo.nom} {volontaireInfo.prenom}</h2>
               <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
                 <p><span className="font-medium">ID:</span> {idVol}</p>
-                <p><span className="font-medium">Sexe:</span> {volontaireInfo.sexe}</p>
-                <p><span className="font-medium">Âge:</span> {volontaireInfo.age} ans</p>
+                <p><span className="font-medium">{t('volunteers.gender')}:</span> {volontaireInfo.sexe}</p>
+                <p><span className="font-medium">{t('volunteers.age')}:</span> {volontaireInfo.age} {t('dates.years')}</p>
                 {volontaireInfo.phototype && (
-                  <p><span className="font-medium">Phototype:</span> {volontaireInfo.phototype}</p>
+                  <p><span className="font-medium">{t('volunteers.phototype')}:</span> {volontaireInfo.phototype}</p>
                 )}
                 {volontaireInfo.email && (
-                  <p><span className="font-medium">Email:</span> {volontaireInfo.email}</p>
+                  <p><span className="font-medium">{t('volunteers.email')}:</span> {volontaireInfo.email}</p>
                 )}
                 {volontaireInfo.telephone && (
-                  <p><span className="font-medium">Téléphone:</span> {volontaireInfo.telephone}</p>
+                  <p><span className="font-medium">{t('volunteers.phone')}:</span> {volontaireInfo.telephone}</p>
                 )}
               </div>
             </div>
@@ -357,21 +359,21 @@ const VolontaireHcDetail = () => {
         <Alert className="my-6 border-yellow-500 bg-yellow-50">
           <IconAlertCircle width={24} height={24} className="h-5 w-5 text-yellow-500" />
           <AlertDescription className="ml-2">
-            <h3 className="text-lg font-medium text-yellow-800 mb-2">Aucune habitude cosmétique trouvée</h3>
+            <h3 className="text-lg font-medium text-yellow-800 mb-2">{t('volunteers.noCosmeticHabitsFound')}</h3>
             <p className="text-yellow-700 mb-4">
-              Ce volontaire n'a pas encore d'habitudes cosmétiques enregistrées. Vous pouvez en créer en cliquant sur l'un des boutons ci-dessous.
+              {t('volunteers.noCosmeticHabitsMessage')}
             </p>
             <div className="flex flex-wrap gap-4">
               <Button asChild>
                 <Link to={`/volontaires-hc/nouveau?idVol=${idVol}`}>
                   <IconPlus width={20} height={20} className="mr-2" />
-                  Créer et définir les habitudes cosmétiques
+                  {t('volunteers.createAndDefineCosmeticHabits')}
                 </Link>
               </Button>
-              
+
               <Button variant="outline" onClick={handleCreateEmptyEntry}>
                 <IconPlus width={20} height={20} className="mr-2" />
-                Initialiser une entrée vide
+                {t('volunteers.initializeEmptyEntry')}
               </Button>
             </div>
           </AlertDescription>
@@ -384,12 +386,12 @@ const VolontaireHcDetail = () => {
     return (
       <div className="max-w-4xl mx-auto py-8">
         <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded-md">
-          <p className="text-yellow-700">Aucune habitude cosmétique trouvée pour ce volontaire.</p>
+          <p className="text-yellow-700">{t('volunteers.noCosmeticHabitsFound')}</p>
         </div>
         <div className="mt-4">
           <Link to="/volontaires-hc" className="text-blue-600 hover:text-blue-800 flex items-center">
             <IconArrowLeft width={16} height={16} className="mr-1" />
-            Retour à la liste
+            {t('common.backToList')}
           </Link>
         </div>
       </div>
@@ -403,24 +405,24 @@ const VolontaireHcDetail = () => {
         <div className="flex items-center mb-4 sm:mb-0">
           <Link to="/volontaires-hc" className="text-blue-600 hover:text-blue-800 flex items-center mr-4">
             <IconArrowLeft width={16} height={16} className="mr-1" />
-            Retour
+            {t('common.back')}
           </Link>
-          <h1 className="text-2xl font-bold text-gray-800">Habitudes cosmétiques</h1>
+          <h1 className="text-2xl font-bold text-gray-800">{t('volunteers.cosmeticHabits')}</h1>
         </div>
         <div className="flex space-x-3">
           <Button variant="outline" onClick={handlePrint}>
             <IconPrint width={16} height={16} className="mr-2" />
-            Imprimer
+            {t('volunteers.print')}
           </Button>
           <Button asChild>
             <Link to={`/volontaires-hc/${idVol}/edit`}>
               <IconEdit width={16} height={16} className="mr-2" />
-              Modifier
+              {t('common.edit')}
             </Link>
           </Button>
           <Button variant="destructive" onClick={() => setDeleteConfirmOpen(true)}>
             <IconTrash width={16} height={16} className="mr-2" />
-            Supprimer
+            {t('common.delete')}
           </Button>
         </div>
       </div>
@@ -430,14 +432,14 @@ const VolontaireHcDetail = () => {
         <Alert className="mb-6 border-yellow-500 bg-yellow-50">
           <IconAlertCircle width={20} height={20} className="h-5 w-5 text-yellow-500" />
           <AlertDescription>
-            Des erreurs ont été rencontrées lors du chargement des données. Certaines informations peuvent ne pas être à jour.
+            {t('volunteers.dataLoadWarning')}
           </AlertDescription>
         </Alert>
       )}
 
       {/* Informations du volontaire */}
       <DetailSection
-        title="Informations du volontaire"
+        title={t('volunteers.volunteerInformation')}
         icon={<IconUser width={20} height={20} className="text-blue-600" />}
       >
         {volontaireInfo ? (
@@ -449,27 +451,27 @@ const VolontaireHcDetail = () => {
               <h2 className="text-xl font-semibold">{volontaireInfo.nom} {volontaireInfo.prenom}</h2>
               <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
                 <p><span className="font-medium">ID:</span> {idVol}</p>
-                <p><span className="font-medium">Sexe:</span> {volontaireInfo.sexe}</p>
-                <p><span className="font-medium">Âge:</span> {volontaireInfo.age} ans</p>
+                <p><span className="font-medium">{t('volunteers.gender')}:</span> {volontaireInfo.sexe}</p>
+                <p><span className="font-medium">{t('volunteers.age')}:</span> {volontaireInfo.age} {t('dates.years')}</p>
                 {volontaireInfo.phototype && (
-                  <p><span className="font-medium">Phototype:</span> {volontaireInfo.phototype}</p>
+                  <p><span className="font-medium">{t('volunteers.phototype')}:</span> {volontaireInfo.phototype}</p>
                 )}
                 {volontaireInfo.email && (
-                  <p><span className="font-medium">Email:</span> {volontaireInfo.email}</p>
+                  <p><span className="font-medium">{t('volunteers.email')}:</span> {volontaireInfo.email}</p>
                 )}
                 {volontaireInfo.telephone && (
-                  <p><span className="font-medium">Téléphone:</span> {volontaireInfo.telephone}</p>
+                  <p><span className="font-medium">{t('volunteers.phone')}:</span> {volontaireInfo.telephone}</p>
                 )}
               </div>
             </div>
           </div>
         ) : (
-          <p className="text-gray-500">Informations du volontaire non disponibles</p>
+          <p className="text-gray-500">{t('volunteers.volunteerInfoUnavailable')}</p>
         )}
       </DetailSection>
 
       {/* Affichage dynamique des sections d'habitudes cosmétiques */}
-      {FORM_SECTIONS.map((section) => (
+      {getFormSections(t).map((section) => (
         <DetailSection
           key={section.title}
           title={section.title}
@@ -495,7 +497,7 @@ const VolontaireHcDetail = () => {
           <CardHeader>
             <CardTitle className="flex items-center text-lg font-medium">
               <IconDroplet width={20} height={20} className="text-blue-600 mr-2" />
-              Commentaires
+              {t('common.comments')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -511,18 +513,18 @@ const VolontaireHcDetail = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <Card className="max-w-md mx-4">
             <CardHeader>
-              <CardTitle>Confirmation de suppression</CardTitle>
+              <CardTitle>{t('common.confirmDelete')}</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-gray-700 mb-6">
-                Êtes-vous sûr de vouloir supprimer les habitudes cosmétiques de ce volontaire ? Cette action est irréversible.
+                {t('common.deleteWarning')}
               </p>
               <div className="flex justify-end space-x-4">
                 <Button variant="outline" onClick={() => setDeleteConfirmOpen(false)}>
-                  Annuler
+                  {t('common.cancel')}
                 </Button>
                 <Button variant="destructive" onClick={handleDelete}>
-                  Supprimer
+                  {t('common.delete')}
                 </Button>
               </div>
             </CardContent>

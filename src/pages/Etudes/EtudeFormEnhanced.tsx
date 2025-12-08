@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useTranslation } from 'react-i18next';
 import etudeService from "../../services/etudeService";
 import IndemniteManager from "../../components/Etudes/IndemniteManager";
 import GroupesSection from "../../components/Etudes/detailsSections/GroupesSection";
@@ -9,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
 
 const ETHNIES_DISPONIBLES = [
@@ -22,7 +24,7 @@ const ETHNIES_DISPONIBLES = [
 const PRODUITS_DISPONIBLES = [
   'GLOSS',
   'ROUGES A LEVRES',
-  'BEAUME A LEVRES',
+  'BAUME A LEVRES',
   'SERUM A LEVRES',
   'HUILE A LEVRES',
   'CONTOUR LEVRES',
@@ -76,6 +78,7 @@ const normalizeEthnies = (ethniesArray: string | string[] | undefined): string =
 };
 
 const EtudeFormEnhanced = () => {
+  const { t } = useTranslation();
   const { id } = useParams();
   const navigate = useNavigate();
   const isEditMode = !!id;
@@ -156,14 +159,14 @@ const EtudeFormEnhanced = () => {
         });
       } catch (error) {
         console.error("Erreur lors du chargement de l'étude:", error);
-        setError("Erreur lors du chargement des données de l'étude");
+        setError(t('studies.loadError'));
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchEtude();
-  }, [id, isEditMode]);
+  }, [id, isEditMode, t]);
 
   // (déplacé plus bas, après déclaration de fetchGroupes)
 
@@ -208,7 +211,7 @@ const EtudeFormEnhanced = () => {
       e.preventDefault();
 
       if (!isEditMode && refExists) {
-        setError("Cette référence d'étude existe déjà");
+        setError(t('studies.referenceExists'));
         return;
       }
 
@@ -229,12 +232,12 @@ const EtudeFormEnhanced = () => {
         }
       } catch (error) {
         console.error("Erreur lors de l'enregistrement de l'étude:", error);
-        setError("Erreur lors de l'enregistrement de l'étude");
+        setError(t('studies.saveError'));
       } finally {
         setIsSaving(false);
       }
     },
-    [formData, isEditMode, refExists, id, navigate]
+    [formData, isEditMode, refExists, id, navigate, t]
   );
 
   // Handlers Groupes (reprise du détail)
@@ -273,7 +276,7 @@ const EtudeFormEnhanced = () => {
   const handleCreateGroupe = useCallback(async (event: React.FormEvent) => {
     event.preventDefault();
     if (!newGroupe.intitule) {
-      setError("L'intitulé du groupe est requis");
+      setError(t('groups.titleRequired'));
       return;
     }
     try {
@@ -287,9 +290,9 @@ const EtudeFormEnhanced = () => {
       setShowGroupeForm(false);
     } catch (e) {
       console.error('Erreur lors de la création du groupe:', e);
-      setError('Erreur lors de la création du groupe');
+      setError(t('groups.createError'));
     }
-  }, [fetchGroupes, id, newGroupe]);
+  }, [fetchGroupes, id, newGroupe, t]);
 
   // Charger les groupes quand l'onglet groupes est ouvert (après déclaration de fetchGroupes)
   useEffect(() => {
@@ -320,7 +323,7 @@ const EtudeFormEnhanced = () => {
       <div className="flex justify-between items-center">
         <div className="flex items-center">
           <h1 className="text-2xl font-bold text-gray-800">
-            {isEditMode ? "Modifier l'étude" : "Créer une nouvelle étude"}
+            {isEditMode ? t('studies.editStudy') : t('studies.createNewStudy')}
           </h1>
           {isEditMode && (
             <span
@@ -330,7 +333,7 @@ const EtudeFormEnhanced = () => {
                   : "bg-red-100 text-red-800 border border-red-500"
               }`}
             >
-              {formData.paye ? "Rémunérée" : "Non rémunérée"}
+              {formData.paye ? t('studies.paid') : t('studies.unpaid')}
             </span>
           )}
         </div>
@@ -362,7 +365,7 @@ const EtudeFormEnhanced = () => {
                 }`}
                 onClick={() => setActiveTab("details")}
               >
-                Détails de l'étude
+                {t('studies.studyDetails')}
               </button>
               <button
                 className={`py-4 px-6 border-b-2 font-medium text-sm ${
@@ -372,7 +375,7 @@ const EtudeFormEnhanced = () => {
                 }`}
                 onClick={() => setActiveTab("indemnites")}
               >
-                Gestion des indemnités
+                {t('studies.compensationManagement')}
               </button>
               <button
                 className={`py-4 px-6 border-b-2 font-medium text-sm ${
@@ -382,13 +385,25 @@ const EtudeFormEnhanced = () => {
                 }`}
                 onClick={() => setActiveTab("groupes")}
               >
-                Groupes
+                {t('groups.title')}
+              </button>
+              <button
+                className={`py-4 px-6 border-b-2 font-medium text-sm ${
+                  activeTab === "rendezvous"
+                    ? "border-primary-500 text-primary-600"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                }`}
+                onClick={() => navigate('/rdvs', { state: { selectedStudyId: id } })}
+              >
+                {t('appointments.title')}
               </button>
             </nav>
           </div>
         </div>
       )}
 
+
+      
       {/* Contenu des onglets */}
       {(!isEditMode || activeTab === "details") && (
         <form onSubmit={handleSubmit}>
@@ -398,7 +413,7 @@ const EtudeFormEnhanced = () => {
             {/* Référence */}
             <div>
               <Label htmlFor="ref">
-                Référence *
+                {t('studies.reference')} *
               </Label>
               <Input
                 type="text"
@@ -412,7 +427,7 @@ const EtudeFormEnhanced = () => {
               />
               {refExists && (
                 <p className="mt-1 text-sm text-red-600">
-                  Cette référence existe déjà
+                  {t('studies.referenceExists')}
                 </p>
               )}
             </div>
@@ -420,7 +435,7 @@ const EtudeFormEnhanced = () => {
             {/* Titre */}
             <div>
               <Label htmlFor="titre">
-                Titre *
+                {t('studies.title')} *
               </Label>
               <Input
                 type="text"
@@ -435,7 +450,7 @@ const EtudeFormEnhanced = () => {
             {/* Description */}
             <div className="md:col-span-2">
               <Label htmlFor="description">
-                Description
+                {t('studies.description')}
               </Label>
               <Textarea
                 id="description"
@@ -450,7 +465,7 @@ const EtudeFormEnhanced = () => {
             {/* Produits  */}
             <div className="md:col-span-2">
               <Label>
-                Produits
+                {t('studies.products')}
               </Label>
               <div className="mt-2 p-4 border border-gray-300 rounded-md bg-gray-50 max-h-64 overflow-y-auto">
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
@@ -475,7 +490,7 @@ const EtudeFormEnhanced = () => {
               </div>
               {selectedProduits.length > 0 && (
                 <p className="mt-2 text-sm text-gray-600">
-                  {selectedProduits.length} produit{selectedProduits.length > 1 ? 's' : ''} sélectionné{selectedProduits.length > 1 ? 's' : ''}
+                  {t('studies.productsSelected', { count: selectedProduits.length })}
                 </p>
               )}
             </div>
@@ -483,7 +498,7 @@ const EtudeFormEnhanced = () => {
             {/* Examens */}
             <div className="md:col-span-2">
               <Label htmlFor="examens">
-                Examens
+                {t('studies.exams')}
               </Label>
               <Textarea
                 id="examens"
@@ -498,29 +513,34 @@ const EtudeFormEnhanced = () => {
             {/* Type d'étude */}
             <div>
               <Label htmlFor="type">
-                Type d'étude *
+                {t('studies.studyType')} *
               </Label>
-              <select
-                id="type"
-                name="type"
+              <Select
                 value={formData.type}
-                onChange={handleChange}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                onValueChange={(value) => setFormData(prev => ({ ...prev, type: value }))}
                 required
               >
-                <option value="">Sélectionner</option>
-                <option value="USAGE">Usage</option>
-                <option value="EFFICACITE MAQUILLAGE">Efficacité Maquillage</option>
-                <option value="EFFICACITE SOIN">Efficacité Soin</option>
-                <option value="DTM">DTM</option>
-                <option value="AUTRE">Autre</option>
-              </select>
+                <SelectTrigger className="h-10">
+                  <SelectValue placeholder={t('studies.selectType')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="USAGE">{t('studies.types.usage')}</SelectItem>
+                  <SelectItem value="EFFICACITE MAQUILLAGE">{t('studies.types.makeupEfficacy')}</SelectItem>
+                  <SelectItem value="EFFICACITE SOIN">{t('studies.types.careEfficacy')}</SelectItem>
+                  <SelectItem value="DTM">{t('studies.types.dtm')}</SelectItem>
+                  <SelectItem value="TENUE">{t('studies.types.hold')}</SelectItem>
+                  <SelectItem value="HYDRATION">{t('studies.types.hydration')}</SelectItem>
+                  <SelectItem value="PIE">{t('studies.types.pie')}</SelectItem>
+                  <SelectItem value="DERMOTRACE">{t('studies.types.dermotrace')}</SelectItem>
+                  <SelectItem value="AUTRE">{t('studies.types.other')}</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Capacité */}
             <div>
               <Label htmlFor="capaciteVolontaires">
-                Capacité (nombre de volontaires) *
+                {t('studies.capacity')} *
               </Label>
               <Input
                 type="number"
@@ -536,7 +556,7 @@ const EtudeFormEnhanced = () => {
             {/* Date de début */}
             <div>
               <Label htmlFor="dateDebut">
-                Date de début *
+                {t('studies.startDate')} *
               </Label>
               <Input
                 type="date"
@@ -551,7 +571,7 @@ const EtudeFormEnhanced = () => {
             {/* Date de fin */}
             <div>
               <Label htmlFor="dateFin">
-                Date de fin *
+                {t('studies.endDate')} *
               </Label>
               <Input
                 type="date"
@@ -577,7 +597,7 @@ const EtudeFormEnhanced = () => {
                 htmlFor="paye"
                 className="font-normal cursor-pointer"
               >
-                Étude rémunérée
+                {t('studies.paidStudy')}
               </Label>
             </div>
 
@@ -585,7 +605,7 @@ const EtudeFormEnhanced = () => {
             {formData.paye && (
               <div>
                 <Label htmlFor="montant">
-                  Montant (€)
+                  {t('studies.amount')}
                 </Label>
                 <Input
                   type="number"
@@ -608,7 +628,7 @@ const EtudeFormEnhanced = () => {
               variant="secondary"
               disabled={isSaving}
             >
-              {isEditMode ? "Retour aux études" : "Annuler"}
+              {isEditMode ? t('studies.backToStudies') : t('common.cancel')}
             </Button>
             <Button
               type="submit"
@@ -617,10 +637,10 @@ const EtudeFormEnhanced = () => {
               {isSaving ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Enregistrement...
+                  {t('studies.saving')}
                 </>
               ) : (
-                isEditMode ? "Enregistrer l'étude" : "Créer l'étude"
+                isEditMode ? t('studies.saveStudy') : t('studies.createStudy')
               )}
             </Button>
           </div>
@@ -643,14 +663,14 @@ const EtudeFormEnhanced = () => {
           {/* Bouton pour retourner aux études */}
           <div className="mt-8 flex justify-between items-center">
             <div className="text-sm text-muted-foreground">
-              <span className="font-medium">💡 Info :</span> Les modifications des volontaires sont sauvegardées automatiquement.
+              <span className="font-medium">{t('common.info')} :</span> {t('studies.compensationAutoSave')}
             </div>
             <Button
               type="button"
               onClick={() => navigate("/etudes")}
               variant="secondary"
             >
-              Retour aux études
+              {t('studies.backToStudies')}
             </Button>
           </div>
         </div>

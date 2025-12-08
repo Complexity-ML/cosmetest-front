@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import './Calendar.css';
 import api from '../../services/api';
 import { Button } from '../ui/button';
-import { Card, CardContent } from '../ui/card';
 import { Alert, AlertDescription } from '../ui/alert';
 import { ChevronLeft, ChevronRight, AlertCircle, Loader2 } from 'lucide-react';
 
@@ -40,6 +40,7 @@ interface StudyRdvs {
 }
 
 const Calendar = () => {
+  const { t } = useTranslation();
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [calendarData, setCalendarData] = useState<CalendarData | null>(null);
@@ -281,12 +282,12 @@ const Calendar = () => {
   if (loading) {
     return (
       <div className="calendar-container">
-        <Card>
-          <CardContent className="flex items-center justify-center p-8">
+        <div className="border rounded-lg">
+          <div className="flex items-center justify-center p-8">
             <Loader2 className="h-8 w-8 animate-spin mr-3" />
-            <p>Chargement du calendrier...</p>
-          </CardContent>
-        </Card>
+            <p>{t('calendar.loading')}</p>
+          </div>
+        </div>
       </div>
     );
   }
@@ -297,9 +298,9 @@ const Calendar = () => {
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
-            <p>Erreur: {error}</p>
+            <p>{t('calendar.error')}: {error}</p>
             <Button onClick={() => window.location.reload()} variant="outline" className="mt-2">
-              Réessayer
+              {t('calendar.retry')}
             </Button>
           </AlertDescription>
         </Alert>
@@ -314,11 +315,11 @@ const Calendar = () => {
         <div className="calendar-navigation">
           <Button variant="outline" onClick={() => navigateMonth(-1)}>
             <ChevronLeft className="h-4 w-4 mr-1" />
-            Précédent
+            {t('calendar.previous')}
           </Button>
           <h2 className="calendar-title">{currentDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}</h2>
           <Button variant="outline" onClick={() => navigateMonth(1)}>
-            Suivant
+            {t('calendar.next')}
             <ChevronRight className="h-4 w-4 ml-1" />
           </Button>
         </div>
@@ -327,15 +328,15 @@ const Calendar = () => {
           <div className="calendar-stats">
             <div className="stat-item">
               <span className="stat-number">{calendarData.etudes.length}</span>
-              <span className="stat-label">Études actives</span>
+              <span className="stat-label">{t('calendar.activeStudies')}</span>
             </div>
             <div className="stat-item">
               <span className="stat-number">{calendarDays.filter((day) => day.hasStudies).length}</span>
-              <span className="stat-label">Jours avec RDV</span>
+              <span className="stat-label">{t('calendar.daysWithAppointments')}</span>
             </div>
             <div className="stat-item">
               <span className="stat-number">{calendarData.etudes.reduce((sum, e) => sum + (e.nombreRdvPeriode || 0), 0)}</span>
-              <span className="stat-label">Total RDV</span>
+              <span className="stat-label">{t('calendar.totalAppointments')}</span>
             </div>
           </div>
         )}
@@ -344,7 +345,7 @@ const Calendar = () => {
       {/* Grid */}
       <div className="calendar-grid">
         <div className="calendar-weekdays">
-          {['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].map((day) => (
+          {[t('calendar.mon'), t('calendar.tue'), t('calendar.wed'), t('calendar.thu'), t('calendar.fri'), t('calendar.sat'), t('calendar.sun')].map((day) => (
             <div key={day} className="weekday-header">{day}</div>
           ))}
         </div>
@@ -386,10 +387,10 @@ const Calendar = () => {
             <div className="modal-header enhanced-header">
               <div className="study-info">
                 <h3>{selectedStudy.ref}</h3>
-                <p className="study-title">{selectedStudy.titre || 'Non défini'}</p>
+                <p className="study-title">{selectedStudy.titre || t('calendar.notDefined')}</p>
                 <div className="study-meta">
-                  <span className="study-type">{selectedStudy.type || 'Non défini'}</span>
-                  <span className="rdv-count">{studyRdvs.selectedDate.length} RDV ce jour</span>
+                  <span className="study-type">{selectedStudy.type || t('calendar.notDefined')}</span>
+                  <span className="rdv-count">{studyRdvs.selectedDate.length} {t('calendar.rdvThisDay')}</span>
                   {selectedDate && (
                     <span className="selected-date-info">
                       📅 {formatDateFr(formatLocalDate(selectedDate))}
@@ -404,7 +405,7 @@ const Calendar = () => {
               {loadingRdvs ? (
                 <div className="loading-section">
                   <div className="spinner"></div>
-                  <p>Chargement des rendez-vous...</p>
+                  <p>{t('calendar.loadingAppointments')}</p>
                 </div>
               ) : (
                 <div className="rdv-sections">
@@ -433,13 +434,13 @@ const Calendar = () => {
                                 <span className="volunteer-name">
                                   {rdv.volontaire
                                     ? `${rdv.volontaire.prenomVol || rdv.volontaire.prenom || ''} ${rdv.volontaire.nomVol || rdv.volontaire.nom || ''}`.trim()
-                                    : 'Volontaire non assigné'
+                                    : t('calendar.volunteerNotAssigned')
                                   }
                                 </span>
                               </div>
                               <div className="rdv-status">
                                 <span className={`status-badge ${getRdvStatusColor(rdv.etat)}`}>
-                                  {rdv.etat || 'Non défini'}
+                                  {rdv.etat || t('calendar.notDefined')}
                                 </span>
                               </div>
                             </div>
@@ -457,8 +458,8 @@ const Calendar = () => {
                     <div className="no-rdv-message">
                       <div className="no-rdv-icon">📅</div>
                       <p>
-                        Aucun rendez-vous trouvé pour cette étude le{' '}
-                        {selectedDate ? formatDateFr(formatLocalDate(selectedDate)) : 'jour sélectionné'}
+                        {t('calendar.noAppointmentFound')} {' '}
+                        {selectedDate ? formatDateFr(formatLocalDate(selectedDate)) : t('calendar.selectedDay')}
                       </p>
                     </div>
                   )}

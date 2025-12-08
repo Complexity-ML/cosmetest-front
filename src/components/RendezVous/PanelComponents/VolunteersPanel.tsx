@@ -1,4 +1,4 @@
-﻿import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
+﻿import { useTranslation } from 'react-i18next';
 import { Button } from '../../ui/button';
 import { Input } from '../../ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
@@ -37,21 +37,22 @@ const VolunteersPanel = ({
   onVolunteerFilterChange,
   getVolunteerAppointmentCount,
 }: VolunteersPanelProps) => {
+  const { t } = useTranslation();
   const selectedIds = new Set(selectedVolunteers.map((volunteer) => getVolunteerId(volunteer)));
 
   return (
-    <Card>
-      <CardHeader>
+    <div className="border rounded-lg">
+      <div className="p-6 pb-4">
         <div className="flex justify-between items-center mb-4">
-          <CardTitle>Volontaires ({volunteers.length})</CardTitle>
+          <h3 className="text-lg font-semibold">{t('volunteers.title')} ({volunteers.length})</h3>
           <Select value={volunteerFilterOption} onValueChange={onVolunteerFilterChange}>
             <SelectTrigger className="w-40">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Tous</SelectItem>
-              <SelectItem value="noAppointments">Sans RDV</SelectItem>
-              <SelectItem value="hasAppointments">Avec RDV déjà</SelectItem>
+              <SelectItem value="all">{t('common.all')}</SelectItem>
+              <SelectItem value="noAppointments">{t('appointments.withoutAppointments')}</SelectItem>
+              <SelectItem value="hasAppointments">{t('appointments.withAppointments')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -59,14 +60,14 @@ const VolunteersPanel = ({
         <div className="mb-4">
           <Input
             type="text"
-            placeholder="Rechercher un volontaire..."
+            placeholder={t('appointments.searchVolunteerPlaceholder')}
             value={searchQuery}
             onChange={(event) => onSearchQueryChange(event.target.value)}
           />
         </div>
 
         <div className="flex justify-between items-center">
-          <span className="text-sm text-gray-600">{selectedVolunteers.length} sélectionné(s)</span>
+          <span className="text-sm text-gray-600">{selectedVolunteers.length} {t('common.selected')}</span>
           <Button
             type="button"
             onClick={onSelectAll}
@@ -74,14 +75,14 @@ const VolunteersPanel = ({
             size="sm"
             disabled={volunteers.length === 0}
           >
-            Sélectionner tous
+            {t('common.selectAll')}
           </Button>
         </div>
-      </CardHeader>
+      </div>
 
-      <CardContent className="max-h-96 overflow-y-auto p-0">
+      <div className="max-h-96 overflow-y-auto p-0">
         {volunteers.length === 0 ? (
-          <div className="p-6 text-center text-gray-500">Aucun volontaire trouvé</div>
+          <div className="p-6 text-center text-gray-500">{t('volunteers.noVolunteerFound')}</div>
         ) : (
           <div className="divide-y divide-gray-200">
             {volunteers.map((volunteer) => {
@@ -108,11 +109,11 @@ const VolunteersPanel = ({
                         {volunteer.prenom} {volunteer.nom}
                       </div>
                       <div className="text-xs text-gray-500">
-                        {volunteer.email ?? 'Pas d\'email'}
+                        {volunteer.email ?? t('volunteers.noEmail')}
                         {appointmentCount > 0 ? (
-                          <span className="ml-2 text-blue-600">• {appointmentCount} RDV</span>
+                          <span className="ml-2 text-blue-600">• {appointmentCount} {t('appointments.rdvCount')}</span>
                         ) : (
-                          <span className="ml-2 text-gray-400">• Aucun RDV</span>
+                          <span className="ml-2 text-gray-400">• {t('appointments.noAppointment')}</span>
                         )}
                       </div>
                     </div>
@@ -122,8 +123,8 @@ const VolunteersPanel = ({
             })}
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 

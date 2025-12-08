@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
-import { useMemo, useState } from 'react'
+import { useMemo, useState, Suspense, lazy } from 'react'
+import { useTranslation } from 'react-i18next'
 import { formatDate } from '../../../utils/dateUtils'
 import AppointmentViewer from '../../../pages/RendezVous/AppointmentViewer'
 import { RendezVousProvider } from '../../../pages/RendezVous/context/RendezVousContext'
@@ -9,6 +10,11 @@ import RdvExcelExport from '../../../components/Etudes/RdvExcelExport'
 import RecrutementExcelExport from '../../../components/Etudes/RecrutementExcelExport'
 import { timeToMinutes, normalizeTime } from '../../../utils/timeUtils'
 import { EtudeData } from '../../../types/etude.types'
+import etudeVolontaireService from '../../../services/etudeVolontaireService'
+import groupeService from '../../../services/groupeService'
+import volontaireService from '../../../services/volontaireService'
+
+const AppointmentEditor = lazy(() => import('../../../components/RendezVous/AppointmentComponents/AppointmentEditor'))
 
 interface RendezVousData {
   id?: number;
@@ -66,6 +72,100 @@ const RendezVousSection = ({
   handleRdvClick,
   sortedRdvs,
 }: RendezVousSectionProps) => {
+  const { t } = useTranslation()
+  const [isEditing, setIsEditing] = useState(false)
+  const [volunteers, setVolunteers] = useState<any[]>([])
+  const [editedRdv, setEditedRdv] = useState<RendezVousData | null>(null)
+
+  const handleEditClick = async (rdv: RendezVousData) => {
+    // Créer une copie du RDV pour ne pas muter l'objet original
+    const rdvCopy = { ...rdv }
+
+    // Charger les volontaires de l'étude pour le mode édition
+    if (rdvCopy.idEtude) {
+      try {
+        const response = await etudeVolontaireService.getVolontairesByEtude(rdvCopy.idEtude)
+        // Gérer le cas où le retour est paginé (objet avec content) ou un tableau direct
+        const etudeVolontaires = Array.isArray(response) ? response : (response?.content || response?.data || [])
+        const volunteerList = (etudeVolontaires || []).map((ev: any) => ({
+          id: ev.idVol || ev.volontaire?.idVol || ev.volontaireId,
+          nom: ev.volontaire?.nom || ev.nom || '',
+          prenom: ev.volontaire?.prenom || ev.prenom || '',
+        })).filter((v: any) => v.id)
+        setVolunteers(volunteerList)
+      } catch (err) {
+        console.error('Erreur lors du chargement des volontaires:', err)
+        setVolunteers([])
+      }
+
+      // Charger les infos du groupe si idGroupe existe
+      if (rdvCopy.idGroupe && !rdvCopy.groupe) {
+        try {
+          const groupeData = await groupeService.getById(rdvCopy.idGroupe)
+          if (groupeData) {
+            rdvCopy.groupe = {
+              id: groupeData.idGroupe || groupeData.id,
+              idGroupe: groupeData.idGroupe || groupeData.id,
+              nom: groupeData.nom || groupeData.intitule || `Groupe ${rdvCopy.idGroupe}`,
+            }
+          }
+        } catch (err) {
+          console.error('Erreur lors du chargement du groupe:', err)
+        }
+      }
+
+      // Charger les infos du volontaire si idVolontaire existe
+      if (rdvCopy.idVolontaire && !rdvCopy.volontaire) {
+        try {
+          const response = await volontaireService.getById(rdvCopy.idVolontaire)
+          const volontaireData = response?.data
+          if (volontaireData) {
+            rdvCopy.volontaire = {
+              id: volontaireData.idVol || volontaireData.id,
+              idVol: volontaireData.idVol || volontaireData.id,
+              nom: volontaireData.nom || volontaireData.nomVol || '',
+              prenom: volontaireData.prenom || volontaireData.prenomVol || '',
+              nomVol: volontaireData.nomVol || volontaireData.nom || '',
+              prenomVol: volontaireData.prenomVol || volontaireData.prenom || '',
+            }
+          }
+        } catch (err) {
+          console.error('Erreur lors du chargement du volontaire:', err)
+        }
+      }
+
+      // S'assurer que le volontaire actuel est dans la liste des volontaires
+      if (rdvCopy.volontaire && rdvCopy.volontaire.id) {
+        setVolunteers(prev => {
+          const exists = prev.some(v => v.id === rdvCopy.volontaire?.id || v.id === rdvCopy.volontaire?.idVol)
+          if (!exists) {
+            return [...prev, {
+              id: rdvCopy.volontaire?.id || rdvCopy.volontaire?.idVol,
+              nom: rdvCopy.volontaire?.nom || '',
+              prenom: rdvCopy.volontaire?.prenom || '',
+            }]
+          }
+          return prev
+        })
+      }
+    }
+    setEditedRdv(rdvCopy)
+    setIsEditing(true)
+  }
+
+  const handleEditBack = () => {
+    setIsEditing(false)
+    setEditedRdv(null)
+  }
+
+  const handleEditSuccess = () => {
+    setIsEditing(false)
+    setEditedRdv(null)
+    handleRdvUpdate()
+    // Retourner à la liste pour voir les changements (selectedRdv sera mis à jour lors du prochain clic)
+    handleBackToRdvList()
+  }
+
   const renderSortIcon = (field: string) => {
     if (sortField !== field) return null
     return sortDirection === 'asc' ? (
@@ -108,21 +208,34 @@ const RendezVousSection = ({
           studyTitle={etude.titre || ''}
           onClose={handleCloseEmailSender}
         />
+      ) : showRdvViewer && editedRdv && isEditing ? (
+        <Suspense fallback={
+          <div className="flex justify-center items-center h-32">
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary-600"></div>
+          </div>
+        }>
+          <AppointmentEditor
+            appointment={editedRdv}
+            volunteers={volunteers}
+            onBack={handleEditBack}
+            onSuccess={handleEditSuccess}
+          />
+        </Suspense>
       ) : showRdvViewer && selectedRdv ? (
         <div>
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-medium">Détails du rendez-vous</h3>
+            <h3 className="text-lg font-medium">{t('appointments.appointmentDetails')}</h3>
             <button
               onClick={handleBackToRdvList}
               className="text-blue-600 hover:text-blue-800 font-medium"
             >
-              ← Retour à la liste
+              ← {t('studyDetails.backToList')}
             </button>
           </div>
           <RendezVousProvider>
             <AppointmentViewer
               appointment={selectedRdv}
-              onEdit={() => { navigate(`/rdvs`) }}
+              onEdit={() => handleEditClick(selectedRdv)}
               onBack={handleBackToRdvList}
               onRefresh={handleRdvUpdate}
             />
@@ -132,9 +245,9 @@ const RendezVousSection = ({
         <div>
           <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center mb-6 space-y-4 lg:space-y-0">
             <div>
-              <h3 className="text-xl font-semibold text-gray-900">Rendez-vous</h3>
+              <h3 className="text-xl font-semibold text-gray-900">{t('studies.appointments')}</h3>
               <p className="text-sm text-gray-600 mt-1">
-                Gestion des rendez-vous pour l'étude {etude.ref}
+                {t('studyDetails.appointmentManagementFor')} {etude.ref}
               </p>
             </div>
 
@@ -143,7 +256,7 @@ const RendezVousSection = ({
                 <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
-                Nouveau RDV
+                {t('studyDetails.newAppointment')}
               </Link>
 
               {rdvs.length > 0 && (
@@ -152,12 +265,12 @@ const RendezVousSection = ({
                     <button
                       onClick={handleOpenEmailSender}
                       className="btn btn-outline-blue inline-flex items-center"
-                      title={`Envoyer un email aux ${getUniqueVolunteerIds().length} volontaires`}
+                      title={t('studyDetails.sendEmailToVolunteers', { count: getUniqueVolunteerIds().length })}
                     >
                       <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                       </svg>
-                      <span className="hidden sm:inline">Email de groupe</span>
+                      <span className="hidden sm:inline">{t('studyDetails.groupEmail')}</span>
                       <span className="sm:hidden">Email</span>
                       <span className="ml-1 px-1.5 py-0.5 text-xs bg-blue-100 text-blue-700 rounded-full">
                         {getUniqueVolunteerIds().length}
@@ -169,12 +282,12 @@ const RendezVousSection = ({
                     <button
                       onClick={() => setShowActionsMenu(!showActionsMenu)}
                       className="btn btn-outline-gray inline-flex items-center"
-                      title="Exporter les données"
+                      title={t('studyDetails.exportData')}
                     >
                       <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
-                      <span className="hidden sm:inline">Exporter</span>
+                      <span className="hidden sm:inline">{t('common.export')}</span>
                       <span className="sm:hidden">Export</span>
                       <svg className="h-4 w-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -184,8 +297,8 @@ const RendezVousSection = ({
                     {showActionsMenu && (
                       <div className="absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-xl border border-gray-200 z-20 overflow-hidden">
                         <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
-                          <h4 className="text-sm font-medium text-gray-900">Exporter les données</h4>
-                          <p className="text-xs text-gray-600 mt-1">Téléchargez les données au format Excel</p>
+                          <h4 className="text-sm font-medium text-gray-900">{t('studyDetails.exportData')}</h4>
+                          <p className="text-xs text-gray-600 mt-1">{t('studyDetails.downloadExcelFormat')}</p>
                         </div>
 
                         <div className="py-2">
@@ -198,7 +311,7 @@ const RendezVousSection = ({
                               getNomVolontaire={getNomVolontaire}
                             />
                             <p className="text-xs text-gray-500 mt-1">
-                              Liste complète des {rdvs.length} rendez-vous avec détails
+                              {t('studyDetails.completeAppointmentsList', { count: rdvs.length })}
                             </p>
                           </div>
 
@@ -209,7 +322,7 @@ const RendezVousSection = ({
                               studyRef={etude.ref}
                             />
                             <p className="text-xs text-gray-500 mt-1">
-                              Informations détaillées des {getUniqueVolunteerIds().length} volontaires
+                              {t('studyDetails.detailedVolunteersInfo', { count: getUniqueVolunteerIds().length })}
                             </p>
                           </div>
 
@@ -221,7 +334,7 @@ const RendezVousSection = ({
                               studyTitle={etude.titre}
                             />
                             <p className="text-xs text-gray-500 mt-1">
-                              Feuille pivot avec tous les {getUniqueVolunteerIds().length} volontaires
+                              {t('studyDetails.pivotSheetVolunteers', { count: getUniqueVolunteerIds().length })}
                             </p>
                           </div>
                         </div>
@@ -241,7 +354,7 @@ const RendezVousSection = ({
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                   </svg>
                   <div className="ml-3">
-                    <p className="text-sm font-medium text-blue-900">Volontaires</p>
+                    <p className="text-sm font-medium text-blue-900">{t('studies.volunteers')}</p>
                     <p className="text-lg font-semibold text-blue-600">
                       {getUniqueVolunteerIds().length}
                     </p>
@@ -255,7 +368,7 @@ const RendezVousSection = ({
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
                   <div className="ml-3">
-                    <p className="text-sm font-medium text-green-900">Rendez-vous</p>
+                    <p className="text-sm font-medium text-green-900">{t('studies.appointments')}</p>
                     <p className="text-lg font-semibold text-green-600">
                       {rdvs.length}
                     </p>
@@ -269,7 +382,7 @@ const RendezVousSection = ({
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.864-.833-2.634 0L4.18 16.5c-.77.833.192 2.5 1.732 2.5z" />
                   </svg>
                   <div className="ml-3">
-                    <p className="text-sm font-medium text-yellow-900">Non assignés</p>
+                    <p className="text-sm font-medium text-yellow-900">{t('studyDetails.unassigned')}</p>
                     <p className="text-lg font-semibold text-yellow-600">
                       {rdvs.filter((rdv: RendezVousData) => !rdv.idVolontaire).length}
                     </p>
@@ -282,13 +395,13 @@ const RendezVousSection = ({
           {/* Filtre par date quand plusieurs dates sont présentes */}
           {uniqueDates.length > 1 && (
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Filtrer par date</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">{t('appointments.filterByDate')}</label>
               <div className="flex flex-wrap gap-2">
                 <button
                   className={`px-3 py-1 text-sm rounded border ${!selectedDate ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}
                   onClick={() => setSelectedDate('')}
                 >
-                  Toutes les dates
+                  {t('appointments.allDates')}
                 </button>
                 {uniqueDates.map((d: string) => (
                   <button
@@ -312,8 +425,8 @@ const RendezVousSection = ({
               <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
-              <h3 className="mt-2 text-sm font-medium text-gray-900">Aucun rendez-vous</h3>
-              <p className="mt-1 text-sm text-gray-500">Commencez par créer votre premier rendez-vous pour cette étude.</p>
+              <h3 className="mt-2 text-sm font-medium text-gray-900">{t('appointments.noAppointments')}</h3>
+              <p className="mt-1 text-sm text-gray-500">{t('studyDetails.startByCreatingAppointment')}</p>
               <div className="mt-6">
                 <Link
                   to="/rdvs"
@@ -322,7 +435,7 @@ const RendezVousSection = ({
                   <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                   </svg>
-                  Créer un rendez-vous
+                  {t('studyDetails.createAppointment')}
                 </Link>
               </div>
             </div>
@@ -330,7 +443,7 @@ const RendezVousSection = ({
             <div>
               <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                 <p className="text-sm text-blue-800">
-                  <strong>Astuce :</strong> Cliquez sur n'importe quelle ligne pour voir les détails du rendez-vous et le modifier.
+                  <strong>{t('studyDetails.tip')}:</strong> {t('studyDetails.clickToViewAppointmentDetails')}
                 </p>
               </div>
               <div className="overflow-x-auto">
@@ -339,25 +452,25 @@ const RendezVousSection = ({
                     <tr>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('date')}>
                         <span className="flex items-center">
-                          Date
+                          {t('appointments.date')}
                           {renderSortIcon('date')}
                         </span>
                       </th>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('heure')}>
                         <span className="flex items-center">
-                          Heure
+                          {t('appointments.time')}
                           {renderSortIcon('heure')}
                         </span>
                       </th>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('volontaire')}>
                         <span className="flex items-center">
-                          Volontaire
+                          {t('appointments.volunteer')}
                           {renderSortIcon('volontaire')}
                         </span>
                       </th>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('etat')}>
                         <span className="flex items-center">
-                          Statut
+                          {t('appointments.status')}
                           {renderSortIcon('etat')}
                         </span>
                       </th>
@@ -365,7 +478,7 @@ const RendezVousSection = ({
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {finalRdvs.map((rdv: RendezVousData) => (
-                      <tr key={rdv.id || `${rdv.idEtude}-${rdv.idRdv}`} className="hover:bg-gray-50 cursor-pointer" onClick={() => handleRdvClick(rdv)} title="Cliquer pour voir les détails">
+                      <tr key={rdv.id || `${rdv.idEtude}-${rdv.idRdv}`} className="hover:bg-gray-50 cursor-pointer" onClick={() => handleRdvClick(rdv)} title={t('studyDetails.clickToViewDetails')}>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{formatDate(rdv.date)}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{normalizeTime(rdv.heure)}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{getNomVolontaire(rdv)}</td>

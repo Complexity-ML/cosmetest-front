@@ -62,3 +62,16 @@ export const EVALUATION_FIELDS: EvaluationField[] = [
   { key: 'teint', label: 'Evaluation teint' },
   { key: 'cynetique', label: 'Evaluation cynetique' }
 ];
+
+export interface EthnieOption {
+  value: string;
+  label: string;
+}
+
+export const ETHNIE_OPTIONS: EthnieOption[] = [
+  { value: 'CAUCASIEN', label: 'Caucasien(ne)' },
+  { value: 'AFRICAIN', label: 'Africain(e)' },
+  { value: 'ASIATIQUE', label: 'Asiatique' },
+  { value: 'INDIENNE', label: 'Indien(ne)' },
+  { value: 'ANTILLAISE', label: 'Antillais(e)' }
+];

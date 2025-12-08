@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import AppointmentViewer from './AppointmentViewer';
+import AppointmentEditor from '../../components/RendezVous/AppointmentComponents/AppointmentEditor';
 import rdvService from '../../services/rdvService';
+import etudeVolontaireService from '../../services/etudeVolontaireService';
 import { Loader2 } from 'lucide-react';
 
 interface Appointment {
@@ -15,12 +17,22 @@ interface Appointment {
   [key: string]: any;
 }
 
+interface Volunteer {
+  id?: number;
+  volontaireId?: number;
+  nom?: string;
+  prenom?: string;
+  [key: string]: any;
+}
+
 const AppointmentViewerWrapper: React.FC = () => {
   const { id, rdvId } = useParams<{ id: string; rdvId: string }>();
   const navigate = useNavigate();
   const [appointment, setAppointment] = useState<Appointment | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [volunteers, setVolunteers] = useState<Volunteer[]>([]);
 
   useEffect(() => {
     const fetchAppointment = async () => {
@@ -50,10 +62,33 @@ const AppointmentViewerWrapper: React.FC = () => {
     navigate('/rdvs');
   };
 
-  const handleEdit = (apt: Appointment) => {
-    // Navigate to edit page or open edit modal
-    console.log('Edit appointment:', apt);
-    // You can implement the edit functionality here
+  const handleEdit = async (apt: Appointment) => {
+    // Charger les volontaires de l'étude pour le mode édition
+    if (apt.idEtude) {
+      try {
+        const etudeVolontaires = await etudeVolontaireService.getVolontairesByEtude(apt.idEtude);
+        // Transformer les données pour avoir id, nom, prenom
+        const volunteerList = (etudeVolontaires || []).map((ev: any) => ({
+          id: ev.idVol || ev.volontaire?.idVol || ev.volontaireId,
+          nom: ev.volontaire?.nom || ev.nom || '',
+          prenom: ev.volontaire?.prenom || ev.prenom || '',
+        })).filter((v: Volunteer) => v.id);
+        setVolunteers(volunteerList);
+      } catch (err) {
+        console.error('Erreur lors du chargement des volontaires:', err);
+        setVolunteers([]);
+      }
+    }
+    setIsEditing(true);
+  };
+
+  const handleEditBack = () => {
+    setIsEditing(false);
+  };
+
+  const handleEditSuccess = async () => {
+    setIsEditing(false);
+    await handleRefresh();
   };
 
   const handleRefresh = async () => {
@@ -88,6 +123,18 @@ const AppointmentViewerWrapper: React.FC = () => {
           Retour aux rendez-vous
         </button>
       </div>
+    );
+  }
+
+  // Mode édition
+  if (isEditing && appointment) {
+    return (
+      <AppointmentEditor
+        appointment={appointment}
+        volunteers={volunteers}
+        onBack={handleEditBack}
+        onSuccess={handleEditSuccess}
+      />
     );
   }
 

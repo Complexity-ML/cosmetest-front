@@ -8,7 +8,7 @@ interface VolontairePhotoProps {
   thumbnail?: boolean;
   onPhotoLoad?: (data: { url: string; photoType: string }) => void;
   onPhotoError?: (error?: string) => void;
-  onPhotoClick?: ((photo: { url: string; type: string }) => void) | null;
+  onPhotoClick?: ((photo: { url: string; type: string; isPdf?: boolean }) => void) | null;
 }
 
 const VolontairePhoto = ({ 
@@ -24,6 +24,7 @@ const VolontairePhoto = ({
   const [error, setError] = useState<string | null>(null);
   const [photoExists, setPhotoExists] = useState<boolean>(false);
   const [imageData, setImageData] = useState<string | null>(null);
+  const [isPdf, setIsPdf] = useState<boolean>(false);
 
   // Vérifier si la photo existe et la télécharger
   useEffect(() => {
@@ -51,15 +52,20 @@ const VolontairePhoto = ({
             ? `/volontaires/${volontaireId}/photos/${photoType}/thumbnail`
             : `/volontaires/${volontaireId}/photos/${photoType}/image`;
           
-          console.log('Téléchargement de l\'image depuis:', imageEndpoint);  
+          console.log('Téléchargement de l\'image depuis:', imageEndpoint);
           const imageResponse = await api.get(imageEndpoint, {
             responseType: 'blob' // Important: demander la réponse comme blob
           });
-          
+
+          // Détecter si c'est un PDF
+          const blobType = imageResponse.data.type;
+          const isPdfFile = blobType === 'application/pdf';
+          setIsPdf(isPdfFile);
+
           // Créer une URL pour le blob
           const imageUrl = URL.createObjectURL(imageResponse.data);
           setImageData(imageUrl);
-          
+
           onPhotoLoad({ url: imageUrl, photoType });
         } else {
           setError(checkResponse.data?.message || 'Photo non disponible');
@@ -92,7 +98,8 @@ const VolontairePhoto = ({
     if (onPhotoClick && imageData) {
       onPhotoClick({
         url: imageData,
-        type: photoType
+        type: photoType,
+        isPdf: isPdf
       });
     }
   };
@@ -113,10 +120,26 @@ const VolontairePhoto = ({
     );
   }
 
+  // Si c'est un PDF, utiliser un iframe ou embed
+  if (isPdf) {
+    return (
+      <div
+        className={`relative rounded-lg overflow-hidden ${className} ${onPhotoClick ? 'cursor-pointer hover:opacity-90' : ''}`}
+        onClick={handleImageClick}
+      >
+        <embed
+          src={imageData}
+          type="application/pdf"
+          className="w-full h-full object-cover"
+        />
+      </div>
+    );
+  }
+
   return (
-    <img 
-      src={imageData} 
-      alt={`Photo ${photoType} du volontaire #${volontaireId}`} 
+    <img
+      src={imageData}
+      alt={`Photo ${photoType} du volontaire #${volontaireId}`}
       className={`object-cover rounded-lg ${className} ${onPhotoClick ? 'cursor-pointer hover:opacity-90' : ''}`}
       onClick={handleImageClick}
       onError={(e: React.SyntheticEvent<HTMLImageElement>) => {

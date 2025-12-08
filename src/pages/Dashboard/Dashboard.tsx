@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from 'react-i18next';
 import { formatDate } from "../../utils/dateUtils";
 import {
   Calendar,
@@ -283,6 +284,7 @@ const ActionCard: React.FC<ActionCardProps> = ({
 
 // Composant Dashboard principal
 const Dashboard: React.FC = () => {
+  const { t } = useTranslation();
   const [stats, setStats] = useState<Stats>(defaultStats);
   const [prochainRdvs, setProchainRdvs] = useState<RendezVous[]>([]);
   const [etudesRecentes, setEtudesRecentes] = useState<Etude[]>([]);
@@ -369,14 +371,14 @@ const Dashboard: React.FC = () => {
         // Si toutes les requêtes ont échoué, afficher une erreur générale
         if (Object.keys(errors).length === 5) {
           setError(
-            "Impossible de charger les données du tableau de bord. Vérifiez votre connexion Internet et l'URL de l'API."
+            t('dashboard.loadError')
           );
         } else if (Object.keys(errors).length > 0) {
           setApiErrors(errors);
         }
       } catch (error) {
         console.error("Erreur générale lors du chargement des données:", error);
-        setError("Erreur inattendue lors du chargement des données");
+        setError(t('dashboard.unexpectedError'));
       } finally {
         setIsLoading(false);
       }
@@ -456,7 +458,7 @@ const Dashboard: React.FC = () => {
             variant="link"
             className="ml-2 p-0 h-auto"
           >
-            Réessayer
+            {t('common.retry')}
           </Button>
         </AlertDescription>
       </Alert>
@@ -466,9 +468,9 @@ const Dashboard: React.FC = () => {
   return (
     <div className="space-y-8">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-blue-800">Tableau de bord</h1>
+        <h1 className="text-2xl font-bold text-blue-800">{t('sidebar.dashboard')}</h1>
         <div className="text-sm text-muted-foreground bg-white px-3 py-1 rounded-md shadow">
-          Dernière mise à jour:{" "}
+          {t('dashboard.lastUpdate')}:{" "}
           {formatDate(new Date().toISOString())}
         </div>
       </div>
@@ -478,14 +480,14 @@ const Dashboard: React.FC = () => {
         <Alert>
           <AlertDescription>
             <p className="font-medium">
-              Certaines données n'ont pas pu être chargées
+              {t('dashboard.partialLoadError')}
             </p>
             <ul className="mt-2 text-sm">
-              {apiErrors.stats && <li>• Statistiques générales</li>}
-              {apiErrors.rdvs && <li>• Prochains rendez-vous</li>}
-              {apiErrors.etudes && <li>• Études récentes</li>}
-              {apiErrors.activite && <li>• Activité récente</li>}
-              {apiErrors.statsJour && <li>• Statistiques du jour</li>}
+              {apiErrors.stats && <li>• {t('dashboard.generalStats')}</li>}
+              {apiErrors.rdvs && <li>• {t('dashboard.upcomingAppointments')}</li>}
+              {apiErrors.etudes && <li>• {t('dashboard.recentStudies')}</li>}
+              {apiErrors.activite && <li>• {t('dashboard.recentActivity')}</li>}
+              {apiErrors.statsJour && <li>• {t('dashboard.todayStats')}</li>}
             </ul>
           </AlertDescription>
         </Alert>
@@ -494,19 +496,19 @@ const Dashboard: React.FC = () => {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <StatCard
-          title="Volontaires actifs"
+          title={t('dashboard.activeVolunteers')}
           value={stats.volontairesActifs}
           color="blue"
           icon={<Users className="h-7 w-7" />}
         />
         <StatCard
-          title="Études en cours"
+          title={t('dashboard.ongoingStudies')}
           value={stats.etudesEnCours}
           color="green"
           icon={<FlaskConical className="h-7 w-7" />}
         />
         <StatCard
-          title="RDV aujourd'hui"
+          title={t('dashboard.todayAppointments')}
           value={stats.rdvToday}
           color="yellow"
           icon={<Calendar className="h-7 w-7" />}
@@ -516,7 +518,7 @@ const Dashboard: React.FC = () => {
       {/* Activity Lists */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <ActivityList
-          title="Prochains rendez-vous"
+          title={t('dashboard.upcomingAppointments')}
           items={prochainRdvs}
           viewAllLink="/rdvs"
           renderItem={(rdv) => (
@@ -527,7 +529,7 @@ const Dashboard: React.FC = () => {
                 </div>
                 <div>
                   <p className="font-medium text-gray-900">
-                    Étude {rdv.etudeRef}
+                    {t('dashboard.study')} {rdv.etudeRef}
                   </p>
                   <p className="text-sm text-muted-foreground">
                     {rdv.commentaires}
@@ -543,7 +545,7 @@ const Dashboard: React.FC = () => {
         />
 
         <ActivityList
-          title="Études récentes"
+          title={t('dashboard.recentStudies')}
           items={etudesRecentes}
           viewAllLink="/etudes"
           renderItem={(etude) => (
@@ -557,7 +559,7 @@ const Dashboard: React.FC = () => {
                     {etude.ref}: {etude.titre}
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    {etude.volontaires} volontaires
+                    {etude.volontaires} {t('dashboard.volunteers')}
                   </p>
                 </div>
               </div>
@@ -573,7 +575,7 @@ const Dashboard: React.FC = () => {
           <CardHeader>
             <CardTitle className="flex items-center">
               <BarChart3 className="h-5 w-5 mr-2 text-blue-600" />
-              Activité récente
+              {t('dashboard.recentActivity')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -616,7 +618,7 @@ const Dashboard: React.FC = () => {
                 </ul>
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
-                  Aucune activité récente disponible
+                  {t('dashboard.noRecentActivity')}
                 </div>
               )}
             </div>
@@ -628,25 +630,25 @@ const Dashboard: React.FC = () => {
           <CardHeader>
             <CardTitle className="flex items-center">
               <Plus className="h-5 w-5 mr-2 text-blue-600" />
-              Actions rapides
+              {t('dashboard.quickActions')}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <ActionCard
-                title="Ajouter un volontaire"
+                title={t('dashboard.addVolunteer')}
                 link="/volontaires/nouveau"
                 color="blue"
                 icon={<UserPlus className="h-4 w-4" />}
               />
               <ActionCard
-                title="Créer une étude"
+                title={t('dashboard.createStudy')}
                 link="/etudes/nouvelle"
                 color="green"
                 icon={<FileText className="h-4 w-4" />}
               />
               <ActionCard
-                title="Planifier un rendez-vous"
+                title={t('dashboard.scheduleAppointment')}
                 link="/rdvs"
                 color="yellow"
                 icon={<CalendarPlus className="h-4 w-4" />}
@@ -655,25 +657,25 @@ const Dashboard: React.FC = () => {
               {/* Statistiques du jour */}
               <div className="mt-6 pt-4 border-t border-gray-100">
                 <h3 className="text-sm font-medium text-gray-600 mb-3">
-                  Aujourd'hui
+                  {t('dashboard.today')}
                 </h3>
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-muted-foreground">
-                    Volontaires ajoutés
+                    {t('dashboard.volunteersAdded')}
                   </span>
                   <span className="font-medium text-gray-900">
                     {statsJour.volontairesAjoutes}
                   </span>
                 </div>
                 <div className="flex justify-between items-center text-sm mt-2">
-                  <span className="text-muted-foreground">RDV effectués</span>
+                  <span className="text-muted-foreground">{t('dashboard.appointmentsCompleted')}</span>
                   <span className="font-medium text-gray-900">
                     {statsJour.rdvEffectues}
                   </span>
                 </div>
                 <div className="flex justify-between items-center text-sm mt-2">
                   <span className="text-muted-foreground">
-                    Nouvelles préinscriptions
+                    {t('dashboard.newRegistrations')}
                   </span>
                   <span className="font-medium text-gray-900">
                     {statsJour.nouvellesPreinscriptions}

@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { useState, useEffect, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../hooks/useAuth'
 import { useNotifications } from '../../context/NotificationContext'
 import { Button } from '@/components/ui/button'
@@ -20,11 +21,13 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Bell, ChevronDown, User, Settings, LogOut, UserPlus, X } from 'lucide-react'
+import LanguageSwitcher from './LanguageSwitcher'
 
 const Navbar = () => {
   const { user, logout } = useAuth()
   const { unreadVolunteersCount, totalVolunteersToday, volunteersToday, loadVolunteersToday, markVolunteersAsConsulted } = useNotifications()
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const [notificationsOpen, setNotificationsOpen] = useState(false)
   const hasLoadedRef = useRef(false)
 
@@ -61,21 +64,8 @@ const Navbar = () => {
   }
 
   const handleDismissNotification = (volunteerId: number, e: React.MouseEvent) => {
-    e.stopPropagation() // Empêcher la navigation vers le profil
-    
-    // Récupérer les notifications déjà dismissées
-    const dismissedIds = JSON.parse(localStorage.getItem('dismissed_volunteer_notifications') || '[]')
-    
-    // Ajouter cet ID à la liste
-    if (!dismissedIds.includes(volunteerId)) {
-      dismissedIds.push(volunteerId)
-      localStorage.setItem('dismissed_volunteer_notifications', JSON.stringify(dismissedIds))
-    }
-    
-    // Décrémenter le compteur et recharger la liste
+    e.stopPropagation()
     markVolunteersAsConsulted()
-    
-    // Recharger la liste des volontaires pour refléter le changement
     setTimeout(() => {
       loadVolunteersToday()
     }, 100)
@@ -87,34 +77,31 @@ const Navbar = () => {
   }
 
   const getRoleLabel = () => {
-    if (!user?.role) return 'Invité'
+    if (!user?.role) return t('settings.user')
     
     switch (user.role) {
       case 2:
-        return 'Administrateur'
+        return t('settings.administrator')
       case 1:
-        return 'Utilisateur'
+        return t('settings.user')
       default:
-        return 'Invité'
+        return t('settings.user')
     }
   }
 
   const getUserInitials = () => {
     if (!user?.login) return 'U'
     
-    // Gérer le format prenom.nom (ex: john.doe)
     if (user.login.includes('.')) {
       const parts = user.login.split('.')
       return `${parts[0][0]}${parts[1][0]}`.toUpperCase()
     }
     
-    // Gérer le format "Prénom Nom" avec espace
     const nameParts = user.login.split(' ')
     if (nameParts.length > 1) {
       return `${nameParts[0][0]}${nameParts[1][0]}`.toUpperCase()
     }
     
-    // Par défaut, prendre les 2 premières lettres
     return user.login.substring(0, 2).toUpperCase()
   }
 
@@ -127,7 +114,8 @@ const Navbar = () => {
       </div>
 
       <div className="flex items-center gap-4">
-        {/* Notifications - Volontaires du jour */}
+        <LanguageSwitcher />
+        
         <Popover open={notificationsOpen} onOpenChange={setNotificationsOpen}>
           <PopoverTrigger asChild>
             <Button
@@ -153,11 +141,11 @@ const Navbar = () => {
                 <CardTitle className="text-base flex items-center justify-between">
                   <span className="flex items-center gap-2">
                     <UserPlus className="h-4 w-4" />
-                    Volontaires du jour
+                    {t('dates.today')} - {t('sidebar.volunteers')}
                   </span>
                   {unreadVolunteersCount > 0 && (
                     <Badge variant="destructive" className="text-xs">
-                      {unreadVolunteersCount} nouveau{unreadVolunteersCount > 1 ? 'x' : ''}
+                      {unreadVolunteersCount} {t('notifications.info').toLowerCase()}
                     </Badge>
                   )}
                 </CardTitle>
@@ -181,10 +169,10 @@ const Navbar = () => {
                                 {volunteer.nom || volunteer.nomVol || 'Nom inconnu'} {volunteer.prenom || volunteer.prenomVol || 'Prénom inconnu'}
                               </p>
                               <p className="text-xs text-muted-foreground">
-                                Modifié/Ajouté aujourd'hui
+                                {t('notifications.updated')} {t('dates.today').toLowerCase()}
                               </p>
                               <p className="text-xs text-muted-foreground/70">
-                                Cliquez pour voir le profil
+                                {t('settings.viewProfile')}
                               </p>
                             </div>
                             <Button
@@ -203,7 +191,7 @@ const Navbar = () => {
                 ) : (
                   <div className="p-8 text-center text-muted-foreground">
                     <Bell className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                    <p className="text-sm">Aucune nouvelle notification</p>
+                    <p className="text-sm">{t('common.noData')}</p>
                   </div>
                 )}
               </CardContent>
@@ -211,7 +199,6 @@ const Navbar = () => {
           </PopoverContent>
         </Popover>
 
-        {/* User dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="flex items-center gap-3">
@@ -230,16 +217,16 @@ const Navbar = () => {
           <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuItem onClick={() => navigate('/profil')}>
               <User className="mr-2 h-4 w-4" />
-              Mon profil
+              {t('settings.myProfile')}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => navigate('/parametres')}>
               <Settings className="mr-2 h-4 w-4" />
-              Paramètres
+              {t('sidebar.settings')}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout} className="text-destructive">
               <LogOut className="mr-2 h-4 w-4" />
-              Déconnexion
+              {t('auth.logout')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

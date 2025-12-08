@@ -1,5 +1,5 @@
 ﻿import { useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
+import { useTranslation } from 'react-i18next';
 import { Button } from '../../ui/button';
 import { Badge } from '../../ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
@@ -33,8 +33,8 @@ interface AppointmentsPanelProps {
   onUnassignSingle: (appointment: Appointment) => void;
 }
 
-const formatDate = (value?: string) => {
-  if (!value) return 'Date inconnue';
+const formatDate = (t: any, value?: string) => {
+  if (!value) return t('dates.unknownDate');
   try {
     return new Date(value).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
   } catch (error) {
@@ -42,7 +42,7 @@ const formatDate = (value?: string) => {
   }
 };
 
-const formatTime = (value?: string) => value ?? 'Heure inconnue';
+const formatTime = (t: any, value?: string) => value ?? t('dates.unknownTime');
 
 const getStatusColor = (status?: string) => {
   switch ((status ?? '').toUpperCase()) {
@@ -75,16 +75,17 @@ const AppointmentsPanel = ({
   onSelectAllAppointments,
   onUnassignSingle,
 }: AppointmentsPanelProps) => {
+  const { t } = useTranslation();
   const selectedIds = useMemo(() => new Set(selectedAppointments.map((item) => getAppointmentId(item))), [selectedAppointments]);
 
   return (
-    <Card>
-      <CardHeader>
+    <div className="border rounded-lg">
+      <div className="p-6 pb-4">
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center gap-2">
-            <CardTitle>Rendez-vous ({appointments.length})</CardTitle>
+            <h3 className="text-lg font-semibold">{t('appointments.list')} ({appointments.length})</h3>
             <Badge variant={actionMode === 'assign' ? 'default' : 'destructive'}>
-              {actionMode === 'assign' ? 'Mode assignation' : 'Mode désassignation'}
+              {actionMode === 'assign' ? t('appointments.assignmentMode') : t('appointments.unassignmentMode')}
             </Badge>
           </div>
           <div className="flex items-center space-x-2">
@@ -93,9 +94,9 @@ const AppointmentsPanel = ({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Tous</SelectItem>
-                <SelectItem value="unassigned">Sans volontaire</SelectItem>
-                <SelectItem value="assigned">Avec volontaire</SelectItem>
+                <SelectItem value="all">{t('common.all')}</SelectItem>
+                <SelectItem value="unassigned">{t('appointments.withoutVolunteer')}</SelectItem>
+                <SelectItem value="assigned">{t('appointments.withVolunteer')}</SelectItem>
               </SelectContent>
             </Select>
             <Select value={sortOption} onValueChange={onSortChange}>
@@ -103,9 +104,9 @@ const AppointmentsPanel = ({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="date">Trier par date</SelectItem>
-                <SelectItem value="time">Trier par heure</SelectItem>
-                <SelectItem value="status">Trier par statut</SelectItem>
+                <SelectItem value="date">{t('appointments.sortByDate')}</SelectItem>
+                <SelectItem value="time">{t('appointments.sortByTime')}</SelectItem>
+                <SelectItem value="status">{t('appointments.sortByStatus')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -113,7 +114,7 @@ const AppointmentsPanel = ({
 
         <div className="flex justify-between items-center">
           <span className="text-sm text-gray-600">
-            {selectedAppointments.length} sélectionné(s)
+            {selectedAppointments.length} {t('common.selected')}
           </span>
           <Button
             type="button"
@@ -122,15 +123,15 @@ const AppointmentsPanel = ({
             size="sm"
           >
             {actionMode === 'assign'
-              ? 'Sélectionner tous (sans volontaire)'
-              : 'Sélectionner tous (avec volontaire)'}
+              ? t('appointments.selectAllWithoutVolunteer')
+              : t('appointments.selectAllWithVolunteer')}
           </Button>
         </div>
-      </CardHeader>
+      </div>
 
-      <CardContent className="max-h-96 overflow-y-auto p-0">
+      <div className="max-h-96 overflow-y-auto p-0">
         {appointments.length === 0 ? (
-          <div className="p-6 text-center text-gray-500">Aucun rendez-vous trouvé</div>
+          <div className="p-6 text-center text-gray-500">{t('appointments.noAppointments')}</div>
         ) : (
           <div className="divide-y divide-gray-200">
             {appointments.map((appointment) => {
@@ -160,22 +161,22 @@ const AppointmentsPanel = ({
                       />
                       <div>
                         <div className="text-sm font-medium text-gray-900">
-                          {formatDate(appointment.date)} à {formatTime(appointment.heure)}
+                          {formatDate(t, appointment.date)} {t('dates.at')} {formatTime(t, appointment.heure)}
                         </div>
                         <div className="text-xs text-gray-500">
-                          RDV #{appointment.idRdv ?? appointment.id}
+                          {t('appointments.rdvNumber')} #{appointment.idRdv ?? appointment.id}
                           {appointment.commentaires ? ` • ${appointment.commentaires}` : ''}
                         </div>
                         {hasVolunteer && appointment.volontaire && (
                           <div className="text-xs text-gray-500 mt-1">
-                            Volontaire : {appointment.volontaire.prenom} {appointment.volontaire.nom}
+                            {t('appointments.volunteer')} : {appointment.volontaire.prenom} {appointment.volontaire.nom}
                           </div>
                         )}
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
                       <Badge className={getStatusColor(appointment.etat)}>
-                        {appointment.etat ?? 'STATUT ?'}
+                        {appointment.etat ?? t('appointments.unknownStatus')}
                       </Badge>
                       {actionMode === 'unassign' && hasVolunteer && (
                         <Button
@@ -188,7 +189,7 @@ const AppointmentsPanel = ({
                           size="sm"
                           className="text-red-600 border-red-300 hover:bg-red-50"
                         >
-                          Désassigner
+                          {t('appointments.unassign')}
                         </Button>
                       )}
                     </div>
@@ -198,8 +199,8 @@ const AppointmentsPanel = ({
             })}
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 

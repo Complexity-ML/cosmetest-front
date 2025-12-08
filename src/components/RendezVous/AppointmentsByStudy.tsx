@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import rdvService from '../../services/rdvService';
 import etudeService from '../../services/etudeService';
 import volontaireService from '../../services/volontaireService';
@@ -7,7 +8,6 @@ import groupeService from '../../services/groupeService';
 import AppointmentSwitcher from './AppointmentSwitcher';
 import { Etude, RendezVous, Volontaire } from '../../types/types';
 import { VolontaireTransformed } from '../../types/volontaire.types';
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
@@ -23,6 +23,7 @@ interface AppointmentsByStudyProps {
 }
 
 const AppointmentsByStudy = ({ onAppointmentClick, onBack }: AppointmentsByStudyProps) => {
+  const { t } = useTranslation();
   const [selectedStudyId, setSelectedStudyId] = useState<string>('');
   const [selectedStudy, setSelectedStudy] = useState<Etude | null>(null);
   const [appointments, setAppointments] = useState<RendezVous[]>([]);
@@ -68,8 +69,8 @@ const AppointmentsByStudy = ({ onAppointmentClick, onBack }: AppointmentsByStudy
         setError(null);
       } catch (err) {
         const error = err as Error;
-        console.error("Erreur lors du chargement des études:", error);
-        setError(`Erreur lors du chargement des études: ${error.message}`);
+        console.error(t('appointments.errorLoadingStudies'), error);
+        setError(`${t('appointments.errorLoadingStudies')}: ${error.message}`);
         setEtudes([]);
       } finally {
         setIsLoading(false);
@@ -79,23 +80,21 @@ const AppointmentsByStudy = ({ onAppointmentClick, onBack }: AppointmentsByStudy
     fetchData();
   }, []);
 
-  // Charger les volontaires
-  useEffect(() => {
-    const loadVolunteers = async () => {
-      try {
-        setVolunteersLoading(true);
-        const response = await volontaireService.getAllWithoutPagination();
-        const data = response || [];
-        setVolunteers(Array.isArray(data) ? data : []);
-      } catch (err) {
-        console.error("Erreur lors du chargement des volontaires:", err);
-      } finally {
-        setVolunteersLoading(false);
-      }
-    };
+  // 🚀 LAZY LOADING - Ne charger les volontaires QUE lorsqu'on en a besoin
+  const loadVolunteersOnDemand = async () => {
+    if (volunteers.length > 0 || volunteersLoading) return; // Déjà chargés
 
-    loadVolunteers();
-  }, []);
+    try {
+      setVolunteersLoading(true);
+      const response = await volontaireService.getAllWithoutPagination();
+      const data = response || [];
+      setVolunteers(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error(t('volunteers.loadError'), err);
+    } finally {
+      setVolunteersLoading(false);
+    }
+  };
 
   // Charger les rendez-vous lorsqu'une étude est sélectionnée
   useEffect(() => {
@@ -114,9 +113,9 @@ const AppointmentsByStudy = ({ onAppointmentClick, onBack }: AppointmentsByStudy
         setAppointments(Array.isArray(rdvs) ? rdvs : []);
         setError(null);
       } catch (err) {
-        console.error("Erreur lors du chargement des rendez-vous:", err);
-        const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue';
-        setError(`Erreur lors du chargement des rendez-vous: ${errorMessage}`);
+        console.error(t('appointments.errorLoadingAppointments'), err);
+        const errorMessage = err instanceof Error ? err.message : t('errors.unknownError');
+        setError(`${t('appointments.errorLoadingAppointments')}: ${errorMessage}`);
         setAppointments([]);
       } finally {
         setIsLoading(false);
@@ -393,10 +392,10 @@ const AppointmentsByStudy = ({ onAppointmentClick, onBack }: AppointmentsByStudy
 
       // Trouver le rendez-vous
       const rdv = appointments.find(a => (a.idRdv || a.id) === rdvId);
-      if (!rdv) throw new Error("Rendez-vous non trouvé");
+      if (!rdv) throw new Error(t('appointments.appointmentNotFound'));
 
       const idEtude = rdv.idEtude || rdv.etude?.id;
-      if (!idEtude) throw new Error("ID d'étude manquant");
+      if (!idEtude) throw new Error(t('appointments.studyIdMissing'));
 
       // Si volontaireId est null, c'est une désassignation
       if (volontaireId === null) {
@@ -496,7 +495,7 @@ const AppointmentsByStudy = ({ onAppointmentClick, onBack }: AppointmentsByStudy
       setAssigningRdvId(null);
 
     } catch (err) {
-      console.error("Erreur lors de l'assignation du volontaire:", err);
+      console.error(t('appointments.errorAssigningVolunteer'), err);
       setAssignmentStatus(prev => ({ ...prev, [rdvId]: 'error' }));
 
       // Masquer après quelques secondes
@@ -517,10 +516,10 @@ const AppointmentsByStudy = ({ onAppointmentClick, onBack }: AppointmentsByStudy
 
       // Trouver le rendez-vous
       const rdv = appointments.find(a => (a.idRdv || a.id) === rdvId);
-      if (!rdv) throw new Error("Rendez-vous non trouvé");
+      if (!rdv) throw new Error(t('appointments.appointmentNotFound'));
 
       const idEtude = rdv.idEtude || rdv.etude?.id;
-      if (!idEtude) throw new Error("ID d'étude manquant");
+      if (!idEtude) throw new Error(t('appointments.studyIdMissing'));
 
       // Créer les données pour la mise à jour
       const updatedData = {
@@ -561,7 +560,7 @@ const AppointmentsByStudy = ({ onAppointmentClick, onBack }: AppointmentsByStudy
       }, 2000);
 
     } catch (err) {
-      console.error("Erreur lors du changement d'état:", err);
+      console.error(t('appointments.errorChangingStatus'), err);
       setAssignmentStatus(prev => ({ ...prev, [rdvId]: 'error' }));
 
       // Masquer après quelques secondes
@@ -595,7 +594,7 @@ const AppointmentsByStudy = ({ onAppointmentClick, onBack }: AppointmentsByStudy
 
   // Formater la date pour l'affichage
   const formatDate = (dateString: string | undefined) => {
-    if (!dateString) return 'Date non spécifiée';
+    if (!dateString) return t('appointments.dateNotSpecified');
     try {
       const date = new Date(dateString);
       return date.toLocaleDateString('fr-FR', {
@@ -676,35 +675,31 @@ const AppointmentsByStudy = ({ onAppointmentClick, onBack }: AppointmentsByStudy
       setAppointments(Array.isArray(rdvs) ? rdvs : []);
       setError(null);
     } catch (err) {
-      console.error("Erreur lors du rafraîchissement des rendez-vous:", err);
-      const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue';
-      setError(`Erreur lors du rafraîchissement des rendez-vous: ${errorMessage}`);
+      console.error(t('appointments.errorRefreshingAppointments'), err);
+      const errorMessage = err instanceof Error ? err.message : t('errors.unknownError');
+      setError(`${t('appointments.errorRefreshingAppointments')}: ${errorMessage}`);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex justify-between items-center">
-          <CardTitle>Rendez-vous par étude</CardTitle>
-          <Button variant="ghost" onClick={onBack}>
-            &lt; Retour
-          </Button>
-        </div>
-      </CardHeader>
-
-      <CardContent className="space-y-6">
+    <div className="space-y-6">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-xl font-bold">{t('appointments.appointmentsByStudy')}</h2>
+        <Button variant="ghost" onClick={onBack}>
+          &lt; {t('common.back')}
+        </Button>
+      </div>
         {/* Section Étude avec style amélioré */}
-        <Card className="border-green-200 bg-green-50">
-          <CardHeader>
-            <CardTitle className="flex items-center text-lg text-green-800">
+        <div className="border border-green-200 bg-green-50 rounded-lg">
+          <div className="p-6 pb-4">
+            <h3 className="flex items-center text-lg font-semibold text-green-800">
               <Folder className="w-5 h-5 mr-2" />
-              Rechercher une étude
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+              {t('studies.search')}
+            </h3>
+          </div>
+          <div className="px-6 pb-6">
             <div ref={etudeSelectorRef} className="relative">
               <Button
                 variant="outline"
@@ -719,7 +714,7 @@ const AppointmentsByStudy = ({ onAppointmentClick, onBack }: AppointmentsByStudy
                     <div className="text-sm text-muted-foreground">{selectedStudy.titre}</div>
                   </div>
                 ) : (
-                  <span className="text-muted-foreground">Sélectionner une étude</span>
+                  <span className="text-muted-foreground">{t('appointments.selectStudy')}</span>
                 )}
                 <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
               </Button>
@@ -730,7 +725,7 @@ const AppointmentsByStudy = ({ onAppointmentClick, onBack }: AppointmentsByStudy
                     <div className="relative">
                       <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                       <Input
-                        placeholder="Rechercher une étude par référence ou titre..."
+                        placeholder={t('appointments.searchStudyByRefOrTitle')}
                         value={searchEtudeTerm}
                         onChange={(e) => setSearchEtudeTerm(e.target.value)}
                         className="pl-9"
@@ -752,24 +747,24 @@ const AppointmentsByStudy = ({ onAppointmentClick, onBack }: AppointmentsByStudy
                       ))
                     ) : searchEtudeTerm ? (
                       <div className="p-4 text-center text-muted-foreground">
-                        Aucune étude ne correspond à votre recherche
+                        {t('appointments.noStudyMatchingSearch')}
                       </div>
                     ) : (
                       <div className="p-4 text-center text-muted-foreground">
-                        Commencez à taper pour rechercher une étude
+                        {t('appointments.startTypingToSearch')}
                       </div>
                     )}
                     {searchEtudeTerm.length > 0 && filteredEtudes.length >= 50 && (
                       <div className="px-3 py-2 text-xs text-center text-muted-foreground bg-muted border-t">
-                        Affichage limité à 50 résultats. Précisez votre recherche pour affiner les résultats.
+                        {t('appointments.displayLimitedTo50')}
                       </div>
                     )}
                   </div>
                 </div>
               )}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* État de chargement */}
         {isLoading && (
@@ -788,31 +783,31 @@ const AppointmentsByStudy = ({ onAppointmentClick, onBack }: AppointmentsByStudy
 
         {/* Liste des rendez-vous */}
         {!isLoading && !error && selectedStudyId && (
-          <Card className="border-purple-200 bg-purple-50">
-            <CardHeader>
+          <div className="border border-purple-200 bg-purple-50 rounded-lg">
+            <div className="p-6 pb-4">
               <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center text-purple-800">
+                <h3 className="flex items-center text-lg font-semibold text-purple-800">
                   <Calendar className="w-5 h-5 mr-2" />
-                  Rendez-vous {selectedStudy && `pour ${selectedStudy.ref}`}
-                </CardTitle>
+                  {selectedStudy ? t('appointments.appointmentsFor', { ref: selectedStudy.ref }) : t('appointments.list')}
+                </h3>
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={refreshAppointments}
-                  title="Rafraîchir les rendez-vous"
+                  title={t('appointments.refreshAppointments')}
                 >
                   <RefreshCw className="h-4 w-4" />
                 </Button>
               </div>
-            </CardHeader>
+            </div>
 
-            <CardContent className="space-y-4">
+            <div className="px-6 pb-6 space-y-4">
               {/* Filtres et stats */}
-              <Card>
-                <CardContent className="pt-6">
+              <div className="border rounded-lg">
+                <div className="p-6">
                   <div className="flex flex-wrap gap-4 items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold">
-                      {getSortedAndFilteredAppointments().length} rendez-vous trouvés
+                      {getSortedAndFilteredAppointments().length} {t('appointments.appointmentsFound')}
                     </h3>
 
                     <div className="flex flex-wrap gap-3">
@@ -820,15 +815,15 @@ const AppointmentsByStudy = ({ onAppointmentClick, onBack }: AppointmentsByStudy
                       <Select value={filterByStatus} onValueChange={setFilterByStatus}>
                         <SelectTrigger className="w-[180px]">
                           <Filter className="w-4 h-4 mr-2" />
-                          <SelectValue placeholder="Tous les statuts" />
+                          <SelectValue placeholder={t('appointments.allStatuses')} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="all">Tous les statuts</SelectItem>
-                          <SelectItem value="PLANIFIE">Planifié</SelectItem>
-                          <SelectItem value="CONFIRME">Confirmé</SelectItem>
-                          <SelectItem value="EN_ATTENTE">En attente</SelectItem>
-                          <SelectItem value="ANNULE">Annulé</SelectItem>
-                          <SelectItem value="COMPLETE">Complété</SelectItem>
+                          <SelectItem value="all">{t('appointments.allStatuses')}</SelectItem>
+                          <SelectItem value="PLANIFIE">{t('appointments.planned')}</SelectItem>
+                          <SelectItem value="CONFIRME">{t('appointments.confirmed')}</SelectItem>
+                          <SelectItem value="EN_ATTENTE">{t('appointments.pending')}</SelectItem>
+                          <SelectItem value="ANNULE">{t('appointments.cancelled')}</SelectItem>
+                          <SelectItem value="COMPLETE">{t('appointments.completed')}</SelectItem>
                         </SelectContent>
                       </Select>
 
@@ -838,10 +833,10 @@ const AppointmentsByStudy = ({ onAppointmentClick, onBack }: AppointmentsByStudy
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="dateAsc">Date ↑</SelectItem>
-                          <SelectItem value="dateDesc">Date ↓</SelectItem>
-                          <SelectItem value="hourAsc">Heure ↑</SelectItem>
-                          <SelectItem value="hourDesc">Heure ↓</SelectItem>
+                          <SelectItem value="dateAsc">{t('appointments.dateAsc')}</SelectItem>
+                          <SelectItem value="dateDesc">{t('appointments.dateDesc')}</SelectItem>
+                          <SelectItem value="hourAsc">{t('appointments.hourAsc')}</SelectItem>
+                          <SelectItem value="hourDesc">{t('appointments.hourDesc')}</SelectItem>
                         </SelectContent>
                       </Select>
 
@@ -853,7 +848,7 @@ const AppointmentsByStudy = ({ onAppointmentClick, onBack }: AppointmentsByStudy
                           onCheckedChange={(checked) => setShowOnlyUnassigned(checked as boolean)}
                         />
                         <Label htmlFor="unassigned" className="text-sm cursor-pointer">
-                          Sans volontaire uniquement
+                          {t('appointments.onlyWithoutVolunteer')}
                         </Label>
                       </div>
                     </div>
@@ -866,13 +861,13 @@ const AppointmentsByStudy = ({ onAppointmentClick, onBack }: AppointmentsByStudy
                       return (
                         <div className="mt-3 pt-3 border-t">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-sm font-medium">Filtrer par date:</span>
+                            <span className="text-sm font-medium">{t('appointments.filterByDate')}:</span>
                             <Badge
                               variant={selectedDateFilter === '' ? 'default' : 'secondary'}
                               className="cursor-pointer"
                               onClick={() => setSelectedDateFilter('')}
                             >
-                              Toutes ({appointments.length})
+                              {t('appointments.all')} ({appointments.length})
                             </Badge>
                             {uniqueDates.map((date) => {
                               const count = appointments.filter(rdv => rdv.date === date).length;
@@ -893,16 +888,16 @@ const AppointmentsByStudy = ({ onAppointmentClick, onBack }: AppointmentsByStudy
                     }
                     return null;
                   })()}
-                </CardContent>
-              </Card>
+                </div>
+              </div>
 
           {getSortedAndFilteredAppointments().length === 0 ? (
-            <Card>
-              <CardContent className="text-center py-8">
+            <div className="border rounded-lg">
+              <div className="text-center py-8">
                 <Calendar className="mx-auto h-12 w-12 text-muted-foreground" />
-                <p className="mt-2 text-muted-foreground">Aucun rendez-vous trouvé avec les filtres actuels.</p>
-              </CardContent>
-            </Card>
+                <p className="mt-2 text-muted-foreground">{t('appointments.noAppointmentFoundWithFilters')}</p>
+              </div>
+            </div>
           ) : (
             <div className="space-y-4">
               {/* Grouper par date si pas de filtre de date sélectionné et plusieurs dates */}
@@ -924,7 +919,7 @@ const AppointmentsByStudy = ({ onAppointmentClick, onBack }: AppointmentsByStudy
                               {formatDate(date)}
                             </h3>
                             <Badge className="bg-purple-600 text-white">
-                              {appointmentsForDate.length} RDV
+                              {appointmentsForDate.length} {t('appointments.rdv')}
                             </Badge>
                           </div>
                         </div>
@@ -967,7 +962,7 @@ const AppointmentsByStudy = ({ onAppointmentClick, onBack }: AppointmentsByStudy
                         <div className="flex justify-between items-center">
                           <div>
                             <div className="font-bold">
-                              {formatDate(appointment.date)} à {appointment.heure || 'Heure non spécifiée'}
+                              {formatDate(appointment.date)} {t('dates.at')} {appointment.heure || t('appointments.timeNotSpecified')}
                             </div>
                             <div className="flex items-center text-sm mt-1">
                               <User className="w-4 h-4 mr-1" />
@@ -978,17 +973,17 @@ const AppointmentsByStudy = ({ onAppointmentClick, onBack }: AppointmentsByStudy
                                   </span>
                                 ) : appointment.idVolontaire ? (
                                   <span className="text-gray-700">
-                                    Volontaire ID: {appointment.idVolontaire}
+                                    {t('appointments.volunteerID')}: {appointment.idVolontaire}
                                     {foundVolunteer ? ` (${foundVolunteer.nom || ''} ${foundVolunteer.prenom || ''})` : ''}
                                   </span>
                                 ) : (
-                                  <span className="text-muted-foreground italic">Aucun volontaire assigné</span>
+                                  <span className="text-muted-foreground italic">{t('appointments.noVolunteerAssignedSimple')}</span>
                                 )}
                               </span>
                             </div>
                           </div>
                           <Badge variant="outline">
-                            {appointment.etat || 'Non spécifié'}
+                            {appointment.etat || t('appointments.notDefined')}
                           </Badge>
                         </div>
 
@@ -1016,7 +1011,7 @@ const AppointmentsByStudy = ({ onAppointmentClick, onBack }: AppointmentsByStudy
                                   <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                                   <Input
                                     type="text"
-                                    placeholder="Rechercher un volontaire..."
+                                    placeholder={t('appointments.searchVolunteer')}
                                     value={searchVolunteerTerm}
                                     onChange={(e) => setSearchVolunteerTerm(e.target.value)}
                                     className="pl-9"
@@ -1045,7 +1040,7 @@ const AppointmentsByStudy = ({ onAppointmentClick, onBack }: AppointmentsByStudy
                                   ))
                                 ) : (
                                   <div className="p-4 text-center text-gray-500">
-                                    Aucun volontaire ne correspond à votre recherche
+                                    {t('appointments.noVolunteerMatchingSearch')}
                                   </div>
                                 )}
                               </div>
@@ -1056,7 +1051,7 @@ const AppointmentsByStudy = ({ onAppointmentClick, onBack }: AppointmentsByStudy
                                   size="sm"
                                   onClick={() => setAssigningRdvId(null)}
                                 >
-                                  Annuler
+                                  {t('appointments.cancel')}
                                 </Button>
 
                                 {(appointment.volontaire || appointment.idVolontaire) && (
@@ -1068,14 +1063,14 @@ const AppointmentsByStudy = ({ onAppointmentClick, onBack }: AppointmentsByStudy
                                       className="mr-2"
                                     >
                                       <ArrowLeftRight className="w-4 h-4 mr-1" />
-                                      Échanger
+                                      {t('appointments.switchButton')}
                                     </Button>
                                     <Button
                                       variant="destructive"
                                       size="sm"
                                       onClick={() => assignVolunteer(rdvId, null)}
                                     >
-                                      Désassigner
+                                      {t('appointments.unassignButton')}
                                     </Button>
                                   </>
                                 )}
@@ -1087,9 +1082,12 @@ const AppointmentsByStudy = ({ onAppointmentClick, onBack }: AppointmentsByStudy
                                 variant="default"
                                 size="sm"
                                 className="exclude-click-outside"
-                                onClick={() => setAssigningRdvId(rdvId)}
+                                onClick={() => {
+                                  loadVolunteersOnDemand(); // 🚀 Charger seulement au clic
+                                  setAssigningRdvId(rdvId);
+                                }}
                               >
-                                {appointment.volontaire || appointment.idVolontaire ? "Changer" : "Assigner"} volontaire
+                                {appointment.volontaire || appointment.idVolontaire ? t('appointments.changeVolunteerButton') : t('appointments.assignVolunteerButton')}
                               </Button>
 
                               {/* Bouton Échanger - visible uniquement si RDV assigné */}
@@ -1098,10 +1096,10 @@ const AppointmentsByStudy = ({ onAppointmentClick, onBack }: AppointmentsByStudy
                                   variant="secondary"
                                   size="sm"
                                   onClick={() => handleOpenSwitcher(appointment)}
-                                  title="Échanger ce rendez-vous avec un autre"
+                                  title={t('appointments.switchButton')}
                                 >
                                   <ArrowLeftRight className="w-4 h-4 mr-1" />
-                                  Échanger
+                                  {t('appointments.switchButton')}
                                 </Button>
                               )}
                             </div>
@@ -1114,14 +1112,14 @@ const AppointmentsByStudy = ({ onAppointmentClick, onBack }: AppointmentsByStudy
                           onValueChange={(value) => changeAppointmentStatus(rdvId, value)}
                         >
                           <SelectTrigger className="w-full md:w-auto">
-                            <SelectValue placeholder="Statut" />
+                            <SelectValue placeholder={t('appointments.status')} />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="PLANIFIE">Planifié</SelectItem>
-                            <SelectItem value="CONFIRME">Confirmé</SelectItem>
-                            <SelectItem value="EN_ATTENTE">En attente</SelectItem>
-                            <SelectItem value="ANNULE">Annulé</SelectItem>
-                            <SelectItem value="COMPLETE">Complété</SelectItem>
+                            <SelectItem value="PLANIFIE">{t('appointments.planned')}</SelectItem>
+                            <SelectItem value="CONFIRME">{t('appointments.confirmed')}</SelectItem>
+                            <SelectItem value="EN_ATTENTE">{t('appointments.pending')}</SelectItem>
+                            <SelectItem value="ANNULE">{t('appointments.cancelled')}</SelectItem>
+                            <SelectItem value="COMPLETE">{t('appointments.completed')}</SelectItem>
                           </SelectContent>
                         </Select>
 
@@ -1132,7 +1130,7 @@ const AppointmentsByStudy = ({ onAppointmentClick, onBack }: AppointmentsByStudy
                           onClick={() => onAppointmentClick(appointment)}
                           className="w-full md:w-auto"
                         >
-                          Détails
+                          {t('common.details')}
                         </Button>
                       </div>
                     </div>
@@ -1155,8 +1153,8 @@ const AppointmentsByStudy = ({ onAppointmentClick, onBack }: AppointmentsByStudy
                       : null;
 
                     return (
-                      <Card key={rdvId} className="hover:shadow-md transition-shadow">
-                        <CardContent className="pt-6">
+                      <div key={rdvId} className="border rounded-lg hover:shadow-md transition-shadow">
+                        <div className="p-6">
                           <div className="flex flex-col gap-4">
                             {/* Info du RDV */}
                             <div className="flex items-center gap-4 flex-wrap">
@@ -1177,7 +1175,7 @@ const AppointmentsByStudy = ({ onAppointmentClick, onBack }: AppointmentsByStudy
                                   <span className="text-green-600 font-medium">
                                     {foundVolunteer
                                       ? `${foundVolunteer.prenomVol || foundVolunteer.prenom || ''} ${foundVolunteer.nomVol || foundVolunteer.nom || ''}`.trim()
-                                      : `Volontaire ID: ${appointment.idVolontaire} (${appointment.prenomVolontaire || appointment.prenomVol || ''} ${appointment.nomVolontaire || appointment.nomVol || ''})`
+                                      : `${t('appointments.volunteerID')}: ${appointment.idVolontaire} (${appointment.prenomVolontaire || appointment.prenomVol || ''} ${appointment.nomVolontaire || appointment.nomVol || ''})`
                                     }
                                   </span>
                                 ) : (
@@ -1185,21 +1183,21 @@ const AppointmentsByStudy = ({ onAppointmentClick, onBack }: AppointmentsByStudy
                                 )}
                               </div>
                               <Badge variant="secondary">
-                                {appointment.etat || 'Non spécifié'}
+                                {appointment.etat || t('appointments.notDefined')}
                               </Badge>
                             </div>
 
                           {/* Commentaires */}
                           {appointment.commentaires && (
                             <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded">
-                              <strong>Commentaires:</strong> {appointment.commentaires}
+                              <strong>{t('appointments.commentLabel')}</strong> {appointment.commentaires}
                             </div>
                           )}
 
                           {/* Success/Error indicators */}
                           {statusIndicator && (
                             <div className={`text-sm ${statusIndicator === 'success' ? 'text-green-600' : 'text-red-600'}`}>
-                              {statusIndicator === 'success' ? '✓ Assigné avec succès' : '✗ Erreur lors de l\'assignation'}
+                              {statusIndicator === 'success' ? t('appointments.assignedSuccess') : t('appointments.assignmentError')}
                             </div>
                           )}
 
@@ -1213,7 +1211,7 @@ const AppointmentsByStudy = ({ onAppointmentClick, onBack }: AppointmentsByStudy
                                   <div ref={volunteerSelectorRef} className="relative">
                                     <input
                                       type="text"
-                                      placeholder="Rechercher un volontaire..."
+                                      placeholder={t('appointments.searchVolunteer')}
                                       value={searchVolunteerTerm}
                                       onChange={(e) => setSearchVolunteerTerm(e.target.value)}
                                       className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm exclude-click-outside"
@@ -1252,7 +1250,7 @@ const AppointmentsByStudy = ({ onAppointmentClick, onBack }: AppointmentsByStudy
                                       size="sm"
                                       onClick={() => setAssigningRdvId(null)}
                                     >
-                                      Annuler
+                                      {t('appointments.cancel')}
                                     </Button>
 
                                     {(appointment.volontaire || appointment.idVolontaire) && (
@@ -1264,14 +1262,14 @@ const AppointmentsByStudy = ({ onAppointmentClick, onBack }: AppointmentsByStudy
                                           className="mr-2"
                                         >
                                           <ArrowLeftRight className="w-4 h-4 mr-1" />
-                                          Échanger
+                                          {t('appointments.switchButton')}
                                         </Button>
                                         <Button
                                           variant="destructive"
                                           size="sm"
                                           onClick={() => assignVolunteer(rdvId, null)}
                                         >
-                                          Désassigner
+                                          {t('appointments.unassignButton')}
                                         </Button>
                                       </>
                                     )}
@@ -1283,9 +1281,12 @@ const AppointmentsByStudy = ({ onAppointmentClick, onBack }: AppointmentsByStudy
                                     variant="default"
                                     size="sm"
                                     className="exclude-click-outside"
-                                    onClick={() => setAssigningRdvId(rdvId)}
+                                    onClick={() => {
+                                      loadVolunteersOnDemand(); // 🚀 Charger seulement au clic
+                                      setAssigningRdvId(rdvId);
+                                    }}
                                   >
-                                    {appointment.volontaire || appointment.idVolontaire ? "Changer" : "Assigner"} volontaire
+                                    {appointment.volontaire || appointment.idVolontaire ? t('appointments.changeVolunteerButton') : t('appointments.assignVolunteerButton')}
                                   </Button>
 
                                   {/* Bouton Échanger - visible uniquement si RDV assigné */}
@@ -1294,10 +1295,10 @@ const AppointmentsByStudy = ({ onAppointmentClick, onBack }: AppointmentsByStudy
                                       variant="secondary"
                                       size="sm"
                                       onClick={() => handleOpenSwitcher(appointment)}
-                                      title="Échanger ce rendez-vous avec un autre"
+                                      title={t('appointments.switchButton')}
                                     >
                                       <ArrowLeftRight className="w-4 h-4 mr-1" />
-                                      Échanger
+                                      {t('appointments.switchButton')}
                                     </Button>
                                   )}
                                 </div>
@@ -1310,14 +1311,14 @@ const AppointmentsByStudy = ({ onAppointmentClick, onBack }: AppointmentsByStudy
                               onValueChange={(value) => changeAppointmentStatus(rdvId, value)}
                             >
                               <SelectTrigger className="w-full md:w-auto">
-                                <SelectValue placeholder="Statut" />
+                                <SelectValue placeholder={t('appointments.status')} />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="PLANIFIE">Planifié</SelectItem>
-                                <SelectItem value="CONFIRME">Confirmé</SelectItem>
-                                <SelectItem value="EN_ATTENTE">En attente</SelectItem>
-                                <SelectItem value="ANNULE">Annulé</SelectItem>
-                                <SelectItem value="COMPLETE">Complété</SelectItem>
+                                <SelectItem value="PLANIFIE">{t('appointments.planned')}</SelectItem>
+                                <SelectItem value="CONFIRME">{t('appointments.confirmed')}</SelectItem>
+                                <SelectItem value="EN_ATTENTE">{t('appointments.pending')}</SelectItem>
+                                <SelectItem value="ANNULE">{t('appointments.cancelled')}</SelectItem>
+                                <SelectItem value="COMPLETE">{t('appointments.completed')}</SelectItem>
                               </SelectContent>
                             </Select>
 
@@ -1328,20 +1329,20 @@ const AppointmentsByStudy = ({ onAppointmentClick, onBack }: AppointmentsByStudy
                               onClick={() => onAppointmentClick(appointment)}
                               className="w-full md:w-auto"
                             >
-                              Détails
+                              {t('common.details')}
                             </Button>
                           </div>
                         </div>
-                        </CardContent>
-                      </Card>
+                        </div>
+                      </div>
                     );
                   });
                 }
               })()}
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
       )}
 
         {/* Appointment Switcher Modal */}
@@ -1353,8 +1354,7 @@ const AppointmentsByStudy = ({ onAppointmentClick, onBack }: AppointmentsByStudy
             onSwitchComplete={handleSwitchComplete}
           />
         )}
-      </CardContent>
-    </Card>
+    </div>
   );
 };
 

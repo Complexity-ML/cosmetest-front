@@ -30,6 +30,10 @@ export const formatCompactDate = (dateString: string | null | undefined): string
   if (!dateString) return '-';
   try {
     const date = new Date(dateString);
+    // Vérifier si la date est valide
+    if (isNaN(date.getTime())) {
+      return '-';
+    }
     return date.toLocaleDateString('fr-FR', {
       day: '2-digit',
       month: '2-digit',

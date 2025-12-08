@@ -1,9 +1,13 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useTranslation } from "react-i18next";
 
-const CaracteristiquesSection = ({ formData, onChange }: any) => (
+const CaracteristiquesSection = ({ formData, onChange }: any) => {
+  const { t } = useTranslation();
+
+  return (
     <Card>
       <CardHeader>
-        <CardTitle>Caractéristiques physiques</CardTitle>
+        <CardTitle>{t('volunteers.physicalCharacteristics')}</CardTitle>
       </CardHeader>
       <CardContent>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -12,7 +16,7 @@ const CaracteristiquesSection = ({ formData, onChange }: any) => (
             htmlFor="taille"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
-            Taille (cm)
+            {t('volunteers.height')} (cm)
           </label>
           <input
             type="number"
@@ -29,7 +33,7 @@ const CaracteristiquesSection = ({ formData, onChange }: any) => (
             htmlFor="poids"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
-            Poids (kg)
+            {t('volunteers.weight')} (kg)
           </label>
           <input
             type="number"
@@ -46,7 +50,7 @@ const CaracteristiquesSection = ({ formData, onChange }: any) => (
             htmlFor="phototype"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
-            Phototype
+            {t('volunteers.phototype')}
           </label>
           <select
             id="phototype"
@@ -55,7 +59,7 @@ const CaracteristiquesSection = ({ formData, onChange }: any) => (
             onChange={onChange}
             className="form-select block w-full"
           >
-            <option value="">Sélectionner</option>
+            <option value="">{t('common.select')}</option>
             <option value="I">I - Peau très claire</option>
             <option value="II">II - Peau claire</option>
             <option value="III">III - Peau claire à mate</option>
@@ -70,7 +74,7 @@ const CaracteristiquesSection = ({ formData, onChange }: any) => (
             htmlFor="ethnie"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
-            Ethnie
+            {t('volunteers.ethnicity')}
           </label>
           <select
             id="ethnie"
@@ -79,7 +83,7 @@ const CaracteristiquesSection = ({ formData, onChange }: any) => (
             onChange={onChange}
             className="form-select block w-full"
           >
-            <option value="">Sélectionner</option>
+            <option value="">{t('common.select')}</option>
             <option value="CAUCASIEN">Caucasien(ne)</option>
             <option value="Caucasienne">Caucasienne</option>
             <option value="AFRICAIN">Africain(e)</option>
@@ -96,7 +100,7 @@ const CaracteristiquesSection = ({ formData, onChange }: any) => (
             htmlFor="sousEthnie"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
-            Sous-ethnie
+            {t('volunteers.subEthnicity')}
           </label>
           <input
             type="text"
@@ -113,7 +117,7 @@ const CaracteristiquesSection = ({ formData, onChange }: any) => (
             htmlFor="yeux"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
-            Couleur des yeux
+            {t('volunteers.eyeColor')}
           </label>
           <select
             id="yeux"
@@ -122,7 +126,7 @@ const CaracteristiquesSection = ({ formData, onChange }: any) => (
             onChange={onChange}
             className="form-select block w-full"
           >
-            <option value="">Sélectionner</option>
+            <option value="">{t('common.select')}</option>
             <option value="Bleus">Bleus</option>
             <option value="Verts">Verts</option>
             <option value="Marrons">Marrons</option>
@@ -137,7 +141,7 @@ const CaracteristiquesSection = ({ formData, onChange }: any) => (
             htmlFor="pilosite"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
-            Pilosité
+            {t('volunteers.hairiness')}
           </label>
           <select
             id="pilosite"
@@ -146,7 +150,7 @@ const CaracteristiquesSection = ({ formData, onChange }: any) => (
             onChange={onChange}
             className="form-select block w-full"
           >
-            <option value="">Sélectionner</option>
+            <option value="">{t('common.select')}</option>
             <option value="Faible_pilosite">Faible pilosité</option>
             <option value="Moyenne_pilosite">Pilosité moyenne</option>
             <option value="Forte_pilosite">Forte pilosité</option>
@@ -158,7 +162,7 @@ const CaracteristiquesSection = ({ formData, onChange }: any) => (
             htmlFor="originePere"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
-            Origine du père
+            {t('volunteers.fatherOrigin')}
           </label>
           <input
             type="text"
@@ -175,7 +179,7 @@ const CaracteristiquesSection = ({ formData, onChange }: any) => (
             htmlFor="origineMere"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
-            Origine de la mère
+            {t('volunteers.motherOrigin')}
           </label>
           <input
             type="text"
@@ -190,6 +194,6 @@ const CaracteristiquesSection = ({ formData, onChange }: any) => (
       </CardContent>
     </Card>
   );
-  
+};
 
 export default CaracteristiquesSection;

@@ -6,9 +6,11 @@ interface PhotoViewerProps {
   photoUrl: string;
   alt: string;
   onClose: () => void;
+  isPdf?: boolean;
 }
 
-const PhotoViewer: React.FC<PhotoViewerProps> = ({ photoUrl, alt, onClose }) => {
+const PhotoViewer: React.FC<PhotoViewerProps> = ({ photoUrl, alt, onClose, isPdf = false }) => {
+
   // Fermer la visionneuse quand on appuie sur Escape
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -28,12 +30,20 @@ const PhotoViewer: React.FC<PhotoViewerProps> = ({ photoUrl, alt, onClose }) => 
       className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center"
       onClick={onClose}
     >
-      <div className="max-w-4xl max-h-screen p-4">
-        <img
-          src={photoUrl}
-          alt={alt}
-          className="max-w-full max-h-[90vh] object-contain"
-        />
+      <div className="max-w-4xl w-full max-h-screen p-4" onClick={(e) => e.stopPropagation()}>
+        {isPdf ? (
+          <embed
+            src={photoUrl}
+            type="application/pdf"
+            className="w-full h-[90vh] rounded"
+          />
+        ) : (
+          <img
+            src={photoUrl}
+            alt={alt}
+            className="max-w-full max-h-[90vh] object-contain mx-auto"
+          />
+        )}
         <Button
           variant="ghost"
           size="icon"

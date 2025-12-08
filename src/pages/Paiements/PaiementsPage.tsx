@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, useContext } from 'react';
+import { useTranslation } from 'react-i18next';
 import { AuthContext } from '../../context/AuthContext';
 import etudeService from '../../services/etudeService';
 import etudeVolontaireService from '../../services/etudeVolontaireService';
@@ -49,6 +50,7 @@ interface PaiementSummary {
 
 
 const PaiementsPage = () => {
+  const { t } = useTranslation();
   const authContext = useContext(AuthContext);
 
   // Stats - TOUJOURS déclarer les hooks en premier
@@ -72,6 +74,7 @@ const PaiementsPage = () => {
   const [statutPaiement, setStatutPaiement] = useState('all');
   const [showOnlyUnpaid, setShowOnlyUnpaid] = useState(false);
   const [showAnnules, setShowAnnules] = useState(false); // NOUVEAU : Afficher/masquer les annulations
+  const [showCompleted6WeeksUnpaid, setShowCompleted6WeeksUnpaid] = useState(false); // Filtre 6+ semaines avec impayés (limité à n-1 et n)
 
   // NOUVEAU : Fonction pour vérifier si un volontaire est annulé
   const isVolontaireAnnule = useCallback((idVolontaire: string | number, idEtude: string | number): boolean => {
@@ -108,7 +111,7 @@ const PaiementsPage = () => {
         setEtudes(Array.isArray(etudesData) ? etudesData : []);
       } catch (error) {
         console.error('Erreur lors du chargement des études:', error);
-        setError('Erreur lors du chargement des études');
+        setError(t('payments.errorLoadingStudies'));
       }
     };
     loadEtudes();
@@ -196,6 +199,36 @@ const PaiementsPage = () => {
   const etudesFiltrees = useMemo(() => {
     let filtered = [...etudes];
 
+    // Filtrage par études terminées il y a 6+ semaines avec des impayés
+    // Limité aux études de l'année n-1 et n pour éviter d'afficher les vieilles études buggées
+    if (showCompleted6WeeksUnpaid) {
+      const sixWeeksAgo = new Date();
+      sixWeeksAgo.setDate(sixWeeksAgo.getDate() - 42); // 6 semaines = 42 jours
+      const currentYear = new Date().getFullYear();
+      const previousYear = currentYear - 1;
+
+      filtered = filtered.filter(etude => {
+        // Vérifier si l'étude a une date de fin et de début
+        if (!etude.dateFin || !etude.dateDebut) return false;
+
+        const dateFin = new Date(etude.dateFin);
+        const dateDebut = new Date(etude.dateDebut);
+
+        // Limiter aux études de l'année n-1 et n uniquement
+        const anneeDebut = dateDebut.getFullYear();
+        if (anneeDebut < previousYear) return false;
+
+        // L'étude doit être terminée il y a 6+ semaines
+        if (dateFin > sixWeeksAgo) return false;
+
+        // Vérifier s'il y a des paiements non payés
+        const summary = paiementsSummaryByEtude[etude.idEtude as string | number];
+        if (!summary) return false;
+
+        return (summary.nonPayes ?? 0) > 0;
+      });
+    }
+
     // Filtrage par dates si des dates sont sélectionnées
     if (dateDebut || dateFin) {
       filtered = filtered.filter(etude => {
@@ -228,7 +261,7 @@ const PaiementsPage = () => {
         }
       }
     }
-    
+
     // Tri en ordre descendant par date de début
     filtered.sort((a, b) => {
       const dateA = new Date(a.dateDebut || '');
@@ -237,14 +270,14 @@ const PaiementsPage = () => {
     });
 
     return filtered;
-  }, [etudes, dateDebut, dateFin, statutPaiement, hasStatutForEtude]);
+  }, [etudes, dateDebut, dateFin, statutPaiement, hasStatutForEtude, showCompleted6WeeksUnpaid, paiementsSummaryByEtude]);
 
   // Reset de l'étude sélectionnée seulement si des filtres sont actifs ET l'étude n'est plus dans la liste filtrée
   useEffect(() => {
-    if ((dateDebut || dateFin || statutPaiement !== 'all') && selectedEtude !== 'none' && !etudesFiltrees.some(e => String(e.idEtude) === selectedEtude)) {
+    if ((dateDebut || dateFin || statutPaiement !== 'all' || showCompleted6WeeksUnpaid) && selectedEtude !== 'none' && !etudesFiltrees.some(e => String(e.idEtude) === selectedEtude)) {
       setSelectedEtude('none');
     }
-  }, [etudesFiltrees, selectedEtude, dateDebut, dateFin, statutPaiement]);
+  }, [etudesFiltrees, selectedEtude, dateDebut, dateFin, statutPaiement, showCompleted6WeeksUnpaid]);
 
   // Fonction pour charger les informations des groupes
   const loadGroupesInfo = async (etudeIds: (string | number)[]) => {
@@ -364,7 +397,7 @@ const PaiementsPage = () => {
 
     } catch (error) {
       console.error('Erreur lors du chargement:', error);
-      setError("Erreur lors du chargement des données de l'étude");
+      setError(t('payments.errorLoadingData'));
     } finally {
       setIsLoading(false);
     }
@@ -374,142 +407,11 @@ const PaiementsPage = () => {
     loadPaiements();
   }, [selectedEtude]);
 
-  // NOTE: This function is not currently used - markAllAsPaidBatch is used instead
-  /* const markAllAsPaid = async () => {
-    if (!selectedEtudeData || !paiements || paiements.length === 0) {
-      return;
-    }
-
-    // MODIFIÉ : Filtrer seulement les paiements non payés ET non annulés
-    const unpaidPaiements = paiements.filter(p => 
-      p.paye !== 1 && !isVolontaireAnnule(p.idVolontaire, p.idEtude)
-    );
-
-    if (unpaidPaiements.length === 0) {
-      setError('Tous les paiements actifs de cette étude sont déjà payés');
-      return;
-    }
-
-    const annulesCount = paiements.filter(p => isVolontaireAnnule(p.idVolontaire, p.idEtude)).length;
-    
-    // Demander confirmation avec info sur les annulés
-    let confirmMessage = `Êtes-vous sûr de vouloir marquer ${unpaidPaiements.length} paiement${unpaidPaiements.length !== 1 ? 's' : ''} comme payé${unpaidPaiements.length !== 1 ? 's' : ''} pour l'étude "${selectedEtudeData.ref}" ?`;
-    
-    if (annulesCount > 0) {
-      confirmMessage += `\n\nNote : ${annulesCount} volontaire${annulesCount !== 1 ? 's' : ''} annulé${annulesCount !== 1 ? 's' : ''} sera ignoré${annulesCount !== 1 ? 's' : ''}.`;
-    }
-    
-    confirmMessage += `\n\nCette action ne peut pas être annulée.`;
-
-    const confirmed = window.confirm(confirmMessage);
-
-    if (!confirmed) {
-      return;
-    }
-
-    setIsMassUpdating(true);
-    setError('');
-
-    try {
-      // Mettre à jour chaque paiement en parallèle
-      const updatePromises = unpaidPaiements.map(async (paiement) => {
-        try {
-          await api.patch('/etude-volontaires/update-paye', null, {
-            params: {
-              idEtude: paiement.idEtude,
-              idGroupe: paiement.idGroupe,
-              idVolontaire: paiement.idVolontaire,
-              iv: paiement.iv,
-              numsujet: paiement.numsujet,
-              paye: paiement.paye,
-              statut: paiement.statut,
-              nouveauPaye: 1
-            }
-          });
-          return { success: true, paiement };
-        } catch (error) {
-          console.error(`Erreur mise à jour paiement ${paiement.idVolontaire}:`, error);
-          return { success: false, paiement, error };
-        }
-      });
-
-      const results = await Promise.allSettled(updatePromises);
-
-      // Analyser les résultats
-      let successCount = 0;
-      let errorCount = 0;
-      const errors: string[] = [];
-
-      results.forEach((result) => {
-        if (result.status === 'fulfilled') {
-          const { success, paiement, error } = result.value;
-          if (success) {
-            successCount++;
-          } else {
-            errorCount++;
-            const errorMsg = error instanceof Error ? error.message : String(error);
-            errors.push(`Volontaire ${paiement.idVolontaire}: ${errorMsg}`);
-          }
-        } else {
-          errorCount++;
-          errors.push(`Erreur système: ${result.reason}`);
-        }
-      });
-
-      // Mettre à jour les données locales pour les succès
-      let updatedPaiements = null;
-      if (successCount > 0) {
-        updatedPaiements = paiements.map(p => {
-          const wasUpdated = unpaidPaiements.some(up =>
-            up.idEtude === p.idEtude && up.idVolontaire === p.idVolontaire
-          );
-          return wasUpdated ? { ...p, paye: 1 } : p;
-        });
-        setPaiements(updatedPaiements);
-
-        const numericId = selectedEtudeData.idEtude != null 
-          ? (typeof selectedEtudeData.idEtude === 'string' ? parseInt(selectedEtudeData.idEtude, 10) : selectedEtudeData.idEtude)
-          : 0;
-        
-        if (numericId) {
-          await refreshSummaryForEtude(numericId);
-
-          try {
-            const newEtudePayeStatus = await etudeService.checkAndUpdatePayeStatus(
-              numericId,
-              updatedPaiements
-            );
-
-            setEtudes(prev => prev.map(e =>
-              e.idEtude === selectedEtudeData.idEtude
-                ? { ...e, paye: newEtudePayeStatus }
-                : e
-            ));
-          } catch (etudeError) {
-            console.error('Erreur mise à jour statut étude:', etudeError);
-          }
-        }
-      }
-
-      // Afficher le résultat
-      if (errorCount > 0) {
-        const errorMessage = `${successCount} paiement${successCount !== 1 ? 's' : ''} mis à jour avec succès, ${errorCount} erreur${errorCount !== 1 ? 's' : ''}:\n${errors.slice(0, 3).join('\n')}${errors.length > 3 ? '\n...' : ''}`;
-        setError(errorMessage);
-      }
-
-    } catch (error) {
-      console.error('Erreur lors de la mise à jour en masse:', error);
-      setError('Erreur lors de la mise à jour en masse des paiements');
-    } finally {
-      setIsMassUpdating(false);
-    }
-  }; */
-
   // MODIFIÉ : Mise à jour du statut de paiement avec vérification annulation
   const updatePaiementStatus = async (paiement: Paiement, nouveauStatut: number) => {
     // NOUVEAU : Vérifier si le volontaire est annulé
     if (isVolontaireAnnule(paiement.idVolontaire, paiement.idEtude)) {
-      setError("Impossible de modifier le paiement d'un volontaire annulé");
+      setError(t('payments.cannotModifyCancelled'));
       return;
     }
 
@@ -574,7 +476,7 @@ const PaiementsPage = () => {
       const errorMessage = error?.response?.data?.details ||
         error?.response?.data?.message ||
         error.message ||
-        setError("Erreur lors de la mise à jour du statut de paiement");
+        t('payments.errorUpdatingStatus');
       setError(errorMessage);
 
       setTimeout(() => {
@@ -673,11 +575,11 @@ const PaiementsPage = () => {
 
     const unpaidCount = paiements.filter(p => p.paye !== 1 && !isVolontaireAnnule(p.idVolontaire, p.idEtude)).length;
     const annulesCount = paiements.filter(p => isVolontaireAnnule(p.idVolontaire, p.idEtude)).length;
-    if (unpaidCount === 0) { setError('Tous les paiements actifs de cette etude sont deja payes'); return; }
+    if (unpaidCount === 0) { setError(t('payments.allPaid')); return; }
 
-    let confirmMessage = `Etes-vous sur de vouloir marquer ${unpaidCount} paiement${unpaidCount !== 1 ? 's' : ''} comme paye${unpaidCount !== 1 ? 's' : ''} pour l'etude "${selectedEtudeData.ref}" ?`;
-    if (annulesCount > 0) confirmMessage += `\n\nNote : ${annulesCount} volontaire${annulesCount !== 1 ? 's' : ''} annule${annulesCount !== 1 ? 's' : ''} sera ignore${annulesCount !== 1 ? 's' : ''}.`;
-    confirmMessage += `\n\nCette action ne peut pas etre annulee.`;
+    let confirmMessage = t('payments.markAllPaidConfirm', { count: unpaidCount, ref: selectedEtudeData.ref });
+    if (annulesCount > 0) confirmMessage += `\n\n${t('payments.cancelledWillBeIgnored', { count: annulesCount })}`;
+    confirmMessage += `\n\n${t('payments.cannotBeUndone')}`;
     const confirmed = window.confirm(confirmMessage);
     if (!confirmed) return;
 
@@ -697,25 +599,11 @@ const PaiementsPage = () => {
       }
     } catch (error) {
       console.error('Erreur mark-all-paid:', error);
-      setError('Erreur lors de la mise a jour en masse des paiements');
+      setError(t('payments.errorMassUpdate'));
     } finally {
       setIsMassUpdating(false);
     }
   };
-
-  // NOTE: StatusIcon component not currently used
-  /* const StatusIcon = ({ status }: { status: string }) => {
-    switch (status) {
-      case 'loading':
-        return <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-blue-500"></div>;
-      case 'success':
-        return <span className="text-green-600 text-xs font-semibold">OK</span>;
-      case 'error':
-        return <span className="text-red-600 text-xs font-semibold">ERR</span>;
-      default:
-        return null;
-    }
-  }; */
 
   // Vérification des permissions
   const canManagePaiements = useMemo(() => {
@@ -759,20 +647,20 @@ const PaiementsPage = () => {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="text-6xl mb-4">🔒</div>
-          <h1 className="text-2xl font-bold text-gray-800 mb-2">Accès refusé</h1>
-          <p className="text-gray-600">Cette page est réservée aux administrateurs.</p>
+          <h1 className="text-2xl font-bold text-gray-800 mb-2">{t('common.accessDenied')}</h1>
+          <p className="text-gray-600">{t('common.adminOnly')}</p>
           <div className="mt-4 space-x-3">
             <button
               onClick={() => window.history.back()}
               className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md transition-colors"
             >
-              Retour
+              {t('common.back')}
             </button>
             <button
               onClick={() => window.location.href = '/dashboard'}
               className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-md transition-colors"
             >
-              Tableau de bord
+              {t('sidebar.dashboard')}
             </button>
           </div>
         </div>
@@ -802,6 +690,8 @@ const PaiementsPage = () => {
         setShowOnlyUnpaid={setShowOnlyUnpaid}
         showAnnules={showAnnules}
         setShowAnnules={setShowAnnules}
+        showCompleted6WeeksUnpaid={showCompleted6WeeksUnpaid}
+        setShowCompleted6WeeksUnpaid={setShowCompleted6WeeksUnpaid}
         allPaiementsLoaded={allPaiementsLoaded}
         paiementStatusMap={PAIEMENT_STATUS}
       />
@@ -809,24 +699,24 @@ const PaiementsPage = () => {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">
-            Gestion des paiements
+            {t('payments.title')}
           </h1>
           {selectedEtude && (
             <div className="mt-1">
               <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                Étude : {getEtudeName(selectedEtude)}
+                {t('payments.study')}: {getEtudeName(selectedEtude)}
               </span>
             </div>
           )}
         </div>
         <div className="flex items-center space-x-2">
           <span className="text-sm text-gray-500">
-            {statistics.total} paiement{statistics.total !== 1 ? 's' : ''}
+            {statistics.total} {t('payments.payment', { count: statistics.total })}
           </span>
-          {(dateDebut || dateFin || statutPaiement !== 'all') && (
+          {(dateDebut || dateFin || statutPaiement !== 'all' || showCompleted6WeeksUnpaid) && (
             <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-              Filtres actifs : {etudesFiltrees.length} étude{etudesFiltrees.length !== 1 ? 's' : ''} filtrée{etudesFiltrees.length !== 1 ? 's' : ''}
-              {statutPaiement !== 'all' && isSummaryLoading && (
+              {t('payments.activeFilters')}: {etudesFiltrees.length} {t('payments.studyFiltered', { count: etudesFiltrees.length })}
+              {(statutPaiement !== 'all' || showCompleted6WeeksUnpaid) && isSummaryLoading && (
                 <span className="ml-1 animate-spin">⏳</span>
               )}
             </span>
@@ -869,21 +759,21 @@ const PaiementsPage = () => {
       />
 
  
-      {etudesFiltrees.length === 0 && (dateDebut || dateFin || statutPaiement !== 'all') ? (
+      {etudesFiltrees.length === 0 && (dateDebut || dateFin || statutPaiement !== 'all' || showCompleted6WeeksUnpaid) ? (
           <div className="text-center py-12">
             <div className="text-4xl mb-4">(i)</div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Aucune etude correspondante</h3>
-            <p className="text-gray-500">Aucune etude ne correspond aux filtres selectionnes.</p>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">{t('payments.noMatchingStudy')}</h3>
+            <p className="text-gray-500">{t('payments.noMatchingStudyDesc')}</p>
           </div>
         ) : (!selectedEtude || selectedEtude === 'none') ? (
           <div className="text-center py-12">
             <div className="text-4xl mb-4">(i)</div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Selectionnez une etude</h3>
-            <p className="text-gray-500">Choisissez une etude dans le filtre ci-dessus pour voir les paiements correspondants.</p>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">{t('payments.selectStudy')}</h3>
+            <p className="text-gray-500">{t('payments.selectStudyDesc')}</p>
           </div>
         ) : paiementsFiltres.length === 0 ? (
           <div className="text-center py-8">
-            <p className="text-gray-500">Aucun paiement trouve pour cette etude avec ces criteres</p>
+            <p className="text-gray-500">{t('payments.noPaymentsFound')}</p>
           </div>
         ) : (
           <PaymentsTable

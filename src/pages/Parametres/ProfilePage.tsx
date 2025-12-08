@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from 'react-i18next';
 import authService from "../../services/authService";
 import parametreService from "../../services/parametreService";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
@@ -36,6 +37,7 @@ interface FormData {
 }
 
 const ProfilePage = () => {
+    const { t } = useTranslation();
     const [user, setUser] = useState<EnrichedUser | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
     const [editing, setEditing] = useState<boolean>(false);
@@ -104,8 +106,8 @@ const ProfilePage = () => {
             }
             setError(null);
         } catch (err) {
-            const errorMessage = err instanceof Error ? err.message : 'Une erreur inconnue est survenue';
-            setError('Erreur lors du chargement du profil: ' + errorMessage);
+            const errorMessage = err instanceof Error ? err.message : t('errors.unknownError');
+            setError(t('profile.loadError') + ' ' + errorMessage);
             console.error(err);
         } finally {
             setLoading(false);
@@ -148,16 +150,16 @@ const ProfilePage = () => {
         try {
             // Vérifier si l'utilisateur a un profil modifiable
             if (!user || !user.idIdentifiant) {
-                throw new Error('Profil non modifiable - Aucun ID utilisateur trouvé dans la base des paramètres');
+                throw new Error(t('profile.notEditable'));
             }
 
             // Validation du mot de passe si modifié
             if (formData.mdpIdentifiant && formData.mdpIdentifiant !== formData.confirmMdp) {
-                throw new Error('Les mots de passe ne correspondent pas');
+                throw new Error(t('profile.passwordMismatch'));
             }
 
             if (formData.mdpIdentifiant && formData.mdpIdentifiant.length < 6) {
-                throw new Error('Le mot de passe doit contenir au moins 6 caractères');
+                throw new Error(t('profile.passwordTooShort'));
             }
 
             // Préparer les données à envoyer
@@ -182,12 +184,12 @@ const ProfilePage = () => {
             await fetchUserProfile();
             
             setEditing(false);
-            setSuccess('Profil mis à jour avec succès');
+            setSuccess(t('profile.updateSuccess'));
             setTimeout(() => setSuccess(null), 3000);
             
         } catch (err) {
-            const errorMessage = err instanceof Error ? err.message : 'Une erreur inconnue est survenue';
-            setError('Erreur lors de la mise à jour: ' + errorMessage);
+            const errorMessage = err instanceof Error ? err.message : t('errors.unknownError');
+            setError(t('profile.updateError') + ' ' + errorMessage);
         } finally {
             setSaving(false);
         }
@@ -202,7 +204,7 @@ const ProfilePage = () => {
                         role="status"
                         aria-label="Chargement en cours"
                     ></div>
-                    <p className="text-muted-foreground">Chargement du profil...</p>
+                    <p className="text-muted-foreground">{t('profile.loading')}</p>
                 </div>
             </div>
         );
@@ -214,9 +216,9 @@ const ProfilePage = () => {
                 <Card>
                     <CardContent className="text-center py-12">
                         <User className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-                        <CardTitle className="mb-2">Profil non disponible</CardTitle>
+                        <CardTitle className="mb-2">{t('profile.unavailable')}</CardTitle>
                         <CardDescription>
-                            Impossible de charger les informations du profil.
+                            {t('profile.cannotLoad')}
                         </CardDescription>
                     </CardContent>
                 </Card>
@@ -247,7 +249,7 @@ const ProfilePage = () => {
                                 </AvatarFallback>
                             </Avatar>
                             <div>
-                                <CardTitle className="text-2xl">Mon Profil</CardTitle>
+                                <CardTitle className="text-2xl">{t('profile.title')}</CardTitle>
                                 <CardDescription className="flex flex-wrap items-center gap-2 mt-1">
                                     {user.role && (
                                         <Badge variant="default">
@@ -257,7 +259,7 @@ const ProfilePage = () => {
                                     {!user.idIdentifiant && (
                                         <Badge variant="secondary" className="gap-1">
                                             <AlertTriangle className="h-3 w-3" />
-                                            Lecture seule
+                                            {t('profile.readOnly')}
                                         </Badge>
                                     )}
                                 </CardDescription>
@@ -268,10 +270,10 @@ const ProfilePage = () => {
                                 onClick={handleEdit}
                                 disabled={!user.idIdentifiant}
                                 size="lg"
-                                title={!user.idIdentifiant ? "Profil non modifiable - Aucune donnée dans la base des paramètres" : "Modifier le profil"}
+                                title={!user.idIdentifiant ? t('profile.notEditableTooltip') : t('profile.editProfile')}
                             >
                                 <Pencil className="mr-2 h-4 w-4" />
-                                Modifier
+                                {t('common.edit')}
                             </Button>
                         )}
                     </div>
@@ -310,17 +312,17 @@ const ProfilePage = () => {
                         // Mode visualisation
                         <div className="space-y-6">
                             <div className="space-y-2">
-                                <Label className="text-muted-foreground">Identifiant</Label>
+                                <Label className="text-muted-foreground">{t('profile.username')}</Label>
                                 <div className="text-lg font-medium bg-muted px-4 py-3 rounded-md">
-                                    {user.identifiant || user.login || 'Non défini'}
+                                    {user.identifiant || user.login || t('profile.notDefined')}
                                 </div>
                             </div>
 
                             <div className="space-y-2">
-                                <Label className="text-muted-foreground">Description</Label>
+                                <Label className="text-muted-foreground">{t('profile.description')}</Label>
                                 <div className="bg-muted px-4 py-3 rounded-md min-h-[100px]">
                                     {user.description || (
-                                        <span className="text-muted-foreground italic">Aucune description</span>
+                                        <span className="text-muted-foreground italic">{t('profile.noDescription')}</span>
                                     )}
                                 </div>
                             </div>
@@ -331,11 +333,11 @@ const ProfilePage = () => {
                                 <div className="space-y-2">
                                     <Label className="text-muted-foreground flex items-center gap-2">
                                         <User className="h-4 w-4" />
-                                        Login
-                                        <Badge variant="outline" className="text-xs">non modifiable</Badge>
+                                        {t('profile.login')}
+                                        <Badge variant="outline" className="text-xs">{t('profile.notEditable')}</Badge>
                                     </Label>
                                     <div className="bg-muted px-4 py-3 rounded-md font-medium">
-                                        {user.login || 'Non défini'}
+                                        {user.login || t('profile.notDefined')}
                                     </div>
                                 </div>
                                 
@@ -353,11 +355,11 @@ const ProfilePage = () => {
                                 
                                 {!user.idIdentifiant && (
                                     <div className="space-y-2">
-                                        <Label className="text-muted-foreground">Statut</Label>
+                                        <Label className="text-muted-foreground">{t('profile.status')}</Label>
                                         <Alert className="border-amber-200 bg-amber-50">
                                             <AlertTriangle className="h-4 w-4 text-amber-600" />
                                             <AlertDescription className="text-amber-800 text-sm">
-                                                Profil non enregistré dans la base des paramètres
+                                                {t('profile.notRegistered')}
                                             </AlertDescription>
                                         </Alert>
                                     </div>
@@ -367,7 +369,7 @@ const ProfilePage = () => {
                                     <div className="md:col-span-2 space-y-2">
                                         <Label className="text-muted-foreground flex items-center gap-2">
                                             <Mail className="h-4 w-4" />
-                                            Email
+                                            {t('profile.email')}
                                         </Label>
                                         <div className="bg-muted px-4 py-3 rounded-md">
                                             {user.mailIdentifiant}
@@ -381,7 +383,7 @@ const ProfilePage = () => {
                         <form onSubmit={handleSave} className="space-y-6">
                             <div className="space-y-2">
                                 <Label htmlFor="identifiant">
-                                    Identifiant <span className="text-destructive">*</span>
+                                    {t('profile.username')} <span className="text-destructive">*</span>
                                 </Label>
                                 <Input
                                     id="identifiant"
@@ -389,19 +391,19 @@ const ProfilePage = () => {
                                     value={formData.identifiant}
                                     onChange={handleInputChange}
                                     required
-                                    placeholder={user.login || "Entrez votre identifiant"}
+                                    placeholder={user.login || t('profile.enterUsername')}
                                 />
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="description">Description</Label>
+                                <Label htmlFor="description">{t('profile.description')}</Label>
                                 <Textarea
                                     id="description"
                                     name="description"
                                     value={formData.description}
                                     onChange={handleInputChange}
                                     rows={4}
-                                    placeholder="Ajoutez une description..."
+                                    placeholder={t('profile.addDescription')}
                                 />
                             </div>
 
@@ -411,13 +413,13 @@ const ProfilePage = () => {
                                 <div className="flex items-center gap-2">
                                     <Lock className="h-4 w-4 text-muted-foreground" />
                                     <Label className="text-base font-semibold">
-                                        Changer le mot de passe (optionnel)
+                                        {t('profile.changePassword')}
                                     </Label>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="space-y-2">
                                         <Label htmlFor="mdpIdentifiant">
-                                            Nouveau mot de passe
+                                            {t('profile.newPassword')}
                                         </Label>
                                         <Input
                                             id="mdpIdentifiant"
@@ -425,13 +427,13 @@ const ProfilePage = () => {
                                             name="mdpIdentifiant"
                                             value={formData.mdpIdentifiant}
                                             onChange={handleInputChange}
-                                            placeholder="Laisser vide pour ne pas changer"
+                                            placeholder={t('profile.leaveEmptyToKeep')}
                                         />
                                     </div>
                                     
                                     <div className="space-y-2">
                                         <Label htmlFor="confirmMdp">
-                                            Confirmer le mot de passe
+                                            {t('profile.confirmPassword')}
                                         </Label>
                                         <Input
                                             id="confirmMdp"
@@ -439,7 +441,7 @@ const ProfilePage = () => {
                                             name="confirmMdp"
                                             value={formData.confirmMdp}
                                             onChange={handleInputChange}
-                                            placeholder="Confirmer le nouveau mot de passe"
+                                            placeholder={t('profile.confirmNewPassword')}
                                         />
                                     </div>
                                 </div>
@@ -454,7 +456,7 @@ const ProfilePage = () => {
                                     className="flex-1"
                                     size="lg"
                                 >
-                                    {saving ? "Enregistrement..." : "Enregistrer"}
+                                    {saving ? t('profile.saving') : t('common.save')}
                                 </Button>
                                 <Button
                                     type="button"
@@ -464,7 +466,7 @@ const ProfilePage = () => {
                                     className="flex-1"
                                     size="lg"
                                 >
-                                    Annuler
+                                    {t('common.cancel')}
                                 </Button>
                             </div>
                         </form>

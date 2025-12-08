@@ -1,19 +1,5 @@
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-
-const TABS = [
-  { id: "infos-personnelles", label: "Informations personnelles" },
-  { id: "caracteristiques", label: "Caracteristiques physiques" },
-  { id: "peau", label: "Peau" },
-  { id: "marques-cutanees", label: "Marques cutanees" },
-  { id: "cheveux", label: "Cheveux & ongles" },
-  { id: "cils", label: "Cils & sourcils" },
-  { id: "problemes", label: "Problemes specifiques" },
-  { id: "medical", label: "Informations medicales" },
-  { id: "mesures", label: "Mesures" },
-  { id: "notes", label: "Notes" },
-  { id: "RIB", label: "RIB" },
-  { id: "evaluation", label: "Evaluation" }
-];
+import { useTranslation } from 'react-i18next'
 
 interface FormTabsProps {
   activeTab: string
@@ -21,10 +7,26 @@ interface FormTabsProps {
 }
 
 const FormTabs = ({ activeTab, setActiveTab }: FormTabsProps) => {
+  const { t } = useTranslation();
+
+  const TABS = [
+    { id: "infos-personnelles", label: t('volunteers.personalInformation') },
+    { id: "caracteristiques", label: t('volunteers.physicalCharacteristics') },
+    { id: "peau", label: t('volunteers.skin') },
+    { id: "marques-cutanees", label: t('volunteers.skinMarks') },
+    { id: "cheveux", label: t('volunteers.hairAndNails') },
+    { id: "cils", label: t('volunteers.eyelashesAndEyebrows') },
+    { id: "problemes", label: t('volunteers.specificProblems') },
+    { id: "medical", label: t('volunteers.medicalInformation') },
+    { id: "mesures", label: t('volunteers.measurements') },
+    { id: "notes", label: t('volunteers.comments') },
+    { id: "RIB", label: t('volunteers.bankDetails') },
+    { id: "evaluation", label: t('volunteers.evaluation') }
+  ];
   return (
     <div className="mb-6">
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="w-full justify-start overflow-x-auto">
+        <TabsList className="h-auto w-full justify-start flex-wrap gap-1">
           {TABS.map((tab) => (
             <TabsTrigger
               key={tab.id}
@@ -40,5 +42,4 @@ const FormTabs = ({ activeTab, setActiveTab }: FormTabsProps) => {
   );
 };
 
-export { TABS };
 export default FormTabs;

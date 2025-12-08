@@ -112,6 +112,11 @@ const AvailableAppointmentsList = ({
 
   const selectedCount = selectedAppointments.length;
 
+  // Compter uniquement les RDV disponibles (non assignés)
+  const availableCount = filteredAppointments.filter(
+    (rdv: RendezVousData) => !rdv.volontaire && !rdv.idVolontaire
+  ).length;
+
   // Regrouper les rendez-vous par heure
   const groupedByTime = filteredAppointments.reduce((groups: { [key: string]: RendezVousData[] }, rdv: RendezVousData) => {
     const normalizedTime = normalizeTime(rdv.heure || '');
@@ -142,6 +147,7 @@ const AvailableAppointmentsList = ({
         formatDate={formatDate}
         selectedCount={selectedCount}
         totalCount={filteredAppointments.length}
+        availableCount={availableCount}
         onSelectAll={onSelectAllAppointments}
         disabled={loading}
       />
