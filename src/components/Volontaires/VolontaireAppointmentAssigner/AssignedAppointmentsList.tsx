@@ -1,4 +1,5 @@
 import AppointmentItem from './AppointmentItem';
+import { useTranslation } from 'react-i18next';
 
 interface RendezVousData {
   idRdv?: number;
@@ -40,19 +41,21 @@ const AssignedAppointmentsList = ({
   getStatusColor,
   loading = false
 }: AssignedAppointmentsListProps) => {
+  const { t } = useTranslation();
+
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200">
       <div className="p-4 border-b border-gray-200">
         <h3 className="text-lg font-semibold text-gray-800">
-          Rendez-vous actuels ({appointments.length})
+          {t('appointments.currentAppointments')} ({appointments.length})
         </h3>
-        <p className="text-sm text-gray-600">Rendez-vous déjà assignés à ce volontaire dans cette étude</p>
+        <p className="text-sm text-gray-600">{t('appointments.appointmentsAlreadyAssigned')}</p>
       </div>
 
       <div className="max-h-96 overflow-y-auto">
         {appointments.length === 0 ? (
           <div className="p-6 text-center text-gray-500">
-            Aucun rendez-vous assigné dans cette étude
+            {t('appointments.noAppointmentAssignedInStudy')}
           </div>
         ) : (
           <div className="divide-y divide-gray-200">

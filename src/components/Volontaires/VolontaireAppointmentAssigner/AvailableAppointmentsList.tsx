@@ -1,6 +1,7 @@
 import AppointmentFilter from './AppointmentFilter';
 import AppointmentItem from './AppointmentItem';
 import { timeToMinutes, normalizeTime } from '../../../utils/timeUtils';
+import { useTranslation } from 'react-i18next';
 
 interface RendezVousData {
   idRdv?: number;
@@ -61,6 +62,7 @@ const AvailableAppointmentsList = ({
   getStatusColor,
   loading = false
 }: AvailableAppointmentsListProps) => {
+  const { t } = useTranslation();
   // time helpers importés depuis utils/timeUtils
 
   // Filtrage et tri des rendez-vous disponibles
@@ -155,7 +157,7 @@ const AvailableAppointmentsList = ({
       <div className="max-h-96 overflow-y-auto">
         {filteredAppointments.length === 0 ? (
           <div className="p-6 text-center text-gray-500">
-            Aucun rendez-vous disponible
+            {t('appointments.noAppointmentAvailable')}
           </div>
         ) : (
           <div>
@@ -169,13 +171,13 @@ const AvailableAppointmentsList = ({
                     </h4>
                     <div className="text-xs text-gray-600">
                       <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                        {groupedByTime[timeGroup].length} RDV
+                        {groupedByTime[timeGroup].length} {t('appointments.rdvLabel')}
                       </span>
                       <span className="ml-2 bg-green-100 text-green-800 px-2 py-1 rounded">
-                        {groupedByTime[timeGroup].filter((rdv: RendezVousData) => !rdv.volontaire && !rdv.idVolontaire).length} disponibles
+                        {groupedByTime[timeGroup].filter((rdv: RendezVousData) => !rdv.volontaire && !rdv.idVolontaire).length} {t('appointments.availablePlural')}
                       </span>
                       <span className="ml-2 bg-orange-100 text-orange-800 px-2 py-1 rounded">
-                        {groupedByTime[timeGroup].filter((rdv: RendezVousData) => rdv.volontaire || rdv.idVolontaire).length} assignés
+                        {groupedByTime[timeGroup].filter((rdv: RendezVousData) => rdv.volontaire || rdv.idVolontaire).length} {t('appointments.assignedPlural')}
                       </span>
                     </div>
                   </div>

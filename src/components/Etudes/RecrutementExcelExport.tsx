@@ -77,7 +77,16 @@ const RecrutementExcelExport: React.FC<RecrutementExcelExportProps> = ({
         try {
           // Récupérer toutes les associations pour cette étude
           const associationsResponse = await api.get(`/etude-volontaires/etude/${studyId}`);
-          const associations = associationsResponse.data.data || [];
+
+          // Gérer les différents formats de réponse possibles
+          let associations: any[] = [];
+          if (Array.isArray(associationsResponse.data)) {
+            associations = associationsResponse.data;
+          } else if (associationsResponse.data?.success && Array.isArray(associationsResponse.data.data)) {
+            associations = associationsResponse.data.data;
+          } else if (associationsResponse.data && Array.isArray(associationsResponse.data.data)) {
+            associations = associationsResponse.data.data;
+          }
 
           // Indexer par idVolontaire pour un accès rapide
           associations.forEach((assoc: any) => {
@@ -151,7 +160,7 @@ const RecrutementExcelExport: React.FC<RecrutementExcelExportProps> = ({
       // 7. Créer les en-têtes dynamiques
       const headers = [
         'NB',
-        'N°sujet', 
+        'N°sujet',
         'ID Vol',
         'nom',
         'prenom',
@@ -165,7 +174,7 @@ const RecrutementExcelExport: React.FC<RecrutementExcelExportProps> = ({
       }
 
       // Ajouter les colonnes finales
-      headers.push('Phototype', 'PS/PNS', 'Type de peau', 'Date de naissance', 'age', 'IV', 'Email');
+      headers.push('Phototype', 'PS/PNS', 'Type de peau', 'Date de naissance', 'age', 'Statut', 'IV', 'Email');
 
       // 8. Créer les lignes de données
       const dataRows: any[][] = [];
@@ -236,7 +245,16 @@ const RecrutementExcelExport: React.FC<RecrutementExcelExportProps> = ({
           age = ageValue;
         }
         row.push(age);
-        
+
+        // Statut - afficher le texte de pénalité si c'est une pénalité
+        const statut = getAssociationInfo(Number(volunteerId), 'statut');
+        let statutDisplay = '';
+        // Vérifier si c'est une pénalité (avec ou sans accent)
+        if (statut && (statut.toLowerCase().includes('penalite') || statut.toLowerCase().includes('pénalité'))) {
+          statutDisplay = statut;
+        }
+        row.push(statutDisplay); // Statut
+
         row.push(getAssociationInfo(Number(volunteerId), 'iv') || getVolunteerInfo(Number(volunteerId), 'iv')); // IV
         row.push(getVolunteerInfo(Number(volunteerId), 'email')); // Email
 
@@ -381,6 +399,7 @@ const RecrutementExcelExport: React.FC<RecrutementExcelExportProps> = ({
         { wch: 15 }, // Type de peau
         { wch: 15 }, // Date de naissance
         { wch: 5 },  // age
+        { wch: 20 }, // Statut
         { wch: 8 },  // IV
         { wch: 25 }  // Email
       );

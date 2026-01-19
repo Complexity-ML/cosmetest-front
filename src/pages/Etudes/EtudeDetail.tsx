@@ -46,6 +46,7 @@ const EtudeDetail = () => {
     setShowGroupeForm,
     newGroupe,
     ethniesDisponibles,
+    phototypesDisponibles,
     handleRdvClick,
     handleBackToRdvList,
     handleRdvUpdate,
@@ -59,6 +60,7 @@ const EtudeDetail = () => {
     handleCloseEmailSender,
     handleGroupeChange,
     handleEthnieChange,
+    handlePhototypeChange,
     handleCreateGroupe,
     fetchGroupes,
   } = useEtudeDetail({ id, navigate })
@@ -175,6 +177,8 @@ const EtudeDetail = () => {
               handleGroupeChange={handleGroupeChange}
               ethniesDisponibles={ethniesDisponibles}
               handleEthnieChange={handleEthnieChange}
+              phototypesDisponibles={phototypesDisponibles}
+              handlePhototypeChange={handlePhototypeChange}
               handleCreateGroupe={handleCreateGroupe}
               isLoadingGroupes={isLoadingGroupes}
               groupes={groupes}

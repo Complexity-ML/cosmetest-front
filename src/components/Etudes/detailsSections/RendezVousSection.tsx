@@ -13,6 +13,9 @@ import { EtudeData } from '../../../types/etude.types'
 import etudeVolontaireService from '../../../services/etudeVolontaireService'
 import groupeService from '../../../services/groupeService'
 import volontaireService from '../../../services/volontaireService'
+import rdvService from '../../../services/rdvService'
+import TimeChangeModal from './TimeChangeModal'
+import AppointmentSwitcher from '../../RendezVous/AppointmentSwitcher'
 
 const AppointmentEditor = lazy(() => import('../../../components/RendezVous/AppointmentComponents/AppointmentEditor'))
 
@@ -76,6 +79,16 @@ const RendezVousSection = ({
   const [isEditing, setIsEditing] = useState(false)
   const [volunteers, setVolunteers] = useState<any[]>([])
   const [editedRdv, setEditedRdv] = useState<RendezVousData | null>(null)
+
+  // Multi-sélection
+  const [selectedRdvIds, setSelectedRdvIds] = useState<Set<string>>(new Set())
+  const [showTimeChangeModal, setShowTimeChangeModal] = useState(false)
+  const [newTime, setNewTime] = useState('')
+  const [newDate, setNewDate] = useState('')
+  const [changeMode, setChangeMode] = useState<'time' | 'date' | 'both'>('time')
+  const [isUpdatingTime, setIsUpdatingTime] = useState(false)
+  const [updateError, setUpdateError] = useState<string | null>(null)
+  const [showSwitcher, setShowSwitcher] = useState(false)
 
   const handleEditClick = async (rdv: RendezVousData) => {
     // Créer une copie du RDV pour ne pas muter l'objet original
@@ -164,6 +177,130 @@ const RendezVousSection = ({
     handleRdvUpdate()
     // Retourner à la liste pour voir les changements (selectedRdv sera mis à jour lors du prochain clic)
     handleBackToRdvList()
+  }
+
+  // Génération d'un ID unique pour chaque RDV
+  const getRdvKey = (rdv: RendezVousData) => rdv.id?.toString() || `${rdv.idEtude}-${rdv.idRdv}`
+
+  // Sélectionner/Désélectionner tous les RDV affichés
+  const handleSelectAll = () => {
+    if (selectedRdvIds.size === finalRdvs.length) {
+      setSelectedRdvIds(new Set())
+    } else {
+      const allKeys = finalRdvs.map((rdv: RendezVousData) => getRdvKey(rdv))
+      setSelectedRdvIds(new Set(allKeys))
+    }
+  }
+
+  // Récupérer les RDV sélectionnés
+  const getSelectedRdvs = () => {
+    return finalRdvs.filter((rdv: RendezVousData) => selectedRdvIds.has(getRdvKey(rdv)))
+  }
+
+  // Ouvrir le modal de changement d'heure/date
+  const openTimeChangeModal = () => {
+    setNewTime('')
+    setNewDate('')
+    setChangeMode('time')
+    setUpdateError(null)
+    setShowTimeChangeModal(true)
+  }
+
+  // Fermer le modal
+  const closeTimeChangeModal = () => {
+    setShowTimeChangeModal(false)
+    setNewTime('')
+    setNewDate('')
+    setChangeMode('time')
+    setUpdateError(null)
+  }
+
+  // Mettre à jour l'heure/date des RDV sélectionnés
+  const handleTimeChange = async () => {
+    const shouldUpdateTime = changeMode === 'time' || changeMode === 'both'
+    const shouldUpdateDate = changeMode === 'date' || changeMode === 'both'
+
+    if (shouldUpdateTime && !newTime) {
+      setUpdateError(t('appointments.pleaseSelectTime') || 'Veuillez sélectionner une heure')
+      return
+    }
+    if (shouldUpdateDate && !newDate) {
+      setUpdateError(t('appointments.pleaseSelectDate') || 'Veuillez sélectionner une date')
+      return
+    }
+
+    setIsUpdatingTime(true)
+    setUpdateError(null)
+
+    const selectedRdvsList = getSelectedRdvs()
+    let successCount = 0
+    let errorCount = 0
+
+    for (const rdv of selectedRdvsList) {
+      try {
+        const idEtude = rdv.idEtude
+        const idRdv = rdv.idRdv || rdv.id
+        if (idEtude && idRdv) {
+          const updateData: any = { ...rdv }
+          if (shouldUpdateTime) {
+            updateData.heure = newTime
+          }
+          if (shouldUpdateDate) {
+            updateData.date = newDate
+          }
+          await rdvService.update(idEtude, idRdv, updateData)
+          successCount++
+        }
+      } catch (err) {
+        console.error('Erreur lors de la mise à jour du RDV:', err)
+        errorCount++
+      }
+    }
+
+    setIsUpdatingTime(false)
+
+    if (errorCount > 0) {
+      setUpdateError(`${successCount} RDV mis à jour, ${errorCount} erreur(s)`)
+    } else {
+      closeTimeChangeModal()
+      setSelectedRdvIds(new Set())
+      handleRdvUpdate() // Rafraîchir la liste
+    }
+  }
+
+  // Supprimer les RDV sélectionnés
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+
+  const handleDeleteSelected = async () => {
+    setIsDeleting(true)
+    const selectedRdvsList = getSelectedRdvs()
+    let successCount = 0
+    let errorCount = 0
+
+    for (const rdv of selectedRdvsList) {
+      try {
+        const idEtude = rdv.idEtude
+        const idRdv = rdv.idRdv || rdv.id
+        if (idEtude && idRdv) {
+          await rdvService.delete(idEtude, idRdv)
+          successCount++
+        }
+      } catch (err) {
+        console.error('Erreur lors de la suppression du RDV:', err)
+        errorCount++
+      }
+    }
+
+    setIsDeleting(false)
+    setShowDeleteConfirm(false)
+
+    if (errorCount > 0) {
+      setUpdateError(`${successCount} RDV supprimé(s), ${errorCount} erreur(s)`)
+    } else {
+      setSelectedRdvIds(new Set())
+      handleRdvUpdate() // Rafraîchir la liste
+    }
   }
 
   const renderSortIcon = (field: string) => {
@@ -446,6 +583,53 @@ const RendezVousSection = ({
                   <strong>{t('studyDetails.tip')}:</strong> {t('studyDetails.clickToViewAppointmentDetails')}
                 </p>
               </div>
+
+              {/* Barre d'actions pour les RDV sélectionnés */}
+              {selectedRdvIds.size > 0 && (
+                <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg flex items-center justify-between">
+                  <span className="text-sm text-yellow-800">
+                    <strong>{selectedRdvIds.size}</strong> {t('appointments.appointmentsSelected') || 'rendez-vous sélectionné(s)'}
+                  </span>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setSelectedRdvIds(new Set())}
+                      className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors"
+                    >
+                      {t('common.cancel') || 'Annuler'}
+                    </button>
+                    <button
+                      onClick={openTimeChangeModal}
+                      className="px-3 py-1.5 text-sm bg-blue-600 text-white hover:bg-blue-700 rounded-md inline-flex items-center gap-1 transition-colors"
+                    >
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      {t('appointments.changeTime') || 'Changer l\'heure'}
+                    </button>
+                    {selectedRdvIds.size === 2 && (
+                      <button
+                        onClick={() => setShowSwitcher(true)}
+                        className="px-3 py-1.5 text-sm bg-purple-600 text-white hover:bg-purple-700 rounded-md inline-flex items-center gap-1 transition-colors"
+                      >
+                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                        </svg>
+                        {t('appointments.switchVolunteers') || 'Échanger volontaires'}
+                      </button>
+                    )}
+                    <button
+                      onClick={() => setShowDeleteConfirm(true)}
+                      className="px-3 py-1.5 text-sm bg-red-600 text-white hover:bg-red-700 rounded-md inline-flex items-center gap-1 transition-colors"
+                    >
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                      {t('common.delete') || 'Supprimer'}
+                    </button>
+                  </div>
+                </div>
+              )}
+
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
@@ -474,6 +658,15 @@ const RendezVousSection = ({
                           {renderSortIcon('etat')}
                         </span>
                       </th>
+                      <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <input
+                          type="checkbox"
+                          checked={finalRdvs.length > 0 && selectedRdvIds.size === finalRdvs.length}
+                          onChange={handleSelectAll}
+                          className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
+                          title={t('common.selectAll') || 'Tout sélectionner'}
+                        />
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -487,6 +680,26 @@ const RendezVousSection = ({
                             {rdv.etat || 'PLANIFIE'}
                           </span>
                         </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-center" onClick={(e) => e.stopPropagation()}>
+                          <input
+                            type="checkbox"
+                            checked={selectedRdvIds.has(getRdvKey(rdv))}
+                            onChange={(e) => {
+                              e.stopPropagation()
+                              const key = getRdvKey(rdv)
+                              setSelectedRdvIds(prev => {
+                                const newSet = new Set(prev)
+                                if (newSet.has(key)) {
+                                  newSet.delete(key)
+                                } else {
+                                  newSet.add(key)
+                                }
+                                return newSet
+                              })
+                            }}
+                            className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
+                          />
+                        </td>
                       </tr>
                     ))}
                  </tbody>
@@ -495,6 +708,96 @@ const RendezVousSection = ({
            </div>
          )}
         </div>
+      )}
+
+      {/* Modal de changement d'heure/date */}
+      <TimeChangeModal
+        isOpen={showTimeChangeModal}
+        onClose={closeTimeChangeModal}
+        selectedCount={selectedRdvIds.size}
+        newTime={newTime}
+        setNewTime={setNewTime}
+        newDate={newDate}
+        setNewDate={setNewDate}
+        changeMode={changeMode}
+        setChangeMode={setChangeMode}
+        onConfirm={handleTimeChange}
+        isLoading={isUpdatingTime}
+        error={updateError}
+      />
+
+      {/* Modal de confirmation de suppression */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
+            <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={() => setShowDeleteConfirm(false)}></div>
+            <div className="relative inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+              <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div className="sm:flex sm:items-start">
+                  <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                    <svg className="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </div>
+                  <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                    <h3 className="text-lg leading-6 font-medium text-gray-900">
+                      {t('appointments.deleteAppointments') || 'Supprimer les rendez-vous'}
+                    </h3>
+                    <div className="mt-2">
+                      <p className="text-sm text-gray-500">
+                        {t('appointments.confirmDeleteSelected') || 'Êtes-vous sûr de vouloir supprimer les rendez-vous sélectionnés ?'}
+                      </p>
+                      <p className="text-sm text-red-600 mt-2 font-medium">
+                        <strong>{selectedRdvIds.size}</strong> {t('appointments.appointmentsWillBeDeleted') || 'rendez-vous seront supprimés'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse gap-2">
+                <button
+                  type="button"
+                  onClick={handleDeleteSelected}
+                  disabled={isDeleting}
+                  className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:w-auto sm:text-sm disabled:opacity-50"
+                >
+                  {isDeleting ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      {t('common.loading') || 'Suppression...'}
+                    </>
+                  ) : (
+                    t('common.delete') || 'Supprimer'
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteConfirm(false)}
+                  disabled={isDeleting}
+                  className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:w-auto sm:text-sm disabled:opacity-50"
+                >
+                  {t('common.cancel') || 'Annuler'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal pour échanger les volontaires */}
+      {showSwitcher && (
+        <AppointmentSwitcher
+          onClose={() => setShowSwitcher(false)}
+          onSwitchComplete={() => {
+            setSelectedRdvIds(new Set())
+            handleRdvUpdate()
+          }}
+          preSelectedRdvs={getSelectedRdvs() as any}
+          etudeId={etude.idEtude}
+        />
       )}
     </div>
   )

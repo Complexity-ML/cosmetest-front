@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import rdvService from '../../../services/rdvService';
 import etudeService from '../../../services/etudeService';
 import groupeService from '../../../services/groupeService';
 import etudeVolontaireService from '../../../services/etudeVolontaireService';
+import volontaireService from '../../../services/volontaireService';
 import { timeToMinutes } from '../../../utils/timeUtils';
 import { useRendezVousContext } from '../context/RendezVousContext';
 
@@ -13,6 +15,9 @@ interface Volunteer {
   nom?: string;
   prenom?: string;
   email?: string;
+  ethnie?: string;
+  telephone?: string;
+  tel?: string;
   [key: string]: any;
 }
 
@@ -33,6 +38,7 @@ interface Group {
   nom?: string;
   idEtude?: number;
   iv?: number | string;
+  ethnie?: string;
   [key: string]: any;
 }
 
@@ -148,10 +154,49 @@ const formatDate = (value: string | undefined): string => {
 
 const formatTime = (value: string | undefined): string => value ?? 'Heure inconnue';
 
+/**
+ * Vérifie si l'ethnie du volontaire correspond aux critères d'ethnie du groupe
+ * @param groupEthnie - L'ethnie(s) requise(s) par le groupe (peut être séparée par ';')
+ * @param volunteerEthnie - L'ethnie du volontaire
+ * @returns true si correspondance, false sinon
+ */
+const checkEthnicityMatch = (groupEthnie: string | undefined, volunteerEthnie: string | undefined): boolean => {
+  // Si le groupe n'a pas de critère d'ethnie, toutes les ethnies sont acceptées
+  if (!groupEthnie || groupEthnie.trim() === '') {
+    return true;
+  }
+
+  // Si le volontaire n'a pas d'ethnie définie, pas de correspondance
+  if (!volunteerEthnie || volunteerEthnie.trim() === '') {
+    return false;
+  }
+
+  // Normaliser les ethnies (minuscules, sans espaces superflus)
+  const normalizedVolunteerEthnie = volunteerEthnie.trim().toLowerCase();
+
+  // Le groupe peut avoir plusieurs ethnies séparées par ';'
+  const groupEthnies = groupEthnie
+    .split(';')
+    .map((e) => e.trim().toLowerCase())
+    .filter((e) => e.length > 0);
+
+  // Si aucune ethnie définie dans le groupe après parsing, accepter tout
+  if (groupEthnies.length === 0) {
+    return true;
+  }
+
+  // Vérifier si l'ethnie du volontaire correspond à l'une des ethnies du groupe
+  return groupEthnies.some((ge) =>
+    normalizedVolunteerEthnie.includes(ge) || ge.includes(normalizedVolunteerEthnie)
+  );
+};
+
 const buildVolunteerConflicts = (appointments: Appointment[]): Map<number, ScheduleConflict[]> => {
   const map = new Map<number, ScheduleConflict[]>();
   appointments.forEach((appointment) => {
-    const volunteerId = normalizeId(appointment.volontaire?.id ?? appointment.idVolontaire);
+    const volunteerId = normalizeId(
+      appointment.volontaire?.id ?? appointment.volontaire?.volontaireId ?? appointment.idVolontaire
+    );
     if (!volunteerId) {
       return;
     }
@@ -170,12 +215,34 @@ const buildVolunteerConflicts = (appointments: Appointment[]): Map<number, Sched
 };
 
 const useMassAssignment = (etudeIdFromUrl: string | number | null | undefined): UseMassAssignmentReturn => {
+  const { t } = useTranslation();
   const context = useRendezVousContext() as any;
-  const contextVolunteers: Volunteer[] = context?.volunteers ?? [];
   const contextStudies: Study[] = context?.studies ?? [];
   const contextIsLoading: boolean = context?.isLoading ?? false;
   const contextError: Error | null = context?.error ?? null;
   const refreshContext = context?.refresh ?? (async () => {});
+
+  // Charger les volontaires localement (le contexte ne les charge pas)
+  const [localVolunteers, setLocalVolunteers] = useState<Volunteer[]>([]);
+  const [volunteersLoading, setVolunteersLoading] = useState(false);
+
+  // Charger tous les volontaires au montage
+  useEffect(() => {
+    const loadVolunteers = async () => {
+      setVolunteersLoading(true);
+      try {
+        const data = await volontaireService.getAllWithoutPagination();
+        const volunteers = Array.isArray(data) ? data.filter((v): v is Volunteer => v !== null) : [];
+        setLocalVolunteers(volunteers);
+      } catch (err) {
+        console.error('Erreur lors du chargement des volontaires:', err);
+        setLocalVolunteers([]);
+      } finally {
+        setVolunteersLoading(false);
+      }
+    };
+    loadVolunteers();
+  }, []);
 
   const [selectedEtudeId, setSelectedEtudeId] = useState<number | null>(() => normalizeId(etudeIdFromUrl));
   const [etudeDetails, setEtudeDetails] = useState<Study>({});
@@ -202,7 +269,7 @@ const useMassAssignment = (etudeIdFromUrl: string | number | null | undefined): 
   const [showSwitcher, setShowSwitcher] = useState(false);
   const [switcherRdv, setSwitcherRdv] = useState<Appointment | null>(null);
 
-  const combinedLoading = loading || contextIsLoading;
+  const combinedLoading = loading || contextIsLoading || volunteersLoading;
   const displayError = error || (contextError ? contextError.message || 'Erreur lors du chargement des données.' : null);
 
   useEffect(() => {
@@ -354,15 +421,30 @@ const useMassAssignment = (etudeIdFromUrl: string | number | null | undefined): 
 
   const filteredVolunteers = useMemo(() => {
     const term = searchQuery.trim().toLowerCase();
-    return contextVolunteers.filter((volunteer) => {
-      const matchesSearch =
-        term.length === 0 ||
-        (volunteer.nom ?? '').toLowerCase().includes(term) ||
-        (volunteer.prenom ?? '').toLowerCase().includes(term) ||
-        (volunteer.email ?? '').toLowerCase().includes(term);
+    return localVolunteers.filter((volunteer) => {
+      if (term.length === 0) {
+        // Pas de recherche, on passe au filtre suivant
+      } else {
+        const nom = (volunteer.nom ?? '').toLowerCase();
+        const prenom = (volunteer.prenom ?? '').toLowerCase();
+        const email = (volunteer.email ?? '').toLowerCase();
+        const tel = (volunteer.telephone ?? volunteer.tel ?? '').toLowerCase();
+        const id = String(volunteer.id ?? volunteer.volontaireId ?? '');
+        const prenomNom = `${prenom} ${nom}`;
+        const nomPrenom = `${nom} ${prenom}`;
 
-      if (!matchesSearch) {
-        return false;
+        const matchesSearch =
+          nom.includes(term) ||
+          prenom.includes(term) ||
+          email.includes(term) ||
+          tel.includes(term) ||
+          id.includes(term) ||
+          prenomNom.includes(term) ||
+          nomPrenom.includes(term);
+
+        if (!matchesSearch) {
+          return false;
+        }
       }
 
       const count = getVolunteerAppointmentCount(getVolunteerId(volunteer) ?? 0);
@@ -375,7 +457,7 @@ const useMassAssignment = (etudeIdFromUrl: string | number | null | undefined): 
           return true;
       }
     });
-  }, [contextVolunteers, getVolunteerAppointmentCount, getVolunteerId, searchQuery, volunteerFilterOption]);
+  }, [localVolunteers, getVolunteerAppointmentCount, getVolunteerId, searchQuery, volunteerFilterOption]);
 
   const handleSelectAppointment = useCallback(
     (appointment: Appointment) => {
@@ -412,10 +494,30 @@ const useMassAssignment = (etudeIdFromUrl: string | number | null | undefined): 
       if (exists) {
         setSelectedVolunteers((previous) => previous.filter((item) => getVolunteerId(item) !== id));
       } else {
+        // Vérifier la correspondance d'ethnie avec le groupe sélectionné
+        if (selectedGroupeDetails?.ethnie) {
+          const ethnicityMatches = checkEthnicityMatch(selectedGroupeDetails.ethnie, volunteer.ethnie);
+          if (!ethnicityMatches) {
+            const volunteerName = `${volunteer.prenom || ''} ${volunteer.nom || ''}`.trim() || t('appointments.thisVolunteer');
+            const volunteerEthnie = volunteer.ethnie || t('appointments.ethnicityNotDefined');
+            const groupEthnie = selectedGroupeDetails.ethnie;
+
+            const proceed = window.confirm(
+              `${t('appointments.ethnicityWarningTitle')}\n\n` +
+              `${t('appointments.ethnicityWarningMessage', { volunteerName, volunteerEthnie, groupEthnie })}\n\n` +
+              `${t('appointments.ethnicityWarningConfirm')}`
+            );
+
+            if (!proceed) {
+              return;
+            }
+          }
+        }
+
         setSelectedVolunteers((previous) => [...previous, volunteer]);
       }
     },
-    [getVolunteerId, selectedVolunteers],
+    [getVolunteerId, selectedVolunteers, selectedGroupeDetails, t],
   );
 
   const handleSelectAllAppointments = useCallback(() => {
@@ -452,12 +554,42 @@ const useMassAssignment = (etudeIdFromUrl: string | number | null | undefined): 
         previous.filter((item) => !filteredVolunteers.some((volunteer) => getVolunteerId(volunteer) === getVolunteerId(item))),
       );
     } else {
+      // Vérifier les incompatibilités d'ethnie avant de sélectionner tous les volontaires
+      if (selectedGroupeDetails?.ethnie) {
+        const incompatibleVolunteers = filteredVolunteers.filter(
+          (volunteer) => !checkEthnicityMatch(selectedGroupeDetails.ethnie, volunteer.ethnie)
+        );
+
+        if (incompatibleVolunteers.length > 0) {
+          const incompatibleNames = incompatibleVolunteers
+            .slice(0, 5)
+            .map((v) => `• ${v.prenom || ''} ${v.nom || ''} (${v.ethnie || t('appointments.ethnicityNotDefined')})`)
+            .join('\n');
+
+          const moreCount = incompatibleVolunteers.length > 5
+            ? `\n${t('appointments.ethnicityWarningMoreCount', { count: incompatibleVolunteers.length - 5 })}`
+            : '';
+
+          const proceed = window.confirm(
+            `${t('appointments.ethnicityWarningTitlePlural')}\n\n` +
+            `${t('appointments.ethnicityWarningGroupRequires', { ethnie: selectedGroupeDetails.ethnie })}\n\n` +
+            `${t('appointments.ethnicityWarningIncompatibleCount', { count: incompatibleVolunteers.length })}\n` +
+            `${incompatibleNames}${moreCount}\n\n` +
+            `${t('appointments.ethnicityWarningConfirmAll')}`
+          );
+
+          if (!proceed) {
+            return;
+          }
+        }
+      }
+
       setSelectedVolunteers((previous) => [
         ...previous.filter((item) => !filteredVolunteers.some((volunteer) => getVolunteerId(volunteer) === getVolunteerId(item))),
         ...filteredVolunteers,
       ]);
     }
-  }, [filteredVolunteers, getVolunteerId, selectedVolunteers]);
+  }, [filteredVolunteers, getVolunteerId, selectedVolunteers, selectedGroupeDetails, t]);
 
   const removeStudyVolunteerAssociation = useCallback(
     async (etudeId: number, volunteerId: number) => {
@@ -858,15 +990,15 @@ const useMassAssignment = (etudeIdFromUrl: string | number | null | undefined): 
       totalAppointments: appointments.length,
       unassignedAppointments: appointments.filter((appointment) => !appointment.volontaire && !appointment.idVolontaire).length,
       assignedAppointments: appointments.filter((appointment) => appointment.volontaire || appointment.idVolontaire).length,
-      totalVolunteers: contextVolunteers.length,
+      totalVolunteers: localVolunteers.length,
       totalGroups: groupes.length,
     }),
-    [appointments, contextVolunteers.length, groupes.length],
+    [appointments, localVolunteers.length, groupes.length],
   );
 
   return {
     studies: contextStudies,
-    volunteers: contextVolunteers,
+    volunteers: localVolunteers,
     selectedEtudeId,
     setSelectedEtudeId,
     etudeDetails,

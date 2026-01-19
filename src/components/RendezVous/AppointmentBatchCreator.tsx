@@ -132,6 +132,16 @@ const AppointmentBatchCreator = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedStudy?.id]); // ⚠️ Ne dépendre QUE de selectedStudy.id, pas de currentStudyId qui change
 
+  // ✅ Effet pour charger les groupes à l'initialisation si une étude est déjà sélectionnée
+  // Cela résout le problème quand le composant est remonté avec la même étude
+  useEffect(() => {
+    if (selectedStudy?.id && groups.length === 0 && !loadingGroups) {
+      loadGroupsForStudy(selectedStudy.id);
+      prefillFirstDateFromStudy(selectedStudy);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Exécuté uniquement au montage du composant
+
   // Fonction pour charger les groupes d'une étude via l'API
   const loadGroupsForStudy = async (studyId: string | number) => {
     if (!studyId) return;
@@ -561,12 +571,16 @@ const AppointmentBatchCreator = ({
         for (const slot of dateInfo.slots) {
           // Si volume > 0, créer autant de rendez-vous que nécessaire
           if (slot.volume > 0) {
+            // Calculer la durée en minutes à partir du temps entre chaque RDV
+            const dureeMinutes = parseInt(timeBetweenHours, 10) * 60 + parseInt(timeBetweenMinutes, 10);
+
             for (let i = 0; i < slot.volume; i++) {
               const rdvData = {
                 idEtude: batchData.idEtude,
                 idGroupe: batchData.idGroupe,
                 date: dateInfo.date,
                 heure: slot.time,
+                duree: dureeMinutes > 0 ? dureeMinutes : null,
                 commentaires: batchData.commentaires,
                 etat: 'PLANIFIE',
                 // Le volontaire sera assigné plus tard

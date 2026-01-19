@@ -67,9 +67,9 @@ const InfosPersonnellesSection: React.FC<InfosPersonnellesSectionProps> = ({ for
                 <SelectValue placeholder={t('common.select')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Madame">Madame</SelectItem>
-                <SelectItem value="Monsieur">Monsieur</SelectItem>
-                <SelectItem value="Autre">Autre</SelectItem>
+                <SelectItem value="Madame">{t('volunteers.titleOptions.Madame')}</SelectItem>
+                <SelectItem value="Monsieur">{t('volunteers.titleOptions.Monsieur')}</SelectItem>
+                <SelectItem value="Autre">{t('volunteers.titleOptions.Autre')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -188,9 +188,9 @@ const InfosPersonnellesSection: React.FC<InfosPersonnellesSectionProps> = ({ for
               required
             >
               <option value="">{t('common.select')}</option>
-              <option value="Masculin">Masculin</option>
-              <option value="Féminin">Féminin</option>
-              <option value="O">Autre</option>
+              <option value="Masculin">{t('volunteers.genderOptions.Masculin')}</option>
+              <option value="Féminin">{t('volunteers.genderOptions.Féminin')}</option>
+              <option value="O">{t('volunteers.genderOptions.O')}</option>
             </select>
             {errors.sexe && (
               <p className="mt-1 text-sm text-red-500">{errors.sexe}</p>

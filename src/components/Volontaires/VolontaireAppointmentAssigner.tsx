@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import rdvService from '../../services/rdvService';
 import etudeService from '../../services/etudeService';
 import groupeService from '../../services/groupeService';
@@ -9,12 +10,15 @@ import StudyGroupSelector from './VolontaireAppointmentAssigner/StudyGroupSelect
 import AvailableAppointmentsList from './VolontaireAppointmentAssigner/AvailableAppointmentsList';
 import AssignedAppointmentsList from './VolontaireAppointmentAssigner/AssignedAppointmentsList';
 import AppointmentSwitcher from '../RendezVous/AppointmentSwitcher';
+import { StudyOverlapAlert } from '../RendezVous/AssignmentComponents';
 
 /**
  * Composant pour assigner un volontaire spécifique à des rendez-vous
  * Utilisé dans la page de détail du volontaire
  */
 const VolontaireAppointmentAssigner = ({ volontaireId, volontaire, onAssignmentComplete }: any) => {
+  const { t } = useTranslation();
+
   // États de base
   const [etudes, setEtudes] = useState<any[]>([]);
   const [selectedEtudeId, setSelectedEtudeId] = useState<number | null>(null);
@@ -56,7 +60,7 @@ const VolontaireAppointmentAssigner = ({ volontaireId, volontaire, onAssignmentC
         setEtudes(Array.isArray(etudesData) ? etudesData : []);
       } catch (err) {
         console.error("Erreur lors du chargement des études:", err);
-        setError("Impossible de charger les études");
+        setError(t('studies.loadError'));
       } finally {
         setLoading(false);
       }
@@ -74,12 +78,12 @@ const VolontaireAppointmentAssigner = ({ volontaireId, volontaire, onAssignmentC
       }
 
       try {
-        console.log("🔍 Chargement détails groupe:", selectedGroupeId);
+        console.log("🔍 Chargement des détails du groupe:", selectedGroupeId);
         const groupeDetails = await groupeService.getById(selectedGroupeId);
-        console.log("📋 Détails groupe récupérés:", groupeDetails);
+        console.log("📋 Détails du groupe récupérés:", groupeDetails);
         setSelectedGroupeDetails(groupeDetails);
       } catch (err) {
-        console.error("❌ Erreur chargement détails groupe:", err);
+        console.error("❌ Erreur lors du chargement des détails du groupe:", err);
         setSelectedGroupeDetails(null);
       }
     };
@@ -129,8 +133,8 @@ const VolontaireAppointmentAssigner = ({ volontaireId, volontaire, onAssignmentC
       setVolunteerCurrentAppointments(currentVolunteerRdvs);
 
     } catch (err) {
-      console.error("Erreur lors du chargement des données d'étude:", err);
-      setError("Erreur lors du chargement des données");
+      console.error("Erreur lors du chargement des données de l'étude:", err);
+      setError(t('common.loadError'));
     } finally {
       setLoading(false);
     }
@@ -158,7 +162,7 @@ const VolontaireAppointmentAssigner = ({ volontaireId, volontaire, onAssignmentC
     setSelectedAppointments([]);
   }, [selectedEtudeId]);
 
-  // Helpers
+  // Helpers (fonctions utilitaires)
   const getAppointmentId = (rdv) => rdv.idRdv || rdv.id;
   const getGroupeId = (groupe) => groupe.id || groupe.idGroupe;
 
@@ -178,7 +182,7 @@ const VolontaireAppointmentAssigner = ({ volontaireId, volontaire, onAssignmentC
     }
 
     try {
-      console.log("🔍 Récupération volontaire ID:", volunteerIdToFetch);
+      console.log("🔍 Récupération du volontaire ID:", volunteerIdToFetch);
       const response = await volontaireService.getDetails(volunteerIdToFetch);
 
       // Extraire les données de la réponse
@@ -193,7 +197,7 @@ const VolontaireAppointmentAssigner = ({ volontaireId, volontaire, onAssignmentC
 
       return volunteerInfo;
     } catch (error) {
-      console.error("❌ Erreur récupération volontaire:", error);
+      console.error("❌ Erreur lors de la récupération du volontaire:", error);
       return null;
     }
   };
@@ -213,7 +217,7 @@ const VolontaireAppointmentAssigner = ({ volontaireId, volontaire, onAssignmentC
   };
 
   const formatTime = (timeString: string) => {
-    return timeString || 'Non spécifiée';
+    return timeString || t('dates.notSpecified');
   };
 
   const getStatusColor = (status: string) => {
@@ -249,23 +253,23 @@ const VolontaireAppointmentAssigner = ({ volontaireId, volontaire, onAssignmentC
         commentaires: newComment.trim()
       };
 
-      console.log("📝 Mise à jour commentaire:", updatedData);
+      console.log("📝 Mise à jour du commentaire:", updatedData);
       await rdvService.update(selectedEtudeId, getAppointmentId(rdv), updatedData);
 
       // Rafraîchir les données
       await loadEtudeData(selectedEtudeId);
 
-      alert('Commentaire mis à jour avec succès.');
+      alert(t('volunteerAppointments.commentUpdated'));
 
     } catch (err) {
       console.error('Erreur lors de la mise à jour du commentaire:', err);
-      alert('Une erreur est survenue lors de la mise à jour du commentaire.');
+      alert(t('volunteerAppointments.commentUpdateError'));
     } finally {
       setLoading(false);
     }
   };
 
-  // Handlers
+  // Gestionnaires d'événements
   const handleEtudeChange = (e) => {
     const value = e.target.value;
     setSelectedEtudeId(value ? parseInt(value, 10) : null);
@@ -284,37 +288,80 @@ const VolontaireAppointmentAssigner = ({ volontaireId, volontaire, onAssignmentC
       // Désélectionner ce rendez-vous
       setSelectedAppointments(prev => prev.filter(selected => getAppointmentId(selected) !== id));
     } else {
-      // Sélection multiple : ajouter ce rendez-vous à la sélection actuelle
+      // Sélection multiple: ajouter ce rendez-vous à la sélection actuelle
       setSelectedAppointments(prev => [...prev, rdv]);
     }
   };
 
   const handleSelectAllAppointments = () => {
-    // Sélectionner ou désélectionner tous les RDV disponibles
+    // Sélectionner ou désélectionner tous les rendez-vous disponibles
     if (selectedAppointments.length === availableAppointments.length) {
-      // Tout est déjà sélectionné, on désélectionne tout
+      // Tout est déjà sélectionné, désélectionner tout
       setSelectedAppointments([]);
     } else {
-      // Sélectionner tous les RDV disponibles
+      // Sélectionner tous les rendez-vous disponibles
       setSelectedAppointments([...availableAppointments]);
     }
+  };
+
+  // Vérifier la compatibilité des phototypes
+  const checkPhototypeCompatibility = (): { compatible: boolean; message: string } => {
+    if (!selectedGroupeDetails || !selectedGroupeDetails.phototype) {
+      return { compatible: true, message: '' };
+    }
+
+    const groupePhototypes = selectedGroupeDetails.phototype.split(';').map((p: string) => p.trim().toLowerCase());
+    const volontairePhototype = volontaire?.phototype?.toLowerCase()?.trim();
+
+    if (!volontairePhototype) {
+      return {
+        compatible: true,
+        message: t('volunteerAppointments.noVolunteerPhototype') || 'Le volontaire n\'a pas de phototype défini.'
+      };
+    }
+
+    const isCompatible = groupePhototypes.some((gp: string) =>
+      gp.toLowerCase() === volontairePhototype ||
+      gp.toLowerCase().includes(volontairePhototype) ||
+      volontairePhototype.includes(gp.toLowerCase())
+    );
+
+    if (!isCompatible) {
+      return {
+        compatible: false,
+        message: `${t('volunteerAppointments.phototypeWarning') || 'Attention: Le phototype du volontaire'} (${volontaire?.phototype}) ${t('volunteerAppointments.doesNotMatch') || 'ne correspond pas aux phototypes du groupe'} (${selectedGroupeDetails.phototype})`
+      };
+    }
+
+    return { compatible: true, message: '' };
   };
 
   // Assignation intelligente avec gestion d'association unique
   const handleAssignAppointments = async () => {
     if (!selectedEtudeId || selectedAppointments.length === 0 || !selectedGroupeId) {
-      alert("Veuillez sélectionner une étude, un groupe et au moins un rendez-vous.");
+      alert(t('volunteerAppointments.selectStudyGroupAppointment'));
       return;
     }
 
-    if (!window.confirm(`Voulez-vous vraiment assigner ${volontaire?.prenom} ${volontaire?.nom} à ${selectedAppointments.length} rendez-vous ?`)) {
+    // Vérification de la compatibilité des phototypes
+    const phototypeCheck = checkPhototypeCompatibility();
+    if (!phototypeCheck.compatible) {
+      const continueAnyway = window.confirm(
+        `⚠️ ${phototypeCheck.message}\n\n${t('volunteerAppointments.continueAnyway') || 'Voulez-vous continuer malgré tout ?'}`
+      );
+      if (!continueAnyway) {
+        return;
+      }
+    }
+
+    if (!window.confirm(t('volunteerAppointments.confirmAssign', { firstName: volontaire?.prenom, lastName: volontaire?.nom, count: selectedAppointments.length }))) {
       return;
     }
 
     try {
       setLoading(true);
 
-      // 1) D'abord, garantir UNE SEULE association étude-volontaire
+      // 1) D'abord, assurer UNE SEULE association étude-volontaire
       let ivGroupe = 0;
       if (selectedGroupeId) {
         try {
@@ -323,7 +370,7 @@ const VolontaireAppointmentAssigner = ({ volontaireId, volontaire, onAssignmentC
             ivGroupe = parseInt(groupeDetails.iv, 10) || 0;
           }
         } catch (e) {
-          console.warn("IV groupe introuvable, on continue avec 0:", (e as any)?.message || e);
+          console.warn("IV du groupe non trouvé, continuation avec 0:", (e as any)?.message || e);
         }
       }
 
@@ -348,7 +395,7 @@ const VolontaireAppointmentAssigner = ({ volontaireId, volontaire, onAssignmentC
         console.warn("Erreur lors de la gestion de l'association étude-volontaire:", (assocErr as any)?.message || assocErr);
       }
 
-      // 2) Ensuite, assigner tous les RDV
+      // 2) Ensuite, assigner tous les rendez-vous
       const rdvPromises = selectedAppointments.map(async (rdv) => {
         const updatedData = {
           idEtude: selectedEtudeId,
@@ -366,7 +413,7 @@ const VolontaireAppointmentAssigner = ({ volontaireId, volontaire, onAssignmentC
 
       await Promise.all(rdvPromises);
 
-      alert(`${selectedAppointments.length} assignation(s) effectuée(s) avec succès.`);
+      alert(t('volunteerAppointments.assignmentSuccess', { count: selectedAppointments.length }));
 
       // Rafraîchir les données
       await loadEtudeData(selectedEtudeId);
@@ -378,25 +425,25 @@ const VolontaireAppointmentAssigner = ({ volontaireId, volontaire, onAssignmentC
 
     } catch (err) {
       console.error("Erreur lors de l'assignation:", err);
-      alert("Une erreur est survenue lors de l'assignation.");
+      alert(t('volunteerAppointments.assignmentError'));
     } finally {
       setLoading(false);
     }
   };
 
-  // Handler pour ouvrir le switcher
+  // Gestionnaire pour ouvrir le switcher
   const handleOpenSwitcher = (rdv: any) => {
     setSwitcherRdv(rdv);
     setShowSwitcher(true);
   };
 
-  // Handler pour fermer le switcher
+  // Gestionnaire pour fermer le switcher
   const handleCloseSwitcher = () => {
     setShowSwitcher(false);
     setSwitcherRdv(null);
   };
 
-  // Handler pour quand un switch est complété
+  // Gestionnaire pour quand un switch est complété
   const handleSwitchComplete = async () => {
     // Recharger les données après un switch
     await loadEtudeData(selectedEtudeId);
@@ -407,14 +454,14 @@ const VolontaireAppointmentAssigner = ({ volontaireId, volontaire, onAssignmentC
 
   // Désassignation intelligente
   const handleUnassignAppointment = async (rdv: any) => {
-    if (!window.confirm('Voulez-vous vraiment désassigner ce volontaire de ce rendez-vous ?')) {
+    if (!window.confirm(t('volunteerAppointments.confirmUnassign'))) {
       return;
     }
 
     try {
       setLoading(true);
 
-      // 1. D'abord, désassigner le volontaire du RDV
+      // 1. D'abord, désassigner le volontaire du rendez-vous
       const updatedData = {
         idEtude: selectedEtudeId,
         idRdv: getAppointmentId(rdv),
@@ -428,29 +475,29 @@ const VolontaireAppointmentAssigner = ({ volontaireId, volontaire, onAssignmentC
 
       await rdvService.update(selectedEtudeId, getAppointmentId(rdv), updatedData);
 
-      // 2. Recharger les données pour avoir l'état actuel
+      // 2. Recharger les données pour obtenir l'état actuel
       await loadEtudeData(selectedEtudeId);
 
-      // 3. Vérifier s'il reste des RDV assignés au volontaire dans cette étude
+      // 3. Vérifier s'il reste des rendez-vous assignés au volontaire dans cette étude
       const remainingAppointments = appointments.filter(appointment => {
         const assignedVolId = appointment.volontaire?.id || appointment.idVolontaire;
         return parseInt(assignedVolId) === parseInt(volontaireId) &&
                getAppointmentId(appointment) !== getAppointmentId(rdv);
       });
 
-      // 4. Si plus aucun RDV assigné, supprimer l'association étude-volontaire
+      // 4. S'il n'y a plus de rendez-vous assignés, supprimer l'association étude-volontaire
       if (remainingAppointments.length === 0) {
         try {
           await etudeVolontaireService.desassignerVolontaireDEtude(selectedEtudeId, parseInt(volontaireId));
-          console.log('Association étude-volontaire supprimée car plus aucun RDV assigné');
+          console.log('Association étude-volontaire supprimée car plus de rendez-vous assignés');
         } catch (e) {
-          console.warn('Impossible de supprimer association étude-volontaire:', (e as any)?.message || e);
+          console.warn('Impossible de supprimer l\'association étude-volontaire:', (e as any)?.message || e);
         }
       } else {
-        console.log(`Association étude-volontaire conservée - ${remainingAppointments.length} RDV restant(s)`);
+        console.log(`Association étude-volontaire conservée - ${remainingAppointments.length} rendez-vous restant(s)`);
       }
 
-      alert('Volontaire désassigné avec succès.');
+      alert(t('volunteerAppointments.unassignmentSuccess'));
 
       if (onAssignmentComplete) {
         onAssignmentComplete();
@@ -458,7 +505,7 @@ const VolontaireAppointmentAssigner = ({ volontaireId, volontaire, onAssignmentC
 
     } catch (err) {
       console.error('Erreur lors de la désassignation:', err);
-      alert('Une erreur est survenue lors de la désassignation.');
+      alert(t('volunteerAppointments.unassignmentError'));
     } finally {
       setLoading(false);
     }
@@ -484,13 +531,13 @@ const VolontaireAppointmentAssigner = ({ volontaireId, volontaire, onAssignmentC
     <div className="space-y-6">
       {/* En-tête */}
       <div>
-        <h2 className="text-lg font-semibold text-gray-800">Assigner à des rendez-vous</h2>
+        <h2 className="text-lg font-semibold text-gray-800">{t('volunteerAppointments.assignToAppointments')}</h2>
         <p className="text-gray-600">
-          Assigner <span className="font-medium">{volontaire?.prenom} {volontaire?.nom}</span> à des rendez-vous d'études
+          {t('volunteerAppointments.assignDescription', { firstName: volontaire?.prenom, lastName: volontaire?.nom })}
         </p>
       </div>
 
-      {/* Sélection d'étude et de groupe */}
+      {/* Sélection de l'étude et du groupe */}
       <StudyGroupSelector
         etudes={etudes}
         selectedEtudeId={selectedEtudeId}
@@ -506,10 +553,20 @@ const VolontaireAppointmentAssigner = ({ volontaireId, volontaire, onAssignmentC
         loading={loading}
       />
 
+      {/* Alerte de chevauchement d'études */}
+      {selectedEtudeId && volontaireId && (
+        <StudyOverlapAlert
+          volontaireId={volontaireId}
+          targetEtudeId={selectedEtudeId}
+          showInlineAlert={true}
+          autoCheck={true}
+        />
+      )}
+
       {/* Interface d'assignation */}
       {selectedEtudeId && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Section Rendez-vous disponibles */}
+          {/* Section des rendez-vous disponibles */}
           <AvailableAppointmentsList
             appointments={availableAppointments}
             selectedAppointments={selectedAppointments}
@@ -532,7 +589,7 @@ const VolontaireAppointmentAssigner = ({ volontaireId, volontaire, onAssignmentC
             loading={loading}
           />
 
-          {/* Section Rendez-vous actuels du volontaire */}
+          {/* Section des rendez-vous actuels du volontaire */}
           <AssignedAppointmentsList
             appointments={volunteerCurrentAppointments}
             onUnassignAppointment={handleUnassignAppointment}
@@ -548,16 +605,42 @@ const VolontaireAppointmentAssigner = ({ volontaireId, volontaire, onAssignmentC
         </div>
       )}
 
+      {/* Alerte phototype incompatible */}
+      {selectedEtudeId && selectedGroupeId && (() => {
+        const check = checkPhototypeCompatibility();
+        if (!check.compatible) {
+          return (
+            <div className="bg-yellow-50 border border-yellow-300 rounded-lg p-4 flex items-start gap-3">
+              <svg className="h-6 w-6 text-yellow-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <div>
+                <h4 className="text-sm font-semibold text-yellow-800">
+                  {t('volunteerAppointments.phototypeIncompatibility') || 'Incompatibilité de phototype'}
+                </h4>
+                <p className="text-sm text-yellow-700 mt-1">
+                  {check.message}
+                </p>
+                <p className="text-xs text-yellow-600 mt-2">
+                  {t('volunteerAppointments.canStillAssign') || 'Vous pouvez toujours assigner ce volontaire, mais une confirmation sera demandée.'}
+                </p>
+              </div>
+            </div>
+          );
+        }
+        return null;
+      })()}
+
       {/* Panneau d'action */}
       {selectedEtudeId && selectedAppointments.length > 0 && selectedGroupeId && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
           <div className="flex justify-between items-center">
             <div>
               <h3 className="text-lg font-semibold text-blue-800">
-                Assignation en cours
+                {t('volunteerAppointments.assignmentInProgress')}
               </h3>
               <p className="text-sm text-blue-600">
-                {selectedAppointments.length} rendez-vous • Groupe: {groupes.find(g => getGroupeId(g) === selectedGroupeId)?.nom || selectedGroupeId}
+                {t('volunteerAppointments.appointmentsGroup', { count: selectedAppointments.length, group: groupes.find(g => getGroupeId(g) === selectedGroupeId)?.nom || selectedGroupeId })}
                 {selectedGroupeDetails && selectedGroupeDetails.iv > 0 && (
                   <span className="text-green-600 font-medium"> (IV: {selectedGroupeDetails.iv}€)</span>
                 )}
@@ -568,7 +651,7 @@ const VolontaireAppointmentAssigner = ({ volontaireId, volontaire, onAssignmentC
                 onClick={() => setSelectedAppointments([])}
                 className="px-4 py-2 border border-blue-300 text-blue-700 rounded-md hover:bg-blue-100"
               >
-                Réinitialiser
+                {t('common.reset')}
               </button>
               <button
                 onClick={handleAssignAppointments}
@@ -579,14 +662,14 @@ const VolontaireAppointmentAssigner = ({ volontaireId, volontaire, onAssignmentC
                     : 'bg-blue-600 hover:bg-blue-700'
                 }`}
               >
-                {loading ? 'Assignation...' : 'Assigner'}
+                {loading ? t('volunteerAppointments.assigning') : t('volunteerAppointments.assign')}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Appointment Switcher Modal */}
+      {/* Modal de changement de rendez-vous */}
       {showSwitcher && (
         <AppointmentSwitcher
           preSelectedRdv={switcherRdv}

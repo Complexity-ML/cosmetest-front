@@ -18,6 +18,7 @@ interface GroupeFormData {
   ageMinimum: string
   ageMaximum: string
   ethnie: string[]
+  phototype: string[]
   criteresSupplémentaires: string
   nbSujet: string
   iv: string
@@ -42,6 +43,7 @@ const GroupeForm = () => {
     ageMinimum: '',
     ageMaximum: '',
     ethnie: [],
+    phototype: [],
     criteresSupplémentaires: '',
     nbSujet: '',
     iv: ''
@@ -72,12 +74,23 @@ const GroupeForm = () => {
     return Array.isArray(ethniesArray) ? ethniesArray.join(';') : ''
   }
 
+  const phototypesArrayToString = (phototypesArray: string[]): string => {
+    return Array.isArray(phototypesArray) ? phototypesArray.join(';') : ''
+  }
+
   const ethniesStringToArray = (ethniesString: string): string[] => {
     if (!ethniesString || ethniesString === '') return []
 
     // Supporte à la fois la virgule et le point-virgule
     const separator = ethniesString.includes(';') ? ';' : ','
     return ethniesString.split(separator).filter((e: string) => e.trim() !== '')
+  }
+
+  const phototypesStringToArray = (phototypesString: string): string[] => {
+    if (!phototypesString || phototypesString === '') return []
+
+    const separator = phototypesString.includes(';') ? ';' : ','
+    return phototypesString.split(separator).filter((p: string) => p.trim() !== '')
   }
 
   // Charger le groupe si on est en mode édition
@@ -95,6 +108,7 @@ const GroupeForm = () => {
 
           // Convertir la chaîne ethnie en tableau pour l'interface
           const ethniesArray = data.ethnie ? ethniesStringToArray(data.ethnie as string) : []
+          const phototypesArray = data.phototype ? phototypesStringToArray(data.phototype as string) : []
 
           const groupeData: GroupeFormData = {
             intitule: data.intitule || data.nom || '',
@@ -103,6 +117,7 @@ const GroupeForm = () => {
             ageMinimum: data.ageMin?.toString() || '',
             ageMaximum: data.ageMax?.toString() || '',
             ethnie: ethniesArray,
+            phototype: phototypesArray,
             criteresSupplémentaires: data.criteresSupplémentaires || '',
             nbSujet: data.nbSujet?.toString() || '',
             iv: data.iv?.toString() || ''
@@ -147,6 +162,15 @@ const GroupeForm = () => {
     'ANTILLAISE'
   ]
 
+  const phototypesDisponibles = [
+    'Type 1',
+    'Type 2',
+    'Type 3',
+    'Type 4',
+    'Type 5',
+    'Type 6'
+  ]
+
   const handleEthnieChange = (ethnieValue: string) => {
     setGroupe(prevGroupe => {
       const currentEthnies = Array.isArray(prevGroupe.ethnie) ? prevGroupe.ethnie : []
@@ -160,6 +184,24 @@ const GroupeForm = () => {
         return {
           ...prevGroupe,
           ethnie: [...currentEthnies, ethnieValue]
+        }
+      }
+    })
+  }
+
+  const handlePhototypeChange = (phototypeValue: string) => {
+    setGroupe(prevGroupe => {
+      const currentPhototypes = Array.isArray(prevGroupe.phototype) ? prevGroupe.phototype : []
+
+      if (currentPhototypes.includes(phototypeValue)) {
+        return {
+          ...prevGroupe,
+          phototype: currentPhototypes.filter((p: string) => p !== phototypeValue)
+        }
+      } else {
+        return {
+          ...prevGroupe,
+          phototype: [...currentPhototypes, phototypeValue]
         }
       }
     })
@@ -190,10 +232,11 @@ const GroupeForm = () => {
     setError(null)
 
     try {
-      // Préparer les données avec ethnie convertie en chaîne et conversion des nombres
+      // Préparer les données avec ethnie et phototype converties en chaîne et conversion des nombres
       const dataToSend = {
         ...groupe,
         ethnie: ethniesArrayToString(groupe.ethnie), // Convertir le tableau en chaîne
+        phototype: phototypesArrayToString(groupe.phototype), // Convertir le tableau en chaîne
         idEtude: groupe.idEtude ? Number(groupe.idEtude) : undefined,
         ageMinimum: groupe.ageMinimum ? Number(groupe.ageMinimum) : undefined,
         ageMaximum: groupe.ageMaximum ? Number(groupe.ageMaximum) : undefined,
@@ -310,25 +353,60 @@ const GroupeForm = () => {
           </Label>
           <div className="space-y-2">
             {ethniesDisponibles.map((ethnieOption) => (
-              <div key={ethnieOption} className="flex items-center space-x-2">
+              <div
+                key={ethnieOption}
+                className="flex items-center space-x-2"
+              >
                 <Checkbox
                   id={`ethnie-${ethnieOption}`}
                   checked={Array.isArray(groupe.ethnie) &&
                     groupe.ethnie.some(e => e.toLowerCase() === ethnieOption.toLowerCase())}
                   onCheckedChange={() => handleEthnieChange(ethnieOption)}
                 />
-                <Label 
+                <label
                   htmlFor={`ethnie-${ethnieOption}`}
-                  className="text-sm font-normal cursor-pointer capitalize"
+                  className="text-sm font-normal capitalize cursor-pointer"
                 >
                   {ethnieOption.toLowerCase()}
-                </Label>
+                </label>
               </div>
             ))}
           </div>
           {Array.isArray(groupe.ethnie) && groupe.ethnie.length > 0 && (
             <p className="text-xs text-muted-foreground mt-1">
               {t('groups.ethnicitiesSelected', { count: groupe.ethnie.length })}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <Label className="mb-2">
+            {t('groups.phototypes') || 'Phototypes'}
+          </Label>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+            {phototypesDisponibles.map((phototypeOption) => (
+              <div
+                key={phototypeOption}
+                className="flex items-center space-x-2"
+              >
+                <Checkbox
+                  id={`phototype-${phototypeOption}`}
+                  checked={Array.isArray(groupe.phototype) &&
+                    groupe.phototype.some(p => p === phototypeOption)}
+                  onCheckedChange={() => handlePhototypeChange(phototypeOption)}
+                />
+                <label
+                  htmlFor={`phototype-${phototypeOption}`}
+                  className="text-sm font-normal cursor-pointer"
+                >
+                  {phototypeOption}
+                </label>
+              </div>
+            ))}
+          </div>
+          {Array.isArray(groupe.phototype) && groupe.phototype.length > 0 && (
+            <p className="text-xs text-muted-foreground mt-1">
+              {t('groups.phototypesSelected', { count: groupe.phototype.length }) || `${groupe.phototype.length} phototype(s) sélectionné(s)`}
             </p>
           )}
         </div>

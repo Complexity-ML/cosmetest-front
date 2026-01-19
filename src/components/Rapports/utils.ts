@@ -97,25 +97,51 @@ export const normaliserSexe = (value: any): string => {
   return normalized;
 };
 
+// Map variations to standard values
+const ethnicityMap: Record<string, string> = {
+  'CAUCASIEN': 'CAUCASIEN',
+  'CAUCASIENNE': 'CAUCASIEN',
+  'AFRICAIN': 'AFRICAIN',
+  'AFRICAINE': 'AFRICAIN',
+  'ASIATIQUE': 'ASIATIQUE',
+  'INDIENNE': 'INDIENNE',
+  'INDIEN': 'INDIENNE',
+  'ANTILLAISE': 'ANTILLAISE',
+  'ANTILLAIS': 'ANTILLAISE'
+};
+
 export const normaliserEthnie = (value: any): string => {
   if (!value) return '';
 
   const normalized = normaliserTexte(value);
 
-  // Map variations to standard values
-  const ethnicityMap: Record<string, string> = {
-    'CAUCASIEN': 'CAUCASIEN',
-    'CAUCASIENNE': 'CAUCASIEN',
-    'AFRICAIN': 'AFRICAIN',
-    'AFRICAINE': 'AFRICAIN',
-    'ASIATIQUE': 'ASIATIQUE',
-    'INDIENNE': 'INDIENNE',
-    'INDIEN': 'INDIENNE',
-    'ANTILLAISE': 'ANTILLAISE',
-    'ANTILLAIS': 'ANTILLAISE'
-  };
-
   return ethnicityMap[normalized] || normalized;
+};
+
+// Nouvelle fonction pour gérer les ethnies multiples (séparées par des virgules)
+export const normaliserEthnies = (value: any): string[] => {
+  if (!value) return [];
+
+  // Si c'est déjà un tableau
+  if (Array.isArray(value)) {
+    return value.map(v => normaliserEthnie(v)).filter(v => v !== '');
+  }
+
+  // Si c'est une chaîne avec des virgules
+  const ethnies = String(value).split(',').map(e => e.trim()).filter(e => e !== '');
+  return ethnies.map(e => normaliserEthnie(e));
+};
+
+// Calculer le score de matching des ethnies (retourne un pourcentage 0-1)
+export const calculerScoreEthnie = (ethniesVolontaire: string[], ethniesRecherchees: Set<string>): number => {
+  if (ethniesRecherchees.size === 0) return 1; // Pas de filtre = 100%
+  if (ethniesVolontaire.length === 0) return 0; // Pas d'ethnie = 0%
+
+  // Compter combien d'ethnies du volontaire correspondent aux ethnies recherchées
+  const matchCount = ethniesVolontaire.filter(e => ethniesRecherchees.has(e)).length;
+
+  // Le score est le ratio des ethnies qui matchent sur le total des ethnies du volontaire
+  return matchCount / ethniesVolontaire.length;
 };
 
 export const isAffirmative = (value: any): boolean => {

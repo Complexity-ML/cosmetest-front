@@ -11,11 +11,15 @@ interface GroupesSectionProps {
   handleGroupeChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   ethniesDisponibles: readonly string[];
   handleEthnieChange: (ethnie: string) => void;
+  phototypesDisponibles?: readonly string[];
+  handlePhototypeChange?: (phototype: string) => void;
   handleCreateGroupe: (e: React.FormEvent) => void;
   isLoadingGroupes: boolean;
   groupes: GroupeData[];
   fetchGroupes: () => void;
 }
+
+const phototypesDefaut = ['Type 1', 'Type 2', 'Type 3', 'Type 4', 'Type 5', 'Type 6'] as const;
 
 const GroupesSection = ({
   etude,
@@ -25,12 +29,20 @@ const GroupesSection = ({
   handleGroupeChange,
   ethniesDisponibles,
   handleEthnieChange,
+  phototypesDisponibles = phototypesDefaut,
+  handlePhototypeChange,
   handleCreateGroupe,
   isLoadingGroupes,
   groupes,
   fetchGroupes,
 }: GroupesSectionProps) => {
   const { t } = useTranslation();
+
+  const onPhototypeChange = (phototype: string) => {
+    if (handlePhototypeChange) {
+      handlePhototypeChange(phototype);
+    }
+  };
 
   const handleDeleteGroupe = async (idGroupe: number) => {
     try {
@@ -202,6 +214,27 @@ const GroupesSection = ({
               </div>
             </div>
 
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {t('groups.phototypes') || 'Phototypes'}
+              </label>
+              <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
+                {phototypesDisponibles.map((phototypeOption: string) => (
+                  <label key={phototypeOption} className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={Array.isArray(newGroupe.phototype) && newGroupe.phototype.includes(phototypeOption)}
+                      onChange={() => onPhototypeChange(phototypeOption)}
+                      className="form-checkbox h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                    />
+                    <span className="ml-2 text-sm text-gray-700">
+                      {phototypeOption}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
             <div className="flex justify-end space-x-3 pt-4">
               <button
                 type="button"
@@ -281,7 +314,17 @@ const GroupesSection = ({
                     <div>
                       <span className="font-medium text-gray-700">{t('groups.ethnicities')}:</span>
                       <span className="ml-2 text-gray-600">
-                        {groupe.ethnie || t('groups.notSpecified')}
+                        {Array.isArray(groupe.ethnie)
+                          ? groupe.ethnie.join(', ')
+                          : (typeof groupe.ethnie === 'string' ? groupe.ethnie.replace(/;/g, ', ') : t('groups.notSpecified'))}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-700">{t('groups.phototypes') || 'Phototypes'}:</span>
+                      <span className="ml-2 text-gray-600">
+                        {Array.isArray(groupe.phototype)
+                          ? groupe.phototype.join(', ')
+                          : (typeof groupe.phototype === 'string' ? groupe.phototype.replace(/;/g, ', ') : t('groups.notSpecified'))}
                       </span>
                     </div>
                     <div>

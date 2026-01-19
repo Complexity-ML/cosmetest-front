@@ -744,7 +744,6 @@ const PaiementsPage = () => {
           etude={selectedEtudeData}
           paiements={paiementsFiltres}
           volontairesInfo={volontairesInfo}
-          getGroupeName={getGroupeName}
         />
       )}
 

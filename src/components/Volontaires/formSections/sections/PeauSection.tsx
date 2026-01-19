@@ -27,11 +27,11 @@ const PeauSection = ({ formData, errors, onChange }: any) => {
             required
           >
             <option value="">{t('common.select')}</option>
-            <option value="Normale">Normale</option>
-            <option value="Sèche">Sèche</option>
-            <option value="Grasse">Grasse</option>
-            <option value="Mixte">Mixte</option>
-            <option value="Sensible">Sensible</option>
+            <option value="Normale">{t('volunteers.skinTypeOptions.Normale')}</option>
+            <option value="Sèche">{t('volunteers.skinTypeOptions.Sèche')}</option>
+            <option value="Grasse">{t('volunteers.skinTypeOptions.Grasse')}</option>
+            <option value="Mixte">{t('volunteers.skinTypeOptions.Mixte')}</option>
+            <option value="Sensible">{t('volunteers.skinTypeOptions.Sensible')}</option>
           </select>
           {errors.typePeauVisage && (
             <p className="mt-1 text-sm text-red-500">{errors.typePeauVisage}</p>
@@ -53,12 +53,12 @@ const PeauSection = ({ formData, errors, onChange }: any) => {
             className="form-select block w-full"
           >
             <option value="">{t('common.select')}</option>
-            <option value="Très claire">Très claire</option>
-            <option value="Claire">Claire</option>
-            <option value="Moyenne">Moyenne</option>
-            <option value="Mate">Mate</option>
-            <option value="Foncée">Foncée</option>
-            <option value="Très foncée">Très foncée</option>
+            <option value="Très claire">{t('volunteers.complexionOptions.Très claire')}</option>
+            <option value="Claire">{t('volunteers.complexionOptions.Claire')}</option>
+            <option value="Moyenne">{t('volunteers.complexionOptions.Moyenne')}</option>
+            <option value="Mate">{t('volunteers.complexionOptions.Mate')}</option>
+            <option value="Foncée">{t('volunteers.complexionOptions.Foncée')}</option>
+            <option value="Très foncée">{t('volunteers.complexionOptions.Très foncée')}</option>
           </select>
         </div>
 
@@ -77,9 +77,9 @@ const PeauSection = ({ formData, errors, onChange }: any) => {
             className="form-select block w-full"
           >
             <option value="">{t('common.select')}</option>
-            <option value="Peau sensible">Peau sensible</option>
-            <option value="Peau peu sensible">Peau peu sensible</option>
-            <option value="Peau non sensible">Peau non sensible</option>
+            <option value="Peau sensible">{t('volunteers.skinSensitivityOptions.Peau sensible')}</option>
+            <option value="Peau peu sensible">{t('volunteers.skinSensitivityOptions.Peau peu sensible')}</option>
+            <option value="Peau non sensible">{t('volunteers.skinSensitivityOptions.Peau non sensible')}</option>
           </select>
         </div>
 
@@ -153,9 +153,9 @@ const PeauSection = ({ formData, errors, onChange }: any) => {
             className="form-select block w-full"
           >
             <option value="">{t('common.select')}</option>
-            <option value="Faiblement">Faiblement</option>
-            <option value="Moyennement">Moyennement</option>
-            <option value="Fortement">Fortement</option>
+            <option value="Faiblement">{t('volunteers.sunExposureOptions.Faiblement')}</option>
+            <option value="Moyennement">{t('volunteers.sunExposureOptions.Moyennement')}</option>
+            <option value="Fortement">{t('volunteers.sunExposureOptions.Fortement')}</option>
           </select>
         </div>
 
@@ -174,10 +174,10 @@ const PeauSection = ({ formData, errors, onChange }: any) => {
             className="form-select block w-full"
           >
             <option value="">{t('common.select')}</option>
-            <option value="Progressif">Progressif</option>
-            <option value="Rapide">Rapide</option>
-            <option value="Difficile">Difficile</option>
-            <option value="Inexistant">Inexistant</option>
+            <option value="Progressif">{t('volunteers.tanningOptions.Progressif')}</option>
+            <option value="Rapide">{t('volunteers.tanningOptions.Rapide')}</option>
+            <option value="Difficile">{t('volunteers.tanningOptions.Difficile')}</option>
+            <option value="Inexistant">{t('volunteers.tanningOptions.Inexistant')}</option>
           </select>
         </div>
 
@@ -196,11 +196,11 @@ const PeauSection = ({ formData, errors, onChange }: any) => {
             className="form-select block w-full"
           >
             <option value="">{t('common.select')}</option>
-            <option value="Jamais">Jamais</option>
-            <option value="Rarement">Rarement</option>
-            <option value="Parfois">Parfois</option>
-            <option value="Souvent">Souvent</option>
-            <option value="Toujours">Toujours</option>
+            <option value="Jamais">{t('volunteers.sunburnOptions.Jamais')}</option>
+            <option value="Rarement">{t('volunteers.sunburnOptions.Rarement')}</option>
+            <option value="Parfois">{t('volunteers.sunburnOptions.Parfois')}</option>
+            <option value="Souvent">{t('volunteers.sunburnOptions.Souvent')}</option>
+            <option value="Toujours">{t('volunteers.sunburnOptions.Toujours')}</option>
           </select>
         </div>
       </div>

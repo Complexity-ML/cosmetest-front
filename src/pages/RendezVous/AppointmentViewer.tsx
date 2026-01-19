@@ -112,9 +112,11 @@ const AppointmentViewer: React.FC<AppointmentViewerProps> = ({ appointment, onEd
       <VolunteerAssignmentCard
         volunteer={volunteer}
         volunteers={volunteerOptions}
+        group={group}
         assigning={assigning}
         onAssign={handleAssignVolunteer}
         onUnassign={handleUnassignVolunteer}
+        etudeId={currentAppointment?.idEtude}
       />
     </div>
   );

@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import volontaireService from '../../../services/volontaireService';
 import { timeToMinutes, normalizeTime } from '../../../utils/timeUtils';
 
@@ -270,7 +271,17 @@ const EnhancedAppointmentsPanel: React.FC<EnhancedAppointmentsPanelProps> = ({
                   const last = volunteerInfo.nomVol || volunteerInfo.nom || volunteerInfo.lastName || '';
                   const civ = volunteerInfo.civilite ? `${volunteerInfo.civilite} ` : '';
                   const label = `${civ}${first} ${last}`.trim();
-                  return <span>👤 {label || t('appointments.volunteer')}</span>;
+                  const volunteerId = rdv.idVolontaire || rdv.volontaire?.id;
+                  return (
+                    <Link
+                      to={`/volontaires/${volunteerId}`}
+                      state={{ activeTab: 'info' }}
+                      className="hover:underline hover:text-green-700 transition-colors"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      👤 {label || t('appointments.volunteer')}
+                    </Link>
+                  );
                 })()}
                 <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">{t('appointments.assigned')}</span>
               </div>
@@ -281,7 +292,16 @@ const EnhancedAppointmentsPanel: React.FC<EnhancedAppointmentsPanelProps> = ({
                   const last = rdv.nomVol || rdv.nomVolontaire || rdv.volontaire?.nomVol || rdv.volontaire?.nom || '';
                   const idPart = rdv.idVolontaire || rdv.volontaire?.id;
                   const label = (first || last) ? `${first} ${last}`.trim() : `${t('appointments.volunteer')} ID: ${idPart}`;
-                  return <span>👤 {label}</span>;
+                  return (
+                    <Link
+                      to={`/volontaires/${idPart}`}
+                      state={{ activeTab: 'info' }}
+                      className="hover:underline hover:text-orange-700 transition-colors"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      👤 {label}
+                    </Link>
+                  );
                 })()}
                 <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded">{t('appointments.loadingInProgress')}</span>
               </div>

@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 
 interface VolunteerData {
   titreVol?: string;
@@ -31,6 +33,7 @@ interface VolunteerInfoProps {
 
 // Composant pour afficher les infos du volontaire
 const VolunteerInfo = ({ rdv, getVolunteerInfo }: VolunteerInfoProps) => {
+  const { t } = useTranslation();
   const [volunteerInfo, setVolunteerInfo] = useState<VolunteerData | null>(null);
   const [loadingVolunteer, setLoadingVolunteer] = useState(false);
 
@@ -65,7 +68,7 @@ const VolunteerInfo = ({ rdv, getVolunteerInfo }: VolunteerInfoProps) => {
   if (loadingVolunteer) {
     return (
       <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded text-xs">
-        Chargement...
+        {t('common.loading')}
       </span>
     );
   }
@@ -77,39 +80,60 @@ const VolunteerInfo = ({ rdv, getVolunteerInfo }: VolunteerInfoProps) => {
     const title = volunteerInfo.titreVol || volunteerInfo.titre;
     const firstName = volunteerInfo.prenomVol || volunteerInfo.prenom || volunteerInfo.firstName;
     const lastName = volunteerInfo.nomVol || volunteerInfo.nom || volunteerInfo.lastName;
+    const volunteerId = volunteerInfo.idVol || volunteerInfo.id || rdv.idVolontaire;
 
     if (firstName && lastName) {
       const displayName = title ? `${title} ${firstName} ${lastName}` : `${firstName} ${lastName}`;
       return (
-        <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded text-xs">
+        <Link
+          to={`/volontaires/${volunteerId}`}
+          state={{ activeTab: 'info' }}
+          className="bg-orange-100 text-orange-800 hover:bg-orange-200 hover:text-orange-900 px-2 py-1 rounded text-xs inline-block transition-colors underline"
+          onClick={(e) => e.stopPropagation()}
+        >
           {displayName}
-        </span>
+        </Link>
       );
     }
 
     // Si on a au moins un nom
     if (firstName || lastName) {
       return (
-        <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded text-xs">
+        <Link
+          to={`/volontaires/${volunteerId}`}
+          state={{ activeTab: 'info' }}
+          className="bg-orange-100 text-orange-800 hover:bg-orange-200 hover:text-orange-900 px-2 py-1 rounded text-xs inline-block transition-colors underline"
+          onClick={(e) => e.stopPropagation()}
+        >
           {firstName || lastName}
-        </span>
+        </Link>
       );
     }
 
     // Fallback: afficher l'ID et les propriétés disponibles
     return (
-      <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded text-xs">
+      <Link
+        to={`/volontaires/${volunteerId}`}
+        state={{ activeTab: 'info' }}
+        className="bg-orange-100 text-orange-800 hover:bg-orange-200 hover:text-orange-900 px-2 py-1 rounded text-xs inline-block transition-colors underline"
+        onClick={(e) => e.stopPropagation()}
+      >
         ID: {rdv.idVolontaire} (Données: {Object.keys(volunteerInfo).join(', ')})
-      </span>
+      </Link>
     );
   }
 
   // Fallback si on a que l'ID
   if (rdv.idVolontaire) {
     return (
-      <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded text-xs">
-        Volontaire ID: {rdv.idVolontaire}
-      </span>
+      <Link
+        to={`/volontaires/${rdv.idVolontaire}`}
+        state={{ activeTab: 'info' }}
+        className="bg-orange-100 text-orange-800 hover:bg-orange-200 hover:text-orange-900 px-2 py-1 rounded text-xs inline-block transition-colors underline"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {t('appointments.volunteerIdLabel')}: {rdv.idVolontaire}
+      </Link>
     );
   }
 
@@ -146,6 +170,7 @@ const AppointmentItem = ({
   getStatusColor,
   loading = false
 }: AppointmentItemProps) => {
+  const { t } = useTranslation();
   const [isEditingComment, setIsEditingComment] = useState(false);
   const [editComment, setEditComment] = useState(rdv.commentaires || '');
 
@@ -207,14 +232,14 @@ const AppointmentItem = ({
             <div className="text-xs text-gray-500">
               {rdv.volontaire || rdv.idVolontaire ? (
                 <div className="text-orange-600">
-                  <span className="font-medium">👤 Assigné à:</span>
+                  <span className="font-medium">👤 {t('appointments.assignedTo')}:</span>
                   <div className="mt-1">
                     <VolunteerInfo rdv={rdv} getVolunteerInfo={getVolunteerInfo} />
                   </div>
                 </div>
               ) : (
                 <span className="text-green-600">
-                  {isSelectable ? '✅ Disponible' : '👤 Assigné à ce volontaire'}
+                  {isSelectable ? `✅ ${t('appointments.available')}` : `👤 ${t('appointments.assignedToThisVolunteer')}`}
                 </span>
               )}
             </div>
@@ -226,7 +251,7 @@ const AppointmentItem = ({
                   type="text"
                   value={editComment}
                   onChange={(e) => setEditComment(e.target.value)}
-                  placeholder="Ajouter un commentaire (ex: 1er Passage, 2e Passage...)"
+                  placeholder={t('appointments.addCommentPlaceholder')}
                   className="w-full text-xs px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                   autoFocus
                   onClick={e => e.stopPropagation()}
@@ -240,7 +265,7 @@ const AppointmentItem = ({
                     className="text-xs px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700"
                     disabled={loading}
                   >
-                    Sauvegarder
+                    {t('common.save')}
                   </button>
                   <button
                     onClick={(e) => {
@@ -249,7 +274,7 @@ const AppointmentItem = ({
                     }}
                     className="text-xs px-2 py-1 bg-gray-400 text-white rounded hover:bg-gray-500"
                   >
-                    Annuler
+                    {t('common.cancel')}
                   </button>
                 </div>
               </div>
@@ -261,7 +286,7 @@ const AppointmentItem = ({
                   </div>
                 ) : (
                   <div className="text-xs text-gray-400 italic">
-                    Aucun commentaire
+                    {t('appointments.noComment')}
                   </div>
                 )}
               </div>
@@ -282,7 +307,7 @@ const AppointmentItem = ({
               }}
               className="text-blue-600 hover:text-blue-800 text-xs px-2 py-1 border border-blue-300 rounded hover:bg-blue-50"
               disabled={loading}
-              title="Éditer le commentaire"
+              title={t('appointments.editComment')}
             >
               ✏️
             </button>
@@ -296,7 +321,7 @@ const AppointmentItem = ({
               }}
               className="text-purple-600 hover:text-purple-800 text-xs px-2 py-1 border border-purple-300 rounded hover:bg-purple-50"
               disabled={loading}
-              title="Échanger avec un autre rendez-vous"
+              title={t('appointments.switchAppointment')}
             >
               ⇄
             </button>
@@ -311,7 +336,7 @@ const AppointmentItem = ({
               className="text-red-600 hover:text-red-800 text-xs px-2 py-1 border border-red-300 rounded hover:bg-red-50"
               disabled={loading}
             >
-              Désassigner
+              {t('appointments.unassign')}
             </button>
           )}
         </div>

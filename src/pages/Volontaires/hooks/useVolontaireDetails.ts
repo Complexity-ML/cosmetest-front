@@ -195,8 +195,46 @@ export const useVolontaireDetails = ({ id, navigate }: UseVolontaireDetailsParam
 
     try {
       const numericId = parseInt(id, 10);
+
+      // Récupérer les RDV à venir
       const rdvsData = await rdvService.getByVolontaire(numericId);
-      setRdvs(Array.isArray(rdvsData) ? rdvsData : []);
+      const upcomingRdvs = Array.isArray(rdvsData) ? rdvsData : [];
+
+      // Récupérer aussi les RDV passés des 8 dernières semaines
+      const today = new Date();
+      const eightWeeksAgo = new Date(today);
+      eightWeeksAgo.setDate(eightWeeksAgo.getDate() - 56);
+
+      let pastRdvs: any[] = [];
+      try {
+        const pastRdvsResponse = await rdvService.search(
+          { idVolontaire: numericId },
+          0,
+          100,
+          'date,desc'
+        );
+        const allRdvs = pastRdvsResponse.content || [];
+        pastRdvs = allRdvs.filter((rdv: any) => {
+          const rdvDate = new Date(rdv.date);
+          rdvDate.setHours(0, 0, 0, 0);
+          const todayDate = new Date();
+          todayDate.setHours(0, 0, 0, 0);
+          return rdvDate < todayDate && rdvDate >= eightWeeksAgo;
+        });
+      } catch (pastError) {
+        console.warn('Erreur lors du chargement des RDV passés:', pastError);
+      }
+
+      // Fusionner les RDV à venir et passés (en évitant les doublons)
+      const allRdvsMap = new Map();
+      [...upcomingRdvs, ...pastRdvs].forEach(rdv => {
+        const key = `${rdv.idEtude}-${rdv.idRdv}`;
+        if (!allRdvsMap.has(key)) {
+          allRdvsMap.set(key, rdv);
+        }
+      });
+
+      setRdvs(Array.from(allRdvsMap.values()));
 
       const etudesResponse = await etudeVolontaireService.getEtudesByVolontaire(id);
       setEtudesCount((etudesResponse.data || []).length);
@@ -284,8 +322,46 @@ export const useVolontaireDetails = ({ id, navigate }: UseVolontaireDetailsParam
         const numericId = parseInt(id, 10);
 
         try {
+          // Récupérer les RDV à venir
           const rdvsData = await rdvService.getByVolontaire(numericId);
-          setRdvs(Array.isArray(rdvsData) ? rdvsData : []);
+          const upcomingRdvs = Array.isArray(rdvsData) ? rdvsData : [];
+
+          // Récupérer aussi les RDV passés des 8 dernières semaines
+          const today = new Date();
+          const eightWeeksAgo = new Date(today);
+          eightWeeksAgo.setDate(eightWeeksAgo.getDate() - 56);
+
+          let pastRdvs: any[] = [];
+          try {
+            const pastRdvsResponse = await rdvService.search(
+              { idVolontaire: numericId },
+              0,
+              100,
+              'date,desc'
+            );
+            // Filtrer pour ne garder que les RDV passés (date < aujourd'hui)
+            const allRdvs = pastRdvsResponse.content || [];
+            pastRdvs = allRdvs.filter((rdv: any) => {
+              const rdvDate = new Date(rdv.date);
+              rdvDate.setHours(0, 0, 0, 0);
+              const todayDate = new Date();
+              todayDate.setHours(0, 0, 0, 0);
+              return rdvDate < todayDate && rdvDate >= eightWeeksAgo;
+            });
+          } catch (pastError) {
+            console.warn('Erreur lors du chargement des RDV passés:', pastError);
+          }
+
+          // Fusionner les RDV à venir et passés (en évitant les doublons)
+          const allRdvsMap = new Map();
+          [...upcomingRdvs, ...pastRdvs].forEach(rdv => {
+            const key = `${rdv.idEtude}-${rdv.idRdv}`;
+            if (!allRdvsMap.has(key)) {
+              allRdvsMap.set(key, rdv);
+            }
+          });
+
+          setRdvs(Array.from(allRdvsMap.values()));
         } catch (rdvsError) {
           console.warn('Erreur lors du chargement des rendez-vous du volontaire:', rdvsError);
           setRdvs([]);

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import './Calendar.css';
 import api from '../../services/api';
 import { Button } from '../ui/button';
@@ -431,12 +432,29 @@ const Calendar = () => {
                             <div className="rdv-details">
                               <div className="volunteer-info">
                                 <span className="volunteer-icon">👤</span>
-                                <span className="volunteer-name">
-                                  {rdv.volontaire
-                                    ? `${rdv.volontaire.prenomVol || rdv.volontaire.prenom || ''} ${rdv.volontaire.nomVol || rdv.volontaire.nom || ''}`.trim()
-                                    : t('calendar.volunteerNotAssigned')
-                                  }
-                                </span>
+                                {rdv.volontaire ? (
+                                  <Link
+                                    to={`/volontaires/${rdv.volontaire.id || rdv.volontaire.idVol || rdv.idVolontaire}`}
+                                    state={{ activeTab: 'info' }}
+                                    className="volunteer-name underline hover:opacity-80 transition-opacity"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    {`${rdv.volontaire.prenomVol || rdv.volontaire.prenom || ''} ${rdv.volontaire.nomVol || rdv.volontaire.nom || ''}`.trim()}
+                                  </Link>
+                                ) : rdv.idVolontaire ? (
+                                  <Link
+                                    to={`/volontaires/${rdv.idVolontaire}`}
+                                    state={{ activeTab: 'info' }}
+                                    className="volunteer-name underline hover:opacity-80 transition-opacity"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    ID: {rdv.idVolontaire}
+                                  </Link>
+                                ) : (
+                                  <span className="volunteer-name">
+                                    {t('calendar.volunteerNotAssigned')}
+                                  </span>
+                                )}
                               </div>
                               <div className="rdv-status">
                                 <span className={`status-badge ${getRdvStatusColor(rdv.etat)}`}>

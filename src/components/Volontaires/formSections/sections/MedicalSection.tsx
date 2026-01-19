@@ -62,15 +62,15 @@ const MedicalSection = ({ formData, onChange }: any) => {
             className="form-select block w-full"
           >
             <option value="">{t('common.select')}</option>
-            <option value="Pilule">Pilule</option>
-            <option value="Stérilet">Stérilet</option>
-            <option value="Implant">Implant</option>
-            <option value="Patch">Patch</option>
-            <option value="Anneau vaginal">Anneau vaginal</option>
-            <option value="Préservatif">Préservatif</option>
-            <option value="Autre">Autre</option>
-            <option value="Aucune">Aucune</option>
-            <option value="Abstinence">Abstinence</option>
+            <option value="Pilule">{t('volunteers.contraceptionOptions.Pilule')}</option>
+            <option value="Stérilet">{t('volunteers.contraceptionOptions.Stérilet')}</option>
+            <option value="Implant">{t('volunteers.contraceptionOptions.Implant')}</option>
+            <option value="Patch">{t('volunteers.contraceptionOptions.Patch')}</option>
+            <option value="Anneau vaginal">{t('volunteers.contraceptionOptions.Anneau vaginal')}</option>
+            <option value="Préservatif">{t('volunteers.contraceptionOptions.Préservatif')}</option>
+            <option value="Autre">{t('volunteers.contraceptionOptions.Autre')}</option>
+            <option value="Aucune">{t('volunteers.contraceptionOptions.Aucune')}</option>
+            <option value="Abstinence">{t('volunteers.contraceptionOptions.Abstinence')}</option>
           </select>
         </div>
 

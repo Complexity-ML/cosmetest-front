@@ -146,10 +146,10 @@ const RdvExcelExport: React.FC<RdvExcelExportProps> = ({
         'Statut',
         'Volontaire',
         'Téléphone',
-        'Date',
-        'Heure',
         'Phototype',
-        'Email'
+        'Email',
+        'Date/T0',
+        'Heure/T0'
       ];
 
       // Ajouter T1, T2, T3... pour les passages supplémentaires (si plus d'un passage)
@@ -181,23 +181,23 @@ const RdvExcelExport: React.FC<RdvExcelExportProps> = ({
         // E: Téléphone
         row.push(getVolunteerInfo(Number(volunteerId), 'telPortable'));
 
-        // F: Date du premier RDV (T0)
-        row.push(volunteerRdvs[0] ? formatDate(volunteerRdvs[0].date, 'dd/MM/yyyy') : '');
-
-        // G: Heure du premier RDV (T0)
-        row.push(volunteerRdvs[0] ? volunteerRdvs[0].heure || '' : '');
-
-        // H: Phototype
+        // F: Phototype
         row.push(getVolunteerInfo(Number(volunteerId), 'phototype'));
 
-        // I: Email
+        // G: Email
         row.push(getVolunteerInfo(Number(volunteerId), 'email'));
+
+        // H: Date du premier RDV (T0)
+        row.push(volunteerRdvs[0] ? formatDate(volunteerRdvs[0].date) : '');
+
+        // I: Heure du premier RDV (T0)
+        row.push(volunteerRdvs[0] ? volunteerRdvs[0].heure || '' : '');
 
         // Ajouter les données des passages supplémentaires T1, T2, T3...
         for (let i = 1; i < maxPassages; i++) {
           if (i < volunteerRdvs.length) {
             const rdv = volunteerRdvs[i];
-            row.push(formatDate(rdv.date, 'dd/MM/yyyy'));
+            row.push(formatDate(rdv.date));
             row.push(rdv.heure || '');
           } else {
             // Pas de RDV pour ce passage
@@ -232,17 +232,17 @@ const RdvExcelExport: React.FC<RdvExcelExportProps> = ({
         // E: Téléphone
         row.push('');
 
-        // F: Date
-        row.push(formatDate(rdv.date, 'dd/MM/yyyy'));
+        // F: Phototype
+        row.push('');
 
-        // G: Heure
+        // G: Email
+        row.push('');
+
+        // H: Date
+        row.push(formatDate(rdv.date));
+
+        // I: Heure
         row.push(rdv.heure || '');
-
-        // H: Phototype
-        row.push('');
-
-        // I: Email
-        row.push('');
 
         // Remplir les autres passages avec des cellules vides
         for (let i = 1; i < maxPassages; i++) {
@@ -375,10 +375,10 @@ const RdvExcelExport: React.FC<RdvExcelExportProps> = ({
         { width: 12 }, // C: Statut
         { width: 30 }, // D: Volontaire
         { width: 15 }, // E: Téléphone
-        { width: 12 }, // F: Date
-        { width: 8 },  // G: Heure
-        { width: 15 }, // H: Phototype
-        { width: 25 }  // I: Email
+        { width: 12 }, // F: Phototype
+        { width: 30 }, // G: Email
+        { width: 12 }, // H: Date
+        { width: 8 }   // I: Heure
       ];
 
       // Ajouter les largeurs pour T1, T2, T3...

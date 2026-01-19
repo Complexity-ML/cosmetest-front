@@ -49,6 +49,18 @@ const BulkEmailModal: React.FC<BulkEmailModalProps> = ({
   const [showPreview, setShowPreview] = useState(false);
   const [previewVolontaire, setPreviewVolontaire] = useState<any>(null);
 
+  // Helper function to filter out archived volunteers
+  const filterActiveVolontaires = (volontaires: any[]) => {
+    return volontaires.filter((vol: any) => {
+      const archiveValue = vol.archive || vol.details?.archive;
+      return !(archiveValue === true ||
+               archiveValue === 1 ||
+               archiveValue === '1' ||
+               archiveValue === 'true' ||
+               archiveValue === 'TRUE');
+    });
+  };
+
   const handleOutlookSend = () => {
     setError('');
 
@@ -59,17 +71,24 @@ const BulkEmailModal: React.FC<BulkEmailModalProps> = ({
       return;
     }
 
-    if (selectedVolontaires.length === 0) {
+    // Filter out archived volunteers
+    const activeVolontaires = filterActiveVolontaires(selectedVolontaires);
+
+    if (activeVolontaires.length === 0) {
       setError(t('reports.email.noVolunteerSelected'));
       return;
     }
 
+    if (activeVolontaires.length < selectedVolontaires.length) {
+      console.warn(`${selectedVolontaires.length - activeVolontaires.length} volontaires archivés ont été exclus de l'envoi`);
+    }
+
     try {
       // Si trop de destinataires, diviser en groupes
-      if (selectedVolontaires.length > 130) {
-        const groups = emailService.splitIntoGroups(selectedVolontaires, 130);
+      if (activeVolontaires.length > 500) {
+        const groups = emailService.splitIntoGroups(activeVolontaires, 500);
 
-        if (confirm(t('reports.email.splitConfirm', { count: selectedVolontaires.length, groups: groups.length }))) {
+        if (confirm(t('reports.email.splitConfirm', { count: activeVolontaires.length, groups: groups.length }))) {
           groups.forEach((group, index) => {
             emailService.openOutlookWithRecipients(group, {
               ...emailData,
@@ -78,7 +97,7 @@ const BulkEmailModal: React.FC<BulkEmailModalProps> = ({
           });
 
           onEmailSent && onEmailSent({
-            count: selectedVolontaires.length,
+            count: activeVolontaires.length,
             subject: emailData.subject,
             method: 'outlook'
           });
@@ -86,10 +105,10 @@ const BulkEmailModal: React.FC<BulkEmailModalProps> = ({
           handleClose();
         }
       } else {
-        emailService.openOutlookWithRecipients(selectedVolontaires, emailData);
+        emailService.openOutlookWithRecipients(activeVolontaires, emailData);
 
         onEmailSent && onEmailSent({
-          count: selectedVolontaires.length,
+          count: activeVolontaires.length,
           subject: emailData.subject,
           method: 'outlook'
         });
@@ -105,14 +124,21 @@ const BulkEmailModal: React.FC<BulkEmailModalProps> = ({
   const handleCreateTxtFiles = () => {
     setError('');
 
-    if (selectedVolontaires.length === 0) {
+    // Filter out archived volunteers
+    const activeVolontaires = filterActiveVolontaires(selectedVolontaires);
+
+    if (activeVolontaires.length === 0) {
       setError(t('reports.email.noVolunteerSelected'));
       return;
     }
 
+    if (activeVolontaires.length < selectedVolontaires.length) {
+      console.warn(`${selectedVolontaires.length - activeVolontaires.length} volontaires archivés ont été exclus de l'export`);
+    }
+
     try {
       // Filtrer les emails valides et exclure "non défini", "undefined", etc.
-      const emailsList = selectedVolontaires
+      const emailsList = activeVolontaires
         .map(vol => vol.email)
         .filter(email => {
           if (!email) return false;
@@ -130,10 +156,10 @@ const BulkEmailModal: React.FC<BulkEmailModalProps> = ({
         return;
       }
 
-      // Diviser en groupes de 130
+      // Diviser en groupes de 500
       const groups = [];
-      for (let i = 0; i < emailsList.length; i += 130) {
-        groups.push(emailsList.slice(i, i + 130));
+      for (let i = 0; i < emailsList.length; i += 500) {
+        groups.push(emailsList.slice(i, i + 500));
       }
 
       // Créer les fichiers TXT
@@ -185,19 +211,26 @@ const BulkEmailModal: React.FC<BulkEmailModalProps> = ({
       return;
     }
 
-    if (selectedVolontaires.length === 0) {
+    // Filter out archived volunteers
+    const activeVolontaires = filterActiveVolontaires(selectedVolontaires);
+
+    if (activeVolontaires.length === 0) {
       setError(t('reports.email.noVolunteerSelected'));
       return;
+    }
+
+    if (activeVolontaires.length < selectedVolontaires.length) {
+      console.warn(`${selectedVolontaires.length - activeVolontaires.length} volontaires archivés ont été exclus de l'envoi`);
     }
 
     setSending(true);
 
     try {
-      const volontaireIds = selectedVolontaires.map(v => typeof v.id === 'string' ? parseInt(v.id, 10) : v.id);
+      const volontaireIds = activeVolontaires.map(v => typeof v.id === 'string' ? parseInt(v.id, 10) : v.id);
       await emailService.sendBulkEmail(volontaireIds, emailData);
 
       onEmailSent && onEmailSent({
-        count: selectedVolontaires.length,
+        count: activeVolontaires.length,
         subject: emailData.subject,
         method: 'api'
       });
@@ -375,7 +408,9 @@ const BulkEmailModal: React.FC<BulkEmailModalProps> = ({
                   variant="secondary"
                   onClick={async () => {
                     try {
-                      await emailService.copyEmailsToClipboard(selectedVolontaires);
+                      // Filter out archived volunteers before copying
+                      const activeVolontaires = filterActiveVolontaires(selectedVolontaires);
+                      await emailService.copyEmailsToClipboard(activeVolontaires);
                       alert(t('reports.email.emailsCopied'));
                     } catch (err) {
                       alert(t('reports.email.emailsCopyError'));
@@ -439,7 +474,9 @@ const BulkEmailModal: React.FC<BulkEmailModalProps> = ({
                   variant="secondary"
                   onClick={async () => {
                     try {
-                      await emailService.copyEmailsToClipboard(selectedVolontaires);
+                      // Filter out archived volunteers before copying
+                      const activeVolontaires = filterActiveVolontaires(selectedVolontaires);
+                      await emailService.copyEmailsToClipboard(activeVolontaires);
                       alert(t('reports.email.emailsCopied'));
                     } catch (err) {
                       alert(t('reports.email.emailsCopyError'));

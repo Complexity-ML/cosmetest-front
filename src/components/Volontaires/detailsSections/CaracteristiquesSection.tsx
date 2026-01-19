@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { formatPhototype, formatEthnie } from '../../../utils/formatters';
+import { formatPhototype } from '../../../utils/formatters';
 import { displayValue } from '../../../pages/Volontaires/utils/detailsHelpers';
 import { VolontaireData } from '../../../types/volontaire.types';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
@@ -10,6 +10,39 @@ interface CaracteristiquesSectionProps {
 
 const CaracteristiquesSection = ({ volontaireDisplayData }: CaracteristiquesSectionProps) => {
   const { t } = useTranslation();
+
+  // Parser les ethnies (peut être un string séparé par des virgules)
+  const getEthniesArray = (): string[] => {
+    if (!volontaireDisplayData.ethnie) return [];
+    if (Array.isArray(volontaireDisplayData.ethnie)) return volontaireDisplayData.ethnie;
+    return volontaireDisplayData.ethnie.split(',').filter((e: string) => e.trim() !== '');
+  };
+
+  // Parser les sous-ethnies (peut être un string séparé par des virgules)
+  const getSousEthniesArray = (): string[] => {
+    if (!volontaireDisplayData.sousEthnie) return [];
+    if (Array.isArray(volontaireDisplayData.sousEthnie)) return volontaireDisplayData.sousEthnie;
+    return volontaireDisplayData.sousEthnie.split(',').filter((e: string) => e.trim() !== '');
+  };
+
+  const ethnies = getEthniesArray();
+  const sousEthnies = getSousEthniesArray();
+
+  // Formater les ethnies pour l'affichage
+  const formatEthnies = (): string => {
+    if (ethnies.length === 0) return '-';
+    return ethnies
+      .map(e => t(`volunteers.ethnicityOptions.${e}`, e))
+      .join(', ');
+  };
+
+  // Formater les sous-ethnies pour l'affichage
+  const formatSousEthnies = (): string => {
+    if (sousEthnies.length === 0) return '-';
+    return sousEthnies
+      .map(se => t(`volunteers.subEthnicityOptions.${se}`, se))
+      .join(', ');
+  };
 
   return (
     <Card>
@@ -38,13 +71,11 @@ const CaracteristiquesSection = ({ volontaireDisplayData }: CaracteristiquesSect
           </div>
           <div className="space-y-1">
             <p className="text-sm font-medium text-brand-cyan">{t('volunteers.ethnicity')}</p>
-            <p className="text-sm text-gray-900">
-              {formatEthnie(volontaireDisplayData.ethnie) || '-'}
-            </p>
+            <p className="text-sm text-gray-900">{formatEthnies()}</p>
           </div>
           <div className="space-y-1">
             <p className="text-sm font-medium text-brand-cyan">{t('volunteers.subEthnicity')}</p>
-            <p className="text-sm text-gray-900">{displayValue(volontaireDisplayData.sousEthnie)}</p>
+            <p className="text-sm text-gray-900">{formatSousEthnies()}</p>
           </div>
           <div className="space-y-1">
             <p className="text-sm font-medium text-brand-cyan">{t('volunteers.eyeColor')}</p>

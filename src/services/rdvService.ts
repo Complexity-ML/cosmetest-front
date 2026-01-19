@@ -15,25 +15,25 @@ interface SearchCriteria {
 }
 
 const rdvService = {
-  // RÃ©cupÃ©rer les rendez-vous avec pagination
+  // Récupérer les rendez-vous avec pagination
   getPaginated: async (page = 0, size = 10, sort = 'date,desc') => {
     const response = await api.get(`${API_URL}/paginated`, {
       params: {
         page,
-        size: Math.min(size, 50), // Limit max page size
+        size: Math.min(size, 100), // Limit max page size
         sort
       }
     });
     return response.data;
   },
 
-  // RÃ©cupÃ©rer un rendez-vous spÃ©cifique
+  // Récupérer un rendez-vous spécifique
   getById: async (idEtude: number, idRdv: number) => {
     const response = await api.get(`${API_URL}/${idEtude}/${idRdv}`);
     return response.data;
   },
 
-  // CrÃ©er un nouveau rendez-vous
+  // Créer un nouveau rendez-vous
   create: async (rdvData: any) => {
     const response = await api.post(API_URL, rdvData);
     return response.data;
@@ -107,13 +107,13 @@ const rdvService = {
       throw error;
     }
   },
-  // RÃ©cupÃ©rer les rendez-vous par volontaire
+  // Récupérer les rendez-vous par volontaire
   getByVolontaire: async (idVolontaire: number) => {
     const response = await api.get(`${API_URL}/by-volontaire/${idVolontaire}`);
     return response.data;
   },
 
-  // Recherche optimisÃ©e avec filtres multiples
+  // Recherche optimisée avec filtres multiples
   search: async (criteria: SearchCriteria, page = 0, size = 10, sort = 'date,desc') => {
     try {
       // Validate and sanitize input criteria
@@ -157,7 +157,7 @@ const rdvService = {
 
       const params = {
         page: Math.max(0, page),
-        size: Math.min(size, 50),
+        size: Math.min(size, 100),
         sort,
         ...sanitizedCriteria
       };
@@ -188,7 +188,7 @@ const rdvService = {
 
       // Specific error handling
       if (error.code === 'ERR_NETWORK') {
-        throw new Error('Impossible de se connecter au serveur. VÃ©rifiez votre connexion internet.');
+        throw new Error('Impossible de se connecter au serveur. Vérifiez votre connexion internet.');
       }
 
       if (error.response) {
@@ -197,22 +197,22 @@ const rdvService = {
           case 400:
             throw new Error('ParamÃ¨tres de recherche invalides');
           case 404:
-            throw new Error('Aucun rÃ©sultat trouvÃ©');
+            throw new Error('Aucun résultat trouvé');
           case 429:
             throw new Error('Trop de requÃªtes. Veuillez patienter.');
           case 500:
-            throw new Error('Erreur serveur. Veuillez rÃ©essayer plus tard.');
+            throw new Error('Erreur serveur. Veuillez réessayer plus tard.');
           default:
             throw new Error(`Erreur ${error.response.status}: ${error.response.data.message || 'Une erreur est survenue'}`);
         }
       }
 
       // Generic fallback error
-      throw new Error('Une erreur est survenue lors de la recherche. Veuillez rÃ©essayer.');
+      throw new Error('Une erreur est survenue lors de la recherche. Veuillez réessayer.');
     }
   },
 
-  // MÃ©thodes simplifiÃ©es pour diffÃ©rents types de recherche
+  // Méthodes simplifiées pour différents types de recherche
   searchByEtude: async (idEtude: number, page = 0, size = 10) => {
     // Ensure idEtude is a positive integer
     const sanitizedIdEtude = Number.isInteger(Number(idEtude)) && Number(idEtude) > 0
@@ -220,7 +220,7 @@ const rdvService = {
       : null;
 
     if (!sanitizedIdEtude) {
-      throw new Error('ID de l\'Ã©tude invalide');
+      throw new Error('ID de l\'étude invalide');
     }
 
     return rdvService.search({ idEtude: sanitizedIdEtude }, page, size);
@@ -271,9 +271,9 @@ const rdvService = {
 
       return response.data;
     } catch (error: any) {
-      console.error('Erreur lors du chargement des Ã©tudes avec comptage de RDV:', error);
+      console.error('Erreur lors du chargement des études avec comptage de RDV:', error);
       try {
-        // RÃ©cupÃ©rer les Ã©tudes paginÃ©es
+        // Récupérer les études paginées
         let etudesResponse;
         if (query && query.trim() !== '') {
           // Recherche avec terme
@@ -296,12 +296,12 @@ const rdvService = {
           });
         }
 
-        // Extraire les Ã©tudes et les informations de pagination
+        // Extraire les études et les informations de pagination
         const etudes = etudesResponse.data.content || etudesResponse.data || [];
         const totalElements = etudesResponse.data.totalElements || etudes.length;
         const totalPages = etudesResponse.data.totalPages || Math.ceil(totalElements / size);
 
-        // Pour chaque Ã©tude, rÃ©cupÃ©rer le nombre de rendez-vous
+        // Pour chaque étude, récupérer le nombre de rendez-vous
         const studiesWithRdvCount = await Promise.all(etudes.map(async (etude: any) => {
           try {
             const idEtude = etude.idEtude || etude.id;
@@ -318,7 +318,7 @@ const rdvService = {
               rdvCount: totalRdvs
             };
           } catch (error: any) {
-            console.error(`Erreur pour l'Ã©tude ${etude.idEtude || etude.id}:`, error);
+            console.error(`Erreur pour l'étude ${etude.idEtude || etude.id}:`, error);
             return {
               ...etude,
               id: etude.idEtude || etude.id,
@@ -337,42 +337,60 @@ const rdvService = {
           totalPages
         };
       } catch (fallbackError: any) {
-        console.error('Ã‰chec du mÃ©canisme de repli:', fallbackError);
+        console.error('Ã‰chec du mécanisme de repli:', fallbackError);
         throw error; // Renvoyer l'erreur originale
       }
     }
   },
 
-  // RÃ©cupÃ©rer les rendez-vous par Ã©tude
+  // Récupérer les rendez-vous par étude
   getByEtudeId: async (idEtude: number) => {
-    // Simplification - utiliser la mÃ©thode searchByEtude existante
-    const result = await rdvService.searchByEtude(idEtude, 0, 100);
-    return result.content || [];
+    // Récupérer TOUS les rendez-vous en paginant
+    const allRdvs: any[] = [];
+    let page = 0;
+    const pageSize = 100;
+
+    while (true) {
+      const result = await rdvService.searchByEtude(idEtude, page, pageSize);
+      const content = result.content || [];
+      allRdvs.push(...content);
+
+      // Utiliser totalPages du backend pour savoir s'il y a plus de pages
+      const totalPages = result.totalPages || 1;
+      const isLastPage = page >= totalPages - 1;
+
+      if (isLastPage || content.length === 0) {
+        break;
+      }
+      page++;
+    }
+
+    return allRdvs;
   },
 
-  // VÃ©rification de la santÃ© de l'index de recherche
+  // Vérification de la santé de l'index de recherche
   checkSearchHealth: async () => {
     try {
       const response = await api.get(`${API_URL}/admin/search-health`);
       return response.data;
     } catch (error: any) {
-      console.error('Erreur lors de la vÃ©rification de l\'Ã©tat de recherche:', error);
+      console.error('Erreur lors de la vérification de l\'état de recherche:', error);
       return { status: 'error', message: error.message };
     }
   },
 
-  // RÃ©indexation des Ã©tudes (admin)
+  // Réindexation des études (admin)
   reindexEtudes: async () => {
     try {
       const response = await api.post(`${API_URL}/admin/reindex-etudes`);
       return response.data;
     } catch (error: any) {
-      console.error('Erreur lors de la rÃ©indexation des Ã©tudes:', error);
+      console.error('Erreur lors de la réindexation des études:', error);
       throw error;
     }
   },
 
-  // RÃ©cupÃ©rer les rendez-vous par pÃ©riode
+  // Récupérer les rendez-vous par période
   getRdvsByPeriod: async (startDate: string, endDate: string) => {
     try {
       // Format des dates: YYYY-MM-DD
@@ -384,18 +402,18 @@ const rdvService = {
       });
       return response.data;
     } catch (error: any) {
-      console.error('Erreur lors de la rÃ©cupÃ©ration des RDVs par pÃ©riode:', error);
+      console.error('Erreur lors de la récupération des RDVs par période:', error);
       throw error;
     }
   },
 
-  // RÃ©cupÃ©rer les Ã©tudes avec le nombre de rendez-vous
+  // Récupérer les études avec le nombre de rendez-vous
   getEtudesWithRdvCount: async () => {
     try {
       const response = await api.get(`${API_URL}/etudes/with-rdv-count`);
       return response.data;
     } catch (error: any) {
-      console.error('Erreur lors de la rÃ©cupÃ©ration des Ã©tudes avec compte de RDV:', error);
+      console.error('Erreur lors de la récupération des études avec compte de RDV:', error);
       throw error;
     }
   }

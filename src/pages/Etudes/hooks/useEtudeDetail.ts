@@ -15,6 +15,15 @@ const ETHNIES_DISPONIBLES = [
   'ANTILLAISE',
 ] as const;
 
+const PHOTOTYPES_DISPONIBLES = [
+  'Type 1',
+  'Type 2',
+  'Type 3',
+  'Type 4',
+  'Type 5',
+  'Type 6',
+] as const;
+
 interface Rdv {
   id?: number;
   idRdv?: number;
@@ -47,6 +56,7 @@ interface NewGroupe {
   ageMinimum?: number;
   ageMaximum?: number;
   ethnie?: string | string[];
+  phototype?: string | string[];
   criteresSupplementaires?: string;
   nbSujet?: number;
   iv?: number;
@@ -81,6 +91,7 @@ interface UseEtudeDetailReturn {
   newGroupe: NewGroupe;
   setNewGroupe: (groupe: NewGroupe | ((prev: NewGroupe) => NewGroupe)) => void;
   ethniesDisponibles: readonly string[];
+  phototypesDisponibles: readonly string[];
   handleRdvClick: (rdv: Rdv) => void;
   handleBackToRdvList: () => void;
   handleRdvUpdate: () => void;
@@ -94,6 +105,7 @@ interface UseEtudeDetailReturn {
   handleCloseEmailSender: () => void;
   handleGroupeChange: (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   handleEthnieChange: (ethnieValue: string) => void;
+  handlePhototypeChange: (phototypeValue: string) => void;
   handleCreateGroupe: (event: React.FormEvent) => Promise<void>;
   fetchRdvs: () => Promise<void>;
   fetchGroupes: () => Promise<void>;
@@ -102,6 +114,11 @@ interface UseEtudeDetailReturn {
 const normalizeEthnies = (ethniesArray: string | string[] | undefined): string => {
   if (!ethniesArray) return '';
   return Array.isArray(ethniesArray) ? ethniesArray.join(',') : ethniesArray;
+};
+
+const normalizePhototypes = (phototypesArray: string | string[] | undefined): string => {
+  if (!phototypesArray) return '';
+  return Array.isArray(phototypesArray) ? phototypesArray.join(';') : phototypesArray;
 };
 
 export const useEtudeDetail = ({ id, navigate }: UseEtudeDetailParams): UseEtudeDetailReturn => {
@@ -128,6 +145,7 @@ export const useEtudeDetail = ({ id, navigate }: UseEtudeDetailParams): UseEtude
     ageMinimum: undefined,
     ageMaximum: undefined,
     ethnie: [],
+    phototype: [],
     criteresSupplementaires: '',
     nbSujet: undefined,
     iv: undefined,
@@ -390,6 +408,24 @@ export const useEtudeDetail = ({ id, navigate }: UseEtudeDetailParams): UseEtude
     });
   }, []);
 
+  const handlePhototypeChange = useCallback((phototypeValue: string) => {
+    setNewGroupe((prevGroupe) => {
+      const currentPhototypes = Array.isArray(prevGroupe.phototype) ? prevGroupe.phototype : [];
+
+      if (currentPhototypes.includes(phototypeValue)) {
+        return {
+          ...prevGroupe,
+          phototype: currentPhototypes.filter((phototype) => phototype !== phototypeValue),
+        };
+      }
+
+      return {
+        ...prevGroupe,
+        phototype: [...currentPhototypes, phototypeValue],
+      };
+    });
+  }, []);
+
   const handleCreateGroupe = useCallback(
     async (event: React.FormEvent) => {
       event.preventDefault();
@@ -404,6 +440,7 @@ export const useEtudeDetail = ({ id, navigate }: UseEtudeDetailParams): UseEtude
           ...newGroupe,
           idEtude: Number(id),
           ethnie: normalizeEthnies(newGroupe.ethnie),
+          phototype: normalizePhototypes(newGroupe.phototype),
         };
 
         await groupeService.create(dataToSend);
@@ -416,6 +453,7 @@ export const useEtudeDetail = ({ id, navigate }: UseEtudeDetailParams): UseEtude
           ageMinimum: undefined,
           ageMaximum: undefined,
           ethnie: [],
+          phototype: [],
           criteresSupplementaires: '',
           nbSujet: undefined,
           iv: undefined,
@@ -488,6 +526,7 @@ export const useEtudeDetail = ({ id, navigate }: UseEtudeDetailParams): UseEtude
     newGroupe,
     setNewGroupe,
     ethniesDisponibles: ETHNIES_DISPONIBLES,
+    phototypesDisponibles: PHOTOTYPES_DISPONIBLES,
     handleRdvClick,
     handleBackToRdvList,
     handleRdvUpdate,
@@ -501,6 +540,7 @@ export const useEtudeDetail = ({ id, navigate }: UseEtudeDetailParams): UseEtude
     handleCloseEmailSender,
     handleGroupeChange,
     handleEthnieChange,
+    handlePhototypeChange,
     handleCreateGroupe,
     fetchRdvs,
     fetchGroupes,

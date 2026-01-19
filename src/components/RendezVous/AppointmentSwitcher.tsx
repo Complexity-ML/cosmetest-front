@@ -15,7 +15,7 @@ import { Label } from '../ui/label';
 interface AppointmentSwitcherProps {
   onClose: () => void;
   onSwitchComplete?: () => void;
-  preSelectedRdv?: RendezVous | null;
+  preSelectedRdvs?: RendezVous[];
   etudeId?: number | null;
 }
 
@@ -23,9 +23,9 @@ interface AppointmentSwitcherProps {
  * Simple and practical appointment switcher
  * Click on RDV1 → Click on RDV2 → Switch!
  */
-const AppointmentSwitcher: React.FC<AppointmentSwitcherProps> = ({ onClose, onSwitchComplete, preSelectedRdv = null, etudeId = null }) => {
+const AppointmentSwitcher: React.FC<AppointmentSwitcherProps> = ({ onClose, onSwitchComplete, preSelectedRdvs = [], etudeId = null }) => {
   const { t } = useTranslation();
-  const [selectedRdvs, setSelectedRdvs] = useState<RendezVous[]>(preSelectedRdv ? [preSelectedRdv] : []);
+  const [selectedRdvs, setSelectedRdvs] = useState<RendezVous[]>(preSelectedRdvs);
   const [appointments, setAppointments] = useState<RendezVous[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');

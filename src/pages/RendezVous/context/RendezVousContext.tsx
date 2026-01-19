@@ -49,7 +49,7 @@ export const RendezVousProvider = ({ children }: RendezVousProviderProps) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<any>(null);
 
-  // 🚀 Fonction stable avec useCallback pour éviter les re-renders
+  // Fonction stable avec useCallback pour éviter les re-renders
   const refresh = useCallback(async () => {
     setIsLoading(true);
     setError(null);
@@ -74,16 +74,14 @@ export const RendezVousProvider = ({ children }: RendezVousProviderProps) => {
     }
   }, []); // Aucune dépendance = fonction stable
 
-  // ✅ UN SEUL useEffect - chargement initial uniquement
+  // UN SEUL useEffect - chargement initial uniquement
   useEffect(() => {
-    console.log('🔄 Chargement initial des études');
     refresh();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Tableau vide = exécution une seule fois au montage
 
-  // 🔄 Pour forcer un rechargement explicite
+  // Pour forcer un rechargement explicite
   const requestRefresh = useCallback(() => {
-    console.log('🔄 Rechargement manuel demandé');
     refresh();
   }, [refresh]);
 

@@ -49,6 +49,7 @@ export interface GroupeData {
   ageMaximum?: number;
   sexe?: string;
   ethnie?: string | string[];
+  phototype?: string | string[];
   nbSujet?: number;
   iv?: number;
   criteresSupplémentaires?: string;

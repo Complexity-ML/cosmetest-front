@@ -51,6 +51,7 @@
     "selected": "selected",
     "seeLess": "See less",
     "seeAll": "See all",
+    "viewAll": "View all",
     "backToList": "Back to list",
     "loadError": "Unable to load data. Please try again.",
     "warning": "Warning",
@@ -122,7 +123,8 @@
     "today": "Today",
     "volunteersAdded": "Volunteers added",
     "appointmentsCompleted": "Appointments completed",
-    "newRegistrations": "New registrations"
+    "newRegistrations": "New registrations",
+    "noOngoingStudies": "No ongoing studies"
   },
   "volunteers": {
     "title": "Volunteer Management",
@@ -267,6 +269,7 @@
     "weight": "Weight",
     "ethnicity": "Ethnicity",
     "subEthnicity": "Sub-ethnicity",
+    "selectEthnicityFirst": "Please select an ethnicity first",
     "eyeColor": "Eye color",
     "hairiness": "Hairiness",
     "fatherOrigin": "Father's origin",
@@ -360,7 +363,194 @@
     "leftProfilePhoto": "Left profile photo",
     "frontPhotoOf": "Front photo of",
     "rightProfilePhotoOf": "Right profile photo of",
-    "leftProfilePhotoOf": "Left profile photo of"
+    "leftProfilePhotoOf": "Left profile photo of",
+    "phototypeOptions": {
+      "I": "I - Very fair skin",
+      "II": "II - Fair skin",
+      "III": "III - Fair to medium skin",
+      "IV": "IV - Medium skin",
+      "V": "V - Dark skin",
+      "VI": "VI - Very dark skin"
+    },
+    "ethnicityOptions": {
+      "Caucasienne": "Caucasian",
+      "Africaine": "African",
+      "Antillaise": "Caribbean",
+      "Indienne": "Indian",
+      "Asiatique": "Asian"
+    },
+    "subEthnicityOptions": {
+      "EUROP_OUEST": "Western European",
+      "EUROP_EST": "Eastern European",
+      "MEDITERRANEEN": "Mediterranean",
+      "NORD_AMERICAIN_CAUCASIEN": "North American Caucasian",
+      "SUD_AMERICAIN_CAUCASIEN": "South American Caucasian",
+      "AF_SUBSAHARIEN": "Sub-Saharan African",
+      "AF_OUEST": "West African",
+      "AF_EST": "East African",
+      "AF_CENTRALE": "Central African",
+      "AF_NORD": "North African",
+      "AFRO_CARABEEN": "Afro-Caribbean",
+      "ANTILLAIS_METISSE": "Mixed Caribbean",
+      "CARIBEENNE": "Caribbean",
+      "AFRO_DESCENDANT_CARAIBES": "Afro-descendant Caribbean",
+      "IND_NORD": "North Indian",
+      "IND_SUD": "South Indian",
+      "INDO_ARYENNE": "Indo-Aryan",
+      "DRAVIDIENNE": "Dravidian",
+      "INDO_PAKISTANAISE": "Indo-Pakistani",
+      "AS_EST": "East Asian",
+      "AS_SUD_EST": "Southeast Asian",
+      "AS_SUD": "South Asian",
+      "AS_CENTRALE": "Central Asian"
+    },
+    "eyeColorOptions": {
+      "Bleus": "Blue",
+      "Verts": "Green",
+      "Marrons": "Brown",
+      "Noisette": "Hazel",
+      "Gris": "Grey",
+      "Noirs": "Black"
+    },
+    "hairinessOptions": {
+      "Faible_pilosite": "Low hairiness",
+      "Moyenne_pilosite": "Medium hairiness",
+      "Forte_pilosite": "High hairiness"
+    },
+    "titleOptions": {
+      "Madame": "Mrs.",
+      "Monsieur": "Mr.",
+      "Autre": "Other"
+    },
+    "genderOptions": {
+      "Masculin": "Male",
+      "Féminin": "Female",
+      "O": "Other"
+    },
+    "skinTypeOptions": {
+      "Normale": "Normal",
+      "Sèche": "Dry",
+      "Grasse": "Oily",
+      "Mixte": "Combination",
+      "Sensible": "Sensitive"
+    },
+    "complexionOptions": {
+      "Très claire": "Very fair",
+      "Claire": "Fair",
+      "Moyenne": "Medium",
+      "Mate": "Olive",
+      "Foncée": "Dark",
+      "Très foncée": "Very dark"
+    },
+    "skinSensitivityOptions": {
+      "Peau sensible": "Sensitive skin",
+      "Peau peu sensible": "Slightly sensitive skin",
+      "Peau non sensible": "Non-sensitive skin"
+    },
+    "sunExposureOptions": {
+      "Faiblement": "Low",
+      "Moyennement": "Moderate",
+      "Fortement": "High"
+    },
+    "tanningOptions": {
+      "Progressif": "Progressive",
+      "Rapide": "Fast",
+      "Difficile": "Difficult",
+      "Inexistant": "None"
+    },
+    "sunburnOptions": {
+      "Jamais": "Never",
+      "Rarement": "Rarely",
+      "Parfois": "Sometimes",
+      "Souvent": "Often",
+      "Toujours": "Always"
+    },
+    "hairColorOptions": {
+      "Blonds": "Blonde",
+      "Bruns": "Brown",
+      "Chatains": "Chestnut",
+      "Noirs": "Black",
+      "Roux": "Red",
+      "Gris": "Grey",
+      "Blancs": "White",
+      "Colorés": "Dyed"
+    },
+    "hairLengthOptions": {
+      "Courts": "Short",
+      "Mi-longs": "Medium",
+      "Longs": "Long",
+      "Très longs": "Very long"
+    },
+    "hairNatureOptions": {
+      "Lisses": "Straight",
+      "Ondulés": "Wavy",
+      "Bouclés": "Curly",
+      "Crépus": "Coily",
+      "Frisés": "Frizzy",
+      "Normaux": "Normal",
+      "Secs": "Dry",
+      "Gras": "Oily"
+    },
+    "hairThicknessOptions": {
+      "Fins": "Fine",
+      "Moyens": "Medium",
+      "Épais": "Thick"
+    },
+    "scalpNatureOptions": {
+      "Normal": "Normal",
+      "Sec": "Dry",
+      "Gras": "Oily",
+      "Mixte": "Combination"
+    },
+    "contraceptionOptions": {
+      "Pilule": "Pill",
+      "Stérilet": "IUD",
+      "Implant": "Implant",
+      "Patch": "Patch",
+      "Anneau vaginal": "Vaginal ring",
+      "Préservatif": "Condom",
+      "Autre": "Other",
+      "Aucune": "None",
+      "Abstinence": "Abstinence"
+    },
+    "lashThicknessOptions": {
+      "Fins": "Fine",
+      "Moyens": "Medium",
+      "Épais": "Thick"
+    },
+    "lashLengthOptions": {
+      "Courts": "Short",
+      "Moyens": "Medium",
+      "Longs": "Long"
+    },
+    "lashCurvatureOptions": {
+      "Droits": "Straight",
+      "Légèrement courbés": "Slightly curved",
+      "Très courbés": "Very curved"
+    },
+    "eyebrowOptions": {
+      "Fins": "Fine",
+      "Moyens": "Medium",
+      "Épais": "Thick",
+      "Clairsemés": "Sparse",
+      "Fournis": "Full"
+    },
+    "lipTypeOptions": {
+      "Fines": "Thin",
+      "Moyennes": "Medium",
+      "Pulpeuses": "Full",
+      "Asymétriques": "Asymmetric"
+    },
+    "sunburns": "Sunburns",
+    "celluliteArms": "Arms",
+    "celluliteButtocksHips": "Buttocks/Hips",
+    "celluliteLegs": "Legs",
+    "celluliteBellyWaist": "Belly/Waist",
+    "title": "Title",
+    "country": "Country",
+    "for": "for",
+    "star": "star",
+    "resetRating": "Reset rating"
   },
   "panel": {
     "title": "HC Panel",
@@ -674,6 +864,9 @@
     "createAppointmentButton": "Create appointment",
     "upcomingAppointments": "Upcoming appointments",
     "noUpcomingAppointments": "No upcoming appointments",
+    "pastAppointments": "Past appointments",
+    "lastEightWeeks": "Last 8 weeks",
+    "noPastAppointments": "No past appointments in the last 8 weeks",
     "appointmentsCancelled": "appointment cancelled",
     "appointmentsCancelledPlural": "appointments cancelled",
     "inVolunteerHistory": "in this volunteer's history",
@@ -817,7 +1010,41 @@
     "appointmentNotFound": "Appointment not found",
     "studyIdMissing": "Study ID missing",
     "years": "years",
-    "age": "Age"
+    "age": "Age",
+    "volunteerIdLabel": "Volunteer ID",
+    "assignedTo": "Assigned to",
+    "assignedToThisVolunteer": "Assigned to this volunteer",
+    "addCommentPlaceholder": "Add a comment (e.g., 1st Visit, 2nd Visit...)",
+    "noComment": "No comment",
+    "editComment": "Edit comment",
+    "switchAppointment": "Switch with another appointment",
+    "currentAppointments": "Current appointments",
+    "appointmentsAlreadyAssigned": "Appointments already assigned to this volunteer in this study",
+    "noAppointmentAssignedInStudy": "No appointment assigned in this study",
+    "noAppointmentAvailable": "No appointment available",
+    "availablePlural": "available",
+    "assignedPlural": "assigned",
+    "chooseStudy": "Choose a study",
+    "noTitle": "No title",
+    "chooseGroup": "Choose a group",
+    "group": "Group",
+    "volunteerAppointments": "Volunteer appointments",
+    "ethnicityWarningTitle": "WARNING - Ethnicity mismatch",
+    "ethnicityWarningMessage": "{{volunteerName}} has ethnicity \"{{volunteerEthnie}}\" but the group requires: \"{{groupEthnie}}\".",
+    "ethnicityWarningConfirm": "Do you still want to select this volunteer?",
+    "ethnicityWarningTitlePlural": "WARNING - Ethnicity mismatches detected",
+    "ethnicityWarningGroupRequires": "The group requires ethnicity: \"{{ethnie}}\"",
+    "ethnicityWarningIncompatibleCount": "{{count}} volunteer(s) have incompatible ethnicity:",
+    "ethnicityWarningMoreCount": "... and {{count}} more",
+    "ethnicityWarningConfirmAll": "Do you still want to select all volunteers?",
+    "ethnicityNotDefined": "not defined",
+    "thisVolunteer": "This volunteer",
+    "appointmentsSelected": "appointment(s) selected",
+    "changeTime": "Change time",
+    "changeTimeForSelected": "Change time for selected appointments",
+    "newTime": "New time",
+    "pleaseSelectTime": "Please select a time",
+    "switchVolunteers": "Switch volunteers"
   },
   "groups": {
     "groupOptional": "Group (optional)",
@@ -882,7 +1109,9 @@
     "additionalCriteria": "Additional criteria",
     "compensation": "Compensation",
     "chooseGroup": "Choose a group",
-    "group": "Group"
+    "group": "Group",
+    "phototypes": "Phototypes",
+    "phototypesSelected": "{{count}} phototype(s) selected"
   },
   "payments": {
     "title": "Payment Management",
@@ -1470,5 +1699,34 @@
     "sortByName": "Sort alphabetically",
     "sortBySubjectNumber": "Sort by subject number",
     "sortByIndemnity": "Sort by compensation"
+  },
+  "volunteerAppointments": {
+    "assignToAppointments": "Assign to appointments",
+    "assignDescription": "Assign {{firstName}} {{lastName}} to study appointments",
+    "commentUpdated": "Comment updated successfully.",
+    "commentUpdateError": "An error occurred while updating the comment.",
+    "selectStudyGroupAppointment": "Please select a study, a group and at least one appointment.",
+    "confirmAssign": "Do you really want to assign {{firstName}} {{lastName}} to {{count}} appointment(s)?",
+    "assignmentSuccess": "{{count}} assignment(s) completed successfully.",
+    "assignmentError": "An error occurred during assignment.",
+    "confirmUnassign": "Do you really want to unassign this volunteer from this appointment?",
+    "unassignmentSuccess": "Volunteer unassigned successfully.",
+    "unassignmentError": "An error occurred during unassignment.",
+    "assignmentInProgress": "Assignment in progress",
+    "appointmentsGroup": "{{count}} appointment(s) • Group: {{group}}",
+    "assigning": "Assigning...",
+    "assign": "Assign"
+  },
+  "studyOverlap": {
+    "warningTitle": "Warning: Study overlap detected",
+    "warningMessage": "This volunteer has {{rdvCount}} appointments on {{count}} other study(ies) that overlap with this period.",
+    "viewDetails": "View details",
+    "modalTitle": "Study overlap",
+    "modalDescription": "The volunteer has appointments on other studies that overlap with \"{{targetStudy}}\"",
+    "noOverlap": "No overlap detected",
+    "checking": "Checking for overlaps...",
+    "rdvCount": "{{count}} appointments",
+    "studyPeriod": "Study period",
+    "overlappingStudies": "Overlapping studies"
   }
 }

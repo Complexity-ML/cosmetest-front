@@ -30,9 +30,9 @@ const CilsSection = ({ formData, onChange }: any) => {
             className="form-select block w-full"
           >
             <option value="">{t('common.select')}</option>
-            <option value="Fins">Fins</option>
-            <option value="Moyens">Moyens</option>
-            <option value="Épais">Épais</option>
+            <option value="Fins">{t('volunteers.lashThicknessOptions.Fins')}</option>
+            <option value="Moyens">{t('volunteers.lashThicknessOptions.Moyens')}</option>
+            <option value="Épais">{t('volunteers.lashThicknessOptions.Épais')}</option>
           </select>
         </div>
 
@@ -51,9 +51,9 @@ const CilsSection = ({ formData, onChange }: any) => {
             className="form-select block w-full"
           >
             <option value="">{t('common.select')}</option>
-            <option value="Courts">Courts</option>
-            <option value="Moyens">Moyens</option>
-            <option value="Longs">Longs</option>
+            <option value="Courts">{t('volunteers.lashLengthOptions.Courts')}</option>
+            <option value="Moyens">{t('volunteers.lashLengthOptions.Moyens')}</option>
+            <option value="Longs">{t('volunteers.lashLengthOptions.Longs')}</option>
           </select>
         </div>
 
@@ -72,9 +72,9 @@ const CilsSection = ({ formData, onChange }: any) => {
             className="form-select block w-full"
           >
             <option value="">{t('common.select')}</option>
-            <option value="Droits">Droits</option>
-            <option value="Légèrement courbés">Légèrement courbés</option>
-            <option value="Très courbés">Très courbés</option>
+            <option value="Droits">{t('volunteers.lashCurvatureOptions.Droits')}</option>
+            <option value="Légèrement courbés">{t('volunteers.lashCurvatureOptions.Légèrement courbés')}</option>
+            <option value="Très courbés">{t('volunteers.lashCurvatureOptions.Très courbés')}</option>
           </select>
         </div>
       </div>
@@ -151,11 +151,11 @@ const CilsSection = ({ formData, onChange }: any) => {
             className="form-select block w-full"
           >
             <option value="">{t('common.select')}</option>
-            <option value="Fins">Fins</option>
-            <option value="Moyens">Moyens</option>
-            <option value="Épais">Épais</option>
-            <option value="Clairsemés">Clairsemés</option>
-            <option value="Fournis">Fournis</option>
+            <option value="Fins">{t('volunteers.eyebrowOptions.Fins')}</option>
+            <option value="Moyens">{t('volunteers.eyebrowOptions.Moyens')}</option>
+            <option value="Épais">{t('volunteers.eyebrowOptions.Épais')}</option>
+            <option value="Clairsemés">{t('volunteers.eyebrowOptions.Clairsemés')}</option>
+            <option value="Fournis">{t('volunteers.eyebrowOptions.Fournis')}</option>
           </select>
         </div>
       </div>
@@ -179,10 +179,10 @@ const CilsSection = ({ formData, onChange }: any) => {
             className="form-select block w-full"
           >
             <option value="">{t('common.select')}</option>
-            <option value="Fines">Fines</option>
-            <option value="Moyennes">Moyennes</option>
-            <option value="Pulpeuses">Pulpeuses</option>
-            <option value="Asymétriques">Asymétriques</option>
+            <option value="Fines">{t('volunteers.lipTypeOptions.Fines')}</option>
+            <option value="Moyennes">{t('volunteers.lipTypeOptions.Moyennes')}</option>
+            <option value="Pulpeuses">{t('volunteers.lipTypeOptions.Pulpeuses')}</option>
+            <option value="Asymétriques">{t('volunteers.lipTypeOptions.Asymétriques')}</option>
           </select>
         </div>
       </div>

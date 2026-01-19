@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import * as XLSX from 'xlsx';
 import infoBancaireService from '../../services/infoBancaireService';
 import annulationService from '../../services/annulationService'; // NOUVEAU
-import { PAIEMENT_STATUS, Paiement } from '../../hooks/usePaiements';
+import { Paiement } from '../../hooks/usePaiements';
 import type { EtudeData } from '../../types/etude.types';
 import type { VolontaireData } from '../../types/volontaire.types';
 import type { InfoBancaire } from '../../types/types';
@@ -15,7 +15,6 @@ interface ExcelExportProps {
   etude: EtudeData | null;
   paiements: Paiement[];
   volontairesInfo: Record<number, VolontaireData>;
-  getGroupeName: (idGroupe: number, idEtude: number) => string;
 }
 
 interface AnnulationsInfo {
@@ -29,8 +28,7 @@ interface BankingData {
 const ExcelExport = ({
   etude,
   paiements,
-  volontairesInfo,
-  getGroupeName
+  volontairesInfo
 }: ExcelExportProps) => {
   const [isExporting, setIsExporting] = useState(false);
   const [exportError, setExportError] = useState('');
@@ -136,7 +134,6 @@ const ExcelExport = ({
     return paiementsActifs.map((paiement: Paiement, index: number) => {
       const volontaire = volontairesInfo[paiement.idVolontaire];
       const bankInfo = bankingData[paiement.idVolontaire];
-      const statutConfig = PAIEMENT_STATUS[paiement.paye as keyof typeof PAIEMENT_STATUS] || PAIEMENT_STATUS[0];
 
       // Extraction des noms/prénoms avec plusieurs possibilités
       const prenom = volontaire?.prenom || volontaire?.prenomVol || '';
@@ -148,11 +145,7 @@ const ExcelExport = ({
         'Prénom': prenom || 'Non renseigné',
         'IBAN': bankInfo?.iban ? infoBancaireService.validation.formatIban(bankInfo.iban) : 'Non renseigné',
         'BIC': bankInfo?.bic || 'Non renseigné',
-        'Groupe': getGroupeName(paiement.idGroupe, paiement.idEtude),
-        'Numéro Sujet': paiement.numsujet || 'Non défini',
         'Montant (€)': paiement.iv || 0,
-        'Statut Paiement': statutConfig.label,
-        'ID Volontaire': paiement.idVolontaire,
         'Remarques': bankInfo ? '' : '⚠️ Info bancaire manquante'
       };
     });
@@ -197,11 +190,7 @@ const ExcelExport = ({
         { wch: 20 },  // Prénom
         { wch: 35 },  // IBAN
         { wch: 15 },  // BIC
-        { wch: 15 },  // Groupe
-        { wch: 12 },  // Numéro Sujet
         { wch: 12 },  // Montant
-        { wch: 15 },  // Statut Paiement
-        { wch: 12 },  // ID Volontaire
         { wch: 25 }   // Remarques
       ];
       ws['!cols'] = columnWidths;
@@ -370,7 +359,7 @@ const ExcelExport = ({
         )}
 
         <div className="text-xs text-gray-500 space-y-1">
-          <p><strong>Le fichier contiendra :</strong> Nom, Prénom, IBAN, BIC, Groupe, N° Sujet, Montant, Statut</p>
+          <p><strong>Le fichier contiendra :</strong> Nom, Prénom, IBAN, BIC, Montant</p>
           <p><strong>Exclusions automatiques :</strong> Volontaires annulés (non comptabilisés)</p>
           <p><strong>Note :</strong> Les volontaires sans RIB seront signalés dans la colonne "Remarques"</p>
         </div>

@@ -288,6 +288,7 @@ const Dashboard: React.FC = () => {
   const [stats, setStats] = useState<Stats>(defaultStats);
   const [prochainRdvs, setProchainRdvs] = useState<RendezVous[]>([]);
   const [etudesRecentes, setEtudesRecentes] = useState<Etude[]>([]);
+  const [etudesEnCours, setEtudesEnCours] = useState<Etude[]>([]);
   const [activiteRecente, setActiviteRecente] = useState<Activite[]>([]);
   const [statsJour, setStatsJour] = useState<StatsJour>(defaultStatsJour);
   const [isLoading, setIsLoading] = useState(true);
@@ -332,7 +333,7 @@ const Dashboard: React.FC = () => {
           errors.rdvs = (err as Error).message;
         }
 
-        // Études
+        // Études récentes
         try {
           const etudesResponse = await api.get(
             `${API_URL}/api/dashboard/etude/recentes`,
@@ -342,6 +343,17 @@ const Dashboard: React.FC = () => {
         } catch (err) {
           console.error("Erreur lors du chargement des études:", err);
           errors.etudes = (err as Error).message;
+        }
+
+        // Études en cours
+        try {
+          const etudesEnCoursResponse = await api.get(
+            `${API_URL}/api/dashboard/etude/en-cours`,
+            axiosConfig
+          );
+          setEtudesEnCours(etudesEnCoursResponse.data.slice(0, 5));
+        } catch (err) {
+          console.error("Erreur lors du chargement des études en cours:", err);
         }
 
         // Activité
@@ -514,6 +526,57 @@ const Dashboard: React.FC = () => {
           icon={<Calendar className="h-7 w-7" />}
         />
       </div>
+
+      {/* Études en cours */}
+      <Card className="hover:shadow-lg transition-all duration-200">
+        <CardHeader>
+          <div className="flex justify-between items-center">
+            <CardTitle className="flex items-center text-lg">
+              <FlaskConical className="h-5 w-5 mr-2 text-green-600" />
+              {t('dashboard.ongoingStudies')}
+            </CardTitle>
+            <Link
+              to="/etudes"
+              className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center group"
+            >
+              {t('common.viewAll')}
+              <ChevronRight className="ml-1 h-4 w-4 group-hover:translate-x-1 transition-transform duration-200" />
+            </Link>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {etudesEnCours.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+              {etudesEnCours.map((etude) => (
+                <Link
+                  key={etude.id}
+                  to={`/etudes/${etude.id}`}
+                  className="p-4 rounded-lg bg-green-50 hover:bg-green-100 transition-colors border border-green-100"
+                >
+                  <div className="flex items-center mb-2">
+                    <div className="w-8 h-8 rounded-full bg-green-200 flex items-center justify-center mr-2">
+                      <FlaskConical className="h-4 w-4 text-green-700" />
+                    </div>
+                    <span className="font-semibold text-green-800 text-sm truncate">
+                      {etude.ref}
+                    </span>
+                  </div>
+                  <p className="text-sm text-green-700 truncate" title={etude.titre}>
+                    {etude.titre}
+                  </p>
+                  <p className="text-xs text-green-600 mt-1">
+                    {etude.volontaires} {t('dashboard.volunteers')}
+                  </p>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-muted-foreground">
+              {t('dashboard.noOngoingStudies')}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Activity Lists */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

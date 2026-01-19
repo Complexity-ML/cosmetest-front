@@ -109,19 +109,46 @@ const deriveIdentifiers = (appointment: Appointment | null): Identifiers => {
 
 const useAppointmentDetails = (initialAppointment: Appointment | null): UseAppointmentDetailsReturn => {
   const context = useRendezVousContext() as any;
-  const volunteerOptions = context?.volunteers ?? [];
   const refreshContext = context?.refresh ?? (async () => {});
-  const volunteerMap = useMemo(() => buildVolunteerMap(volunteerOptions), [volunteerOptions]);
 
   const [appointment, setAppointment] = useState<Appointment | null>(initialAppointment ?? null);
   const [group, setGroup] = useState<Group | null>(null);
   const [volunteer, setVolunteer] = useState<Volunteer | null>(null);
+  const [volunteerOptions, setVolunteerOptions] = useState<Volunteer[]>([]);
   const [loading, setLoading] = useState(false);
   const [assigning, setAssigning] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
+  const volunteerMap = useMemo(() => buildVolunteerMap(volunteerOptions), [volunteerOptions]);
   const identifiers = useMemo(() => deriveIdentifiers(initialAppointment), [initialAppointment]);
+
+  // Charger la liste des volontaires disponibles
+  useEffect(() => {
+    const fetchVolunteers = async () => {
+      try {
+        // Utiliser getAllWithoutPagination pour avoir tous les volontaires
+        const volunteers = await volontaireService.getAllWithoutPagination();
+        if (Array.isArray(volunteers)) {
+          setVolunteerOptions(volunteers.filter((v): v is Volunteer => v !== null));
+        }
+      } catch (err) {
+        console.warn('Impossible de charger la liste des volontaires', err);
+        // Fallback: essayer getAll avec pagination
+        try {
+          const response = await volontaireService.getAll({ size: 1000 });
+          const data = response?.data?.content ?? response?.data ?? response ?? [];
+          if (Array.isArray(data)) {
+            setVolunteerOptions(data.filter((v): v is Volunteer => v !== null));
+          }
+        } catch (fallbackErr) {
+          console.warn('Fallback également échoué', fallbackErr);
+        }
+      }
+    };
+
+    fetchVolunteers();
+  }, []);
 
   const fetchAppointment = useCallback(async () => {
     if (!identifiers.idEtude || !identifiers.idRdv) {

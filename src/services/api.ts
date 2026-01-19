@@ -7,7 +7,7 @@ import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig, AxiosResp
 // Détermine automatiquement l'URL de l'API
 // - en dev derrière Vite: utilisez '/api' (proxy Vite -> backend)
 // - sinon via variable d'env VITE_API_URL (ex: http://localhost:8888)
-const envApiRoot = 'http://localhost:8888';
+const envApiRoot = 'http://192.168.127.36:8888';
 const baseApiUrl = envApiRoot
   ? `${envApiRoot.replace(/\/$/, '')}/api`
   : '/api';

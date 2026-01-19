@@ -113,10 +113,32 @@ const VolontaireDetailRdv = ({ rdvs = [], volontaireId }: VolontaireDetailRdvPro
     return rdvDate.getTime() === today.getTime();
   };
 
+  // Fonction pour déterminer si un RDV est passé dans les 8 dernières semaines
+  const isPastEightWeeks = (dateRdv: string) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const eightWeeksAgo = new Date(today);
+    eightWeeksAgo.setDate(eightWeeksAgo.getDate() - 56);
+    const rdvDate = new Date(dateRdv);
+    rdvDate.setHours(0, 0, 0, 0);
+    return rdvDate < today && rdvDate >= eightWeeksAgo;
+  };
+
   // Filtrer et trier les RDVs à venir (plus récents en premier)
   const upcomingRdvs = rdvs
     .filter(rdv => isUpcoming(rdv.date))
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+  // RDVs du jour uniquement (pour affichage séparé)
+  const todayRdvs = upcomingRdvs.filter(rdv => isToday(rdv.date));
+
+  // RDVs futurs (sans aujourd'hui)
+  const futureRdvs = upcomingRdvs.filter(rdv => !isToday(rdv.date));
+
+  // RDVs passés des 8 dernières semaines (triés du plus récent au plus ancien)
+  const pastRdvs = rdvs
+    .filter(rdv => isPastEightWeeks(rdv.date))
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   // Export Excel des RDVs du jour et à venir
   const exportToExcel = () => {
@@ -178,32 +200,116 @@ const VolontaireDetailRdv = ({ rdvs = [], volontaireId }: VolontaireDetailRdvPro
         </Alert>
       )}
 
-      {/* Rendez-vous à venir et du jour */}
-      <div>
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-medium text-gray-900">
-            {t('appointments.upcomingAppointments')} ({upcomingRdvs.length})
-          </h3>
-          {upcomingRdvs.length > 0 && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={exportToExcel}
-              className="flex items-center gap-2"
-            >
-              <Download className="h-4 w-4" />
-              {t('common.export')}
-            </Button>
-          )}
-        </div>
+      {/* Bouton d'export global */}
+      <div className="flex justify-end mb-4">
+        {upcomingRdvs.length > 0 && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={exportToExcel}
+            className="flex items-center gap-2"
+          >
+            <Download className="h-4 w-4" />
+            {t('common.export')}
+          </Button>
+        )}
+      </div>
 
-        {upcomingRdvs.length === 0 ? (
+      {/* Rendez-vous en cours (aujourd'hui) */}
+      {todayRdvs.length > 0 && (
+        <div className="mb-6">
+          <h3 className="text-lg font-medium text-blue-800 mb-4">
+            {t('appointments.currentAppointments')} ({todayRdvs.length})
+          </h3>
+          <div className="space-y-3">
+            {todayRdvs.map((rdv) => {
+              const annulation = isRdvAnnule(rdv);
+              const isAnnule = !!annulation;
+
+              return (
+                <div
+                  key={`today-${rdv.idEtude}-${rdv.idRdv}`}
+                  className={`border rounded-lg p-4 hover:shadow-sm transition-shadow ${
+                    isAnnule ? 'border-red-300 bg-red-50' : 'border-blue-300 bg-blue-50'
+                  }`}
+                >
+                  {isAnnule && (
+                    <div className="mb-3 flex items-center gap-2 bg-red-100 border border-red-300 rounded-md px-3 py-2">
+                      <XCircle className="h-5 w-5 text-red-600" />
+                      <div className="flex-1">
+                        <p className="text-sm font-bold text-red-800">{t('appointments.appointmentCancelled')}</p>
+                        <p className="text-xs text-red-700">{t('appointments.cancelledOn')} {formatDate(annulation.dateAnnulation)}</p>
+                        {annulation.motif && <p className="text-xs text-red-600 mt-1">{t('appointments.reason')} : {annulation.motif}</p>}
+                      </div>
+                    </div>
+                  )}
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-3 mb-2">
+                        <Link to={`/etudes/${rdv.idEtude}`} className="font-medium text-primary-600 hover:text-primary-700">
+                          {rdv.etudeRef || `Étude #${rdv.idEtude}`}
+                        </Link>
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          {t('appointments.today')}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                        <div>
+                          <span className="font-medium text-gray-500">{t('appointments.date')}:</span>
+                          <p className="text-gray-900">{formatDate(rdv.date)}</p>
+                        </div>
+                        <div>
+                          <span className="font-medium text-gray-500">{t('appointments.time')}:</span>
+                          <p className="text-gray-900">{formatTime(rdv.heure)}</p>
+                        </div>
+                        <div>
+                          <span className="font-medium text-gray-500">{t('appointments.duration')}:</span>
+                          <p className="text-gray-900">{(rdv.duree || rdv.duration) ? `${rdv.duree || rdv.duration} min` : '-'}</p>
+                        </div>
+                      </div>
+                      {rdv.commentaire && (
+                        <div className="mt-2">
+                          <span className="font-medium text-gray-500 text-sm">{t('appointments.comment')}:</span>
+                          <p className="text-gray-700 text-sm mt-1">{rdv.commentaire}</p>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex flex-col items-end space-y-2">
+                      {isAnnule ? (
+                        <Badge variant="destructive" className="flex items-center gap-1">
+                          <XCircle className="h-3 w-3" />
+                          {t('appointments.cancelled')}
+                        </Badge>
+                      ) : (
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${formatStatut(rdv.etat).class}`}>
+                          {formatStatut(rdv.etat).label}
+                        </span>
+                      )}
+                      <Link to={`/rdvs/${rdv.idEtude}/${rdv.idRdv}`} className="text-xs text-primary-600 hover:text-primary-700">
+                        {t('appointments.viewDetails')}
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Rendez-vous à venir */}
+      <div>
+        <h3 className="text-lg font-medium text-gray-900 mb-4">
+          {t('appointments.upcomingAppointments')} ({futureRdvs.length})
+        </h3>
+
+        {futureRdvs.length === 0 ? (
           <div className="bg-gray-50 rounded-lg p-6 text-center">
             <p className="text-gray-500">{t('appointments.noUpcomingAppointments')}</p>
           </div>
         ) : (
           <div className="space-y-3">
-            {upcomingRdvs.map((rdv) => {
+            {futureRdvs.map((rdv) => {
               const annulation = isRdvAnnule(rdv);
               const isAnnule = !!annulation;
               
@@ -300,6 +406,113 @@ const VolontaireDetailRdv = ({ rdvs = [], volontaireId }: VolontaireDetailRdvPro
                 </div>
               </div>
             );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Rendez-vous passés (8 dernières semaines) */}
+      <div className="mt-6">
+        <h3 className="text-lg font-medium text-gray-500 mb-4">
+          {t('appointments.pastAppointments')} - {t('appointments.lastEightWeeks')} ({pastRdvs.length})
+        </h3>
+
+        {pastRdvs.length === 0 ? (
+          <div className="bg-gray-50 rounded-lg p-6 text-center">
+            <p className="text-gray-500">{t('appointments.noPastAppointments')}</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {pastRdvs.map((rdv) => {
+              const annulation = isRdvAnnule(rdv);
+              const isAnnule = !!annulation;
+
+              return (
+                <div
+                  key={`past-${rdv.idEtude}-${rdv.idRdv}`}
+                  className={`border rounded-lg p-4 hover:shadow-sm transition-shadow ${
+                    isAnnule
+                      ? 'border-red-300 bg-red-50'
+                      : 'border-gray-200 bg-gray-50'
+                  }`}
+                >
+                  {/* Badge d'annulation visible */}
+                  {isAnnule && (
+                    <div className="mb-3 flex items-center gap-2 bg-red-100 border border-red-300 rounded-md px-3 py-2">
+                      <XCircle className="h-5 w-5 text-red-600" />
+                      <div className="flex-1">
+                        <p className="text-sm font-bold text-red-800">
+                          {t('appointments.appointmentCancelled')}
+                        </p>
+                        <p className="text-xs text-red-700">
+                          {t('appointments.cancelledOn')} {formatDate(annulation.dateAnnulation)}
+                        </p>
+                        {annulation.motif && (
+                          <p className="text-xs text-red-600 mt-1">
+                            {t('appointments.reason')} : {annulation.motif}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-3 mb-2">
+                        <Link
+                          to={`/etudes/${rdv.idEtude}`}
+                          className="font-medium text-gray-600 hover:text-gray-800"
+                        >
+                          {rdv.etudeRef || `Étude #${rdv.idEtude}`}
+                        </Link>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                        <div>
+                          <span className="font-medium text-gray-500">{t('appointments.date')}:</span>
+                          <p className="text-gray-700">{formatDate(rdv.date)}</p>
+                        </div>
+                        <div>
+                          <span className="font-medium text-gray-500">{t('appointments.time')}:</span>
+                          <p className="text-gray-700">{formatTime(rdv.heure)}</p>
+                        </div>
+                        <div>
+                          <span className="font-medium text-gray-500">{t('appointments.duration')}:</span>
+                          <p className="text-gray-700">{(rdv.duree || rdv.duration) ? `${rdv.duree || rdv.duration} min` : '-'}</p>
+                        </div>
+                      </div>
+
+                      {rdv.commentaire && (
+                        <div className="mt-2">
+                          <span className="font-medium text-gray-500 text-sm">{t('appointments.comment')}:</span>
+                          <p className="text-gray-600 text-sm mt-1">{rdv.commentaire}</p>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex flex-col items-end space-y-2">
+                      {isAnnule ? (
+                        <Badge variant="destructive" className="flex items-center gap-1">
+                          <XCircle className="h-3 w-3" />
+                          {t('appointments.cancelled')}
+                        </Badge>
+                      ) : (
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          formatStatut(rdv.etat).class
+                        }`}>
+                          {formatStatut(rdv.etat).label}
+                        </span>
+                      )}
+
+                      <Link
+                        to={`/rdvs/${rdv.idEtude}/${rdv.idRdv}`}
+                        className="text-xs text-gray-500 hover:text-gray-700"
+                      >
+                        {t('appointments.viewDetails')}
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              );
             })}
           </div>
         )}

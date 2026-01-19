@@ -552,10 +552,6 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
     return updateVolontaire(volontaire, "statut", nouveauStatut, "/etude-volontaires/update-statut");
   }, [updateVolontaire]);
 
-  const updateNumSujet = useCallback((volontaire: VolontaireAssigne, nouveauNumSujet: string | number) => {
-    return updateVolontaire(volontaire, "numsujet", nouveauNumSujet, "/etude-volontaires/update-numsujet");
-  }, [updateVolontaire]);
-
   const updateIV = useCallback((volontaire: VolontaireAssigne, nouvelleIV: string | number) => {
     return updateVolontaire(volontaire, "iv", nouvelleIV, "/etude-volontaires/update-iv");
   }, [updateVolontaire]);
@@ -599,6 +595,37 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
     };
   }, []);
 
+  // Fonction pour obtenir nom et prénom séparément (pour le tri)
+  const getVolontaireNomPrenom = useMemo(
+    () => (idVolontaire: number): { nom: string; prenom: string } => {
+      if (!idVolontaire || idVolontaire === 0) {
+        return { nom: '', prenom: '' };
+      }
+
+      const volontaire = volontairesInfo[idVolontaire];
+      if (!volontaire) {
+        return { nom: '', prenom: '' };
+      }
+
+      const prenom = (
+        volontaire.prenom ||
+        volontaire.prenomVol ||
+        volontaire.prenomVolontaire ||
+        ""
+      ).toLowerCase();
+
+      const nom = (
+        volontaire.nom ||
+        volontaire.nomVol ||
+        volontaire.nomVolontaire ||
+        ""
+      ).toLowerCase();
+
+      return { nom, prenom };
+    },
+    [volontairesInfo]
+  );
+
   // Liste triée des volontaires
   const volontairesTries = useMemo(() => {
     if (sortConfig.column === 'none') {
@@ -609,9 +636,17 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
       let comparison = 0;
 
       if (sortConfig.column === 'nom') {
-        const nameA = getVolontaireName(a.idVolontaire).toLowerCase();
-        const nameB = getVolontaireName(b.idVolontaire).toLowerCase();
-        comparison = nameA.localeCompare(nameB, 'fr');
+        // Trier par nom de famille d'abord, puis par prénom
+        const volA = getVolontaireNomPrenom(a.idVolontaire);
+        const volB = getVolontaireNomPrenom(b.idVolontaire);
+
+        // Comparer d'abord par nom
+        comparison = volA.nom.localeCompare(volB.nom, 'fr');
+
+        // Si les noms sont identiques, comparer par prénom
+        if (comparison === 0) {
+          comparison = volA.prenom.localeCompare(volB.prenom, 'fr');
+        }
       } else if (sortConfig.column === 'numsujet') {
         comparison = (a.numsujet || 0) - (b.numsujet || 0);
       } else if (sortConfig.column === 'iv') {
@@ -622,7 +657,7 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
     });
 
     return sorted;
-  }, [volontairesAssignes, sortConfig, getVolontaireName]);
+  }, [volontairesAssignes, sortConfig, getVolontaireNomPrenom]);
 
   // Fonction pour changer l'ordre de tri
   const handleSort = useCallback((column: 'nom' | 'numsujet' | 'iv') => {
@@ -729,6 +764,75 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
       default:
         return null;
     }
+  };
+
+  // Composant pour l'input du numéro de sujet avec validation des doublons
+  const NumSujetInput: React.FC<{ volontaire: VolontaireAssigne }> = ({ volontaire }) => {
+    const [value, setValue] = useState(volontaire.numsujet?.toString() || "");
+    const [localError, setLocalError] = useState("");
+
+    const handleUpdate = (newValue: string) => {
+      const numSujetValue = parseInt(newValue) || 0;
+
+      // Vérifier si le numéro de sujet est déjà utilisé par un autre volontaire
+      if (numSujetValue > 0) {
+        const existingVolontaire = volontairesAssignes.find(
+          (v) => v.numsujet === numSujetValue && v.idVolontaire !== volontaire.idVolontaire
+        );
+
+        if (existingVolontaire) {
+          // Obtenir le nom du volontaire existant
+          const volInfo = volontairesInfo[existingVolontaire.idVolontaire];
+          let nomExistant = `Volontaire #${existingVolontaire.idVolontaire}`;
+          if (volInfo) {
+            const prenom = volInfo.prenom || volInfo.prenomVol || volInfo.prenomVolontaire || "";
+            const nom = volInfo.nom || volInfo.nomVol || volInfo.nomVolontaire || "";
+            if (prenom && nom) nomExistant = `${prenom} ${nom}`;
+            else if (prenom) nomExistant = prenom;
+            else if (nom) nomExistant = nom;
+          }
+          setLocalError(`N° ${numSujetValue} déjà attribué à ${nomExistant}`);
+          // Réinitialiser à l'ancienne valeur après 3 secondes
+          setTimeout(() => {
+            setValue(volontaire.numsujet?.toString() || "");
+            setLocalError("");
+          }, 3000);
+          return;
+        }
+      }
+
+      setLocalError("");
+      updateVolontaire(volontaire, "numsujet", newValue, "/etude-volontaires/update-numsujet");
+    };
+
+    return (
+      <div className="relative">
+        <div className="flex items-center space-x-2">
+          <Input
+            type="number"
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            className={`w-20 ${localError ? "border-red-500 bg-red-50" : ""}`}
+            min="1"
+            title={localError || ""}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                handleUpdate(value);
+              }
+            }}
+            onBlur={() => handleUpdate(value)}
+          />
+          <StatusIcon
+            status={updateStatus[`${volontaire.idVolontaire}_numsujet`]}
+          />
+        </div>
+        {localError && (
+          <div className="absolute z-10 left-0 top-full mt-1 p-2 bg-red-100 border border-red-300 rounded shadow-lg max-w-[250px]">
+            <p className="text-xs text-red-700 font-medium">{localError}</p>
+          </div>
+        )}
+      </div>
+    );
   };
 
   // Composant pour la gestion des annulations
@@ -1223,8 +1327,8 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {volontairesTries.map((volontaire, index) => (
-                <tr key={`${volontaire.idVolontaire}-${index}`}
+              {volontairesTries.map((volontaire) => (
+                <tr key={`${volontaire.idVolontaire}-${volontaire.idGroupe}`}
                   className={`
                       ${volontaire.idVolontaire === 0 ? "bg-yellow-50" : ""}
                     `}>
@@ -1245,25 +1349,7 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
                   </td>
 
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    <div className="flex items-center space-x-2">
-                      <Input
-                        type="number"
-                        defaultValue={volontaire.numsujet || ""}
-                        className="w-20"
-                        min="1"
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            updateNumSujet(volontaire, (e.target as HTMLInputElement).value);
-                          }
-                        }}
-                        onBlur={(e) => {
-                          updateNumSujet(volontaire, e.target.value);
-                        }}
-                      />
-                      <StatusIcon
-                        status={updateStatus[`${volontaire.idVolontaire}_numsujet`]}
-                      />
-                    </div>
+                    <NumSujetInput volontaire={volontaire} />
                   </td>
 
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">

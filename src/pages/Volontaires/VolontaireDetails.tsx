@@ -1,5 +1,6 @@
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useEffect } from 'react';
 import { ChevronRight, Loader2, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -23,6 +24,7 @@ const VolontaireDetails = () => {
   const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Early return if id is undefined
   if (!id) {
@@ -61,6 +63,14 @@ const VolontaireDetails = () => {
     handleArchive,
     handleUnarchive,
   } = useVolontaireDetails({ id, navigate });
+
+  // Écouter les changements de location state pour changer d'onglet
+  useEffect(() => {
+    const state = location.state as { activeTab?: string };
+    if (state?.activeTab) {
+      setActiveTab(state.activeTab as any);
+    }
+  }, [location.state, setActiveTab]);
 
   if (isLoading) {
     return (

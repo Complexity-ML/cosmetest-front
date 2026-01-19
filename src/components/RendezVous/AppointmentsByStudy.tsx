@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import rdvService from '../../services/rdvService';
 import etudeService from '../../services/etudeService';
 import volontaireService from '../../services/volontaireService';
@@ -968,14 +969,24 @@ const AppointmentsByStudy = ({ onAppointmentClick, onBack }: AppointmentsByStudy
                               <User className="w-4 h-4 mr-1" />
                               <span>
                                 {appointment.volontaire ? (
-                                  <span className="text-gray-700">
+                                  <Link
+                                    to={`/volontaires/${appointment.volontaire.id || appointment.volontaire.idVol || appointment.idVolontaire}`}
+                                    state={{ activeTab: 'info' }}
+                                    className="text-gray-700 hover:text-blue-600 underline transition-colors"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
                                     {appointment.volontaire.nom} {appointment.volontaire.prenom}
-                                  </span>
+                                  </Link>
                                 ) : appointment.idVolontaire ? (
-                                  <span className="text-gray-700">
+                                  <Link
+                                    to={`/volontaires/${appointment.idVolontaire}`}
+                                    state={{ activeTab: 'info' }}
+                                    className="text-gray-700 hover:text-blue-600 underline transition-colors"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
                                     {t('appointments.volunteerID')}: {appointment.idVolontaire}
                                     {foundVolunteer ? ` (${foundVolunteer.nom || ''} ${foundVolunteer.prenom || ''})` : ''}
-                                  </span>
+                                  </Link>
                                 ) : (
                                   <span className="text-muted-foreground italic">{t('appointments.noVolunteerAssignedSimple')}</span>
                                 )}
@@ -1172,12 +1183,17 @@ const AppointmentsByStudy = ({ onAppointmentClick, onBack }: AppointmentsByStudy
                               <div className="flex items-center">
                                 <User className="w-4 h-4 mr-2" />
                                 {appointment.volontaire || appointment.idVolontaire || foundVolunteer ? (
-                                  <span className="text-green-600 font-medium">
+                                  <Link
+                                    to={`/volontaires/${(foundVolunteer?.id || foundVolunteer?.idVol || appointment.volontaire?.id || appointment.volontaire?.idVol || appointment.idVolontaire)}`}
+                                    state={{ activeTab: 'info' }}
+                                    className="text-green-600 font-medium hover:text-green-700 underline transition-colors"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
                                     {foundVolunteer
                                       ? `${foundVolunteer.prenomVol || foundVolunteer.prenom || ''} ${foundVolunteer.nomVol || foundVolunteer.nom || ''}`.trim()
                                       : `${t('appointments.volunteerID')}: ${appointment.idVolontaire} (${appointment.prenomVolontaire || appointment.prenomVol || ''} ${appointment.nomVolontaire || appointment.nomVol || ''})`
                                     }
-                                  </span>
+                                  </Link>
                                 ) : (
                                   <span className="text-muted-foreground">Aucun volontaire assigné</span>
                                 )}

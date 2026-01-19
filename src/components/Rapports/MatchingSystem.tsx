@@ -7,7 +7,8 @@ import {
   createInitialFilters,
   normaliserPhototype,
   normaliserSexe,
-  normaliserEthnie,
+  normaliserEthnies,
+  calculerScoreEthnie,
   parseEvaluation,
   calculerAge,
   calculerScoreMaquillage,
@@ -191,13 +192,13 @@ const MatchingSystem = () => {
     setLoading(true);
 
     try {
-      // Get all volunteers IDs first
+      // Get all volunteers IDs first (excluding archived ones)
       let allVolontairesIds = [];
       let page = 0;
       let hasMore = true;
 
       while (hasMore) {
-        const responseIds = await api.get(`/volontaires?page=${page}&size=1000`);
+        const responseIds = await api.get(`/volontaires?page=${page}&size=1000&includeArchived=false`);
         const idsData = responseIds.data?.content || [];
         allVolontairesIds.push(...idsData);
         hasMore = !responseIds.data?.last;
@@ -246,21 +247,27 @@ const MatchingSystem = () => {
         filters.demographics.phototypes.map((item: string) => normaliserPhototype(item))
       );
       const ethnieSet = new Set(
-        filters.demographics.ethnies.map((item: string) => normaliserEthnie(item))
+        filters.demographics.ethnies.map((item: string) => normaliserEthnies(item)[0] || item.toUpperCase())
       );
       const sexeCritere = normaliserSexe(filters.demographics.sexe);
       const hasMakeupCriteria = makeupSelectionCount > 0;
+      const hasEthnieCriteria = ethnieSet.size > 0;
 
       const matches = volontaires
         .filter((volontaire) => {
-          // Exclude archived volunteers
-          if (volontaire.archive === true || volontaire.archive === 1) {
+          // Exclude archived volunteers - handle multiple formats
+          const archiveValue = volontaire.archive;
+          if (archiveValue === true ||
+              archiveValue === 1 ||
+              archiveValue === '1' ||
+              archiveValue === 'true' ||
+              archiveValue === 'TRUE') {
             return false;
           }
 
           const age = calculerAge(volontaire.dateNaissance);
           const phototypeVolontaire = normaliserPhototype(volontaire.phototype);
-          const ethnieVolontaire = normaliserEthnie(volontaire.ethnie);
+          const ethniesVolontaire = normaliserEthnies(volontaire.ethnie);
           const sexeVolontaire = normaliserSexe(volontaire.sexe);
 
           // Age filter - HARD FILTER
@@ -273,9 +280,12 @@ const MatchingSystem = () => {
             return false;
           }
 
-          // Ethnie filter - HARD FILTER
-          if (ethnieSet.size > 0 && !ethnieSet.has(ethnieVolontaire)) {
-            return false;
+          // Ethnie filter - SOFT FILTER (au moins une ethnie doit matcher pour apparaître)
+          if (hasEthnieCriteria) {
+            const scoreEthnie = calculerScoreEthnie(ethniesVolontaire, ethnieSet);
+            if (scoreEthnie === 0) {
+              return false; // Aucune ethnie ne match, on exclut
+            }
           }
 
           // Sex filter - HARD FILTER
@@ -288,9 +298,15 @@ const MatchingSystem = () => {
         .map((volontaire) => {
           const age = calculerAge(volontaire.dateNaissance);
           const habitudesVolontaire = habitudesMap.get(volontaire.idVol);
+          const ethniesVolontaire = normaliserEthnies(volontaire.ethnie);
 
-          // Since all demographic criteria are met, score is 100%
-          const scoreDemo = 100;
+          // Calculer le score d'ethnie (100% si pas de critère, sinon ratio de match)
+          const scoreEthnie = hasEthnieCriteria
+            ? calculerScoreEthnie(ethniesVolontaire, ethnieSet) * 100
+            : 100;
+
+          // Le score démographique prend en compte le score d'ethnie
+          const scoreDemo = scoreEthnie;
 
           const scoreMaquillage = calculerScoreMaquillage(habitudesVolontaire, filters.makeup) * 100;
           const scoreTotal = hasMakeupCriteria

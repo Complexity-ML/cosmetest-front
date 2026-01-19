@@ -1,7 +1,8 @@
-﻿import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../../ui/button';
 import { Input } from '../../ui/input';
+import StudyOverlapAlert from './StudyOverlapAlert';
 
 
 interface Volunteer {
@@ -11,36 +12,53 @@ interface Volunteer {
   prenom?: string;
   titre?: string;
   email?: string;
+  ethnie?: string;
+  [key: string]: any;
+}
+
+interface Group {
+  id?: number;
+  idGroupe?: number;
+  nom?: string;
+  ethnie?: string;
   [key: string]: any;
 }
 
 interface VolunteerAssignmentCardProps {
   volunteer?: Volunteer | null;
   volunteers: Volunteer[];
+  group?: Group | null;
   assigning: boolean;
   onAssign: (volunteerId: string) => Promise<void>;
   onUnassign: () => void;
+  etudeId?: number | string;
+}
+
+/**
+ * Vérifie si l'ethnie du volontaire correspond aux critères d'ethnie du groupe
+ */
+const checkEthnicityMatch = (groupEthnie: string | undefined, volunteerEthnie: string | undefined): boolean => {
+  if (!groupEthnie || groupEthnie.trim() === '') {
+    return true;
+  }
+  if (!volunteerEthnie || volunteerEthnie.trim() === '') {
+    return false;
+  }
+  const normalizedVolunteerEthnie = volunteerEthnie.trim().toLowerCase();
+  const groupEthnies = groupEthnie.split(';').map((e) => e.trim().toLowerCase()).filter((e) => e.length > 0);
+  if (groupEthnies.length === 0) {
+    return true;
+  }
+  return groupEthnies.some((ge) => normalizedVolunteerEthnie.includes(ge) || ge.includes(normalizedVolunteerEthnie));
 }
 
 const getVolunteerId = (volunteer?: Volunteer | null): number | undefined => volunteer?.id ?? volunteer?.volontaireId;
 
-const VolunteerAssignmentCard = ({ volunteer, volunteers, assigning, onAssign, onUnassign }: VolunteerAssignmentCardProps) => {
+const VolunteerAssignmentCard = ({ volunteer, volunteers, group, assigning, onAssign, onUnassign, etudeId }: VolunteerAssignmentCardProps) => {
+  const { t } = useTranslation();
   const [isSelectorOpen, setSelectorOpen] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [selectedVolunteerId, setSelectedVolunteerId] = useState<string>('');
-  const selectorRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (selectorRef.current && !selectorRef.current.contains(event.target as Node)) {
-        setSelectorOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
   useEffect(() => {
     if (!isSelectorOpen) {
       setSelectedVolunteerId('');
@@ -70,11 +88,34 @@ const VolunteerAssignmentCard = ({ volunteer, volunteers, assigning, onAssign, o
     if (!selectedVolunteerId) {
       return;
     }
+
+    // Vérifier la correspondance d'ethnie avec le groupe
+    if (group?.ethnie) {
+      const selectedVolunteer = volunteers.find((v) => `${getVolunteerId(v)}` === selectedVolunteerId);
+      if (selectedVolunteer) {
+        const ethnicityMatches = checkEthnicityMatch(group.ethnie, selectedVolunteer.ethnie);
+        if (!ethnicityMatches) {
+          const volunteerName = `${selectedVolunteer.prenom || ''} ${selectedVolunteer.nom || ''}`.trim() || t('appointments.thisVolunteer');
+          const volunteerEthnie = selectedVolunteer.ethnie || t('appointments.ethnicityNotDefined');
+          const groupEthnie = group.ethnie;
+
+          const proceed = window.confirm(
+            `${t('appointments.ethnicityWarningTitle')}\n\n` +
+            `${t('appointments.ethnicityWarningMessage', { volunteerName, volunteerEthnie, groupEthnie })}\n\n` +
+            `${t('appointments.ethnicityWarningConfirm')}`
+          );
+
+          if (!proceed) {
+            return;
+          }
+        }
+      }
+    }
+
     await onAssign(selectedVolunteerId);
     setSelectorOpen(false);
   };
 
-  const { t } = useTranslation();
   const volunteerId = getVolunteerId(volunteer);
 
   return (
@@ -104,12 +145,24 @@ const VolunteerAssignmentCard = ({ volunteer, volunteers, assigning, onAssign, o
             </p>
             {volunteer.email && <p className="text-xs text-gray-500">{volunteer.email}</p>}
             <div className="text-xs text-gray-500">{t('volunteers.identifier')} : {volunteerId}</div>
+
+            {/* Alerte de chevauchement d'études */}
+            {etudeId && volunteerId && (
+              <div className="mt-3">
+                <StudyOverlapAlert
+                  volontaireId={volunteerId}
+                  targetEtudeId={etudeId}
+                  showInlineAlert={true}
+                  autoCheck={true}
+                />
+              </div>
+            )}
           </div>
         ) : (
           <p className="text-sm text-gray-500">{t('appointments.noVolunteerAssignedToAppointment')}</p>
         )}
 
-        <div className="flex flex-col gap-2 mt-4" ref={selectorRef}>
+        <div className="flex flex-col gap-2 mt-4">
           <Button
             type="button"
             onClick={() => setSelectorOpen((prev) => !prev)}
