@@ -7,18 +7,20 @@ import { Loader2, FileSpreadsheet } from 'lucide-react';
 
 interface RecrutementExcelExportProps {
   volunteerIds?: any[];
+  rdvs?: any[];  // Ajout: RDV passés en prop (comme RdvExcelExport)
   studyRef?: string;
   studyId?: number | null;
   studyTitle?: string;
   className?: string;
 }
 
-const RecrutementExcelExport: React.FC<RecrutementExcelExportProps> = ({ 
-  volunteerIds = [], 
-  studyRef = '', 
-  studyId = null, 
-  studyTitle = '', 
-  className = '' 
+const RecrutementExcelExport: React.FC<RecrutementExcelExportProps> = ({
+  volunteerIds = [],
+  rdvs: rdvsProp,  // RDV passés en prop
+  studyRef = '',
+  studyId = null,
+  studyTitle = '',
+  className = ''
 }) => {
   const [isExporting, setIsExporting] = useState(false);
   const [exportProgress, setExportProgress] = useState(0);
@@ -32,12 +34,18 @@ const RecrutementExcelExport: React.FC<RecrutementExcelExportProps> = ({
         throw new Error('Aucun volontaire à exporter');
       }
 
-      // 1. Récupérer tous les RDV de l'étude
-      let rdvs = [];
-      if (studyId) {
+      // 1. Utiliser les RDV passés en prop (comme RdvExcelExport) ou les récupérer via API
+      let rdvs: any[] = [];
+      if (rdvsProp && rdvsProp.length > 0) {
+        // Utiliser les RDV passés en prop (même source que RdvExcelExport)
+        rdvs = rdvsProp;
+        console.log(`RecrutementExcelExport: ${rdvs.length} RDV reçus en prop`);
+      } else if (studyId) {
+        // Fallback: récupérer via API
         try {
-          const rdvsResponse = await api.get(`/rdvs/search?idEtude=${studyId}`);
+          const rdvsResponse = await api.get(`/rdvs/search?idEtude=${studyId}&size=10000`);
           rdvs = rdvsResponse.data?.content || rdvsResponse.data?.data || rdvsResponse.data || [];
+          console.log(`RecrutementExcelExport: ${rdvs.length} RDV récupérés via API`);
         } catch (error) {
           console.error('Erreur lors de la récupération des RDV:', error);
         }
@@ -103,24 +111,22 @@ const RecrutementExcelExport: React.FC<RecrutementExcelExportProps> = ({
       setExportProgress(30);
 
       // 4. Grouper les RDV par volontaire et calculer le nombre max de passages
+      // Copie de la logique de RdvExcelExport qui fonctionne
       const rdvsByVolunteer: Record<string, any[]> = {};
       let maxPassages = 0;
 
+      // Grouper TOUS les RDV par volontaire (sans filtrer d'abord)
       rdvs.forEach((rdv: any) => {
-        const volId = rdv.idVolontaire;
-        const isIncluded = volunteerIds.includes(volId) || 
-                          volunteerIds.includes(String(volId)) || 
-                          volunteerIds.includes(Number(volId));
-                          
-        if (rdv.idVolontaire && isIncluded) {
-          if (!rdvsByVolunteer[rdv.idVolontaire]) {
-            rdvsByVolunteer[rdv.idVolontaire] = [];
+        if (rdv.idVolontaire) {
+          const volKey = String(rdv.idVolontaire);
+          if (!rdvsByVolunteer[volKey]) {
+            rdvsByVolunteer[volKey] = [];
           }
-          rdvsByVolunteer[rdv.idVolontaire].push(rdv);
+          rdvsByVolunteer[volKey].push(rdv);
         }
       });
 
-      // Trier les RDV de chaque volontaire par date/heure
+      // Trier les RDV de chaque volontaire par date/heure et calculer maxPassages
       Object.keys(rdvsByVolunteer).forEach(volunteerId => {
         rdvsByVolunteer[volunteerId].sort((a: any, b: any) => {
           const dateA = new Date(a.date);
@@ -135,7 +141,7 @@ const RecrutementExcelExport: React.FC<RecrutementExcelExportProps> = ({
           return heureA.localeCompare(heureB);
         });
 
-        // Calculer le nombre max de passages
+        // Calculer le nombre max de passages sur TOUS les volontaires
         maxPassages = Math.max(maxPassages, rdvsByVolunteer[volunteerId].length);
       });
 
@@ -181,20 +187,29 @@ const RecrutementExcelExport: React.FC<RecrutementExcelExportProps> = ({
       let volunteerCounter = 1;
 
       // Traiter tous les volontaires dans l'ordre
-      volunteerIds.forEach((volunteerId: any) => {
-        const volunteerRdvs = rdvsByVolunteer[volunteerId] || [];
+      volunteerIds.forEach((volId: any) => {
+        // Normaliser l'ID (peut être un objet avec id/idVol ou un simple ID)
+        const volunteerId = typeof volId === 'object' && volId !== null
+          ? (volId.id || volId.idVol || volId)
+          : volId;
+        const volunteerIdNum = Number(volunteerId);
+
+        // Accéder aux RDV - essayer plusieurs formats de clé
+        const volunteerRdvs = rdvsByVolunteer[String(volunteerId)]
+          || rdvsByVolunteer[volunteerId]
+          || [];
         const row: any[] = [];
 
         // Informations de base
         row.push(volunteerCounter++); // NB
-        row.push(getAssociationInfo(Number(volunteerId), 'numsujet')); // N°sujet
+        row.push(getAssociationInfo(volunteerIdNum, 'numsujet')); // N°sujet
         row.push(volunteerId); // ID Vol
-        row.push((getVolunteerInfo(Number(volunteerId), 'nom') || '').toUpperCase()); // nom
-        row.push(getVolunteerInfo(Number(volunteerId), 'prenom')); // prenom
+        row.push((getVolunteerInfo(volunteerIdNum, 'nom') || '').toUpperCase()); // nom
+        row.push(getVolunteerInfo(volunteerIdNum, 'prenom')); // prenom
         
         // Téléphone formaté
-        const telPortable = getVolunteerInfo(Number(volunteerId), 'telPortable');
-        const telDomicile = getVolunteerInfo(Number(volunteerId), 'telDomicile');
+        const telPortable = getVolunteerInfo(volunteerIdNum, 'telPortable');
+        const telDomicile = getVolunteerInfo(volunteerIdNum, 'telDomicile');
         const phone = telPortable || telDomicile;
         let formattedPhone = '';
         if (phone) {
@@ -222,17 +237,17 @@ const RecrutementExcelExport: React.FC<RecrutementExcelExportProps> = ({
         }
 
         // Colonnes finales
-        row.push(getVolunteerInfo(Number(volunteerId), 'phototype')); // Phototype
-        
+        row.push(getVolunteerInfo(volunteerIdNum, 'phototype')); // Phototype
+
         // PS/PNS
-        const peauSensible = getVolunteerInfo(Number(volunteerId), 'peauSensible');
+        const peauSensible = getVolunteerInfo(volunteerIdNum, 'peauSensible');
         row.push(peauSensible === 'Oui' ? 'PS' : 'PNS');
-        
-        row.push(getVolunteerInfo(Number(volunteerId), 'typePeauVisage')); // Type de peau
-        row.push(formatDate(getVolunteerInfo(Number(volunteerId), 'dateNaissance'))); // Date de naissance
-        
+
+        row.push(getVolunteerInfo(volunteerIdNum, 'typePeauVisage')); // Type de peau
+        row.push(formatDate(getVolunteerInfo(volunteerIdNum, 'dateNaissance'))); // Date de naissance
+
         // Age calculé
-        const dateNaissance = getVolunteerInfo(Number(volunteerId), 'dateNaissance');
+        const dateNaissance = getVolunteerInfo(volunteerIdNum, 'dateNaissance');
         let age: string | number = '';
         if (dateNaissance) {
           const today = new Date();
@@ -247,7 +262,7 @@ const RecrutementExcelExport: React.FC<RecrutementExcelExportProps> = ({
         row.push(age);
 
         // Statut - afficher le texte de pénalité si c'est une pénalité
-        const statut = getAssociationInfo(Number(volunteerId), 'statut');
+        const statut = getAssociationInfo(volunteerIdNum, 'statut');
         let statutDisplay = '';
         // Vérifier si c'est une pénalité (avec ou sans accent)
         if (statut && (statut.toLowerCase().includes('penalite') || statut.toLowerCase().includes('pénalité'))) {
@@ -255,8 +270,8 @@ const RecrutementExcelExport: React.FC<RecrutementExcelExportProps> = ({
         }
         row.push(statutDisplay); // Statut
 
-        row.push(getAssociationInfo(Number(volunteerId), 'iv') || getVolunteerInfo(Number(volunteerId), 'iv')); // IV
-        row.push(getVolunteerInfo(Number(volunteerId), 'email')); // Email
+        row.push(getAssociationInfo(volunteerIdNum, 'iv') || getVolunteerInfo(volunteerIdNum, 'iv')); // IV
+        row.push(getVolunteerInfo(volunteerIdNum, 'email')); // Email
 
         dataRows.push(row);
       });

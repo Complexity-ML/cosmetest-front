@@ -8,6 +8,7 @@ import GroupEmailSender from '../../../components/Etudes/GroupEmailSender'
 import VolunteerExcelExport from '../../../components/Etudes/VolunteerExcelExport'
 import RdvExcelExport from '../../../components/Etudes/RdvExcelExport'
 import RecrutementExcelExport from '../../../components/Etudes/RecrutementExcelExport'
+import VolontairesCommunsExport from '../../../components/Etudes/VolontairesCommunsExport'
 import { timeToMinutes, normalizeTime } from '../../../utils/timeUtils'
 import { EtudeData } from '../../../types/etude.types'
 import etudeVolontaireService from '../../../services/etudeVolontaireService'
@@ -466,12 +467,24 @@ const RendezVousSection = ({
                           <div className="px-4 py-3 hover:bg-gray-50 border-b border-gray-100">
                             <RecrutementExcelExport
                               volunteerIds={getUniqueVolunteerIds()}
+                              rdvs={rdvs}
                               studyRef={etude.ref}
                               studyId={etude.idEtude}
                               studyTitle={etude.titre}
                             />
                             <p className="text-xs text-gray-500 mt-1">
                               {t('studyDetails.pivotSheetVolunteers', { count: getUniqueVolunteerIds().length })}
+                            </p>
+                          </div>
+
+                          <div className="px-4 py-3 hover:bg-gray-50">
+                            <VolontairesCommunsExport
+                              studyRef={etude.ref}
+                              studyId={etude.idEtude}
+                              studyTitle={etude.titre}
+                            />
+                            <p className="text-xs text-gray-500 mt-1">
+                              Volontaires présents dans plusieurs études de même référence
                             </p>
                           </div>
                         </div>
