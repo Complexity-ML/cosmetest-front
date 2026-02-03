@@ -4,13 +4,11 @@
 
 import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
 
-// Détermine automatiquement l'URL de l'API
-// - en dev derrière Vite: utilisez '/api' (proxy Vite -> backend)
-// - sinon via variable d'env VITE_API_URL (ex: http://localhost:8888)
-const envApiRoot = 'http://192.168.127.36:8888';
-const baseApiUrl = envApiRoot
-  ? `${envApiRoot.replace(/\/$/, '')}/api`
-  : '/api';
+// URL de l'API
+// - En production avec proxy IIS: utiliser '/api' (same-origin)
+// - Sans proxy: utiliser l'URL complète du backend
+const API_HOST = 'http://192.168.127.36:8888';
+const baseApiUrl = `${API_HOST}/api`;
 
 // Créer une instance d'axios avec la configuration de base
 const api: AxiosInstance = axios.create({

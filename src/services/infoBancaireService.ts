@@ -245,9 +245,9 @@ const infoBancaireService = {
       // Supprime les espaces et convertit en majuscules
       const cleanBic = bic.replace(/\s/g, '').toUpperCase();
       
-      // BIC : 8 ou 11 caractères alphanumériques
-      // Format: 4 lettres (banque) + 2 lettres (pays) + 2 caractères (ville) + optionnel 3 caractères (succursale)
-      const bicRegex = /^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/;
+      // BIC : 8, 10 ou 11 caractères alphanumériques
+      // Format: 4 lettres (banque) + 2 lettres (pays) + 2 caractères (ville) + optionnel 2-3 caractères (succursale)
+      const bicRegex = /^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{2,3})?$/;
       
       return bicRegex.test(cleanBic);
     },
@@ -342,7 +342,9 @@ const infoBancaireService = {
       { code: 'BDFEFRPPCCT', name: 'Banque de France' },
       { code: 'CRLYFRPP', name: 'Crédit Lyonnais (LCL)' },
       { code: 'AGRIFRPP', name: 'Crédit Agricole' },
-      { code: 'PSSTFRPPXXX', name: 'Banque Postale' }
+      { code: 'PSSTFRPPPAR', name: 'Banque Postale' },
+      { code: 'BOUSFRPPXXX', name: 'Boursorama Bank' },
+      { code: 'REVOLT21XXX', name: 'Revolut' }
     ];
   },
 

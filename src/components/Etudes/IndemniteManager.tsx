@@ -2,7 +2,7 @@
 // IndemniteManager.tsx - Version avec bouton d'annulation dédié
 // ============================================================
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import etudeVolontaireService from "../../services/etudeVolontaireService";
 import groupeService from "../../services/groupeService";
@@ -94,6 +94,21 @@ interface UpdateParams {
   nouveauStatut?: string;
   nouveauNumSujet?: number;
   nouvelIV?: number;
+}
+
+// Props pour les composants d'input externalisés
+interface NumSujetInputProps {
+  volontaire: VolontaireAssigne;
+  volontairesAssignes: VolontaireAssigne[];
+  volontairesInfo: Record<number, VolontaireInfo>;
+  updateStatus: UpdateStatusMap;
+  onUpdate: (volontaire: VolontaireAssigne, field: 'numsujet', value: string, endpoint: string) => Promise<void>;
+}
+
+interface IVInputProps {
+  volontaire: VolontaireAssigne;
+  updateStatus: UpdateStatusMap;
+  onUpdate: (volontaire: VolontaireAssigne, value: string) => Promise<void>;
 }
 
 // ===============================
@@ -189,10 +204,226 @@ const StatutIcon: React.FC<{ iconName: string; className?: string }> = ({ iconNa
     Handshake: <Handshake className={className} />,
     XCircle: <XCircle className={className} />,
   };
-  
+
   return <>{icons[iconName] || <AlertCircle className={className} />}</>;
 };
 
+// Composant pour l'indicateur de statut de mise à jour
+const UpdateStatusIcon: React.FC<{ status?: 'loading' | 'success' | 'error' | 'cancelled' }> = ({ status }) => {
+  switch (status) {
+    case "loading":
+      return (
+        <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-blue-500"></div>
+      );
+    case "success":
+      return <Check className="text-green-500 w-5 h-5" />;
+    case "error":
+      return <X className="text-red-500 w-5 h-5" />;
+    case "cancelled":
+      return <AlertTriangle className="text-orange-500 w-5 h-5" />;
+    default:
+      return null;
+  }
+};
+
+// ===============================
+// COMPOSANTS D'INPUT EXTERNALISÉS
+// ===============================
+
+// Composant NumSujetInput externalisé pour éviter les re-renders
+const NumSujetInput: React.FC<NumSujetInputProps> = ({
+  volontaire,
+  volontairesAssignes,
+  volontairesInfo,
+  updateStatus,
+  onUpdate
+}) => {
+  const [value, setValue] = useState(volontaire.numsujet?.toString() || "");
+  const [localError, setLocalError] = useState("");
+  const isSavingRef = useRef(false);
+  const lastSavedValueRef = useRef(volontaire.numsujet?.toString() || "");
+  const inputRef = useRef<HTMLInputElement>(null);
+  const hasFocusRef = useRef(false);
+  const pendingValueRef = useRef<string | null>(null);
+
+  // Synchroniser la valeur locale avec la prop seulement si on n'est pas en train d'éditer
+  useEffect(() => {
+    const propValue = volontaire.numsujet?.toString() || "";
+    if (!hasFocusRef.current && !isSavingRef.current && pendingValueRef.current === null && propValue !== lastSavedValueRef.current) {
+      setValue(propValue);
+      lastSavedValueRef.current = propValue;
+    }
+  }, [volontaire.numsujet]);
+
+  const handleUpdate = async (newValue: string) => {
+    if (isSavingRef.current) {
+      pendingValueRef.current = newValue;
+      return;
+    }
+
+    const numSujetValue = parseInt(newValue) || 0;
+    const currentSavedValue = parseInt(lastSavedValueRef.current) || 0;
+
+    if (numSujetValue === currentSavedValue) {
+      pendingValueRef.current = null;
+      return;
+    }
+
+    // Vérifier les doublons
+    if (numSujetValue > 0) {
+      const existingVolontaire = volontairesAssignes.find(
+        (v) => v.numsujet === numSujetValue && v.idVolontaire !== volontaire.idVolontaire
+      );
+
+      if (existingVolontaire) {
+        const volInfo = volontairesInfo[existingVolontaire.idVolontaire];
+        let nomExistant = `Volontaire #${existingVolontaire.idVolontaire}`;
+        if (volInfo) {
+          const prenom = volInfo.prenom || volInfo.prenomVol || volInfo.prenomVolontaire || "";
+          const nom = volInfo.nom || volInfo.nomVol || volInfo.nomVolontaire || "";
+          if (prenom && nom) nomExistant = `${nom} ${prenom}`;
+          else if (prenom) nomExistant = prenom;
+          else if (nom) nomExistant = nom;
+        }
+        setLocalError(`N° ${numSujetValue} déjà attribué à ${nomExistant}`);
+        pendingValueRef.current = null;
+        setTimeout(() => {
+          setValue(lastSavedValueRef.current);
+          setLocalError("");
+        }, 3000);
+        return;
+      }
+    }
+
+    setLocalError("");
+    isSavingRef.current = true;
+    pendingValueRef.current = newValue;
+
+    try {
+      await onUpdate(volontaire, "numsujet", newValue, "/etude-volontaires/update-numsujet");
+      lastSavedValueRef.current = newValue;
+    } finally {
+      isSavingRef.current = false;
+      pendingValueRef.current = null;
+    }
+  };
+
+  return (
+    <div className="relative">
+      <div className="flex items-center space-x-2">
+        <Input
+          ref={inputRef}
+          type="number"
+          value={value}
+          onChange={(e) => {
+            const rawValue = e.target.value;
+            const normalizedValue = rawValue === '' ? '' : String(parseInt(rawValue) || 0);
+            setValue(normalizedValue);
+          }}
+          className={`w-20 ${localError ? "border-red-500 bg-red-50" : ""}`}
+          min="1"
+          title={localError || ""}
+          onFocus={(e) => {
+            hasFocusRef.current = true;
+            e.target.select();
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              handleUpdate(value);
+            }
+          }}
+          onBlur={() => {
+            const valueToSave = value;
+            pendingValueRef.current = valueToSave;
+            hasFocusRef.current = false;
+            handleUpdate(valueToSave);
+          }}
+        />
+        <UpdateStatusIcon status={updateStatus[`${volontaire.idVolontaire}_numsujet`]} />
+      </div>
+      {localError && (
+        <div className="absolute z-10 left-0 top-full mt-1 p-2 bg-red-100 border border-red-300 rounded shadow-lg max-w-[250px]">
+          <p className="text-xs text-red-700 font-medium">{localError}</p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Composant IVInput externalisé pour éviter les re-renders
+const IVInput: React.FC<IVInputProps> = ({ volontaire, updateStatus, onUpdate }) => {
+  const [value, setValue] = useState(volontaire.iv?.toString() || "0");
+  const isSavingRef = useRef(false);
+  const lastSavedValueRef = useRef(volontaire.iv?.toString() || "0");
+  const hasFocusRef = useRef(false);
+  const pendingValueRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    const propValue = volontaire.iv?.toString() || "0";
+    if (!hasFocusRef.current && !isSavingRef.current && pendingValueRef.current === null && propValue !== lastSavedValueRef.current) {
+      setValue(propValue);
+      lastSavedValueRef.current = propValue;
+    }
+  }, [volontaire.iv]);
+
+  const handleUpdate = async (newValue: string) => {
+    if (isSavingRef.current) {
+      pendingValueRef.current = newValue;
+      return;
+    }
+
+    const ivValue = parseInt(newValue) || 0;
+    const currentSavedValue = parseInt(lastSavedValueRef.current) || 0;
+
+    if (ivValue === currentSavedValue) {
+      pendingValueRef.current = null;
+      return;
+    }
+
+    isSavingRef.current = true;
+    pendingValueRef.current = newValue;
+
+    try {
+      await onUpdate(volontaire, newValue);
+      lastSavedValueRef.current = newValue;
+    } finally {
+      isSavingRef.current = false;
+      pendingValueRef.current = null;
+    }
+  };
+
+  return (
+    <div className="flex items-center space-x-2">
+      <Input
+        type="number"
+        value={value}
+        onChange={(e) => {
+          const rawValue = e.target.value;
+          const normalizedValue = rawValue === '' ? '' : String(parseInt(rawValue) || 0);
+          setValue(normalizedValue);
+        }}
+        className="w-24"
+        min="0"
+        onFocus={(e) => {
+          hasFocusRef.current = true;
+          e.target.select();
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            handleUpdate(value);
+          }
+        }}
+        onBlur={() => {
+          const valueToSave = value;
+          pendingValueRef.current = valueToSave;
+          hasFocusRef.current = false;
+          handleUpdate(valueToSave);
+        }}
+      />
+      <UpdateStatusIcon status={updateStatus[`${volontaire.idVolontaire}_iv`]} />
+    </div>
+  );
+};
 
 // ===============================
 // HOOKS PERSONNALISÉS
@@ -572,9 +803,9 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
       const nom =
         volontaire.nom || volontaire.nomVol || volontaire.nomVolontaire || "";
 
-      if (prenom && nom) return `${prenom} ${nom}`;
-      if (prenom) return prenom;
+      if (prenom && nom) return `${nom} ${prenom}`;
       if (nom) return nom;
+      if (prenom) return prenom;
       if (volontaire.nomComplet) return volontaire.nomComplet;
 
       return `${t('indemnity.volunteer')} #${idVolontaire}`;
@@ -748,93 +979,6 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
     }
   }, [error, onError]);
 
-  // Composant pour l'indicateur de statut
-  const StatusIcon: React.FC<{ status?: 'loading' | 'success' | 'error' | 'cancelled' }> = ({ status }) => {
-    switch (status) {
-      case "loading":
-        return (
-          <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-blue-500"></div>
-        );
-      case "success":
-        return <Check className="text-green-500 w-5 h-5" />;
-      case "error":
-        return <X className="text-red-500 w-5 h-5" />;
-      case "cancelled":
-        return <AlertTriangle className="text-orange-500 w-5 h-5" />;
-      default:
-        return null;
-    }
-  };
-
-  // Composant pour l'input du numéro de sujet avec validation des doublons
-  const NumSujetInput: React.FC<{ volontaire: VolontaireAssigne }> = ({ volontaire }) => {
-    const [value, setValue] = useState(volontaire.numsujet?.toString() || "");
-    const [localError, setLocalError] = useState("");
-
-    const handleUpdate = (newValue: string) => {
-      const numSujetValue = parseInt(newValue) || 0;
-
-      // Vérifier si le numéro de sujet est déjà utilisé par un autre volontaire
-      if (numSujetValue > 0) {
-        const existingVolontaire = volontairesAssignes.find(
-          (v) => v.numsujet === numSujetValue && v.idVolontaire !== volontaire.idVolontaire
-        );
-
-        if (existingVolontaire) {
-          // Obtenir le nom du volontaire existant
-          const volInfo = volontairesInfo[existingVolontaire.idVolontaire];
-          let nomExistant = `Volontaire #${existingVolontaire.idVolontaire}`;
-          if (volInfo) {
-            const prenom = volInfo.prenom || volInfo.prenomVol || volInfo.prenomVolontaire || "";
-            const nom = volInfo.nom || volInfo.nomVol || volInfo.nomVolontaire || "";
-            if (prenom && nom) nomExistant = `${prenom} ${nom}`;
-            else if (prenom) nomExistant = prenom;
-            else if (nom) nomExistant = nom;
-          }
-          setLocalError(`N° ${numSujetValue} déjà attribué à ${nomExistant}`);
-          // Réinitialiser à l'ancienne valeur après 3 secondes
-          setTimeout(() => {
-            setValue(volontaire.numsujet?.toString() || "");
-            setLocalError("");
-          }, 3000);
-          return;
-        }
-      }
-
-      setLocalError("");
-      updateVolontaire(volontaire, "numsujet", newValue, "/etude-volontaires/update-numsujet");
-    };
-
-    return (
-      <div className="relative">
-        <div className="flex items-center space-x-2">
-          <Input
-            type="number"
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            className={`w-20 ${localError ? "border-red-500 bg-red-50" : ""}`}
-            min="1"
-            title={localError || ""}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                handleUpdate(value);
-              }
-            }}
-            onBlur={() => handleUpdate(value)}
-          />
-          <StatusIcon
-            status={updateStatus[`${volontaire.idVolontaire}_numsujet`]}
-          />
-        </div>
-        {localError && (
-          <div className="absolute z-10 left-0 top-full mt-1 p-2 bg-red-100 border border-red-300 rounded shadow-lg max-w-[250px]">
-            <p className="text-xs text-red-700 font-medium">{localError}</p>
-          </div>
-        )}
-      </div>
-    );
-  };
-
   // Composant pour la gestion des annulations
   const AnnulationButton: React.FC<{ volontaire: VolontaireAssigne }> = ({ volontaire }) => {
     const [showForm, setShowForm] = useState(false);
@@ -937,7 +1081,7 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
           </div>
 
           <div className="flex items-center justify-center">
-            <StatusIcon status={updateStatus[`${volontaire.idVolontaire}_annulation`]} />
+            <UpdateStatusIcon status={updateStatus[`${volontaire.idVolontaire}_annulation`]} />
           </div>
         </div>
       );
@@ -996,7 +1140,7 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
             </Button>
           </div>
           <div className="flex items-center justify-center">
-            <StatusIcon status={updateStatus[`${volontaire.idVolontaire}_delete`]} />
+            <UpdateStatusIcon status={updateStatus[`${volontaire.idVolontaire}_delete`]} />
           </div>
         </div>
       );
@@ -1102,7 +1246,7 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
           </div>
 
           <div className="flex items-center justify-end">
-            <StatusIcon status={updateStatus[`${volontaire.idVolontaire}_statut`]} />
+            <UpdateStatusIcon status={updateStatus[`${volontaire.idVolontaire}_statut`]} />
           </div>
         </div>
       );
@@ -1129,7 +1273,7 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
         </div>
 
         <div className="flex items-center justify-end">
-          <StatusIcon status={updateStatus[`${volontaire.idVolontaire}_statut`]} />
+          <UpdateStatusIcon status={updateStatus[`${volontaire.idVolontaire}_statut`]} />
         </div>
       </div>
     );
@@ -1349,29 +1493,21 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
                   </td>
 
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    <NumSujetInput volontaire={volontaire} />
+                    <NumSujetInput
+                      volontaire={volontaire}
+                      volontairesAssignes={volontairesAssignes}
+                      volontairesInfo={volontairesInfo}
+                      updateStatus={updateStatus}
+                      onUpdate={updateVolontaire}
+                    />
                   </td>
 
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    <div className="flex items-center space-x-2">
-                      <Input
-                        type="number"
-                        defaultValue={volontaire.iv || 0}
-                        className="w-24"
-                        min="0"
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            updateIV(volontaire, (e.target as HTMLInputElement).value);
-                          }
-                        }}
-                        onBlur={(e) => {
-                          updateIV(volontaire, e.target.value);
-                        }}
-                      />
-                      <StatusIcon
-                        status={updateStatus[`${volontaire.idVolontaire}_iv`]}
-                      />
-                    </div>
+                    <IVInput
+                      volontaire={volontaire}
+                      updateStatus={updateStatus}
+                      onUpdate={updateIV}
+                    />
                   </td>
 
 

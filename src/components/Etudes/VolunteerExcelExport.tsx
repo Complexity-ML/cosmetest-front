@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import * as XLSX from 'xlsx';
 import volontaireService from '../../services/volontaireService';
 import etudeService from '../../services/etudeService';
+import api from '../../services/api';
 import { Button } from '@/components/ui/button';
 import { Loader2, Download } from 'lucide-react';
 
@@ -122,7 +123,35 @@ const VolunteerExcelExport: React.FC<VolunteerExcelExportProps> = ({
 
       setExportProgress(5);
 
-      // 1. Récupérer les détails complets de tous les volontaires
+      // 1. Récupérer les associations étude-volontaire pour obtenir numsujet
+      const associationsData: Record<number, any> = {};
+
+      if (volunteerIds.length > 0 && studyId) {
+        try {
+          const associationsResponse = await api.get(`/etude-volontaires/etude/${studyId}`);
+
+          let associations: any[] = [];
+          if (Array.isArray(associationsResponse.data)) {
+            associations = associationsResponse.data;
+          } else if (associationsResponse.data?.success && Array.isArray(associationsResponse.data.data)) {
+            associations = associationsResponse.data.data;
+          } else if (associationsResponse.data && Array.isArray(associationsResponse.data.data)) {
+            associations = associationsResponse.data.data;
+          }
+
+          associations.forEach((assoc: any) => {
+            if (assoc.idVolontaire) {
+              associationsData[assoc.idVolontaire] = assoc;
+            }
+          });
+        } catch (error) {
+          console.error('Erreur lors de la récupération des associations:', error);
+        }
+      }
+
+      setExportProgress(10);
+
+      // 2. Récupérer les détails complets de tous les volontaires
       const volunteersData: any[] = [];
       let processedCount = 0;
 
@@ -150,9 +179,14 @@ const VolunteerExcelExport: React.FC<VolunteerExcelExportProps> = ({
       // Filtrer les résultats valides et normaliser les types de peau
       volunteerResults.forEach(result => {
         if (result.data) {
+          // Récupérer le numsujet depuis les associations (base de données)
+          const association = associationsData[result.id];
+          const numsujetFromDb = association?.numsujet;
+
           const normalizedData = {
             ...result.data,
-            numeroSujet: result.index,
+            // Utiliser le numsujet de la BDD, laisser vide si 0 ou undefined
+            numeroSujet: (numsujetFromDb && numsujetFromDb !== 0) ? numsujetFromDb : '',
             idVolontaire: result.id,
             // Normaliser le type de peau
             typePeauVisage: normalizeTypePeau(result.data.typePeauVisage),
@@ -171,6 +205,7 @@ const VolunteerExcelExport: React.FC<VolunteerExcelExportProps> = ({
 
       // 2. Créer les en-têtes selon le format amélioré
       const headers = [
+        'ID Vol',
         'N° Sujet',
         'Code',
         'AGE',
@@ -181,7 +216,6 @@ const VolunteerExcelExport: React.FC<VolunteerExcelExportProps> = ({
         '', // Colonne vide
         'TYPE DE PEAU (EN)',
         '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', // Colonnes vides
-        'ID VOL',
         'Phototype'
       ];
 
@@ -212,6 +246,9 @@ const VolunteerExcelExport: React.FC<VolunteerExcelExportProps> = ({
 
       volunteersData.forEach((volunteer) => {
         const row = [];
+
+        // ID Vol
+        row.push(volunteer.idVol || '');
 
         // N° Sujet
         row.push(volunteer.numeroSujet || '');
@@ -259,9 +296,6 @@ const VolunteerExcelExport: React.FC<VolunteerExcelExportProps> = ({
           row.push('');
         }
 
-        // ID VOL (utilise idVol de l'entité)
-        row.push(volunteer.idVol || '');
-
         // Phototype (utilise l'attribut phototype de l'entité)
         row.push(volunteer.phototype || '');
 
@@ -270,19 +304,19 @@ const VolunteerExcelExport: React.FC<VolunteerExcelExportProps> = ({
 
       setExportProgress(85);
 
-      // 5. Ajouter des statistiques en bas (FORMAT PIVOT - Section séparée)
+      // 5. Définir les plages de données pour les formules Excel
+      // Les données commencent à la ligne 4 (après titre, en-têtes, ligne vide)
+      const dataStartRowExcel = 4; // Ligne Excel (1-indexed)
+      const dataEndRowExcel = dataStartRowExcel + volunteersData.length - 1;
 
-      // Plusieurs lignes vides pour séparer les données des statistiques
-      dataRows.push(new Array(headers.length).fill(''));
-      dataRows.push(new Array(headers.length).fill(''));
-      dataRows.push(new Array(headers.length).fill(''));
+      // Colonnes: D=Age, E=Sensibilité, F=Type peau, H=Ethnie, AE=Phototype
+      const ageRange = `D${dataStartRowExcel}:D${dataEndRowExcel}`;
+      const sensibiliteRange = `E${dataStartRowExcel}:E${dataEndRowExcel}`;
+      const typePeauRange = `F${dataStartRowExcel}:F${dataEndRowExcel}`;
+      const ethnieRange = `H${dataStartRowExcel}:H${dataEndRowExcel}`;
+      const phototypeRange = `AE${dataStartRowExcel}:AE${dataEndRowExcel}`;
 
-      // TITRE DE LA SECTION STATISTIQUES
-      const statsTitle = ['=== STATISTIQUES DÉMOGRAPHIQUES ==='];
-      dataRows.push(statsTitle);
-      dataRows.push(new Array(headers.length).fill(''));
-
-      // === CALCULS PRÉALABLES ===
+      // === CALCULS PRÉALABLES (pour les valeurs initiales) ===
       const ages = volunteersData.map(v => {
         if (v.dateNaissance) {
           return Math.floor((new Date().getTime() - new Date(v.dateNaissance).getTime()) / (365.25 * 24 * 60 * 60 * 1000));
@@ -294,14 +328,12 @@ const VolunteerExcelExport: React.FC<VolunteerExcelExportProps> = ({
       const minAge = ages.length > 0 ? Math.min(...ages) : 0;
       const maxAge = ages.length > 0 ? Math.max(...ages) : 0;
 
-      // Calcul de l'écart type
       let ecartTypeAge = 0;
       if (ages.length > 0) {
         const variance = ages.reduce((acc: number, age: number) => acc + Math.pow(age - moyenneAge, 2), 0) / ages.length;
         ecartTypeAge = Math.round(Math.sqrt(variance) * 10) / 10;
       }
 
-      // Calcul de la médiane
       let medianeAge: number = 0;
       if (ages.length > 0) {
         const sortedAges = [...ages].sort((a: number, b: number) => a - b);
@@ -314,158 +346,203 @@ const VolunteerExcelExport: React.FC<VolunteerExcelExportProps> = ({
         }
       }
 
-      // === 1. STATISTIQUES D'ÂGE (FORMAT PIVOT) ===
-      const ageStatsPivot = [
-        ['STATISTIQUES D\'ÂGE', 'Valeur', ''],
-        ['N', ages.length, ''],
-        ['Moyenne', moyenneAge, 'ans'],
-        ['Médiane', medianeAge, 'ans'],
-        ['Écart type', ecartTypeAge, 'ans'],
-        ['Minimum', minAge, 'ans'],
-        ['Maximum', maxAge, 'ans'],
-        ['', '', ''] // Ligne vide
-      ];
-
-      ageStatsPivot.forEach(statRow => {
-        const row = new Array(headers.length).fill('');
-        row[0] = statRow[0];
-        row[1] = statRow[1];
-        row[2] = statRow[2];
-        dataRows.push(row);
-      });
-
-      // === 2. STATISTIQUES DE SENSIBILITÉ CUTANÉE (FORMAT PIVOT) ===
+      // Comptages pour les statistiques
       const sensibiliteStats: Record<string, number> = volunteersData.reduce((acc: Record<string, number>, v: any) => {
         const sens = v.sensibiliteCutanee || 'Non spécifié';
         acc[sens] = (acc[sens] || 0) + 1;
         return acc;
       }, {});
 
-      const sensibilitePivot: Array<[string, number | string, string]> = [['SENSIBILITÉ CUTANÉE', 'N', '%']];
-      Object.entries(sensibiliteStats).forEach(([type, count]) => {
-        const percentage = Math.round(((count as number) / volunteersData.length) * 100 * 10) / 10;
-        sensibilitePivot.push([type, count, `${percentage}%`]);
-      });
-      sensibilitePivot.push(['', '', '']); // Ligne vide
-
-      sensibilitePivot.forEach(statRow => {
-        const row = new Array(headers.length).fill('');
-        row[0] = statRow[0];
-        row[1] = statRow[1];
-        row[2] = statRow[2];
-        dataRows.push(row);
-      });
-
-      // === 3. STATISTIQUES DE TYPES DE PEAU (FORMAT PIVOT) ===
-      // Utiliser les données déjà normalisées
       const typesPeauStats: Record<string, number> = volunteersData.reduce((acc: Record<string, number>, v: any) => {
         const type = v.typePeauVisage || 'Non spécifié';
         acc[type] = (acc[type] || 0) + 1;
         return acc;
       }, {});
 
-      const typesPeauPivot: Array<Array<string | number>> = [
-        ['TYPES DE PEAU', 'N', '%'],
-        ['', '', ''] // Séparateur
-      ];
-
-      // Afficher toujours dans le même ordre:
-      const orderedTypesPeau = [
-        'Grasse',
-        'Mixte',
-        'Normale',
-        'Sèche',
-        'Sensible', // Une seule entrée pour "Sensible"
-        'Mixte à tendance grasse',
-        'Mixte à tendance sèche'
-      ];
-
-      orderedTypesPeau.forEach(type => {
-        const count = typesPeauStats[type] || 0;
-        if (count > 0) { // Afficher seulement si il y a des données
-          const percentage = Math.round((count / volunteersData.length) * 100 * 10) / 10;
-          typesPeauPivot.push([type, count, `${percentage}%`]);
-        }
-      });
-
-      // Ajouter les types non prévus dans l'ordre (s'il y en a)
-      Object.entries(typesPeauStats).forEach(([type, count]) => {
-        if (!orderedTypesPeau.includes(type) && type !== 'Non spécifié') {
-          const percentage = Math.round(((count as number) / volunteersData.length) * 100 * 10) / 10;
-          typesPeauPivot.push([type, count, `${percentage}%`]);
-        }
-      });
-
-      // Ajouter "Non spécifié" à la fin s'il existe
-      if (typesPeauStats['Non spécifié']) {
-        const count = typesPeauStats['Non spécifié'];
-        const percentage = Math.round((count / volunteersData.length) * 100 * 10) / 10;
-        typesPeauPivot.push(['Non spécifié', count, `${percentage}%`]);
-      }
-
-      typesPeauPivot.push(['', '', '']);
-
-      // Ligne vide pour séparer les sections
-      typesPeauPivot.forEach(statRow => {
-        const row = new Array(headers.length).fill('');
-        row[0] = statRow[0];
-        row[1] = statRow[1];
-        row[2] = statRow[2];
-        dataRows.push(row);
-      });
-
-      // === 4. STATISTIQUES DE PHOTOTYPES (FORMAT PIVOT) ===
       const phototypesStats: Record<string, number> = volunteersData.reduce((acc: Record<string, number>, v: any) => {
         const phototype = v.phototype || 'Non spécifié';
         acc[phototype] = (acc[phototype] || 0) + 1;
         return acc;
       }, {});
 
-      // Toujours afficher les phototypes dans l'ordre croissant
-      const orderedPhototypes = [
-        'Phototype 1',
-        'Phototype 2',
-        'Phototype 3',
-        'Phototype 4',
-        'Phototype 5',
-        'Phototype 6',
-      ];
-
-      const phototypePivot: Array<Array<string | number>> = [['PHOTOTYPES', 'N', '%']];
-      orderedPhototypes.forEach(type => {
-        const count = phototypesStats[type] || 0;
-        const percentage = Math.round((count / volunteersData.length) * 100 * 10) / 10;
-        phototypePivot.push([type, count, `${percentage}%`]);
-      });
-      phototypePivot.push(['', '', '']); // Ligne vide
-
-      phototypePivot.forEach(statRow => {
-        const row = new Array(headers.length).fill('');
-        row[0] = statRow[0];
-        row[1] = statRow[1];
-        row[2] = statRow[2];
-        dataRows.push(row);
-      });
-
-      // === 5. STATISTIQUES D'ETHNIES (FORMAT PIVOT) ===
       const ethniesStats: Record<string, number> = volunteersData.reduce((acc: Record<string, number>, v: any) => {
         const ethnie = v.ethnie || 'Non spécifié';
         acc[ethnie] = (acc[ethnie] || 0) + 1;
         return acc;
       }, {});
 
-      const ethniesPivot: Array<Array<string | number>> = [['ETHNIES', 'N', '%']];
-      Object.entries(ethniesStats).forEach(([ethnie, count]) => {
-        const percentage = Math.round(((count as number) / volunteersData.length) * 100 * 10) / 10;
-        ethniesPivot.push([ethnie, count, `${percentage}%`]);
-      });
+      // Plusieurs lignes vides pour séparer les données des statistiques
+      dataRows.push(new Array(headers.length).fill(''));
+      dataRows.push(new Array(headers.length).fill(''));
+      dataRows.push(new Array(headers.length).fill(''));
 
-      ethniesPivot.forEach(statRow => {
+      // TITRE DE LA SECTION STATISTIQUES
+      const statsTitle = ['=== STATISTIQUES DÉMOGRAPHIQUES (avec formules) ==='];
+      dataRows.push(statsTitle);
+      dataRows.push(new Array(headers.length).fill(''));
+
+      // Structure pour stocker les formules à appliquer après création de la feuille
+      // Maintenant avec valeur calculée + formule
+      const formulesToApply: Array<{row: number, col: number, formula: string, value: number}> = [];
+      let currentRowIndex = dataRows.length;
+
+      // === 1. STATISTIQUES D'ÂGE ===
+      const ageStatsLabels = [
+        ['STATISTIQUES D\'ÂGE', 'Valeur', 'Unité'],
+        ['N (effectif)', ages.length, ''],
+        ['Moyenne', moyenneAge, 'ans'],
+        ['Médiane', medianeAge, 'ans'],
+        ['Écart type', ecartTypeAge, 'ans'],
+        ['Minimum', minAge, 'ans'],
+        ['Maximum', maxAge, 'ans'],
+        ['', '', '']
+      ];
+
+      ageStatsLabels.forEach((statRow, idx) => {
         const row = new Array(headers.length).fill('');
         row[0] = statRow[0];
         row[1] = statRow[1];
         row[2] = statRow[2];
         dataRows.push(row);
+
+        // Ajouter les formules avec valeurs pré-calculées
+        if (idx === 1) {
+          formulesToApply.push({row: currentRowIndex + idx, col: 1, formula: `COUNT(${ageRange})`, value: ages.length});
+        } else if (idx === 2) {
+          formulesToApply.push({row: currentRowIndex + idx, col: 1, formula: `ROUND(AVERAGE(${ageRange}),1)`, value: moyenneAge});
+        } else if (idx === 3) {
+          formulesToApply.push({row: currentRowIndex + idx, col: 1, formula: `MEDIAN(${ageRange})`, value: medianeAge});
+        } else if (idx === 4) {
+          formulesToApply.push({row: currentRowIndex + idx, col: 1, formula: `ROUND(STDEV(${ageRange}),1)`, value: ecartTypeAge});
+        } else if (idx === 5) {
+          formulesToApply.push({row: currentRowIndex + idx, col: 1, formula: `MIN(${ageRange})`, value: minAge});
+        } else if (idx === 6) {
+          formulesToApply.push({row: currentRowIndex + idx, col: 1, formula: `MAX(${ageRange})`, value: maxAge});
+        }
+      });
+      currentRowIndex = dataRows.length;
+
+      // === 2. STATISTIQUES DE SENSIBILITÉ CUTANÉE ===
+      const sensibiliteValues = Object.keys(sensibiliteStats);
+      const sensibiliteLabels: (string | number)[][] = [['SENSIBILITÉ CUTANÉE', 'N', '%']];
+      sensibiliteValues.forEach(val => {
+        const count = sensibiliteStats[val];
+        const pct = Math.round((count / volunteersData.length) * 100 * 10) / 10;
+        sensibiliteLabels.push([val, count, pct]);
+      });
+      sensibiliteLabels.push(['TOTAL', volunteersData.length, 100]);
+      sensibiliteLabels.push(['', '', '']);
+
+      sensibiliteLabels.forEach((statRow, idx) => {
+        const row = new Array(headers.length).fill('');
+        row[0] = statRow[0];
+        row[1] = statRow[1];
+        row[2] = statRow[2];
+        dataRows.push(row);
+
+        if (idx >= 1 && idx <= sensibiliteValues.length) {
+          const value = sensibiliteValues[idx - 1];
+          const count = sensibiliteStats[value];
+          const pct = Math.round((count / volunteersData.length) * 100 * 10) / 10;
+          formulesToApply.push({row: currentRowIndex + idx, col: 1, formula: `COUNTIF(${sensibiliteRange},"${value}")`, value: count});
+          formulesToApply.push({row: currentRowIndex + idx, col: 2, formula: `ROUND(COUNTIF(${sensibiliteRange},"${value}")/COUNTA(${sensibiliteRange})*100,1)`, value: pct});
+        } else if (idx === sensibiliteValues.length + 1) {
+          formulesToApply.push({row: currentRowIndex + idx, col: 1, formula: `COUNTA(${sensibiliteRange})`, value: volunteersData.length});
+        }
+      });
+      currentRowIndex = dataRows.length;
+
+      // === 3. STATISTIQUES DE TYPES DE PEAU ===
+      const orderedTypesPeau = ['Grasse', 'Mixte', 'Normale', 'Sèche', 'Sensible', 'Mixte à tendance grasse', 'Mixte à tendance sèche'];
+      const typesPeauPresents = [...new Set(volunteersData.map(v => v.typePeauVisage || 'Non spécifié'))];
+      const allTypesPeau = [...new Set([...orderedTypesPeau.filter(t => typesPeauPresents.includes(t)), ...typesPeauPresents])];
+
+      const typesPeauLabels: (string | number)[][] = [['TYPES DE PEAU', 'N', '%']];
+      allTypesPeau.forEach(type => {
+        const count = typesPeauStats[type] || 0;
+        const pct = Math.round((count / volunteersData.length) * 100 * 10) / 10;
+        typesPeauLabels.push([type, count, pct]);
+      });
+      typesPeauLabels.push(['TOTAL', volunteersData.length, 100]);
+      typesPeauLabels.push(['', '', '']);
+
+      typesPeauLabels.forEach((statRow, idx) => {
+        const row = new Array(headers.length).fill('');
+        row[0] = statRow[0];
+        row[1] = statRow[1];
+        row[2] = statRow[2];
+        dataRows.push(row);
+
+        if (idx >= 1 && idx <= allTypesPeau.length) {
+          const type = allTypesPeau[idx - 1];
+          const count = typesPeauStats[type] || 0;
+          const pct = Math.round((count / volunteersData.length) * 100 * 10) / 10;
+          formulesToApply.push({row: currentRowIndex + idx, col: 1, formula: `COUNTIF(${typePeauRange},"${type}")`, value: count});
+          formulesToApply.push({row: currentRowIndex + idx, col: 2, formula: `ROUND(COUNTIF(${typePeauRange},"${type}")/COUNTA(${typePeauRange})*100,1)`, value: pct});
+        } else if (idx === allTypesPeau.length + 1) {
+          formulesToApply.push({row: currentRowIndex + idx, col: 1, formula: `COUNTA(${typePeauRange})`, value: volunteersData.length});
+        }
+      });
+      currentRowIndex = dataRows.length;
+
+      // === 4. STATISTIQUES DE PHOTOTYPES ===
+      const orderedPhototypes = ['Phototype 1', 'Phototype 2', 'Phototype 3', 'Phototype 4', 'Phototype 5', 'Phototype 6'];
+
+      const phototypesLabels: (string | number)[][] = [['PHOTOTYPES', 'N', '%']];
+      orderedPhototypes.forEach(type => {
+        const count = phototypesStats[type] || 0;
+        const pct = Math.round((count / volunteersData.length) * 100 * 10) / 10;
+        phototypesLabels.push([type, count, pct]);
+      });
+      phototypesLabels.push(['TOTAL', volunteersData.length, 100]);
+      phototypesLabels.push(['', '', '']);
+
+      phototypesLabels.forEach((statRow, idx) => {
+        const row = new Array(headers.length).fill('');
+        row[0] = statRow[0];
+        row[1] = statRow[1];
+        row[2] = statRow[2];
+        dataRows.push(row);
+
+        if (idx >= 1 && idx <= orderedPhototypes.length) {
+          const type = orderedPhototypes[idx - 1];
+          const count = phototypesStats[type] || 0;
+          const pct = Math.round((count / volunteersData.length) * 100 * 10) / 10;
+          formulesToApply.push({row: currentRowIndex + idx, col: 1, formula: `COUNTIF(${phototypeRange},"${type}")`, value: count});
+          formulesToApply.push({row: currentRowIndex + idx, col: 2, formula: `ROUND(COUNTIF(${phototypeRange},"${type}")/COUNTA(${phototypeRange})*100,1)`, value: pct});
+        } else if (idx === orderedPhototypes.length + 1) {
+          formulesToApply.push({row: currentRowIndex + idx, col: 1, formula: `COUNTA(${phototypeRange})`, value: volunteersData.length});
+        }
+      });
+      currentRowIndex = dataRows.length;
+
+      // === 5. STATISTIQUES D'ETHNIES ===
+      const ethniesPresentes = Object.keys(ethniesStats);
+
+      const ethniesLabels: (string | number)[][] = [['ETHNIES', 'N', '%']];
+      ethniesPresentes.forEach(ethnie => {
+        const count = ethniesStats[ethnie];
+        const pct = Math.round((count / volunteersData.length) * 100 * 10) / 10;
+        ethniesLabels.push([ethnie, count, pct]);
+      });
+      ethniesLabels.push(['TOTAL', volunteersData.length, 100]);
+
+      ethniesLabels.forEach((statRow, idx) => {
+        const row = new Array(headers.length).fill('');
+        row[0] = statRow[0];
+        row[1] = statRow[1];
+        row[2] = statRow[2];
+        dataRows.push(row);
+
+        if (idx >= 1 && idx <= ethniesPresentes.length) {
+          const ethnie = ethniesPresentes[idx - 1];
+          const count = ethniesStats[ethnie];
+          const pct = Math.round((count / volunteersData.length) * 100 * 10) / 10;
+          formulesToApply.push({row: currentRowIndex + idx, col: 1, formula: `COUNTIF(${ethnieRange},"${ethnie}")`, value: count});
+          formulesToApply.push({row: currentRowIndex + idx, col: 2, formula: `ROUND(COUNTIF(${ethnieRange},"${ethnie}")/COUNTA(${ethnieRange})*100,1)`, value: pct});
+        } else if (idx === ethniesPresentes.length + 1) {
+          formulesToApply.push({row: currentRowIndex + idx, col: 1, formula: `COUNTA(${ethnieRange})`, value: volunteersData.length});
+        }
       });
 
       setExportProgress(90);
@@ -473,6 +550,14 @@ const VolunteerExcelExport: React.FC<VolunteerExcelExportProps> = ({
       // 6. Créer le fichier Excel
       const wb = XLSX.utils.book_new();
       const ws = XLSX.utils.aoa_to_sheet(dataRows);
+
+      // 6b. Appliquer les formules Excel aux cellules avec valeurs pré-calculées
+      formulesToApply.forEach(({row, col, formula, value}) => {
+        const cellRef = XLSX.utils.encode_cell({ r: row, c: col });
+        // Cellule avec valeur calculée ET formule
+        // Excel affiche la valeur immédiatement et recalcule si les données changent
+        ws[cellRef] = { f: formula, t: 'n', v: value };
+      });
 
       // 7. Style pour les en-têtes
       const headerRowIndex = 1; // Deuxième ligne (index 1)
@@ -653,7 +738,8 @@ const VolunteerExcelExport: React.FC<VolunteerExcelExportProps> = ({
 
       // 12. Définir la largeur des colonnes
       const colWidths = [
-        { width: 25 },  // N° Sujet
+        { width: 10 },  // ID Vol
+        { width: 10 },  // N° Sujet
         { width: 8 },   // Code
         { width: 6 },   // Age
         { width: 20 },  // Sensibilité cutanée
@@ -662,17 +748,9 @@ const VolunteerExcelExport: React.FC<VolunteerExcelExportProps> = ({
         { width: 15 },  // Ethnie
         { width: 3 },   // Vide
         { width: 20 },  // Type de peau EN
-        // Colonnes vides (16 colonnes au lieu de 17)
-        ...Array(16).fill({ width: 3 }),
-        { width: 20 },  // Age (stats) - élargi
-        { width: 12 },  // Moyenne
-        { width: 8 },   // 0
-        { width: 10 },  // ID VOL
-
+        // Colonnes vides (20 colonnes)
+        ...Array(20).fill({ width: 3 }),
         { width: 15 },  // Phototype
-        { width: 15 },  // Phototype
-        { width: 6 },   // N
-        { width: 8 }    // %
       ];
 
       ws['!cols'] = colWidths;

@@ -745,7 +745,10 @@
     "ongoing": "Ongoing",
     "completed": "Completed",
     "viewStudy": "View study",
-    "studyHistory": "Study history"
+    "studyHistory": "Study history",
+    "filterAwaitingPaymentActive": "Active filter: Awaiting payment",
+    "results": "result(s)",
+    "clearFilter": "Clear filter"
   },
   "appointments": {
     "title": "Appointment Management",

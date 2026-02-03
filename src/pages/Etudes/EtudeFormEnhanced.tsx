@@ -21,6 +21,15 @@ const ETHNIES_DISPONIBLES = [
   'ANTILLAISE',
 ];
 
+const PHOTOTYPES_DISPONIBLES = [
+  'Type 1',
+  'Type 2',
+  'Type 3',
+  'Type 4',
+  'Type 5',
+  'Type 6',
+];
+
 const PRODUITS_DISPONIBLES = [
   'GLOSS',
   'ROUGES A LEVRES',
@@ -67,6 +76,7 @@ interface NewGroupe {
   ageMinimum?: number;
   ageMaximum?: number;
   ethnie?: string | string[];
+  phototype?: string | string[];
   criteresSupplementaires?: string;
   nbSujet?: number;
   iv?: number;
@@ -119,6 +129,7 @@ const EtudeFormEnhanced = () => {
     ageMinimum: undefined,
     ageMaximum: undefined,
     ethnie: [],
+    phototype: [],
     criteresSupplementaires: '',
     nbSujet: undefined,
     iv: undefined,
@@ -259,6 +270,15 @@ const EtudeFormEnhanced = () => {
     });
   }, []);
 
+  const handlePhototypeChange = useCallback((phototypeValue: string) => {
+    setNewGroupe((prevGroupe) => {
+      const current = Array.isArray(prevGroupe.phototype) ? prevGroupe.phototype : [];
+      return current.includes(phototypeValue)
+        ? { ...prevGroupe, phototype: current.filter((p) => p !== phototypeValue) }
+        : { ...prevGroupe, phototype: [...current, phototypeValue] };
+    });
+  }, []);
+
   const fetchGroupes = useCallback(async () => {
     if (!isEditMode || !id) return;
     try {
@@ -280,11 +300,16 @@ const EtudeFormEnhanced = () => {
       return;
     }
     try {
-      const payload = { ...newGroupe, idEtude: Number(id), ethnie: normalizeEthnies(newGroupe.ethnie) };
+      const payload = {
+        ...newGroupe,
+        idEtude: Number(id),
+        ethnie: normalizeEthnies(newGroupe.ethnie),
+        phototype: Array.isArray(newGroupe.phototype) ? newGroupe.phototype.join(';') : ''
+      };
       await groupeService.create(payload);
       await fetchGroupes();
       setNewGroupe({
-        intitule: '', description: '', idEtude: id ? Number(id) : undefined, ageMinimum: undefined, ageMaximum: undefined, ethnie: [],
+        intitule: '', description: '', idEtude: id ? Number(id) : undefined, ageMinimum: undefined, ageMaximum: undefined, ethnie: [], phototype: [],
         criteresSupplementaires: '', nbSujet: undefined, iv: undefined,
       });
       setShowGroupeForm(false);
@@ -688,6 +713,8 @@ const EtudeFormEnhanced = () => {
             handleGroupeChange={handleGroupeChange}
             ethniesDisponibles={ETHNIES_DISPONIBLES}
             handleEthnieChange={handleEthnieChange}
+            phototypesDisponibles={PHOTOTYPES_DISPONIBLES}
+            handlePhototypeChange={handlePhototypeChange}
             handleCreateGroupe={handleCreateGroupe}
             isLoadingGroupes={isLoadingGroupes}
             groupes={groupes}

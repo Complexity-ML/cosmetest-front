@@ -746,7 +746,10 @@
     "ongoing": "En cours",
     "completed": "Terminé",
     "viewStudy": "Voir étude",
-    "studyHistory": "Historique des études"
+    "studyHistory": "Historique des études",
+    "filterAwaitingPaymentActive": "Filtre actif : En attente de paiement",
+    "results": "résultat(s)",
+    "clearFilter": "Effacer le filtre"
   },
   "appointments": {
     "title": "Gestion des Rendez-vous",

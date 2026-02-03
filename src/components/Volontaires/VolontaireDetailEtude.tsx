@@ -14,6 +14,9 @@ const VolontaireDetailEtude = ({ volontaireId }: any) => {
   // État pour l'accordéon des études terminées
   const [showTerminatedStudies, setShowTerminatedStudies] = useState(false);
 
+  // État pour le filtre des études en attente de paiement
+  const [filterAwaitingPayment, setFilterAwaitingPayment] = useState(false);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -192,11 +195,21 @@ const VolontaireDetailEtude = ({ volontaireId }: any) => {
     return false;
   });
 
+  // Appliquer le filtre "en attente de paiement" si activé
+  const etudesActivesFiltered = filterAwaitingPayment
+    ? etudesActives.filter(e => e.paye === 0 && e.iv > 0)
+    : etudesActives;
+
+  const etudesTermineesFiltered = filterAwaitingPayment
+    ? etudesTerminees.filter(e => e.paye === 0 && e.iv > 0)
+    : etudesTerminees;
+
   console.log('Résultats finaux:', {
     total: etudesEnrichies.length,
     actives: etudesActives.length,
     terminees: etudesTerminees.length,
-    indemniteAnneeCourante: indemniteAnneeCourante
+    indemniteAnneeCourante: indemniteAnneeCourante,
+    filterAwaitingPayment: filterAwaitingPayment
   });
 
   return (
@@ -243,11 +256,14 @@ const VolontaireDetailEtude = ({ volontaireId }: any) => {
               </p>
               <p className="text-gray-600 text-sm">{t('studies.paidStudies')}</p>
             </div>
-            <div className="text-center">
+            <div
+              className={`text-center cursor-pointer rounded-lg p-2 transition-colors ${filterAwaitingPayment ? 'bg-orange-100 ring-2 ring-orange-400' : 'hover:bg-orange-50'}`}
+              onClick={() => setFilterAwaitingPayment(!filterAwaitingPayment)}
+            >
               <p className="text-xl font-bold text-orange-600">
                 {etudesEnrichies.filter(e => e.paye === 0 && e.iv > 0).length}
               </p>
-              <p className="text-gray-600 text-sm">{t('studies.awaitingPayment')}</p>
+              <p className="text-gray-600 text-sm underline">{t('studies.awaitingPayment')}</p>
             </div>
             <div className="text-center">
               <p className="text-xl font-bold text-red-600">
@@ -265,19 +281,34 @@ const VolontaireDetailEtude = ({ volontaireId }: any) => {
         </div>
       </div>
 
+      {/* Indicateur de filtre actif */}
+      {filterAwaitingPayment && (
+        <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 flex items-center justify-between">
+          <span className="text-orange-700 text-sm font-medium">
+            {t('studies.filterAwaitingPaymentActive')} ({etudesActivesFiltered.length + etudesTermineesFiltered.length} {t('studies.results')})
+          </span>
+          <button
+            onClick={() => setFilterAwaitingPayment(false)}
+            className="text-orange-600 hover:text-orange-800 text-sm underline"
+          >
+            {t('studies.clearFilter')}
+          </button>
+        </div>
+      )}
+
       {/* Études en cours */}
       <div>
         <h3 className="text-lg font-medium text-gray-900 mb-4">
-          {t('studies.currentStudies')} ({etudesActives.length})
+          {t('studies.currentStudies')} ({etudesActivesFiltered.length})
         </h3>
 
-        {etudesActives.length === 0 ? (
+        {etudesActivesFiltered.length === 0 ? (
           <div className="bg-gray-50 rounded-lg p-6 text-center">
             <p className="text-gray-500">{t('studies.noOngoingStudies')}</p>
           </div>
         ) : (
           <div className="space-y-3">
-            {etudesActives.map((etude, index) => (
+            {etudesActivesFiltered.map((etude, index) => (
               <div
                 key={`active-${etude.idEtude}-${index}`}
                 className="border border-gray-200 rounded-lg p-4 bg-white hover:shadow-sm transition-shadow"
@@ -356,14 +387,14 @@ const VolontaireDetailEtude = ({ volontaireId }: any) => {
       </div>
 
       {/* Accordéon pour les études terminées */}
-      {etudesTerminees.length > 0 && (
+      {etudesTermineesFiltered.length > 0 && (
         <div className="border border-gray-200 rounded-lg overflow-hidden">
           <button
             onClick={() => setShowTerminatedStudies(!showTerminatedStudies)}
             className="w-full px-6 py-4 bg-gray-50 hover:bg-gray-100 transition-colors flex items-center justify-between text-left"
           >
             <h3 className="text-lg font-medium text-gray-900">
-              {t('studies.studyHistory')} ({etudesTerminees.length})
+              {t('studies.studyHistory')} ({etudesTermineesFiltered.length})
             </h3>
             <span className={`transform transition-transform duration-200 ${showTerminatedStudies ? 'rotate-180' : ''}`}>
               ▼
@@ -373,7 +404,7 @@ const VolontaireDetailEtude = ({ volontaireId }: any) => {
           {showTerminatedStudies && (
             <div className="p-6 bg-white">
               <div className="space-y-3">
-                {etudesTerminees.map((etude, index) => (
+                {etudesTermineesFiltered.map((etude, index) => (
                   <div
                     key={`terminated-${etude.idEtude}-${index}`}
                     className="border border-gray-200 rounded-lg p-4 bg-gray-50 hover:shadow-sm transition-shadow"
