@@ -17,7 +17,7 @@ import {
   type MakeupFilters,
   type EvaluationFilters
 } from './utils';
-import { CriteriaPanel } from './CriteriaComponents';
+import { CriteriaPanel, CustomCriterion } from './CriteriaComponents';
 import { ResultsTable, StatsGrid } from './ResultsComponents';
 import BulkEmailModal from './BulkEmailModal';
 
@@ -52,6 +52,7 @@ const MatchingSystem = () => {
   const [error, setError] = useState('');
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [selectedVolontaires, setSelectedVolontaires] = useState<any[]>([]);
+  const [customCriteria, setCustomCriteria] = useState<CustomCriterion[]>([]);
 
   const makeupSelectionCount =
     filters.makeup.visage.length +
@@ -167,7 +168,28 @@ const MatchingSystem = () => {
 
   const resetFilters = () => {
     setFilters(createInitialFilters());
+    setCustomCriteria([]);
     setResults([]);
+  };
+
+  // Gestion des critères personnalisés
+  const handleAddCustomCriterion = () => {
+    const newCriterion: CustomCriterion = {
+      id: `custom-${Date.now()}`,
+      label: '',
+      filter: ''
+    };
+    setCustomCriteria((prev) => [...prev, newCriterion]);
+  };
+
+  const handleRemoveCustomCriterion = (id: string) => {
+    setCustomCriteria((prev) => prev.filter((c) => c.id !== id));
+  };
+
+  const handleChangeCustomCriterion = (id: string, field: 'label' | 'filter', value: string) => {
+    setCustomCriteria((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, [field]: value } : c))
+    );
   };
 
   const handleContactAll = (volontaires: any[]) => {
@@ -291,6 +313,19 @@ const MatchingSystem = () => {
           // Sex filter - HARD FILTER
           if (sexeCritere && sexeCritere !== sexeVolontaire) {
             return false;
+          }
+
+          // Custom criteria filter - SOFT FILTER (recherche texte dans les données du volontaire)
+          if (customCriteria.length > 0) {
+            const volontaireString = JSON.stringify(volontaire).toLowerCase();
+            for (const criterion of customCriteria) {
+              if (criterion.filter && criterion.filter.trim() !== '') {
+                const filterValue = criterion.filter.toLowerCase().trim();
+                if (!volontaireString.includes(filterValue)) {
+                  return false;
+                }
+              }
+            }
           }
 
           return true;
@@ -463,7 +498,8 @@ const MatchingSystem = () => {
                       min: val.min !== null ? String(val.min) : undefined,
                       max: val.max !== null ? String(val.max) : undefined
                     }
-                  }), {})
+                  }), {}),
+                  customCriteria: customCriteria
                 }}
                 onAgeChange={handleAgeChange}
                 onSexChange={handleSexChange}
@@ -471,6 +507,9 @@ const MatchingSystem = () => {
                 onEthnieToggle={toggleEthnie}
                 onMakeupToggle={toggleMakeupOption}
                 onEvaluationChange={handleEvaluationThresholdChange}
+                onAddCustomCriterion={handleAddCustomCriterion}
+                onRemoveCustomCriterion={handleRemoveCustomCriterion}
+                onChangeCustomCriterion={handleChangeCustomCriterion}
                 onExecute={executerMatching}
                 onReset={resetFilters}
                 makeupCount={makeupSelectionCount}

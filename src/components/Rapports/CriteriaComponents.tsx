@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Search } from 'lucide-react';
+import { Search, Plus, Trash2 } from 'lucide-react';
 import { MAKEUP_OPTIONS, EVALUATION_FIELDS, ETHNIE_OPTIONS } from './constants';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +8,13 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+
+// Type pour les critères personnalisés
+export interface CustomCriterion {
+  id: string;
+  label: string;
+  filter: string;
+}
 
 export const InfoBanner = () => {
   const { t } = useTranslation();
@@ -166,6 +173,85 @@ export const MakeupCategory: React.FC<MakeupCategoryProps> = ({ title, options, 
   </div>
 );
 
+// Composant pour les critères personnalisés "Autres"
+interface CustomCriteriaSectionProps {
+  customCriteria: CustomCriterion[];
+  onAdd: () => void;
+  onRemove: (id: string) => void;
+  onChange: (id: string, field: 'label' | 'filter', value: string) => void;
+}
+
+export const CustomCriteriaSection: React.FC<CustomCriteriaSectionProps> = ({
+  customCriteria,
+  onAdd,
+  onRemove,
+  onChange
+}) => {
+  const { t } = useTranslation();
+
+  return (
+    <div className="mt-6 pt-6 border-t border-gray-200">
+      <div className="flex items-center justify-between mb-4">
+        <h4 className="font-medium text-gray-700">{t('reports.matching.otherCriteria')}</h4>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={onAdd}
+          className="flex items-center gap-1"
+        >
+          <Plus className="w-4 h-4" />
+          {t('reports.matching.addCriterion')}
+        </Button>
+      </div>
+
+      {customCriteria.length === 0 ? (
+        <p className="text-sm text-gray-500 italic">{t('reports.matching.noCustomCriteria')}</p>
+      ) : (
+        <div className="space-y-3">
+          {customCriteria.map((criterion) => (
+            <div key={criterion.id} className="flex items-end gap-3 p-3 bg-gray-50 rounded-lg">
+              <div className="flex-1 space-y-1">
+                <Label htmlFor={`criterion-label-${criterion.id}`} className="text-xs text-gray-500">
+                  {t('reports.matching.criterionLabel')}
+                </Label>
+                <Input
+                  id={`criterion-label-${criterion.id}`}
+                  type="text"
+                  placeholder={t('reports.matching.criterionLabelPlaceholder')}
+                  value={criterion.label}
+                  onChange={(e) => onChange(criterion.id, 'label', e.target.value)}
+                />
+              </div>
+              <div className="flex-1 space-y-1">
+                <Label htmlFor={`criterion-filter-${criterion.id}`} className="text-xs text-gray-500">
+                  {t('reports.matching.criterionFilter')}
+                </Label>
+                <Input
+                  id={`criterion-filter-${criterion.id}`}
+                  type="text"
+                  placeholder={t('reports.matching.criterionFilterPlaceholder')}
+                  value={criterion.filter}
+                  onChange={(e) => onChange(criterion.id, 'filter', e.target.value)}
+                />
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => onRemove(criterion.id)}
+                className="text-red-500 hover:text-red-700 hover:bg-red-50"
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 interface MakeupFiltersProps {
   values: {
     visage: string[];
@@ -173,9 +259,20 @@ interface MakeupFiltersProps {
     levres: string[];
   };
   onToggle: (category: string, value: string) => void;
+  customCriteria?: CustomCriterion[];
+  onAddCustomCriterion?: () => void;
+  onRemoveCustomCriterion?: (id: string) => void;
+  onChangeCustomCriterion?: (id: string, field: 'label' | 'filter', value: string) => void;
 }
 
-export const MakeupFilters: React.FC<MakeupFiltersProps> = ({ values, onToggle }) => {
+export const MakeupFilters: React.FC<MakeupFiltersProps> = ({
+  values,
+  onToggle,
+  customCriteria = [],
+  onAddCustomCriterion,
+  onRemoveCustomCriterion,
+  onChangeCustomCriterion
+}) => {
   const { t } = useTranslation();
   return (
     <div className="bg-white p-6 rounded-lg border border-gray-200">
@@ -199,6 +296,16 @@ export const MakeupFilters: React.FC<MakeupFiltersProps> = ({ values, onToggle }
           selected={values.levres}
           onToggle={(value) => onToggle('levres', value)}
         />
+
+        {/* Section Autres critères */}
+        {onAddCustomCriterion && onRemoveCustomCriterion && onChangeCustomCriterion && (
+          <CustomCriteriaSection
+            customCriteria={customCriteria}
+            onAdd={onAddCustomCriterion}
+            onRemove={onRemoveCustomCriterion}
+            onChange={onChangeCustomCriterion}
+          />
+        )}
       </div>
     </div>
   );
@@ -315,6 +422,7 @@ interface CriteriaPanelProps {
       levres: string[];
     };
     evaluations: Record<string, { min?: string; max?: string }>;
+    customCriteria?: CustomCriterion[];
   };
   onAgeChange: (field: string, value: string) => void;
   onSexChange: (value: string) => void;
@@ -322,6 +430,9 @@ interface CriteriaPanelProps {
   onEthnieToggle: (value: string) => void;
   onMakeupToggle: (category: string, value: string) => void;
   onEvaluationChange: (key: string, type: 'min' | 'max', value: string) => void;
+  onAddCustomCriterion?: () => void;
+  onRemoveCustomCriterion?: (id: string) => void;
+  onChangeCustomCriterion?: (id: string, field: 'label' | 'filter', value: string) => void;
   onExecute: () => void;
   onReset: () => void;
   makeupCount: number;
@@ -336,6 +447,9 @@ export const CriteriaPanel: React.FC<CriteriaPanelProps> = ({
   onEthnieToggle,
   onMakeupToggle,
   onEvaluationChange,
+  onAddCustomCriterion,
+  onRemoveCustomCriterion,
+  onChangeCustomCriterion,
   onExecute,
   onReset,
   makeupCount,
@@ -350,7 +464,14 @@ export const CriteriaPanel: React.FC<CriteriaPanelProps> = ({
       onPhototypeToggle={onPhototypeToggle}
       onEthnieToggle={onEthnieToggle}
     />
-    <MakeupFilters values={filters.makeup} onToggle={onMakeupToggle} />
+    <MakeupFilters
+      values={filters.makeup}
+      onToggle={onMakeupToggle}
+      customCriteria={filters.customCriteria}
+      onAddCustomCriterion={onAddCustomCriterion}
+      onRemoveCustomCriterion={onRemoveCustomCriterion}
+      onChangeCustomCriterion={onChangeCustomCriterion}
+    />
     <EvaluationFilters values={filters.evaluations} onChange={onEvaluationChange} />
     <FiltersActionBar
       makeupCount={makeupCount}

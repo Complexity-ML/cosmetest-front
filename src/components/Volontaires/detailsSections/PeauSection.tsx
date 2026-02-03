@@ -25,6 +25,10 @@ const PeauSection = ({ volontaireDisplayData }: { volontaireDisplayData: any }) 
           <p className="text-sm text-gray-900">{displayValue(volontaireDisplayData.carnation)}</p>
         </div>
         <div className="space-y-1">
+          <p className="text-sm font-medium text-brand-cyan">{t('volunteers.phototype')}</p>
+          <p className="text-sm text-gray-900">{displayValue(volontaireDisplayData.phototype)}</p>
+        </div>
+        <div className="space-y-1">
           <p className="text-sm font-medium text-brand-cyan">{t('volunteers.skinSensitivity')}</p>
           <p className="text-sm text-gray-900">{displayValue(volontaireDisplayData.sensibiliteCutanee)}</p>
         </div>

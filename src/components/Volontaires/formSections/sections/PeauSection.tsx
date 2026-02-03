@@ -64,6 +64,30 @@ const PeauSection = ({ formData, errors, onChange }: any) => {
 
         <div>
           <label
+            htmlFor="phototype"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            {t('volunteers.phototype')}
+          </label>
+          <select
+            id="phototype"
+            name="phototype"
+            value={formData.phototype}
+            onChange={onChange}
+            className="form-select block w-full"
+          >
+            <option value="">{t('common.select')}</option>
+            <option value="I">{t('volunteers.phototypeOptions.I')}</option>
+            <option value="II">{t('volunteers.phototypeOptions.II')}</option>
+            <option value="III">{t('volunteers.phototypeOptions.III')}</option>
+            <option value="IV">{t('volunteers.phototypeOptions.IV')}</option>
+            <option value="V">{t('volunteers.phototypeOptions.V')}</option>
+            <option value="VI">{t('volunteers.phototypeOptions.VI')}</option>
+          </select>
+        </div>
+
+        <div>
+          <label
             htmlFor="sensibiliteCutanee"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
