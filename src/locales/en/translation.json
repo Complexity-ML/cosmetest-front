@@ -255,6 +255,7 @@
     "scars": "Scars",
     "tattoos": "Tattoos",
     "piercings": "Piercings",
+    "locationPlaceholder": "Specify the location (e.g. left arm, right hand...)",
     "pigmentSpots": "Pigment spots",
     "face": "Face",
     "neck": "Neck",

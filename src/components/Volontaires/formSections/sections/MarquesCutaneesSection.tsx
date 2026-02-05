@@ -15,55 +15,103 @@ const MarquesCutaneesSection = ({ formData, onChange }: any) => {
         {t('volunteers.characteristics')}
       </h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="flex items-center">
-          <input
-            type="checkbox"
-            id="cicatrices"
-            name="cicatrices"
-            checked={formData.cicatrices === "Oui"}
-            onChange={onChange}
-            className="form-checkbox h-5 w-5 text-primary-600"
-          />
-          <label
-            htmlFor="cicatrices"
-            className="ml-2 block text-sm font-medium text-gray-700"
-          >
-            {t('volunteers.scars')}
-          </label>
+        <div>
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              id="cicatrices"
+              name="cicatrices"
+              checked={!!formData.cicatrices && formData.cicatrices !== "Non"}
+              onChange={(e) => {
+                onChange({ target: { name: 'cicatrices', value: e.target.checked ? 'Oui' : '', type: 'text' } } as any);
+              }}
+              className="form-checkbox h-5 w-5 text-primary-600"
+            />
+            <label
+              htmlFor="cicatrices"
+              className="ml-2 block text-sm font-medium text-gray-700"
+            >
+              {t('volunteers.scars')}
+            </label>
+          </div>
+          {!!formData.cicatrices && formData.cicatrices !== "Non" && (
+            <input
+              type="text"
+              name="cicatrices"
+              value={formData.cicatrices === "Oui" ? "" : formData.cicatrices}
+              onChange={(e) => {
+                onChange({ target: { name: 'cicatrices', value: e.target.value || 'Oui', type: 'text' } } as any);
+              }}
+              placeholder={t('volunteers.locationPlaceholder')}
+              className="form-input block w-full mt-2"
+            />
+          )}
         </div>
 
-        <div className="flex items-center">
-          <input
-            type="checkbox"
-            id="tatouages"
-            name="tatouages"
-            checked={formData.tatouages === "Oui"}
-            onChange={onChange}
-            className="form-checkbox h-5 w-5 text-primary-600"
-          />
-          <label
-            htmlFor="tatouages"
-            className="ml-2 block text-sm font-medium text-gray-700"
-          >
-            {t('volunteers.tattoos')}
-          </label>
+        <div>
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              id="tatouages"
+              name="tatouages"
+              checked={!!formData.tatouages && formData.tatouages !== "Non"}
+              onChange={(e) => {
+                onChange({ target: { name: 'tatouages', value: e.target.checked ? 'Oui' : '', type: 'text' } } as any);
+              }}
+              className="form-checkbox h-5 w-5 text-primary-600"
+            />
+            <label
+              htmlFor="tatouages"
+              className="ml-2 block text-sm font-medium text-gray-700"
+            >
+              {t('volunteers.tattoos')}
+            </label>
+          </div>
+          {!!formData.tatouages && formData.tatouages !== "Non" && (
+            <input
+              type="text"
+              name="tatouages"
+              value={formData.tatouages === "Oui" ? "" : formData.tatouages}
+              onChange={(e) => {
+                onChange({ target: { name: 'tatouages', value: e.target.value || 'Oui', type: 'text' } } as any);
+              }}
+              placeholder={t('volunteers.locationPlaceholder')}
+              className="form-input block w-full mt-2"
+            />
+          )}
         </div>
 
-        <div className="flex items-center">
-          <input
-            type="checkbox"
-            id="piercings"
-            name="piercings"
-            checked={formData.piercings === "Oui"}
-            onChange={onChange}
-            className="form-checkbox h-5 w-5 text-primary-600"
-          />
-          <label
-            htmlFor="piercings"
-            className="ml-2 block text-sm font-medium text-gray-700"
-          >
-            {t('volunteers.piercings')}
-          </label>
+        <div>
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              id="piercings"
+              name="piercings"
+              checked={!!formData.piercings && formData.piercings !== "Non"}
+              onChange={(e) => {
+                onChange({ target: { name: 'piercings', value: e.target.checked ? 'Oui' : '', type: 'text' } } as any);
+              }}
+              className="form-checkbox h-5 w-5 text-primary-600"
+            />
+            <label
+              htmlFor="piercings"
+              className="ml-2 block text-sm font-medium text-gray-700"
+            >
+              {t('volunteers.piercings')}
+            </label>
+          </div>
+          {!!formData.piercings && formData.piercings !== "Non" && (
+            <input
+              type="text"
+              name="piercings"
+              value={formData.piercings === "Oui" ? "" : formData.piercings}
+              onChange={(e) => {
+                onChange({ target: { name: 'piercings', value: e.target.value || 'Oui', type: 'text' } } as any);
+              }}
+              placeholder={t('volunteers.locationPlaceholder')}
+              className="form-input block w-full mt-2"
+            />
+          )}
         </div>
       </div>
 

@@ -91,9 +91,9 @@ export interface VolontaireData {
   santeCompatible?: boolean;
 
   // Caractéristiques supplémentaires
-  cicatrices?: boolean;
-  tatouages?: boolean;
-  piercings?: boolean;
+  cicatrices?: string;
+  tatouages?: string;
+  piercings?: string;
 
   // Notes et commentaires
   notes?: number; // Note globale (évaluation en étoiles 0-5)
@@ -169,9 +169,9 @@ export interface VolontaireTransformed {
   allergiesCommentaires?: string;
   santeCompatible?: boolean;
   notes?: string;
-  cicatrices?: boolean;
-  tatouages?: boolean;
-  piercings?: boolean;
+  cicatrices?: string;
+  tatouages?: string;
+  piercings?: string;
   vergeturesJambes?: boolean;
   vergeturesFessesHanches?: boolean;
   vergeturesVentreTaille?: boolean;

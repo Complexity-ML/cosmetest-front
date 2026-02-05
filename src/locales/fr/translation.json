@@ -256,6 +256,7 @@
     "scars": "Cicatrices",
     "tattoos": "Tatouages",
     "piercings": "Piercings",
+    "locationPlaceholder": "Précisez la localisation (ex: bras gauche, main droite...)",
     "pigmentSpots": "Taches pigmentaires",
     "face": "Visage",
     "neck": "Cou",

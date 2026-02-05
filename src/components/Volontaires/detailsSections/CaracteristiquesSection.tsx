@@ -93,6 +93,24 @@ const CaracteristiquesSection = ({ volontaireDisplayData }: CaracteristiquesSect
             <p className="text-sm font-medium text-brand-cyan">{t('volunteers.motherOrigin')}</p>
             <p className="text-sm text-gray-900">{displayValue(volontaireDisplayData.origineMere)}</p>
           </div>
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-brand-cyan">{t('volunteers.scars')}</p>
+            <p className="text-sm text-gray-900">
+              {!volontaireDisplayData.cicatrices || volontaireDisplayData.cicatrices === 'Non' ? t('common.no') : volontaireDisplayData.cicatrices === 'Oui' ? t('common.yes') : `${t('common.yes')} — ${volontaireDisplayData.cicatrices}`}
+            </p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-brand-cyan">{t('volunteers.tattoos')}</p>
+            <p className="text-sm text-gray-900">
+              {!volontaireDisplayData.tatouages || volontaireDisplayData.tatouages === 'Non' ? t('common.no') : volontaireDisplayData.tatouages === 'Oui' ? t('common.yes') : `${t('common.yes')} — ${volontaireDisplayData.tatouages}`}
+            </p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-brand-cyan">{t('volunteers.piercings')}</p>
+            <p className="text-sm text-gray-900">
+              {!volontaireDisplayData.piercings || volontaireDisplayData.piercings === 'Non' ? t('common.no') : volontaireDisplayData.piercings === 'Oui' ? t('common.yes') : `${t('common.yes')} — ${volontaireDisplayData.piercings}`}
+            </p>
+          </div>
         </div>
       </CardContent>
     </Card>
