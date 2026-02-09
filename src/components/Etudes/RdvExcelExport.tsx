@@ -131,6 +131,29 @@ const RdvExcelExport: React.FC<RdvExcelExportProps> = ({
         return '';
       };
 
+      // 5b. Fonction helper pour normaliser le phototype (romains → arabes)
+      const normalizePhototype = (value: string): string => {
+        if (!value) return '';
+        const str = value.toString().trim().toUpperCase();
+        const romanToArabic: Record<string, string> = {
+          'VI': '6', 'V': '5', 'IV': '4', 'III': '3', 'II': '2', 'I': '1'
+        };
+        for (const [roman, arabic] of Object.entries(romanToArabic)) {
+          if (str === roman) return `Phototype ${arabic}`;
+        }
+        // Si c'est déjà un chiffre seul (1-6)
+        if (/^[1-6]$/.test(str)) return `Phototype ${str}`;
+        // Si c'est déjà au format "Phototype X" avec un chiffre arabe
+        const matchArabic = str.match(/^PHOTOTYPE\s*(\d)$/);
+        if (matchArabic) return `Phototype ${matchArabic[1]}`;
+        // Si c'est au format "Phototype III" avec un chiffre romain
+        const matchRoman = str.match(/^PHOTOTYPE\s*(VI|IV|V?I{0,3})$/);
+        if (matchRoman && romanToArabic[matchRoman[1]]) {
+          return `Phototype ${romanToArabic[matchRoman[1]]}`;
+        }
+        return value;
+      };
+
       // 6. Fonction helper pour récupérer les infos de l'association
       const getAssociationInfo = (volunteerId: number, field: string) => {
         if (associationsData[volunteerId]) {
@@ -186,7 +209,7 @@ const RdvExcelExport: React.FC<RdvExcelExportProps> = ({
         row.push(getVolunteerInfo(Number(volunteerId), 'telPortable'));
 
         // G: Phototype
-        row.push(getVolunteerInfo(Number(volunteerId), 'phototype'));
+        row.push(normalizePhototype(getVolunteerInfo(Number(volunteerId), 'phototype')));
 
         // H: Email
         row.push(getVolunteerInfo(Number(volunteerId), 'email'));

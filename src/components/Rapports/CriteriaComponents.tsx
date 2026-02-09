@@ -40,11 +40,13 @@ interface DemographicFiltersProps {
     sexe: string;
     phototypes: string[];
     ethnies: string[];
+    excludeEtudeRef: string;
   };
   onAgeChange: (field: string, value: string) => void;
   onSexChange: (value: string) => void;
   onPhototypeToggle: (value: string) => void;
   onEthnieToggle: (value: string) => void;
+  onExcludeEtudeRefChange: (value: string) => void;
 }
 
 export const DemographicFilters: React.FC<DemographicFiltersProps> = ({
@@ -52,7 +54,8 @@ export const DemographicFilters: React.FC<DemographicFiltersProps> = ({
   onAgeChange,
   onSexChange,
   onPhototypeToggle,
-  onEthnieToggle
+  onEthnieToggle,
+  onExcludeEtudeRefChange
 }) => {
   const { t } = useTranslation();
   return (
@@ -94,6 +97,19 @@ export const DemographicFilters: React.FC<DemographicFiltersProps> = ({
                 <SelectItem value="FEMININ">{t('reports.matching.female')}</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="excludeEtudeRef">{t('reports.matching.excludeStudy')}</Label>
+            <Input
+              id="excludeEtudeRef"
+              type="text"
+              placeholder={t('reports.matching.excludeStudyPlaceholder')}
+              value={values.excludeEtudeRef}
+              onChange={(e) => onExcludeEtudeRefChange(e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">{t('reports.matching.excludeStudyHint')}</p>
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -415,6 +431,7 @@ interface CriteriaPanelProps {
       sexe: string;
       phototypes: string[];
       ethnies: string[];
+      excludeEtudeRef: string;
     };
     makeup: {
       visage: string[];
@@ -428,6 +445,7 @@ interface CriteriaPanelProps {
   onSexChange: (value: string) => void;
   onPhototypeToggle: (value: string) => void;
   onEthnieToggle: (value: string) => void;
+  onExcludeEtudeRefChange: (value: string) => void;
   onMakeupToggle: (category: string, value: string) => void;
   onEvaluationChange: (key: string, type: 'min' | 'max', value: string) => void;
   onAddCustomCriterion?: () => void;
@@ -445,6 +463,7 @@ export const CriteriaPanel: React.FC<CriteriaPanelProps> = ({
   onSexChange,
   onPhototypeToggle,
   onEthnieToggle,
+  onExcludeEtudeRefChange,
   onMakeupToggle,
   onEvaluationChange,
   onAddCustomCriterion,
@@ -463,6 +482,7 @@ export const CriteriaPanel: React.FC<CriteriaPanelProps> = ({
       onSexChange={onSexChange}
       onPhototypeToggle={onPhototypeToggle}
       onEthnieToggle={onEthnieToggle}
+      onExcludeEtudeRefChange={onExcludeEtudeRefChange}
     />
     <MakeupFilters
       values={filters.makeup}

@@ -1291,6 +1291,9 @@
       "contactAll": "Contacter tous",
       "ageError": "L'âge minimum ne peut pas être supérieur à l'âge maximum.",
       "noVolunteerMatch": "Aucun volontaire ne correspond aux critères sélectionnés.",
+      "excludeStudy": "Exclure une étude",
+      "excludeStudyPlaceholder": "Référence de l'étude (ex: ET-2025-001)",
+      "excludeStudyHint": "Les volontaires déjà inscrits dans cette étude seront exclus des résultats.",
       "matchingError": "Erreur lors du matching des volontaires."
     },
     "email": {

@@ -6,6 +6,7 @@ export interface DemographicsFilters {
   phototypes: string[];
   ethnies: string[];
   sexe: string;
+  excludeEtudeRef: string;
 }
 
 export interface MakeupFilters {
@@ -39,7 +40,8 @@ export const createInitialFilters = (): Filters => ({
     ageMax: 65,
     phototypes: [],
     ethnies: [],
-    sexe: ''
+    sexe: '',
+    excludeEtudeRef: ''
   },
   makeup: {
     visage: [],

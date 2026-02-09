@@ -1,6 +1,8 @@
 ﻿import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import api from '../../services/api';
+import etudeService from '../../services/etudeService';
+import etudeVolontaireService from '../../services/etudeVolontaireService';
 import { SearchIcon, UserIcon } from './icons';
 import { EVALUATION_FIELDS } from './constants';
 import {
@@ -82,6 +84,16 @@ const MatchingSystem = () => {
       demographics: {
         ...prev.demographics,
         sexe: value
+      }
+    }));
+  };
+
+  const handleExcludeEtudeRefChange = (value: string) => {
+    setFilters((prev) => ({
+      ...prev,
+      demographics: {
+        ...prev.demographics,
+        excludeEtudeRef: value
       }
     }));
   };
@@ -248,7 +260,38 @@ const MatchingSystem = () => {
         const batchResults = await Promise.all(batchPromises);
         volontairesDetails.push(...batchResults);
       }
-      const volontaires = volontairesDetails.filter((vol) => vol !== null);
+      let volontaires = volontairesDetails.filter((vol) => vol !== null);
+
+      // Exclude volunteers already enrolled in the specified study
+      const excludeRef = filters.demographics.excludeEtudeRef.trim();
+      console.log('[Exclude Study] Valeur du champ excludeEtudeRef:', JSON.stringify(excludeRef));
+      if (excludeRef) {
+        try {
+          console.log('[Exclude Study] Appel getByRef avec:', excludeRef);
+          const etude = await etudeService.getByRef(excludeRef);
+          console.log('[Exclude Study] Étude trouvée:', JSON.stringify(etude));
+          const etudeId = etude.idEtude ?? etude.id;
+          console.log('[Exclude Study] etudeId résolu:', etudeId);
+          if (etudeId) {
+            const associations = await etudeVolontaireService.getVolontairesByEtude(etudeId);
+            console.log('[Exclude Study] Associations brutes:', JSON.stringify(associations));
+            const associationsList = Array.isArray(associations) ? associations : (associations?.data || associations?.content || []);
+            const enrolledIds = new Set(
+              associationsList
+                .filter((a: any) => a.statut !== 'ANNULE')
+                .map((a: any) => Number(a.idVolontaire))
+            );
+            console.log('[Exclude Study] IDs à exclure:', [...enrolledIds]);
+            const before = volontaires.length;
+            volontaires = volontaires.filter((vol) => !enrolledIds.has(Number(vol.idVol)));
+            console.log(`[Exclude Study] ${before - volontaires.length} volontaires exclus (${before} → ${volontaires.length})`);
+          }
+        } catch (err) {
+          console.error(`[Exclude Study] ERREUR pour ref "${excludeRef}":`, err);
+        }
+      } else {
+        console.log('[Exclude Study] Champ vide, pas d\'exclusion');
+      }
 
       // Get habits cosmétiques
       const responseHC = await api.get('/volontaires-hc');
@@ -489,7 +532,8 @@ const MatchingSystem = () => {
                     ageMax: String(filters.demographics.ageMax),
                     sexe: filters.demographics.sexe,
                     phototypes: filters.demographics.phototypes,
-                    ethnies: filters.demographics.ethnies
+                    ethnies: filters.demographics.ethnies,
+                    excludeEtudeRef: filters.demographics.excludeEtudeRef
                   },
                   makeup: filters.makeup,
                   evaluations: Object.entries(filters.evaluations).reduce((acc, [key, val]) => ({
@@ -505,6 +549,7 @@ const MatchingSystem = () => {
                 onSexChange={handleSexChange}
                 onPhototypeToggle={togglePhototype}
                 onEthnieToggle={toggleEthnie}
+                onExcludeEtudeRefChange={handleExcludeEtudeRefChange}
                 onMakeupToggle={toggleMakeupOption}
                 onEvaluationChange={handleEvaluationThresholdChange}
                 onAddCustomCriterion={handleAddCustomCriterion}

@@ -155,6 +155,54 @@ const RecrutementExcelExport: React.FC<RecrutementExcelExportProps> = ({
         return '';
       };
 
+      // 5b. Fonction helper pour normaliser le phototype (romains → arabes)
+      const normalizePhototype = (value: string): string => {
+        if (!value) return '';
+        const str = value.toString().trim().toUpperCase();
+        const romanToArabic: Record<string, string> = {
+          'VI': '6', 'V': '5', 'IV': '4', 'III': '3', 'II': '2', 'I': '1'
+        };
+        for (const [roman, arabic] of Object.entries(romanToArabic)) {
+          if (str === roman) return `Phototype ${arabic}`;
+        }
+        if (/^[1-6]$/.test(str)) return `Phototype ${str}`;
+        const matchArabic = str.match(/^PHOTOTYPE\s*(\d)$/);
+        if (matchArabic) return `Phototype ${matchArabic[1]}`;
+        const matchRoman = str.match(/^PHOTOTYPE\s*(VI|IV|V?I{0,3})$/);
+        if (matchRoman && romanToArabic[matchRoman[1]]) {
+          return `Phototype ${romanToArabic[matchRoman[1]]}`;
+        }
+        return value;
+      };
+
+      // 5c. Fonction helper pour formater le statut (même logique que IndemniteManager)
+      const formatStatut = (statut: string): string => {
+        if (!statut) return '';
+        const statutLabels: Record<string, string> = {
+          'inscrit': '',
+          'surbook': 'Surbook',
+          'penalite': 'Pénalité',
+          'parrainage': 'Parrainage',
+          'annule': 'Annulé',
+        };
+        const str = statut.toString().trim();
+        // Gérer les statuts composés "penalite : retard"
+        let statutBase = str;
+        let raison = '';
+        if (str.includes(' : ')) {
+          const parts = str.split(' : ');
+          statutBase = parts[0].trim();
+          raison = parts.slice(1).join(' : ').trim();
+        }
+        const normalized = statutBase.toLowerCase()
+          .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+          .replace(/[^a-z0-9_\s]/g, '').replace(/\s+/g, '_');
+        const label = statutLabels[normalized];
+        if (label === '') return ''; // inscrit → vide
+        if (label) return raison ? `${label} : ${raison}` : label;
+        return str; // statut non reconnu → afficher tel quel
+      };
+
       // 6. Fonction helper pour récupérer les infos de l'association
       const getAssociationInfo = (volunteerId: number, field: string) => {
         if (associationsData[volunteerId]) {
@@ -237,7 +285,7 @@ const RecrutementExcelExport: React.FC<RecrutementExcelExportProps> = ({
         }
 
         // Colonnes finales
-        row.push(getVolunteerInfo(volunteerIdNum, 'phototype')); // Phototype
+        row.push(normalizePhototype(getVolunteerInfo(volunteerIdNum, 'phototype'))); // Phototype
 
         // PS/PNS
         const peauSensible = getVolunteerInfo(volunteerIdNum, 'peauSensible');
@@ -261,14 +309,8 @@ const RecrutementExcelExport: React.FC<RecrutementExcelExportProps> = ({
         }
         row.push(age);
 
-        // Statut - afficher le texte de pénalité si c'est une pénalité
-        const statut = getAssociationInfo(volunteerIdNum, 'statut');
-        let statutDisplay = '';
-        // Vérifier si c'est une pénalité (avec ou sans accent)
-        if (statut && (statut.toLowerCase().includes('penalite') || statut.toLowerCase().includes('pénalité'))) {
-          statutDisplay = statut;
-        }
-        row.push(statutDisplay); // Statut
+        // Statut
+        row.push(formatStatut(getAssociationInfo(volunteerIdNum, 'statut'))); // Statut
 
         row.push(getAssociationInfo(volunteerIdNum, 'iv') || getVolunteerInfo(volunteerIdNum, 'iv')); // IV
         row.push(getVolunteerInfo(volunteerIdNum, 'email')); // Email
