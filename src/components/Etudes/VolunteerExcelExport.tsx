@@ -38,7 +38,16 @@ const VolunteerExcelExport: React.FC<VolunteerExcelExportProps> = ({
   const formatEthnieEnglish = (ethnie: any) => {
     if (!ethnie) return '';
     try {
-      return ethnie.replace('Caucasienne', 'Caucasian').replace('Africain', 'African').replace('Asiatique', 'Asian').replace('Indienne', 'Indian').replace('Antillaise', 'West-Indian');
+      const key = ethnie.trim().toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+      if (key.includes('caucas')) return 'Caucasian';
+      if (key.includes('africa')) return 'African';
+      if (key.includes('asia') || key.includes('asiat')) return 'Asian';
+      if (key.includes('indien') || key.includes('indian')) return 'Indian';
+      if (key.includes('antill') || key.includes('west')) return 'West-Indian';
+
+      return ethnie.trim();
     } catch (error) {
       console.error('Erreur formatage ethnie:', error);
       return '';
@@ -48,63 +57,43 @@ const VolunteerExcelExport: React.FC<VolunteerExcelExportProps> = ({
   // Fonction pour normaliser les types de peau (regrouper les variations)
   const normalizeTypePeau = (typePeau: any) => {
     if (!typePeau) return 'Non spécifié';
-    
-    const normalized = typePeau.trim();
-    
-    // Normaliser les variations de casse et d'orthographe
-    const normalizations: Record<string, string> = {
-      'sensible': 'Sensible',
-      'Sensible': 'Sensible',
-      'SENSIBLE': 'Sensible',
-      'grasse': 'Grasse',
-      'Grasse': 'Grasse',
-      'GRASSE': 'Grasse',
-      'sèche': 'Sèche', 
-      'Sèche': 'Sèche',
-      'seche': 'Sèche',
-      'Seche': 'Sèche',
-      'SÈCHE': 'Sèche',
-      'normale': 'Normale',
-      'Normale': 'Normale',
-      'NORMALE': 'Normale',
-      'mixte': 'Mixte',
-      'Mixte': 'Mixte',
-      'MIXTE': 'Mixte',
-      'mixte à tendance grasse': 'Mixte à tendance grasse',
-      'Mixte à tendance grasse': 'Mixte à tendance grasse',
-      'mixte à tendance sèche': 'Mixte à tendance sèche',
-      'Mixte à tendance sèche': 'Mixte à tendance sèche',
-      'mixte à tendance seche': 'Mixte à tendance sèche',
-      'Mixte à tendance seche': 'Mixte à tendance sèche'
-    };
 
-    return normalizations[normalized] || normalized;
+    // Lowercase + suppression accents + trim pour comparaison
+    const key = typePeau.trim().toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+    // Vérifier les types composés en premier (mixte à tendance...)
+    if (key.includes('mixte') && key.includes('tendance') && (key.includes('grasse') || key.includes('grass'))) {
+      return 'Mixte à tendance grasse';
+    }
+    if (key.includes('mixte') && key.includes('tendance') && (key.includes('seche') || key.includes('sec'))) {
+      return 'Mixte à tendance sèche';
+    }
+
+    // Types simples : on retire le 's' final éventuel pour gérer les pluriels
+    const singular = key.replace(/s$/, '');
+
+    if (singular === 'normal' || singular === 'normale') return 'Normale';
+    if (singular === 'seche' || singular === 'sec') return 'Sèche';
+    if (singular === 'grasse' || singular === 'gras' || singular === 'grass') return 'Grasse';
+    if (singular === 'mixte' || singular === 'mixt') return 'Mixte';
+    if (singular === 'sensible') return 'Sensible';
+
+    return typePeau.trim();
   };
 
   // Fonction pour normaliser la sensibilité cutanée
   const normalizeSensibiliteCutanee = (sensibilite: any) => {
     if (!sensibilite) return 'Non spécifié';
-    
-    const normalized = sensibilite.trim();
-    
-    // Normaliser les variations de casse pour la sensibilité cutanée
-    const normalizations: Record<string, string> = {
-      'peau sensible': 'Peau sensible',
-      'Peau sensible': 'Peau sensible',
-      'Peau Sensible': 'Peau sensible',
-      'PEAU SENSIBLE': 'Peau sensible',
-      'peau non sensible': 'Peau non sensible',
-      'Peau non sensible': 'Peau non sensible',
-      'Peau Non Sensible': 'Peau non sensible',
-      'PEAU NON SENSIBLE': 'Peau non sensible',
-      'sensible': 'Peau sensible',
-      'Sensible': 'Peau sensible',
-      'non sensible': 'Peau non sensible',
-      'Non sensible': 'Peau non sensible',
-      'Non Sensible': 'Peau non sensible'
-    };
 
-    return normalizations[normalized] || normalized;
+    const key = sensibilite.trim().toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+    if (key.includes('non') && key.includes('sensible')) return 'Peau non sensible';
+    if (key.includes('peu') && key.includes('sensible')) return 'Peau peu sensible';
+    if (key.includes('sensible')) return 'Peau sensible';
+
+    return sensibilite.trim();
   };
 
   const exportVolunteersToExcel = async () => {
@@ -241,7 +230,16 @@ const VolunteerExcelExport: React.FC<VolunteerExcelExportProps> = ({
       // Ligne vide pour séparer
       dataRows.push(new Array(headers.length).fill(''));
 
-      // 4. Ajouter les données des volontaires
+      // 4. Trier par numéro de sujet croissant (null/vide en premier)
+      volunteersData.sort((a, b) => {
+        const numA = a.numeroSujet;
+        const numB = b.numeroSujet;
+        if (!numA && !numB) return 0;
+        if (!numA) return -1;
+        if (!numB) return 1;
+        return Number(numA) - Number(numB);
+      });
+
       const studyStartDate = studyInfo?.dateDebut ? formatDateEnglish(studyInfo.dateDebut) : '';
 
       volunteersData.forEach((volunteer) => {
@@ -366,7 +364,7 @@ const VolunteerExcelExport: React.FC<VolunteerExcelExportProps> = ({
       }, {});
 
       const ethniesStats: Record<string, number> = volunteersData.reduce((acc: Record<string, number>, v: any) => {
-        const ethnie = v.ethnie || 'Non spécifié';
+        const ethnie = formatEthnieEnglish(v.ethnie) || 'Not specified';
         acc[ethnie] = (acc[ethnie] || 0) + 1;
         return acc;
       }, {});

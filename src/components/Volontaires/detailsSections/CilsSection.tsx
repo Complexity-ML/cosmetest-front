@@ -26,6 +26,10 @@ const CilsSection = ({ volontaireDisplayData }: { volontaireDisplayData: any }) 
           <p className="text-sm text-gray-900">{displayValue(volontaireDisplayData.courbureCils)}</p>
         </div>
         <div className="space-y-1">
+          <p className="text-sm font-medium text-brand-cyan">Aucun problème</p>
+          <p className="text-sm text-gray-900">{displayYesNo(volontaireDisplayData.cilsProblemeAucun)}</p>
+        </div>
+        <div className="space-y-1">
           <p className="text-sm font-medium text-brand-cyan">{t('volunteers.damagedLashes')}</p>
           <p className="text-sm text-gray-900">{displayYesNo(volontaireDisplayData.cilsAbimes)}</p>
         </div>

@@ -72,6 +72,10 @@ const PeauSection = ({ volontaireDisplayData }: { volontaireDisplayData: any }) 
         <h3 className="text-sm font-semibold text-gray-800 mb-4">{t('volunteers.cellulite')}</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-1">
+            <p className="text-sm font-medium text-brand-cyan">Aucun</p>
+            <p className="text-sm text-gray-900">{displayYesNo(volontaireDisplayData.celluliteAucun)}</p>
+          </div>
+          <div className="space-y-1">
             <p className="text-sm font-medium text-brand-cyan">{t('volunteers.arms')}</p>
             <p className="text-sm text-gray-900">{displayYesNo(volontaireDisplayData.celluliteBras)}</p>
           </div>
@@ -95,6 +99,10 @@ const PeauSection = ({ volontaireDisplayData }: { volontaireDisplayData: any }) 
       <div>
         <h3 className="text-sm font-semibold text-gray-800 mb-4">{t('volunteers.skinDryness')}</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-brand-cyan">Aucun</p>
+            <p className="text-sm text-gray-900">{displayYesNo(volontaireDisplayData.secheresseAucun)}</p>
+          </div>
           <div className="space-y-1">
             <p className="text-sm font-medium text-brand-cyan">{t('volunteers.lips')}</p>
             <p className="text-sm text-gray-900">{displayYesNo(volontaireDisplayData.secheresseLevres)}</p>
@@ -140,6 +148,10 @@ const PeauSection = ({ volontaireDisplayData }: { volontaireDisplayData: any }) 
         <h3 className="text-sm font-semibold text-gray-800 mb-4">{t('volunteers.eyeProblems')}</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="space-y-1">
+            <p className="text-sm font-medium text-brand-cyan">Aucun</p>
+            <p className="text-sm text-gray-900">{displayYesNo(volontaireDisplayData.yeuxAucun)}</p>
+          </div>
+          <div className="space-y-1">
             <p className="text-sm font-medium text-brand-cyan">{t('volunteers.pigmentaryCircles')}</p>
             <p className="text-sm text-gray-900">{displayYesNo(volontaireDisplayData.cernesPigmentaires)}</p>
           </div>
@@ -159,6 +171,10 @@ const PeauSection = ({ volontaireDisplayData }: { volontaireDisplayData: any }) 
       <div>
         <h3 className="text-sm font-semibold text-gray-800 mb-4">{t('volunteers.lossOfFirmness')}</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-brand-cyan">Aucun</p>
+            <p className="text-sm text-gray-900">{displayYesNo(volontaireDisplayData.fermeteAucun)}</p>
+          </div>
           <div className="space-y-1">
             <p className="text-sm font-medium text-brand-cyan">{t('volunteers.face')}</p>
             <p className="text-sm text-gray-900">{displayYesNo(volontaireDisplayData.perteDeFermeteVisage)}</p>

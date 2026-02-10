@@ -432,7 +432,8 @@
       "Normale": "Normal",
       "Sèche": "Dry",
       "Grasse": "Oily",
-      "Mixte": "Combination",
+      "Mixte à tendance grasse": "Combination oily",
+      "Mixte à tendance sèche": "Combination dry",
       "Sensible": "Sensitive"
     },
     "complexionOptions": {
@@ -525,9 +526,8 @@
       "Longs": "Long"
     },
     "lashCurvatureOptions": {
-      "Droits": "Straight",
-      "Légèrement courbés": "Slightly curved",
-      "Très courbés": "Very curved"
+      "Droit": "Straight",
+      "Courbé": "Curved"
     },
     "eyebrowOptions": {
       "Fins": "Fine",

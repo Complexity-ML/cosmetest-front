@@ -34,6 +34,10 @@ const CheveuxSection = ({ volontaireDisplayData }: { volontaireDisplayData: any 
           <p className="text-sm text-gray-900">{displayValue(volontaireDisplayData.natureCuirChevelu)}</p>
         </div>
         <div className="space-y-1">
+          <p className="text-sm font-medium text-brand-cyan">Aucun problème capillaire</p>
+          <p className="text-sm text-gray-900">{displayYesNo(volontaireDisplayData.cheveuxProblemeAucun)}</p>
+        </div>
+        <div className="space-y-1">
           <p className="text-sm font-medium text-brand-cyan">{t('volunteers.sensitiveScalp')}</p>
           <p className="text-sm text-gray-900">{displayYesNo(volontaireDisplayData.cuirCheveluSensible)}</p>
         </div>
@@ -52,6 +56,10 @@ const CheveuxSection = ({ volontaireDisplayData }: { volontaireDisplayData: any 
       <div>
         <h3 className="text-sm font-semibold text-gray-800 mb-4">{t('volunteers.nails')}</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-brand-cyan">Aucun</p>
+            <p className="text-sm text-gray-900">{displayYesNo(volontaireDisplayData.onglesProblemeAucun)}</p>
+          </div>
           <div className="space-y-1">
             <p className="text-sm font-medium text-brand-cyan">{t('volunteers.brittleNails')}</p>
             <p className="text-sm text-gray-900">{displayYesNo(volontaireDisplayData.onglesCassants)}</p>

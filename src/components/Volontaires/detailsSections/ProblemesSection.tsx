@@ -13,6 +13,10 @@ const ProblemesSection = ({ volontaireDisplayData }: { volontaireDisplayData: an
     <CardContent>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-1">
+          <p className="text-sm font-medium text-brand-cyan">Aucun</p>
+          <p className="text-sm text-gray-900">{displayYesNo(volontaireDisplayData.problemesAucun)}</p>
+        </div>
+        <div className="space-y-1">
           <p className="text-sm font-medium text-brand-cyan">{t('volunteers.acne')}</p>
           <p className="text-sm text-gray-900">{displayYesNo(volontaireDisplayData.acne)}</p>
         </div>

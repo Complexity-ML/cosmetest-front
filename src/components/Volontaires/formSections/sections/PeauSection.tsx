@@ -1,8 +1,75 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useTranslation } from "react-i18next";
+import { useCallback } from "react";
+
+const createSyntheticEvent = (name: string, value: string) => ({
+  target: { name, value, type: 'text' }
+} as any);
 
 const PeauSection = ({ formData, errors, onChange }: any) => {
   const { t } = useTranslation();
+
+  const handleNoneToggle = useCallback((
+    groupIds: string[],
+    noneId: string,
+    clickedId: string,
+    isCurrentlyChecked: boolean,
+  ) => {
+    if (clickedId === noneId) {
+      if (!isCurrentlyChecked) {
+        groupIds.forEach(id => {
+          if (id !== noneId && formData[id] === 'Oui') {
+            onChange(createSyntheticEvent(id, ''));
+          }
+        });
+        onChange(createSyntheticEvent(noneId, 'Oui'));
+      } else {
+        onChange(createSyntheticEvent(noneId, ''));
+      }
+    } else {
+      if (!isCurrentlyChecked && formData[noneId] === 'Oui') {
+        onChange(createSyntheticEvent(noneId, ''));
+      }
+      onChange(createSyntheticEvent(clickedId, isCurrentlyChecked ? '' : 'Oui'));
+    }
+  }, [formData, onChange]);
+
+  const celluliteIds = ['celluliteBras', 'celluliteFessesHanches', 'celluliteJambes', 'celluliteVentreTaille', 'celluliteAucun'];
+  const secheresseIds = ['secheresseLevres', 'secheresseCou', 'secheressePoitrineDecollete', 'secheresseVentreTaille', 'secheresseFessesHanches', 'secheresseBras', 'secheresseMains', 'secheresseJambes', 'secheressePieds', 'secheresseAucun'];
+  const yeuxIds = ['cernesPigmentaires', 'cernesVasculaires', 'poches', 'yeuxAucun'];
+  const fermeteIds = ['perteDeFermeteVisage', 'perteDeFermeteCou', 'perteDeFermeteDecollete', 'perteDeFermeteAvantBras', 'fermeteAucun'];
+
+  const NoneCheckbox = ({ groupIds, noneId }: { groupIds: string[], noneId: string }) => (
+    <div className="flex items-center col-span-full">
+      <input
+        type="checkbox"
+        id={noneId}
+        name={noneId}
+        checked={formData[noneId] === "Oui"}
+        onChange={() => handleNoneToggle(groupIds, noneId, noneId, formData[noneId] === "Oui")}
+        className="form-checkbox h-5 w-5 text-primary-600"
+      />
+      <label htmlFor={noneId} className="ml-2 block text-sm font-medium text-gray-700">
+        Aucun
+      </label>
+    </div>
+  );
+
+  const GroupCheckbox = ({ id, label, groupIds, noneId }: { id: string, label: string, groupIds: string[], noneId: string }) => (
+    <div className="flex items-center">
+      <input
+        type="checkbox"
+        id={id}
+        name={id}
+        checked={formData[id] === "Oui"}
+        onChange={() => handleNoneToggle(groupIds, noneId, id, formData[id] === "Oui")}
+        className="form-checkbox h-5 w-5 text-primary-600"
+      />
+      <label htmlFor={id} className="ml-2 block text-sm font-medium text-gray-700">
+        {label}
+      </label>
+    </div>
+  );
 
   return (
     <Card>
@@ -30,7 +97,8 @@ const PeauSection = ({ formData, errors, onChange }: any) => {
             <option value="Normale">{t('volunteers.skinTypeOptions.Normale')}</option>
             <option value="Sèche">{t('volunteers.skinTypeOptions.Sèche')}</option>
             <option value="Grasse">{t('volunteers.skinTypeOptions.Grasse')}</option>
-            <option value="Mixte">{t('volunteers.skinTypeOptions.Mixte')}</option>
+            <option value="Mixte à tendance grasse">{t('volunteers.skinTypeOptions.Mixte à tendance grasse')}</option>
+            <option value="Mixte à tendance sèche">{t('volunteers.skinTypeOptions.Mixte à tendance sèche')}</option>
             <option value="Sensible">{t('volunteers.skinTypeOptions.Sensible')}</option>
           </select>
           {errors.typePeauVisage && (
@@ -102,7 +170,6 @@ const PeauSection = ({ formData, errors, onChange }: any) => {
           >
             <option value="">{t('common.select')}</option>
             <option value="Peau sensible">{t('volunteers.skinSensitivityOptions.Peau sensible')}</option>
-            <option value="Peau peu sensible">{t('volunteers.skinSensitivityOptions.Peau peu sensible')}</option>
             <option value="Peau non sensible">{t('volunteers.skinSensitivityOptions.Peau non sensible')}</option>
           </select>
         </div>
@@ -232,340 +299,45 @@ const PeauSection = ({ formData, errors, onChange }: any) => {
         {t('volunteers.cellulite')}
       </h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="flex items-center">
-          <input
-            type="checkbox"
-            id="celluliteBras"
-            name="celluliteBras"
-            checked={formData.celluliteBras === "Oui"}
-            onChange={onChange}
-            className="form-checkbox h-5 w-5 text-primary-600"
-          />
-          <label
-            htmlFor="celluliteBras"
-            className="ml-2 block text-sm font-medium text-gray-700"
-          >
-            {t('volunteers.celluliteArms')}
-          </label>
-        </div>
-
-        <div className="flex items-center">
-          <input
-            type="checkbox"
-            id="celluliteFessesHanches"
-            name="celluliteFessesHanches"
-            checked={formData.celluliteFessesHanches === "Oui"}
-            onChange={onChange}
-            className="form-checkbox h-5 w-5 text-primary-600"
-          />
-          <label
-            htmlFor="celluliteFessesHanches"
-            className="ml-2 block text-sm font-medium text-gray-700"
-          >
-            {t('volunteers.celluliteButtocksHips')}
-          </label>
-        </div>
-
-        <div className="flex items-center">
-          <input
-            type="checkbox"
-            id="celluliteJambes"
-            name="celluliteJambes"
-            checked={formData.celluliteJambes === "Oui"}
-            onChange={onChange}
-            className="form-checkbox h-5 w-5 text-primary-600"
-          />
-          <label
-            htmlFor="celluliteJambes"
-            className="ml-2 block text-sm font-medium text-gray-700"
-          >
-            {t('volunteers.celluliteLegs')}
-          </label>
-        </div>
-
-        <div className="flex items-center">
-          <input
-            type="checkbox"
-            id="celluliteVentreTaille"
-            name="celluliteVentreTaille"
-            checked={formData.celluliteVentreTaille === "Oui"}
-            onChange={onChange}
-            className="form-checkbox h-5 w-5 text-primary-600"
-          />
-          <label
-            htmlFor="celluliteVentreTaille"
-            className="ml-2 block text-sm font-medium text-gray-700"
-          >
-            {t('volunteers.celluliteBellyWaist')}
-          </label>
-        </div>
+        <NoneCheckbox groupIds={celluliteIds} noneId="celluliteAucun" />
+        <GroupCheckbox id="celluliteBras" label={t('volunteers.celluliteArms')} groupIds={celluliteIds} noneId="celluliteAucun" />
+        <GroupCheckbox id="celluliteFessesHanches" label={t('volunteers.celluliteButtocksHips')} groupIds={celluliteIds} noneId="celluliteAucun" />
+        <GroupCheckbox id="celluliteJambes" label={t('volunteers.celluliteLegs')} groupIds={celluliteIds} noneId="celluliteAucun" />
+        <GroupCheckbox id="celluliteVentreTaille" label={t('volunteers.celluliteBellyWaist')} groupIds={celluliteIds} noneId="celluliteAucun" />
       </div>
       <h3 className="text-md font-medium text-gray-800 mt-6 mb-3">
         {t('volunteers.skinDryness')}
       </h3>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="flex items-center">
-          <input
-            type="checkbox"
-            id="secheresseLevres"
-            name="secheresseLevres"
-            checked={formData.secheresseLevres === "Oui"}
-            onChange={onChange}
-            className="form-checkbox h-5 w-5 text-primary-600"
-          />
-          <label
-            htmlFor="secheresseLevres"
-            className="ml-2 block text-sm font-medium text-gray-700"
-          >
-            {t('volunteers.lips')}
-          </label>
-        </div>
-
-        <div className="flex items-center">
-          <input
-            type="checkbox"
-            id="secheresseCou"
-            name="secheresseCou"
-            checked={formData.secheresseCou === "Oui"}
-            onChange={onChange}
-            className="form-checkbox h-5 w-5 text-primary-600"
-          />
-          <label
-            htmlFor="secheresseCou"
-            className="ml-2 block text-sm font-medium text-gray-700"
-          >
-            {t('volunteers.neck')}
-          </label>
-        </div>
-
-        <div className="flex items-center">
-          <input
-            type="checkbox"
-            id="secheressePoitrineDecollete"
-            name="secheressePoitrineDecollete"
-            checked={formData.secheressePoitrineDecollete === "Oui"}
-            onChange={onChange}
-            className="form-checkbox h-5 w-5 text-primary-600"
-          />
-          <label
-            htmlFor="secheressePoitrineDecollete"
-            className="ml-2 block text-sm font-medium text-gray-700"
-          >
-            {t('volunteers.chestNeckline')}
-          </label>
-        </div>
-
-        <div className="flex items-center">
-          <input
-            type="checkbox"
-            id="secheresseVentreTaille"
-            name="secheresseVentreTaille"
-            checked={formData.secheresseVentreTaille === "Oui"}
-            onChange={onChange}
-            className="form-checkbox h-5 w-5 text-primary-600"
-          />
-          <label
-            htmlFor="secheresseVentreTaille"
-            className="ml-2 block text-sm font-medium text-gray-700"
-          >
-            {t('volunteers.bellyWaist')}
-          </label>
-        </div>
-
-        <div className="flex items-center">
-          <input
-            type="checkbox"
-            id="secheresseFessesHanches"
-            name="secheresseFessesHanches"
-            checked={formData.secheresseFessesHanches === "Oui"}
-            onChange={onChange}
-            className="form-checkbox h-5 w-5 text-primary-600"
-          />
-          <label
-            htmlFor="secheresseFessesHanches"
-            className="ml-2 block text-sm font-medium text-gray-700"
-          >
-            {t('volunteers.buttocksHips')}
-          </label>
-        </div>
-
-        <div className="flex items-center">
-          <input
-            type="checkbox"
-            id="secheresseBras"
-            name="secheresseBras"
-            checked={formData.secheresseBras === "Oui"}
-            onChange={onChange}
-            className="form-checkbox h-5 w-5 text-primary-600"
-          />
-          <label
-            htmlFor="secheresseBras"
-            className="ml-2 block text-sm font-medium text-gray-700"
-          >
-            {t('volunteers.arms')}
-          </label>
-        </div>
-
-        <div className="flex items-center">
-          <input
-            type="checkbox"
-            id="secheresseMains"
-            name="secheresseMains"
-            checked={formData.secheresseMains === "Oui"}
-            onChange={onChange}
-            className="form-checkbox h-5 w-5 text-primary-600"
-          />
-          <label
-            htmlFor="secheresseMains"
-            className="ml-2 block text-sm font-medium text-gray-700"
-          >
-            {t('volunteers.hands')}
-          </label>
-        </div>
-
-        <div className="flex items-center">
-          <input
-            type="checkbox"
-            id="secheresseJambes"
-            name="secheresseJambes"
-            checked={formData.secheresseJambes === "Oui"}
-            onChange={onChange}
-            className="form-checkbox h-5 w-5 text-primary-600"
-          />
-          <label
-            htmlFor="secheresseJambes"
-            className="ml-2 block text-sm font-medium text-gray-700"
-          >
-            {t('volunteers.legs')}
-          </label>
-        </div>
-
-        <div className="flex items-center">
-          <input
-            type="checkbox"
-            id="secheressePieds"
-            name="secheressePieds"
-            checked={formData.secheressePieds === "Oui"}
-            onChange={onChange}
-            className="form-checkbox h-5 w-5 text-primary-600"
-          />
-          <label
-            htmlFor="secheressePieds"
-            className="ml-2 block text-sm font-medium text-gray-700"
-          >
-            {t('volunteers.feet')}
-          </label>
-        </div>
+        <NoneCheckbox groupIds={secheresseIds} noneId="secheresseAucun" />
+        <GroupCheckbox id="secheresseLevres" label={t('volunteers.lips')} groupIds={secheresseIds} noneId="secheresseAucun" />
+        <GroupCheckbox id="secheresseCou" label={t('volunteers.neck')} groupIds={secheresseIds} noneId="secheresseAucun" />
+        <GroupCheckbox id="secheressePoitrineDecollete" label={t('volunteers.chestNeckline')} groupIds={secheresseIds} noneId="secheresseAucun" />
+        <GroupCheckbox id="secheresseVentreTaille" label={t('volunteers.bellyWaist')} groupIds={secheresseIds} noneId="secheresseAucun" />
+        <GroupCheckbox id="secheresseFessesHanches" label={t('volunteers.buttocksHips')} groupIds={secheresseIds} noneId="secheresseAucun" />
+        <GroupCheckbox id="secheresseBras" label={t('volunteers.arms')} groupIds={secheresseIds} noneId="secheresseAucun" />
+        <GroupCheckbox id="secheresseMains" label={t('volunteers.hands')} groupIds={secheresseIds} noneId="secheresseAucun" />
+        <GroupCheckbox id="secheresseJambes" label={t('volunteers.legs')} groupIds={secheresseIds} noneId="secheresseAucun" />
+        <GroupCheckbox id="secheressePieds" label={t('volunteers.feet')} groupIds={secheresseIds} noneId="secheresseAucun" />
       </div>
       <h3 className="text-md font-medium text-gray-800 mt-6 mb-3">
         {t('volunteers.eyeProblems')}
       </h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="flex items-center">
-          <input
-            type="checkbox"
-            id="cernesPigmentaires"
-            name="cernesPigmentaires"
-            checked={formData.cernesPigmentaires === "Oui"}
-            onChange={onChange}
-            className="form-checkbox h-5 w-5 text-primary-600"
-          />
-          <label
-            htmlFor="cernesPigmentaires"
-            className="ml-2 block text-sm font-medium text-gray-700"
-          >
-            {t('volunteers.pigmentaryCircles')}
-          </label>
-        </div>
-
-        <div className="flex items-center">
-          <input
-            type="checkbox"
-            id="cernesVasculaires"
-            name="cernesVasculaires"
-            checked={formData.cernesVasculaires === "Oui"}
-            onChange={onChange}
-            className="form-checkbox h-5 w-5 text-primary-600"
-          />
-          <label
-            htmlFor="cernesVasculaires"
-            className="ml-2 block text-sm font-medium text-gray-700"
-          >
-            {t('volunteers.vascularCircles')}
-          </label>
-        </div>
-
-        <div className="flex items-center">
-          <input
-            type="checkbox"
-            id="poches"
-            name="poches"
-            checked={formData.poches === "Oui"}
-            onChange={onChange}
-            className="form-checkbox h-5 w-5 text-primary-600"
-          />
-          <label
-            htmlFor="poches"
-            className="ml-2 block text-sm font-medium text-gray-700"
-          >
-            {t('volunteers.bags')}
-          </label>
-        </div>
+        <NoneCheckbox groupIds={yeuxIds} noneId="yeuxAucun" />
+        <GroupCheckbox id="cernesPigmentaires" label={t('volunteers.pigmentaryCircles')} groupIds={yeuxIds} noneId="yeuxAucun" />
+        <GroupCheckbox id="cernesVasculaires" label={t('volunteers.vascularCircles')} groupIds={yeuxIds} noneId="yeuxAucun" />
+        <GroupCheckbox id="poches" label={t('volunteers.bags')} groupIds={yeuxIds} noneId="yeuxAucun" />
       </div>
       <h3 className="text-md font-medium text-gray-800 mt-6 mb-3">
         {t('volunteers.lossOfFirmness')}
       </h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="flex items-center">
-          <input
-            type="checkbox"
-            id="perteDeFermeteVisage"
-            name="perteDeFermeteVisage"
-            checked={formData.perteDeFermeteVisage === "Oui"}
-            onChange={onChange}
-            className="form-checkbox h-5 w-5 text-primary-600"
-          />
-          <label
-            htmlFor="perteDeFermeteVisage"
-            className="ml-2 block text-sm font-medium text-gray-700"
-          >
-            {t('volunteers.face')}
-          </label>
-        </div>
-
-        <div className="flex items-center">
-          <input
-            type="checkbox"
-            id="perteDeFermeteCou"
-            name="perteDeFermeteCou"
-            checked={formData.perteDeFermeteCou === "Oui"}
-            onChange={onChange}
-            className="form-checkbox h-5 w-5 text-primary-600"
-          />
-          <label
-            htmlFor="perteDeFermeteCou"
-            className="ml-2 block text-sm font-medium text-gray-700"
-          >
-            {t('volunteers.neck')}
-          </label>
-        </div>
-
-        <div className="flex items-center">
-          <input
-            type="checkbox"
-            id="perteDeFermeteDecollete"
-            name="perteDeFermeteDecollete"
-            checked={formData.perteDeFermeteDecollete === "Oui"}
-            onChange={onChange}
-            className="form-checkbox h-5 w-5 text-primary-600"
-          />
-          <label
-            htmlFor="perteDeFermeteDecollete"
-            className="ml-2 block text-sm font-medium text-gray-700"
-          >
-            {t('volunteers.neckline')}
-          </label>
-        </div>
+        <NoneCheckbox groupIds={fermeteIds} noneId="fermeteAucun" />
+        <GroupCheckbox id="perteDeFermeteVisage" label={t('volunteers.face')} groupIds={fermeteIds} noneId="fermeteAucun" />
+        <GroupCheckbox id="perteDeFermeteCou" label={t('volunteers.neck')} groupIds={fermeteIds} noneId="fermeteAucun" />
+        <GroupCheckbox id="perteDeFermeteDecollete" label={t('volunteers.neckline')} groupIds={fermeteIds} noneId="fermeteAucun" />
+        <GroupCheckbox id="perteDeFermeteAvantBras" label="Avant-bras" groupIds={fermeteIds} noneId="fermeteAucun" />
       </div>
       </CardContent>
     </Card>

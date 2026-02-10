@@ -8,6 +8,7 @@ import etudeVolontaireService from "../../services/etudeVolontaireService";
 import groupeService from "../../services/groupeService";
 import volontaireService from "../../services/volontaireService";
 import annulationService from "../../services/annulationService";
+import rdvService from "../../services/rdvService";
 import api from "../../services/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -919,6 +920,20 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
     };
   }, [volontairesAssignes]);
 
+  // Helper pour parser la réponse etude-volontaire
+  const parseEtudeVolontaireResponse = (response: any): VolontaireAssigne[] => {
+    if (Array.isArray(response)) {
+      return response;
+    } else if (response?.success && Array.isArray(response.data)) {
+      return response.data;
+    } else if (response && Array.isArray(response.data)) {
+      return response.data;
+    } else {
+      console.warn("Format de réponse inattendu:", response);
+      return [];
+    }
+  };
+
   // Chargement des données
   useEffect(() => {
     const fetchVolontaires = async () => {
@@ -927,17 +942,55 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
       try {
         setIsLoading(true);
         const response = await etudeVolontaireService.getVolontairesByEtude(etudeId);
+        let assignes: VolontaireAssigne[] = parseEtudeVolontaireResponse(response);
 
-        let assignes: VolontaireAssigne[] = [];
-        if (Array.isArray(response)) {
-          assignes = response;
-        } else if (response?.success && Array.isArray(response.data)) {
-          assignes = response.data;
-        } else if (response && Array.isArray(response.data)) {
-          assignes = response.data;
-        } else {
-          console.warn("Format de réponse inattendu:", response);
-          assignes = [];
+        // Fallback : si aucun volontaire dans etude_volontaire, récupérer depuis les RDV
+        if (assignes.length === 0) {
+          try {
+            const etudeIdNum = parseInt(etudeId.toString());
+
+            // Récupérer les groupes de l'étude pour la FK idGroupe
+            const groupesData: any = await groupeService.getGroupesByIdEtude(etudeIdNum);
+            const groupes = Array.isArray(groupesData) ? groupesData : (groupesData?.data || []);
+            const defaultGroupeId = groupes.length > 0 ? (groupes[0].idGroupe || groupes[0].id || 0) : 0;
+
+            if (defaultGroupeId === 0) {
+              console.warn("Aucun groupe trouvé pour l'étude, impossible de créer les associations");
+            } else {
+              const rdvData = await rdvService.getByEtudeId(etudeIdNum);
+              if (Array.isArray(rdvData) && rdvData.length > 0) {
+                const uniqueVolIds = [...new Set(
+                  rdvData
+                    .map((rdv: any) => rdv.idVolontaire)
+                    .filter((vid: number) => vid && vid !== 0)
+                )] as number[];
+
+                if (uniqueVolIds.length > 0) {
+                  // Créer les entrées manquantes dans etude_volontaire avec un vrai idGroupe
+                  await Promise.allSettled(
+                    uniqueVolIds.map((volId) =>
+                      api.post("/etude-volontaires", {
+                        idEtude: etudeIdNum,
+                        idVolontaire: volId,
+                        idGroupe: defaultGroupeId,
+                        iv: 0,
+                        numsujet: 0,
+                        paye: 0,
+                        statut: "-",
+                      })
+                    )
+                  );
+
+                  // Re-charger après création
+                  const response2 = await etudeVolontaireService.getVolontairesByEtude(etudeId);
+                  assignes = parseEtudeVolontaireResponse(response2);
+                  setDebugInfo(`${assignes.length} volontaires synchronisés depuis les RDV`);
+                }
+              }
+            }
+          } catch (rdvError) {
+            console.warn("Impossible de charger les volontaires depuis les RDV:", rdvError);
+          }
         }
 
         setVolontairesAssignes(assignes);

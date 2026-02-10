@@ -448,7 +448,6 @@ const EtudeFormEnhanced = () => {
                 onChange={handleChange}
                 className={refExists ? "border-red-500" : ""}
                 required
-                disabled={isEditMode}
               />
               {refExists && (
                 <p className="mt-1 text-sm text-red-600">

@@ -58,12 +58,14 @@ export const formatSkinType = (skinType: string | null | undefined): string => {
     'NORMALE': 'Normale',
     'SECHE': 'Sèche',
     'GRASSE': 'Grasse',
-    'MIXTE': 'Mixte',
+    'MIXTE À TENDANCE GRASSE': 'Mixte à tendance grasse',
+    'MIXTE À TENDANCE SÈCHE': 'Mixte à tendance sèche',
+    'MIXTE A TENDANCE GRASSE': 'Mixte à tendance grasse',
+    'MIXTE A TENDANCE SECHE': 'Mixte à tendance sèche',
     'SENSIBLE': 'Sensible',
     'N': 'Normale',
     'S': 'Sèche',
     'G': 'Grasse',
-    'M': 'Mixte',
     'SE': 'Sensible'
   };
 
