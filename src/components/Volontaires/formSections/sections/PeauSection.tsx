@@ -97,6 +97,7 @@ const PeauSection = ({ formData, errors, onChange }: any) => {
             <option value="Normale">{t('volunteers.skinTypeOptions.Normale')}</option>
             <option value="Sèche">{t('volunteers.skinTypeOptions.Sèche')}</option>
             <option value="Grasse">{t('volunteers.skinTypeOptions.Grasse')}</option>
+            <option value="Mixte">{t('volunteers.skinTypeOptions.Mixte')}</option>
             <option value="Mixte à tendance grasse">{t('volunteers.skinTypeOptions.Mixte à tendance grasse')}</option>
             <option value="Mixte à tendance sèche">{t('volunteers.skinTypeOptions.Mixte à tendance sèche')}</option>
             <option value="Sensible">{t('volunteers.skinTypeOptions.Sensible')}</option>

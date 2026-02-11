@@ -92,7 +92,7 @@ const etudeService = {
   },
 
   getByRef: async (ref: string): Promise<Etude> => {
-    const response = await api.get<Etude>(`${ETUDES_ENDPOINT}/ref/${ref}`);
+    const response = await api.get<Etude>(`${ETUDES_ENDPOINT}/search-by-ref`, { params: { ref } });
     return response.data;
   },
 

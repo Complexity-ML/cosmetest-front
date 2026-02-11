@@ -187,6 +187,10 @@ const PeauSection = ({ volontaireDisplayData }: { volontaireDisplayData: any }) 
             <p className="text-sm font-medium text-brand-cyan">{t('volunteers.neckline')}</p>
             <p className="text-sm text-gray-900">{displayYesNo(volontaireDisplayData.perteDeFermeteDecollete)}</p>
           </div>
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-brand-cyan">{t('volunteers.forearms')}</p>
+            <p className="text-sm text-gray-900">{displayYesNo(volontaireDisplayData.perteDeFermeteAvantBras)}</p>
+          </div>
         </div>
       </div>
     </CardContent>

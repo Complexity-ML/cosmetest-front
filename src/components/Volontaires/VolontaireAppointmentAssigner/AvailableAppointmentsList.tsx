@@ -73,15 +73,10 @@ const AvailableAppointmentsList = ({
         return false;
       }
 
-      // Filtre par recherche
+      // Filtre par heure
       if (searchQuery.trim() === '') return true;
       const searchLower = searchQuery.toLowerCase();
-      return (
-        formatDate(rdv.date || '').toLowerCase().includes(searchLower) ||
-        formatTime(rdv.heure || '').toLowerCase().includes(searchLower) ||
-        (rdv.etat || '').toLowerCase().includes(searchLower) ||
-        (rdv.commentaires || '').toLowerCase().includes(searchLower)
-      );
+      return (rdv.heure || '').toLowerCase().includes(searchLower);
     })
     .sort((a: RendezVousData, b: RendezVousData) => {
       // Debug tri (désactiver si trop verbeux)

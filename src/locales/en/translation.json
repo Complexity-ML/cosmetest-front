@@ -260,6 +260,7 @@
     "face": "Face",
     "neck": "Neck",
     "neckline": "Neckline",
+    "forearms": "Forearms",
     "hands": "Hands",
     "stretchMarks": "Stretch marks",
     "legs": "Legs",
@@ -432,6 +433,7 @@
       "Normale": "Normal",
       "Sèche": "Dry",
       "Grasse": "Oily",
+      "Mixte": "Combination",
       "Mixte à tendance grasse": "Combination oily",
       "Mixte à tendance sèche": "Combination dry",
       "Sensible": "Sensitive"

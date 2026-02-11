@@ -742,6 +742,24 @@ const volontaireService = {
     return volontaireService.getActifs(params);
   },
 
+  // ==================== VÉRIFICATION DE DOUBLONS ====================
+
+  /**
+   * Vérifie si un volontaire existe déjà par email, nom ou prénom
+   * Retourne la liste des volontaires correspondants
+   */
+  checkDuplicate: async (params: { keyword: string }) => {
+    try {
+      const response = await api.get('/volontaires/search', {
+        params: { keyword: params.keyword, page: 0, size: 10 }
+      });
+      const content = response.data?.content || [];
+      return content.map((raw: any) => transformVolontaireData(raw)).filter((v: any) => v?.id);
+    } catch {
+      return [];
+    }
+  },
+
   // ==================== MÉTHODES DE VALIDATION ====================
 
   /**

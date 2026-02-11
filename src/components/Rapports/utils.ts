@@ -6,7 +6,7 @@ export interface DemographicsFilters {
   phototypes: string[];
   ethnies: string[];
   sexe: string;
-  excludeEtudeRef: string;
+  excludeEtudeRefs: string[];
 }
 
 export interface MakeupFilters {
@@ -41,7 +41,7 @@ export const createInitialFilters = (): Filters => ({
     phototypes: [],
     ethnies: [],
     sexe: '',
-    excludeEtudeRef: ''
+    excludeEtudeRefs: []
   },
   makeup: {
     visage: [],

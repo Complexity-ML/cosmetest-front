@@ -261,6 +261,7 @@
     "face": "Visage",
     "neck": "Cou",
     "neckline": "Décolleté",
+    "forearms": "Avant-bras",
     "hands": "Mains",
     "stretchMarks": "Vergetures",
     "legs": "Jambes",
@@ -433,6 +434,7 @@
       "Normale": "Normale",
       "Sèche": "Sèche",
       "Grasse": "Grasse",
+      "Mixte": "Mixte",
       "Mixte à tendance grasse": "Mixte à tendance grasse",
       "Mixte à tendance sèche": "Mixte à tendance sèche",
       "Sensible": "Sensible"

@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Search, Plus, Trash2 } from 'lucide-react';
+import { Search, Plus, Trash2, X } from 'lucide-react';
 import { MAKEUP_OPTIONS, EVALUATION_FIELDS, ETHNIE_OPTIONS } from './constants';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -40,13 +40,14 @@ interface DemographicFiltersProps {
     sexe: string;
     phototypes: string[];
     ethnies: string[];
-    excludeEtudeRef: string;
+    excludeEtudeRefs: string[];
   };
   onAgeChange: (field: string, value: string) => void;
   onSexChange: (value: string) => void;
   onPhototypeToggle: (value: string) => void;
   onEthnieToggle: (value: string) => void;
-  onExcludeEtudeRefChange: (value: string) => void;
+  onAddExcludeRef: (ref: string) => void;
+  onRemoveExcludeRef: (ref: string) => void;
 }
 
 export const DemographicFilters: React.FC<DemographicFiltersProps> = ({
@@ -55,9 +56,27 @@ export const DemographicFilters: React.FC<DemographicFiltersProps> = ({
   onSexChange,
   onPhototypeToggle,
   onEthnieToggle,
-  onExcludeEtudeRefChange
+  onAddExcludeRef,
+  onRemoveExcludeRef
 }) => {
   const { t } = useTranslation();
+  const [excludeInput, setExcludeInput] = useState('');
+
+  const handleAddExcludeRef = () => {
+    const ref = excludeInput.trim();
+    if (ref && !values.excludeEtudeRefs.includes(ref)) {
+      onAddExcludeRef(ref);
+      setExcludeInput('');
+    }
+  };
+
+  const handleExcludeKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAddExcludeRef();
+    }
+  };
+
   return (
     <div className="bg-white p-6 rounded-lg border border-gray-200">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('reports.matching.demographicCriteria')}</h3>
@@ -99,18 +118,47 @@ export const DemographicFilters: React.FC<DemographicFiltersProps> = ({
             </Select>
           </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="excludeEtudeRef">{t('reports.matching.excludeStudy')}</Label>
+        <div className="space-y-2">
+          <Label>{t('reports.matching.excludeStudy')}</Label>
+          <div className="flex gap-2">
             <Input
-              id="excludeEtudeRef"
               type="text"
               placeholder={t('reports.matching.excludeStudyPlaceholder')}
-              value={values.excludeEtudeRef}
-              onChange={(e) => onExcludeEtudeRefChange(e.target.value)}
+              value={excludeInput}
+              onChange={(e) => setExcludeInput(e.target.value)}
+              onKeyDown={handleExcludeKeyDown}
+              className="flex-1"
             />
-            <p className="text-xs text-muted-foreground">{t('reports.matching.excludeStudyHint')}</p>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={handleAddExcludeRef}
+              disabled={!excludeInput.trim()}
+            >
+              <Plus className="w-4 h-4" />
+            </Button>
           </div>
+          {values.excludeEtudeRefs.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-2">
+              {values.excludeEtudeRefs.map((ref) => (
+                <span
+                  key={ref}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-sm bg-red-50 text-red-700 border border-red-200"
+                >
+                  {ref}
+                  <button
+                    type="button"
+                    onClick={() => onRemoveExcludeRef(ref)}
+                    className="hover:bg-red-200 rounded-full p-0.5"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+          <p className="text-xs text-muted-foreground">{t('reports.matching.excludeStudyHint')}</p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
@@ -431,7 +479,7 @@ interface CriteriaPanelProps {
       sexe: string;
       phototypes: string[];
       ethnies: string[];
-      excludeEtudeRef: string;
+      excludeEtudeRefs: string[];
     };
     makeup: {
       visage: string[];
@@ -445,7 +493,8 @@ interface CriteriaPanelProps {
   onSexChange: (value: string) => void;
   onPhototypeToggle: (value: string) => void;
   onEthnieToggle: (value: string) => void;
-  onExcludeEtudeRefChange: (value: string) => void;
+  onAddExcludeRef: (ref: string) => void;
+  onRemoveExcludeRef: (ref: string) => void;
   onMakeupToggle: (category: string, value: string) => void;
   onEvaluationChange: (key: string, type: 'min' | 'max', value: string) => void;
   onAddCustomCriterion?: () => void;
@@ -463,7 +512,8 @@ export const CriteriaPanel: React.FC<CriteriaPanelProps> = ({
   onSexChange,
   onPhototypeToggle,
   onEthnieToggle,
-  onExcludeEtudeRefChange,
+  onAddExcludeRef,
+  onRemoveExcludeRef,
   onMakeupToggle,
   onEvaluationChange,
   onAddCustomCriterion,
@@ -482,7 +532,8 @@ export const CriteriaPanel: React.FC<CriteriaPanelProps> = ({
       onSexChange={onSexChange}
       onPhototypeToggle={onPhototypeToggle}
       onEthnieToggle={onEthnieToggle}
-      onExcludeEtudeRefChange={onExcludeEtudeRefChange}
+      onAddExcludeRef={onAddExcludeRef}
+      onRemoveExcludeRef={onRemoveExcludeRef}
     />
     <MakeupFilters
       values={filters.makeup}

@@ -194,8 +194,8 @@ const VolunteerExcelExport: React.FC<VolunteerExcelExportProps> = ({
 
       // 2. Créer les en-têtes selon le format amélioré
       const headers = [
-        'ID Vol',
         'N° Sujet',
+        'ID Vol',
         'Code',
         'AGE',
         'Sensibilité cutanée',
@@ -245,11 +245,11 @@ const VolunteerExcelExport: React.FC<VolunteerExcelExportProps> = ({
       volunteersData.forEach((volunteer) => {
         const row = [];
 
-        // ID Vol
-        row.push(volunteer.idVol || '');
-
         // N° Sujet
         row.push(volunteer.numeroSujet || '');
+
+        // ID Vol
+        row.push(volunteer.idVol || '');
 
         // Code (initiales générées à partir du nom/prénom)
         const code = volunteer.nomVol && volunteer.prenomVol ?
@@ -451,9 +451,10 @@ const VolunteerExcelExport: React.FC<VolunteerExcelExportProps> = ({
       currentRowIndex = dataRows.length;
 
       // === 3. STATISTIQUES DE TYPES DE PEAU ===
-      const orderedTypesPeau = ['Grasse', 'Mixte', 'Normale', 'Sèche', 'Sensible', 'Mixte à tendance grasse', 'Mixte à tendance sèche'];
+      const orderedTypesPeau = ['Normale', 'Sèche', 'Grasse', 'Mixte à tendance grasse', 'Mixte à tendance sèche', 'Sensible'];
       const typesPeauPresents = [...new Set(volunteersData.map(v => v.typePeauVisage || 'Non spécifié'))];
-      const allTypesPeau = [...new Set([...orderedTypesPeau.filter(t => typesPeauPresents.includes(t)), ...typesPeauPresents])];
+      const extraTypes = typesPeauPresents.filter(t => !orderedTypesPeau.includes(t));
+      const allTypesPeau = [...orderedTypesPeau, ...extraTypes];
 
       const typesPeauLabels: (string | number)[][] = [['TYPES DE PEAU', 'N', '%']];
       allTypesPeau.forEach(type => {

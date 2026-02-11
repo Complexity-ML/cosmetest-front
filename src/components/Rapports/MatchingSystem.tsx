@@ -88,12 +88,22 @@ const MatchingSystem = () => {
     }));
   };
 
-  const handleExcludeEtudeRefChange = (value: string) => {
+  const handleAddExcludeRef = (ref: string) => {
     setFilters((prev) => ({
       ...prev,
       demographics: {
         ...prev.demographics,
-        excludeEtudeRef: value
+        excludeEtudeRefs: [...prev.demographics.excludeEtudeRefs, ref]
+      }
+    }));
+  };
+
+  const handleRemoveExcludeRef = (ref: string) => {
+    setFilters((prev) => ({
+      ...prev,
+      demographics: {
+        ...prev.demographics,
+        excludeEtudeRefs: prev.demographics.excludeEtudeRefs.filter((r: string) => r !== ref)
       }
     }));
   };
@@ -262,35 +272,34 @@ const MatchingSystem = () => {
       }
       let volontaires = volontairesDetails.filter((vol) => vol !== null);
 
-      // Exclude volunteers already enrolled in the specified study
-      const excludeRef = filters.demographics.excludeEtudeRef.trim();
-      console.log('[Exclude Study] Valeur du champ excludeEtudeRef:', JSON.stringify(excludeRef));
-      if (excludeRef) {
-        try {
-          console.log('[Exclude Study] Appel getByRef avec:', excludeRef);
-          const etude = await etudeService.getByRef(excludeRef);
-          console.log('[Exclude Study] Étude trouvée:', JSON.stringify(etude));
-          const etudeId = etude.idEtude ?? etude.id;
-          console.log('[Exclude Study] etudeId résolu:', etudeId);
-          if (etudeId) {
-            const associations = await etudeVolontaireService.getVolontairesByEtude(etudeId);
-            console.log('[Exclude Study] Associations brutes:', JSON.stringify(associations));
-            const associationsList = Array.isArray(associations) ? associations : (associations?.data || associations?.content || []);
-            const enrolledIds = new Set(
+      // Exclude volunteers already enrolled in the specified studies
+      const excludeRefs = filters.demographics.excludeEtudeRefs.filter((r: string) => r.trim());
+      console.log('[Exclude Study] Refs à exclure:', excludeRefs);
+      if (excludeRefs.length > 0) {
+        const allEnrolledIds = new Set<number>();
+        for (const excludeRef of excludeRefs) {
+          try {
+            console.log('[Exclude Study] Appel getByRef avec:', excludeRef);
+            const etude = await etudeService.getByRef(excludeRef);
+            console.log('[Exclude Study] Étude trouvée:', JSON.stringify(etude));
+            const etudeId = etude.idEtude ?? etude.id;
+            if (etudeId) {
+              const associations = await etudeVolontaireService.getVolontairesByEtude(etudeId);
+              const associationsList = Array.isArray(associations) ? associations : (associations?.data || associations?.content || []);
               associationsList
                 .filter((a: any) => a.statut !== 'ANNULE')
-                .map((a: any) => Number(a.idVolontaire))
-            );
-            console.log('[Exclude Study] IDs à exclure:', [...enrolledIds]);
-            const before = volontaires.length;
-            volontaires = volontaires.filter((vol) => !enrolledIds.has(Number(vol.idVol)));
-            console.log(`[Exclude Study] ${before - volontaires.length} volontaires exclus (${before} → ${volontaires.length})`);
+                .forEach((a: any) => allEnrolledIds.add(Number(a.idVolontaire)));
+            }
+          } catch (err) {
+            console.error(`[Exclude Study] ERREUR pour ref "${excludeRef}":`, err);
           }
-        } catch (err) {
-          console.error(`[Exclude Study] ERREUR pour ref "${excludeRef}":`, err);
         }
+        console.log('[Exclude Study] IDs à exclure (total):', [...allEnrolledIds]);
+        const before = volontaires.length;
+        volontaires = volontaires.filter((vol) => !allEnrolledIds.has(Number(vol.idVol)));
+        console.log(`[Exclude Study] ${before - volontaires.length} volontaires exclus (${before} → ${volontaires.length})`);
       } else {
-        console.log('[Exclude Study] Champ vide, pas d\'exclusion');
+        console.log('[Exclude Study] Aucune étude à exclure');
       }
 
       // Get habits cosmétiques
@@ -533,7 +542,7 @@ const MatchingSystem = () => {
                     sexe: filters.demographics.sexe,
                     phototypes: filters.demographics.phototypes,
                     ethnies: filters.demographics.ethnies,
-                    excludeEtudeRef: filters.demographics.excludeEtudeRef
+                    excludeEtudeRefs: filters.demographics.excludeEtudeRefs
                   },
                   makeup: filters.makeup,
                   evaluations: Object.entries(filters.evaluations).reduce((acc, [key, val]) => ({
@@ -549,7 +558,8 @@ const MatchingSystem = () => {
                 onSexChange={handleSexChange}
                 onPhototypeToggle={togglePhototype}
                 onEthnieToggle={toggleEthnie}
-                onExcludeEtudeRefChange={handleExcludeEtudeRefChange}
+                onAddExcludeRef={handleAddExcludeRef}
+                onRemoveExcludeRef={handleRemoveExcludeRef}
                 onMakeupToggle={toggleMakeupOption}
                 onEvaluationChange={handleEvaluationThresholdChange}
                 onAddCustomCriterion={handleAddCustomCriterion}

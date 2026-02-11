@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import volontaireService from '../../services/volontaireService'
 import { usePagination } from '../../hooks/usePagination'
 import { Search, Plus } from 'lucide-react'
 import VolontairesTable from '../../components/Volontaires/VolontairesTable'
+import DuplicateCheckDialog from '../../components/Volontaires/DuplicateCheckDialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -19,6 +19,7 @@ const VolontairesPage = () => {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [includeArchived, setIncludeArchived] = useState(false)
+  const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false)
   const { page, size, updateTotal, goToPage, nextPage, prevPage, pageCount, total } = usePagination()
   
   useEffect(() => {
@@ -84,11 +85,9 @@ const VolontairesPage = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">{t('volunteers.title')}</h1>
-        <Button asChild>
-          <Link to="/volontaires/nouveau">
-            <Plus className="mr-2 h-4 w-4" />
-            {t('common.add')}
-          </Link>
+        <Button onClick={() => setDuplicateDialogOpen(true)}>
+          <Plus className="mr-2 h-4 w-4" />
+          {t('common.add')}
         </Button>
       </div>
       
@@ -201,6 +200,11 @@ const VolontairesPage = () => {
           )}
         </>
       )}
+
+      <DuplicateCheckDialog
+        open={duplicateDialogOpen}
+        onOpenChange={setDuplicateDialogOpen}
+      />
     </div>
   )
 }

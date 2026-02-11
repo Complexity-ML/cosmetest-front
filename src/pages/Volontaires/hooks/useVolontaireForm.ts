@@ -7,6 +7,66 @@ import { toISODateString } from '../../../utils/dateUtils';
 
 import { INITIAL_FORM_STATE } from '../constants/initialFormState';
 
+// Helper : matcher une valeur BDD avec les options d'un dropdown (insensible casse/accents/espaces)
+const matchOption = (dbValue: any, options: string[]): string => {
+  if (!dbValue) return '';
+  const val = String(dbValue).trim();
+  // Match exact d'abord
+  if (options.includes(val)) return val;
+  // Match insensible à la casse
+  const lower = val.toLowerCase();
+  const match = options.find(opt => opt.toLowerCase() === lower);
+  return match || val;
+};
+
+// Normalise n'importe quel format de phototype vers "I","II",..."VI"
+// Gère : "1"→"I", "III"→"III", "Phototype III"→"III", "Phototype 3"→"III", "phototype_3"→"III", etc.
+const normalizePhototype = (raw: any): string => {
+  if (!raw) return '';
+  const s = String(raw).trim();
+  // Mapping numérique direct
+  const numToRoman: Record<string, string> = {
+    '1': 'I', '2': 'II', '3': 'III', '4': 'IV', '5': 'V', '6': 'VI',
+  };
+  if (numToRoman[s]) return numToRoman[s];
+  // Déjà un chiffre romain valide
+  const validRomans = ['I', 'II', 'III', 'IV', 'V', 'VI'];
+  const upper = s.toUpperCase();
+  if (validRomans.includes(upper)) return upper;
+  // Extraire le chiffre ou romain d'une chaîne plus longue (ex: "Phototype III", "Phototype 3")
+  const match = s.match(/(\d+|[IViv]+)\s*$/);
+  if (match) {
+    const extracted = match[1];
+    if (numToRoman[extracted]) return numToRoman[extracted];
+    const extractedUpper = extracted.toUpperCase();
+    if (validRomans.includes(extractedUpper)) return extractedUpper;
+  }
+  return s;
+};
+
+// Options valides pour chaque select du formulaire
+const SELECT_OPTIONS = {
+  phototype: ['I', 'II', 'III', 'IV', 'V', 'VI'],
+  typePeauVisage: ['Normale', 'Sèche', 'Grasse', 'Mixte', 'Mixte à tendance grasse', 'Mixte à tendance sèche', 'Sensible'],
+  carnation: ['Très claire', 'Claire', 'Moyenne', 'Mate', 'Foncée', 'Très foncée'],
+  sensibiliteCutanee: ['Peau sensible', 'Peau peu sensible', 'Peau non sensible'],
+  expositionSolaire: ['Faiblement', 'Moyennement', 'Fortement'],
+  bronzage: ['Progressif', 'Rapide', 'Difficile', 'Inexistant'],
+  coupsDeSoleil: ['Jamais', 'Rarement', 'Parfois', 'Souvent', 'Toujours'],
+  couleurCheveux: ['Blond', 'Châtain', 'Brun', 'Noir', 'Roux', 'Gris', 'Blanc', 'Colorés'],
+  longueurCheveux: ['Courts', 'Mi-longs', 'Longs', 'Très longs'],
+  natureCheveux: ['Raides', 'Ondulés', 'Bouclés', 'Crépus'],
+  epaisseurCheveux: ['Fins', 'Moyens', 'Épais'],
+  natureCuirChevelu: ['Normal', 'Gras', 'Sec', 'Mixte'],
+  epaisseurCils: ['Fins', 'Moyens', 'Épais'],
+  longueurCils: ['Courts', 'Moyens', 'Longs'],
+  courbureCils: ['Droit', 'Courbé'],
+  caracteristiqueSourcils: ['Clairsemés', 'Fournis'],
+  levres: ['Fines', 'Moyennes', 'Pulpeuses', 'Asymétriques'],
+  sexe: ['M', 'F', 'Masculin', 'Féminin', 'Autre'],
+  ethnie: ['Caucasienne', 'Africaine', 'Asiatique', 'Indienne', 'Antillaise'],
+};
+
 // Mapping des champs d'erreur vers les onglets correspondants
 const FIELD_TO_TAB_MAP: Record<string, string> = {
   // Informations personnelles
@@ -458,7 +518,11 @@ export const useVolontaireForm = ({ id, isEditMode, navigate }: UseVolontaireFor
         let detailsData: any = {};
         try {
           const detailsResponse = await volontaireService.getDetails(id!);
-          detailsData = detailsResponse.data || {};
+          const responseData = detailsResponse.data;
+          // Gérer le wrapper ApiResponse { success, message, data: {...} }
+          detailsData = (responseData?.data && typeof responseData.data === 'object' && !Array.isArray(responseData.data))
+            ? responseData.data
+            : responseData || {};
         } catch (detailsError) {
           console.warn(
             "Erreur lors du chargement des détails du volontaire:",
@@ -491,7 +555,7 @@ export const useVolontaireForm = ({ id, isEditMode, navigate }: UseVolontaireFor
           email: detailsData.emailVol || "",
           telephone: detailsData.telPortableVol || "",
           telephoneDomicile: detailsData.telDomicileVol || "",
-          sexe: detailsData.sexe || "",
+          sexe: matchOption(detailsData.sexe, SELECT_OPTIONS.sexe),
           dateNaissance: detailsData.dateNaissance
             ? toISODateString(detailsData.dateNaissance)
             : "",
@@ -505,8 +569,13 @@ export const useVolontaireForm = ({ id, isEditMode, navigate }: UseVolontaireFor
           // Caractéristiques physiques
           taille: detailsData.taille || "",
           poids: detailsData.poids || "",
-          phototype: detailsData.phototype || "",
-          ethnie: detailsData.ethnie || "",
+          phototype: (() => {
+            const raw = detailsData.phototype;
+            const normalized = normalizePhototype(raw);
+            console.log('[DEBUG Phototype] raw:', raw, '→ normalized:', normalized);
+            return matchOption(normalized, SELECT_OPTIONS.phototype);
+          })(),
+          ethnie: matchOption(detailsData.ethnie, SELECT_OPTIONS.ethnie),
           sousEthnie: detailsData.sousEthnie || "",
           yeux: detailsData.yeux || "",
           pilosite: detailsData.pilosite || "",
@@ -514,26 +583,26 @@ export const useVolontaireForm = ({ id, isEditMode, navigate }: UseVolontaireFor
           origineMere: detailsData.origineMere || "",
 
           // Peau
-          typePeauVisage: detailsData.typePeauVisage || "",
-          carnation: detailsData.carnation || "",
-          sensibiliteCutanee: detailsData.sensibiliteCutanee || "",
+          typePeauVisage: matchOption(detailsData.typePeauVisage, SELECT_OPTIONS.typePeauVisage),
+          carnation: matchOption(detailsData.carnation, SELECT_OPTIONS.carnation),
+          sensibiliteCutanee: matchOption(detailsData.sensibiliteCutanee, SELECT_OPTIONS.sensibiliteCutanee),
           teintInhomogene: detailsData.teintInhomogene || "Non",
           teintTerne: detailsData.teintTerne || "Non",
           poresVisibles: detailsData.poresVisibles || "Non",
-          expositionSolaire: detailsData.expositionSolaire || "",
-          bronzage: detailsData.bronzage || "",
-          coupsDeSoleil: detailsData.coupsDeSoleil || "",
+          expositionSolaire: matchOption(detailsData.expositionSolaire, SELECT_OPTIONS.expositionSolaire),
+          bronzage: matchOption(detailsData.bronzage, SELECT_OPTIONS.bronzage),
+          coupsDeSoleil: matchOption(detailsData.coupsDeSoleil, SELECT_OPTIONS.coupsDeSoleil),
           celluliteBras: detailsData.celluliteBras || "Non",
           celluliteFessesHanches: detailsData.celluliteFessesHanches || "Non",
           celluliteJambes: detailsData.celluliteJambes || "Non",
           celluliteVentreTaille: detailsData.celluliteVentreTaille || "Non",
 
           // Cheveux et ongles
-          couleurCheveux: detailsData.couleurCheveux || "",
-          longueurCheveux: detailsData.longueurCheveux || "",
-          natureCheveux: detailsData.natureCheveux || "",
-          epaisseurCheveux: detailsData.epaisseurCheveux || "",
-          natureCuirChevelu: detailsData.natureCuirChevelu || "",
+          couleurCheveux: matchOption(detailsData.couleurCheveux, SELECT_OPTIONS.couleurCheveux),
+          longueurCheveux: matchOption(detailsData.longueurCheveux, SELECT_OPTIONS.longueurCheveux),
+          natureCheveux: matchOption(detailsData.natureCheveux, SELECT_OPTIONS.natureCheveux),
+          epaisseurCheveux: matchOption(detailsData.epaisseurCheveux, SELECT_OPTIONS.epaisseurCheveux),
+          natureCuirChevelu: matchOption(detailsData.natureCuirChevelu, SELECT_OPTIONS.natureCuirChevelu),
           cuirCheveluSensible: detailsData.cuirCheveluSensible || "Non",
           chuteDeCheveux: detailsData.chuteDeCheveux || "Non",
           cheveuxCassants: detailsData.cheveuxCassants || "Non",
@@ -598,11 +667,12 @@ export const useVolontaireForm = ({ id, isEditMode, navigate }: UseVolontaireFor
           perteDeFermeteVisage: detailsData.perteDeFermeteVisage || "Non",
           perteDeFermeteCou: detailsData.perteDeFermeteCou || "Non",
           perteDeFermeteDecollete: detailsData.perteDeFermeteDecollete || "Non",
+          perteDeFermeteAvantBras: detailsData.perteDeFermeteAvantBras || "Non",
 
           // Cils
-          epaisseurCils: detailsData.epaisseurCils || "",
-          longueurCils: detailsData.longueurCils || "",
-          courbureCils: detailsData.courbureCils || "",
+          epaisseurCils: matchOption(detailsData.epaisseurCils, SELECT_OPTIONS.epaisseurCils),
+          longueurCils: matchOption(detailsData.longueurCils, SELECT_OPTIONS.longueurCils),
+          courbureCils: matchOption(detailsData.courbureCils, SELECT_OPTIONS.courbureCils),
           cilsAbimes: detailsData.cilsAbimes || "Non",
           cilsBroussailleux: detailsData.cilsBroussailleux || "Non",
           chuteDeCils: detailsData.chuteDeCils || "Non",
@@ -641,13 +711,13 @@ export const useVolontaireForm = ({ id, isEditMode, navigate }: UseVolontaireFor
           ita: detailsData.ita || "",
 
           // Autres attributs manquants
-          levres: detailsData.levres || "",
+          levres: matchOption(detailsData.levres, SELECT_OPTIONS.levres),
           bouffeeChaleurMenaupose: detailsData.bouffeeChaleurMenaupose || "Non",
           cernesVasculaires: detailsData.cernesVasculaires || "Non",
           cernesPigmentaires: detailsData.cernesPigmentaires || "Non",
           poches: detailsData.poches || "Non",
           nbCigarettesJour: detailsData.nbCigarettesJour || "",
-          caracteristiqueSourcils: detailsData.caracteristiqueSourcils || "",
+          caracteristiqueSourcils: matchOption(detailsData.caracteristiqueSourcils, SELECT_OPTIONS.caracteristiqueSourcils),
           mapyeux: detailsData.mapyeux || "",
           maplevres: detailsData.maplevres || "",
           mapsourcils: detailsData.mapsourcils || "",
@@ -958,6 +1028,7 @@ export const useVolontaireForm = ({ id, isEditMode, navigate }: UseVolontaireFor
         perteDeFermeteVisage: defaultIfNull(formData.perteDeFermeteVisage, "Non"),
         perteDeFermeteCou: defaultIfNull(formData.perteDeFermeteCou, "Non"),
         perteDeFermeteDecollete: defaultIfNull(formData.perteDeFermeteDecollete, "Non"),
+        perteDeFermeteAvantBras: defaultIfNull(formData.perteDeFermeteAvantBras, "Non"),
 
         // Cils
         epaisseurCils: defaultIfNull(formData.epaisseurCils, ""),
