@@ -645,7 +645,7 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
             ? volontaire.iv || 0
             : volontaire.statut || "inscrit";
 
-      if (newValue === currentValue) {
+      if (String(newValue) === String(currentValue)) {
         setUpdateStatus((prev) => ({ ...prev, [statusKey]: "success" }));
         setTimeout(() => {
           setUpdateStatus((prev) => {
@@ -679,9 +679,9 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
 
       await api.patch(endpoint, null, { params });
 
-      setVolontairesAssignes((prev) => 
+      setVolontairesAssignes((prev) =>
         prev.map((v) =>
-          v.idVolontaire === volontaireId
+          v.idVolontaire === volontaireId && v.idGroupe === volontaire.idGroupe
             ? {
               ...v,
               [field]:
@@ -992,18 +992,33 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
           console.warn("Impossible de synchroniser les volontaires depuis les RDV:", rdvError);
         }
 
-        setVolontairesAssignes(assignes);
-        setDebugInfo(`${assignes.length} volontaires trouvés`);
+        // Dédupliquer par idVolontaire (garder l'entrée avec le numsujet le plus élevé)
+        const deduplicatedAssignes = Object.values(
+          assignes.reduce((acc: Record<number, VolontaireAssigne>, vol: VolontaireAssigne) => {
+            const existing = acc[vol.idVolontaire];
+            if (!existing || (vol.numsujet || 0) > (existing.numsujet || 0)) {
+              acc[vol.idVolontaire] = vol;
+            }
+            return acc;
+          }, {} as Record<number, VolontaireAssigne>)
+        );
 
-        if (assignes.length > 0) {
+        if (deduplicatedAssignes.length < assignes.length) {
+          console.warn(`⚠️ ${assignes.length - deduplicatedAssignes.length} doublons supprimés`);
+        }
+
+        setVolontairesAssignes(deduplicatedAssignes);
+        setDebugInfo(`${deduplicatedAssignes.length} volontaires trouvés`);
+
+        if (deduplicatedAssignes.length > 0) {
           const uniqueGroupeIds = [
             ...new Set(
-              assignes.map((v: VolontaireAssigne) => v.idGroupe).filter((id: number) => id && id !== 0)
+              deduplicatedAssignes.map((v: VolontaireAssigne) => v.idGroupe).filter((id: number) => id && id !== 0)
             ),
           ] as number[];
           const uniqueVolontaireIds = [
             ...new Set(
-              assignes.map((v: VolontaireAssigne) => v.idVolontaire).filter((id: number) => id && id !== 0)
+              deduplicatedAssignes.map((v: VolontaireAssigne) => v.idVolontaire).filter((id: number) => id && id !== 0)
             ),
           ] as number[];
 
