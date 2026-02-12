@@ -3,6 +3,7 @@
 // ============================================================
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import etudeVolontaireService from "../../services/etudeVolontaireService";
 import groupeService from "../../services/groupeService";
@@ -511,6 +512,7 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
   showDebugInfo = false
 }) => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
 
   // États
   const [volontairesAssignes, setVolontairesAssignes] = useState<VolontaireAssigne[]>([]);
@@ -1546,11 +1548,20 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     <div>
                       <div className="font-medium">
-                        {getVolontaireName(volontaire.idVolontaire)}
-                        {volontaire.idVolontaire === 0 && (
-                          <span className="ml-2 text-xs bg-yellow-200 text-yellow-800 px-2 py-1 rounded">
-                            {t('indemnity.temporary')}
-                          </span>
+                        {volontaire.idVolontaire !== 0 ? (
+                          <button
+                            onClick={() => navigate(`/volontaires/${volontaire.idVolontaire}`)}
+                            className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left"
+                          >
+                            {getVolontaireName(volontaire.idVolontaire)}
+                          </button>
+                        ) : (
+                          <>
+                            {getVolontaireName(volontaire.idVolontaire)}
+                            <span className="ml-2 text-xs bg-yellow-200 text-yellow-800 px-2 py-1 rounded">
+                              {t('indemnity.temporary')}
+                            </span>
+                          </>
                         )}
                       </div>
                       <div className="text-xs text-gray-500">
