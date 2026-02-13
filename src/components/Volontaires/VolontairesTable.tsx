@@ -26,6 +26,7 @@ interface Volontaire {
   email?: string
   typePeauVisage?: string
   typePeau?: string
+  phototype?: string
   archive?: boolean
 }
 
@@ -163,12 +164,21 @@ const VolontairesTable = ({ volontaires, onArchive }: VolontairesTableProps) => 
                   <ArrowUpDown className="ml-2 h-4 w-4" />
                 </div>
               </TableHead>
-              <TableHead 
+              <TableHead
                 className="cursor-pointer hover:bg-accent"
                 onClick={() => requestSort('typePeauVisage')}
               >
                 <div className="flex items-center">
                   <span>{t('volunteers.skinType')}</span>
+                  <ArrowUpDown className="ml-2 h-4 w-4" />
+                </div>
+              </TableHead>
+              <TableHead
+                className="cursor-pointer hover:bg-accent"
+                onClick={() => requestSort('phototype')}
+              >
+                <div className="flex items-center">
+                  <span>Phototype</span>
                   <ArrowUpDown className="ml-2 h-4 w-4" />
                 </div>
               </TableHead>
@@ -217,6 +227,11 @@ const VolontairesTable = ({ volontaires, onArchive }: VolontairesTableProps) => 
                       {typePeau}
                     </Badge>
                   </TableCell>
+                  <TableCell>
+                    <span className="text-sm text-gray-700">
+                      {volontaire.phototype || '-'}
+                    </span>
+                  </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
                       <Button
@@ -249,7 +264,7 @@ const VolontairesTable = ({ volontaires, onArchive }: VolontairesTableProps) => 
               )})
             ) : (
               <TableRow>
-                <TableCell colSpan={7} className="text-center text-muted-foreground">
+                <TableCell colSpan={8} className="text-center text-muted-foreground">
                   {t('volunteers.noVolunteers')}
                 </TableCell>
               </TableRow>

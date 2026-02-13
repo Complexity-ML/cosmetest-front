@@ -240,6 +240,13 @@ const VolunteerExcelExport: React.FC<VolunteerExcelExportProps> = ({
         return Number(numA) - Number(numB);
       });
 
+      // Retirer les volontaires qui n'ont pas de numéro de sujet
+      for (let i = volunteersData.length - 1; i >= 0; i--) {
+        if (!volunteersData[i].numeroSujet || volunteersData[i].numeroSujet === '') {
+          volunteersData.splice(i, 1);
+        }
+      }
+
       const studyStartDate = studyInfo?.dateDebut ? formatDateEnglish(studyInfo.dateDebut) : '';
 
       volunteersData.forEach((volunteer) => {

@@ -355,6 +355,26 @@ const volontaireService = {
     return api.get('/volontaires/search/criteria', { params: criteria });
   },
 
+  /**
+   * Recherche multi-champs (nom, prénom, email, tel, id) avec conditions AND
+   */
+  searchMulti: async (params: {
+    nom?: string;
+    prenom?: string;
+    email?: string;
+    tel?: string;
+    idVol?: string;
+    includeArchived?: boolean;
+    page?: number;
+    size?: number;
+  }) => {
+    const response = await api.get('/volontaires/search/multi', { params });
+    if (response.data?.content) {
+      response.data.content = response.data.content.map(transformVolontaireData);
+    }
+    return response;
+  },
+
   // ==================== MÉTHODES DE FILTRAGE ====================
 
   /**

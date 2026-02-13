@@ -193,6 +193,11 @@ const VolontaireDetailEtude = ({ volontaireId }: any) => {
       return dateFin < today;
     }
     return false;
+  }).sort((a, b) => {
+    // Plus récentes en premier
+    const dateA = a.dateFin ? new Date(a.dateFin).getTime() : 0;
+    const dateB = b.dateFin ? new Date(b.dateFin).getTime() : 0;
+    return dateB - dateA;
   });
 
   // Appliquer le filtre "en attente de paiement" si activé

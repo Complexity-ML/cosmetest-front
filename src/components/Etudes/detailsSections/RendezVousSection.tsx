@@ -671,6 +671,12 @@ const RendezVousSection = ({
                           {renderSortIcon('etat')}
                         </span>
                       </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('commentaire')}>
+                        <span className="flex items-center">
+                          Commentaire
+                          {renderSortIcon('commentaire')}
+                        </span>
+                      </th>
                       <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                         <input
                           type="checkbox"
@@ -692,6 +698,9 @@ const RendezVousSection = ({
                           <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${rdv.etat === 'CONFIRME' ? 'bg-green-100 text-green-800' : rdv.etat === 'EN_ATTENTE' ? 'bg-yellow-100 text-yellow-800' : rdv.etat === 'ANNULE' ? 'bg-red-100 text-red-800' : rdv.etat === 'COMPLETE' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}`}>
                             {rdv.etat || 'PLANIFIE'}
                           </span>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-600 max-w-[200px] truncate" title={rdv.commentaire || ''}>
+                          {rdv.commentaire || '-'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-center" onClick={(e) => e.stopPropagation()}>
                           <input
