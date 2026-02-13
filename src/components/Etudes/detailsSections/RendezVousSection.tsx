@@ -671,10 +671,10 @@ const RendezVousSection = ({
                           {renderSortIcon('etat')}
                         </span>
                       </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('commentaire')}>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('commentaires')}>
                         <span className="flex items-center">
                           Commentaire
-                          {renderSortIcon('commentaire')}
+                          {renderSortIcon('commentaires')}
                         </span>
                       </th>
                       <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -699,8 +699,8 @@ const RendezVousSection = ({
                             {rdv.etat || 'PLANIFIE'}
                           </span>
                         </td>
-                        <td className="px-6 py-4 text-sm text-gray-600 max-w-[200px] truncate" title={rdv.commentaire || ''}>
-                          {rdv.commentaire || '-'}
+                        <td className="px-6 py-4 text-sm text-gray-600 max-w-[200px] truncate" title={rdv.commentaires || ''}>
+                          {rdv.commentaires || '-'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-center" onClick={(e) => e.stopPropagation()}>
                           <input
