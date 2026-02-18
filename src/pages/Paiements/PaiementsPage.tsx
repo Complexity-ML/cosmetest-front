@@ -5,7 +5,7 @@ import etudeService from '../../services/etudeService';
 import etudeVolontaireService from '../../services/etudeVolontaireService';
 import volontaireService from '../../services/volontaireService';
 import groupeService from '../../services/groupeService';
-import annulationService from '../../services/annulationService'; // NOUVEAU
+import annulationService from '../../services/annulationService';
 import api from '../../services/api';
 import { PAIEMENT_STATUS } from '../../hooks/usePaiements';
 import ExcelExport from '../../components/Paiements/ExcelExport';
@@ -14,7 +14,21 @@ import MassActionsPanel from '../../components/Paiements/MassActionsPanel';
 import FiltersPanel from '../../components/Paiements/FiltersPanel';
 import PaiementService from '../../services/PaiementService';
 import PaymentsTable from '../../components/Paiements/PaymentsTable';
-import { Etude } from '../../types/types'; // Import Etude type
+import { Etude } from '../../types/types';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+import { ArrowLeft } from 'lucide-react';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 
 // Type definitions
 interface Paiement {
@@ -42,68 +56,65 @@ interface GroupeInfo {
 
 interface PaiementSummary {
   total: number;
-  paye: number;
-  nonPaye: number;
+  payes: number;
+  nonPayes: number;
   enAttente: number;
+  annules: number;
+  montantTotal: number;
+  montantPaye: number;
   [key: string]: number;
 }
-
 
 const PaiementsPage = () => {
   const { t } = useTranslation();
   const authContext = useContext(AuthContext);
 
-  // Stats - TOUJOURS déclarer les hooks en premier
+  // State global
   const [etudes, setEtudes] = useState<Etude[]>([]);
-  const [paiements, setPaiements] = useState<Paiement[]>([]);
-  const [volontairesInfo, setVolontairesInfo] = useState<Record<string | number, VolontaireInfo>>({});
-  const [groupesInfo, setGroupesInfo] = useState<Record<string, GroupeInfo>>({});
-  const [annulationsInfo, setAnnulationsInfo] = useState<Record<string, boolean>>({}); // NOUVEAU : Cache des annulations
   const [paiementsSummaryByEtude, setPaiementsSummaryByEtude] = useState<Record<string | number, PaiementSummary>>({});
+  const [allPaiementsLoaded, setAllPaiementsLoaded] = useState(false);
   const [isSummaryLoading, setIsSummaryLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
-  const [updateStatus, setUpdateStatus] = useState<Record<string, any>>({});
-  const [allPaiementsLoaded, setAllPaiementsLoaded] = useState(false);
-  const [isMassUpdating, setIsMassUpdating] = useState(false);
 
-  // Filtres
-  const [selectedEtude, setSelectedEtude] = useState('none');
-  const [dateDebut, setDateDebut] = useState('');
-  const [dateFin, setDateFin] = useState('');
+  // Filtres (niveau liste)
+  const [searchQuery, setSearchQuery] = useState('');
   const [statutPaiement, setStatutPaiement] = useState('all');
-  const [showOnlyUnpaid, setShowOnlyUnpaid] = useState(false);
-  const [showAnnules, setShowAnnules] = useState(false); // NOUVEAU : Afficher/masquer les annulations
-  const [showCompleted6WeeksUnpaid, setShowCompleted6WeeksUnpaid] = useState(false); // Filtre 6+ semaines avec impayés (limité à n-1 et n)
 
-  // NOUVEAU : Fonction pour vérifier si un volontaire est annulé
+  // Vue détail
+  const [selectedEtudeId, setSelectedEtudeId] = useState<number | null>(null);
+  const [paiements, setPaiements] = useState<Paiement[]>([]);
+  const [volontairesInfo, setVolontairesInfo] = useState<Record<string | number, VolontaireInfo>>({});
+  const [groupesInfo, setGroupesInfo] = useState<Record<string, GroupeInfo>>({});
+  const [annulationsInfo, setAnnulationsInfo] = useState<Record<string, boolean>>({});
+  const [isDetailLoading, setIsDetailLoading] = useState(false);
+  const [updateStatus, setUpdateStatus] = useState<Record<string, any>>({});
+  const [isMassUpdating, setIsMassUpdating] = useState(false);
+  const [showOnlyUnpaid, setShowOnlyUnpaid] = useState(false);
+  const [showAnnules, setShowAnnules] = useState(false);
+
+  // Vérifier si un volontaire est annulé
   const isVolontaireAnnule = useCallback((idVolontaire: string | number, idEtude: string | number): boolean => {
     const key = `${idEtude}_${idVolontaire}`;
     return annulationsInfo[key] === true;
   }, [annulationsInfo]);
 
-  // NOUVEAU : Charger les annulations pour une étude
-  const loadAnnulationsInfo = useCallback(async (etudeId: string | number) => {
+  // Charger les annulations pour une étude
+  const loadAnnulationsInfo = useCallback(async (etudeId: number) => {
     try {
-      const numericId = typeof etudeId === 'string' ? parseInt(etudeId, 10) : etudeId;
-      const annulations = await annulationService.getByEtude(numericId);
-      
+      const annulations = await annulationService.getByEtude(etudeId);
       const annulationsData: Record<string, boolean> = {};
       annulations.forEach((annulation: any) => {
         const key = `${annulation.idEtude}_${annulation.idVol}`;
         annulationsData[key] = true;
       });
-
-      setAnnulationsInfo(prev => ({
-        ...prev,
-        ...annulationsData
-      }));
+      setAnnulationsInfo(prev => ({ ...prev, ...annulationsData }));
     } catch (error) {
       console.error('Erreur lors du chargement des annulations:', error);
     }
   }, []);
 
-  // Chargement des études
+  // Chargement initial des études
   useEffect(() => {
     const loadEtudes = async () => {
       try {
@@ -112,10 +123,14 @@ const PaiementsPage = () => {
       } catch (error) {
         console.error('Erreur lors du chargement des études:', error);
         setError(t('payments.errorLoadingStudies'));
+      } finally {
+        setIsLoading(false);
       }
     };
     loadEtudes();
   }, []);
+
+  // Chargement des résumés de paiements par étude
   useEffect(() => {
     const loadPaiementSummaries = async () => {
       try {
@@ -144,36 +159,11 @@ const PaiementsPage = () => {
         setIsSummaryLoading(false);
       }
     };
-
     loadPaiementSummaries();
   }, []);
 
-
-  // Filtrage et tri des études avec gestion du cache
-
-  const hasStatutForEtude = useCallback((etudeId: string | number, statutRecherche: number): boolean => {
-    const summary = paiementsSummaryByEtude[etudeId];
-    if (!summary) {
-      return false;
-    }
-    switch (statutRecherche) {
-      case 0:
-        return (summary.nonPayes ?? 0) > 0;
-      case 1:
-        return (summary.payes ?? 0) > 0;
-      case 2:
-        return (summary.enAttente ?? 0) > 0;
-      case 3:
-        return (summary.annules ?? 0) > 0;
-      default:
-        return false;
-    }
-  }, [paiementsSummaryByEtude]);
-
   const refreshSummaryForEtude = useCallback(async (etudeId: string | number) => {
-    if (!etudeId) {
-      return;
-    }
+    if (!etudeId) return;
     try {
       const numericId = typeof etudeId === 'string' ? parseInt(etudeId, 10) : etudeId;
       const refreshedSummary = await PaiementService.getPaiementsSummaryPourEtude(numericId);
@@ -193,60 +183,39 @@ const PaiementsPage = () => {
     } catch (error) {
       console.error('Erreur lors de la mise à jour du résumé de paiements:', error);
     }
-  }, [setPaiementsSummaryByEtude]);
+  }, []);
 
+  // Vérifier si une étude a un certain statut de paiement
+  const hasStatutForEtude = useCallback((etudeId: string | number, statutRecherche: number): boolean => {
+    const summary = paiementsSummaryByEtude[etudeId];
+    if (!summary) return false;
+    switch (statutRecherche) {
+      case 0: return (summary.nonPayes ?? 0) > 0;
+      case 1: return (summary.payes ?? 0) > 0;
+      case 2: return (summary.enAttente ?? 0) > 0;
+      case 3: return (summary.annules ?? 0) > 0;
+      default: return false;
+    }
+  }, [paiementsSummaryByEtude]);
+
+  // ===== NIVEAU 1 : LISTE DES ÉTUDES =====
 
   const etudesFiltrees = useMemo(() => {
     let filtered = [...etudes];
 
-    // Filtrage par études terminées il y a 6+ semaines avec des impayés
-    // Limité aux études de l'année n-1 et n pour éviter d'afficher les vieilles études buggées
-    if (showCompleted6WeeksUnpaid) {
-      const sixWeeksAgo = new Date();
-      sixWeeksAgo.setDate(sixWeeksAgo.getDate() - 42); // 6 semaines = 42 jours
-      const currentYear = new Date().getFullYear();
-      const previousYear = currentYear - 1;
-
+    // Recherche par ID ou référence
+    if (searchQuery.trim()) {
+      const query = searchQuery.trim().toLowerCase();
       filtered = filtered.filter(etude => {
-        // Vérifier si l'étude a une date de fin et de début
-        if (!etude.dateFin || !etude.dateDebut) return false;
-
-        const dateFin = new Date(etude.dateFin);
-        const dateDebut = new Date(etude.dateDebut);
-
-        // Limiter aux études de l'année n-1 et n uniquement
-        const anneeDebut = dateDebut.getFullYear();
-        if (anneeDebut < previousYear) return false;
-
-        // L'étude doit être terminée il y a 6+ semaines
-        if (dateFin > sixWeeksAgo) return false;
-
-        // Vérifier s'il y a des paiements non payés
-        const summary = paiementsSummaryByEtude[etude.idEtude as string | number];
-        if (!summary) return false;
-
-        return (summary.nonPayes ?? 0) > 0;
+        const ref = (etude.ref || '').toLowerCase();
+        const id = String(etude.idEtude || '').toLowerCase();
+        return ref.includes(query) || id.includes(query);
       });
     }
 
-    // Filtrage par dates si des dates sont sélectionnées
-    if (dateDebut || dateFin) {
-      filtered = filtered.filter(etude => {
-        if (!etude.dateDebut) return false;
-
-        const dateEtude = new Date(etude.dateDebut);
-
-        if (dateDebut && dateEtude <= new Date(dateDebut)) return false;
-        if (dateFin && dateEtude > new Date(dateFin)) return false;
-
-        return true;
-      });
-    }
-
-    // Filtrage par statut de paiement avec gestion spéciale pour "Non payé"
+    // Filtrage par statut de paiement
     if (statutPaiement !== 'all') {
       const statutRecherche = parseInt(statutPaiement, 10);
-
       if (Number.isInteger(statutRecherche)) {
         if (statutRecherche === 0) {
           filtered = filtered.filter(etude =>
@@ -262,59 +231,66 @@ const PaiementsPage = () => {
       }
     }
 
-    // Tri en ordre descendant par date de début
+    // Tri par date de fin décroissante (plus récente en haut)
     filtered.sort((a, b) => {
-      const dateA = new Date(a.dateDebut || '');
-      const dateB = new Date(b.dateDebut || '');
+      const dateA = new Date(a.dateFin || a.dateDebut || '');
+      const dateB = new Date(b.dateFin || b.dateDebut || '');
       return dateB.getTime() - dateA.getTime();
     });
 
     return filtered;
-  }, [etudes, dateDebut, dateFin, statutPaiement, hasStatutForEtude, showCompleted6WeeksUnpaid, paiementsSummaryByEtude]);
+  }, [etudes, searchQuery, statutPaiement, hasStatutForEtude]);
 
-  // Reset de l'étude sélectionnée seulement si des filtres sont actifs ET l'étude n'est plus dans la liste filtrée
-  useEffect(() => {
-    if ((dateDebut || dateFin || statutPaiement !== 'all' || showCompleted6WeeksUnpaid) && selectedEtude !== 'none' && !etudesFiltrees.some(e => String(e.idEtude) === selectedEtude)) {
-      setSelectedEtude('none');
-    }
-  }, [etudesFiltrees, selectedEtude, dateDebut, dateFin, statutPaiement, showCompleted6WeeksUnpaid]);
+  // Vérifier si une étude est > 6 semaines avec des impayés (pas rouge si statut payé)
+  const isEtudeOverdue = useCallback((etude: Etude): boolean => {
+    if (etude.paye === 2) return false; // Étude payée = pas de surbrillance rouge
+    if (!etude.dateFin) return false;
+    const dateFin = new Date(etude.dateFin);
+    const sixWeeksAgo = new Date();
+    sixWeeksAgo.setDate(sixWeeksAgo.getDate() - 42);
+    if (dateFin > sixWeeksAgo) return false;
+    const summary = paiementsSummaryByEtude[etude.idEtude as string | number];
+    if (!summary) return false;
+    return (summary.nonPayes ?? 0) > 0;
+  }, [paiementsSummaryByEtude]);
 
-  // Fonction pour charger les informations des groupes
+  // ===== NIVEAU 2 : DÉTAIL D'UNE ÉTUDE =====
+
+  const selectedEtudeData = useMemo(() => {
+    if (selectedEtudeId === null) return null;
+    return etudes.find(e => e.idEtude === selectedEtudeId) || null;
+  }, [etudes, selectedEtudeId]);
+
+  // Chargement des groupes
   const loadGroupesInfo = async (etudeIds: (string | number)[]) => {
     try {
       const groupesData: Record<string, any> = {};
-
       const results = await Promise.allSettled(
-        etudeIds.map(async (etudeId: string | number) => {
+        etudeIds.map(async (etudeId) => {
           try {
             const groupes = await groupeService.getGroupesByIdEtude(etudeId);
             return { etudeId, groupes: Array.isArray(groupes) ? groupes : [] };
           } catch (error) {
-            console.error(`Erreur groupes étude ${etudeId}:`, error);
             return { etudeId, groupes: [] };
           }
         })
       );
-
       results.forEach((result) => {
         if (result.status === 'fulfilled' && result.value?.groupes) {
           const { etudeId, groupes } = result.value;
-
           groupes.forEach((groupe: any) => {
             groupesData[groupe.id || groupe.idGroupe] = groupe;
           });
-
           groupesData[`etude_${etudeId}`] = groupes;
         }
       });
-
       setGroupesInfo(groupesData);
     } catch (error) {
       console.error('Erreur lors du chargement des groupes:', error);
     }
   };
 
-  // Fonction pour normaliser les données de paiements
+  // Normaliser les données de paiements
   const normalizePaiementsData = (paiementsData: any[]) => {
     return paiementsData.map((paiement: any) => ({
       ...paiement,
@@ -328,46 +304,34 @@ const PaiementsPage = () => {
     }));
   };
 
-  // Chargement des informations des volontaires
+  // Chargement des volontaires
   const loadVolontairesInfo = useCallback(async (volontaireIds: (string | number)[]) => {
     try {
       const volontairesData: Record<string | number, any> = {};
       const results = await Promise.allSettled(
-        volontaireIds.map(async (volontaireId: string | number) => {
+        volontaireIds.map(async (volontaireId) => {
           const response = await volontaireService.getDetails(volontaireId);
           return { id: volontaireId, data: response.data };
         })
       );
-
       results.forEach((result) => {
         if (result.status === 'fulfilled' && result.value?.data) {
           volontairesData[result.value.id] = result.value.data;
         }
       });
-
       setVolontairesInfo(volontairesData);
     } catch (error) {
       console.error('Erreur lors du chargement des volontaires:', error);
     }
   }, []);
 
-  // Chargement conditionnel des paiements
-  const loadPaiements = async () => {
+  // Charger les paiements d'une étude
+  const loadPaiements = useCallback(async (etudeId: number) => {
     try {
-      setIsLoading(true);
+      setIsDetailLoading(true);
       setError('');
 
-      if (!selectedEtude || selectedEtude === 'none') {
-        setPaiements([]);
-        setVolontairesInfo({});
-        setGroupesInfo({});
-        setAnnulationsInfo({}); // NOUVEAU : Reset des annulations
-        setIsLoading(false);
-        return;
-      }
-
-      // 1. Charger les paiements de cette étude UNIQUEMENT
-      const response = await etudeVolontaireService.getVolontairesByEtude(selectedEtude);
+      const response = await etudeVolontaireService.getVolontairesByEtude(etudeId);
       const paiementsData = Array.isArray(response) ? response : response?.data || [];
 
       if (paiementsData.length === 0) {
@@ -375,48 +339,49 @@ const PaiementsPage = () => {
         setVolontairesInfo({});
         setGroupesInfo({});
         setAnnulationsInfo({});
-        setIsLoading(false);
+        setIsDetailLoading(false);
         return;
       }
 
-      // 2. Normaliser les données
       const normalizedPaiements = normalizePaiementsData(paiementsData);
       setPaiements(normalizedPaiements);
 
-      // 3. NOUVEAU : Charger les annulations pour cette étude
-      await loadAnnulationsInfo(selectedEtude);
+      await loadAnnulationsInfo(etudeId);
 
-      // 4. Charger les volontaires de cette étude UNIQUEMENT
       const uniqueVolontaireIds = [...new Set(normalizedPaiements.map((p: any) => p.idVolontaire).filter((id: any) => id))];
       if (uniqueVolontaireIds.length > 0) {
         await loadVolontairesInfo(uniqueVolontaireIds);
       }
 
-      // 5. Charger les groupes de cette étude UNIQUEMENT
-      await loadGroupesInfo([selectedEtude]);
-
+      await loadGroupesInfo([etudeId]);
     } catch (error) {
       console.error('Erreur lors du chargement:', error);
       setError(t('payments.errorLoadingData'));
     } finally {
-      setIsLoading(false);
+      setIsDetailLoading(false);
     }
-  };
+  }, [loadAnnulationsInfo, loadVolontairesInfo, t]);
 
+  // Charger les paiements quand on sélectionne une étude
   useEffect(() => {
-    loadPaiements();
-  }, [selectedEtude]);
+    if (selectedEtudeId !== null) {
+      loadPaiements(selectedEtudeId);
+    } else {
+      setPaiements([]);
+      setVolontairesInfo({});
+      setGroupesInfo({});
+      setAnnulationsInfo({});
+    }
+  }, [selectedEtudeId]);
 
-  // MODIFIÉ : Mise à jour du statut de paiement avec vérification annulation
+  // Mise à jour du statut de paiement
   const updatePaiementStatus = async (paiement: Paiement, nouveauStatut: number) => {
-    // NOUVEAU : Vérifier si le volontaire est annulé
     if (isVolontaireAnnule(paiement.idVolontaire, paiement.idEtude)) {
       setError(t('payments.cannotModifyCancelled'));
       return;
     }
 
     const key = `${paiement.idEtude}_${paiement.idVolontaire}`;
-
     try {
       setUpdateStatus(prev => ({ ...prev, [key]: 'loading' }));
 
@@ -433,7 +398,6 @@ const PaiementsPage = () => {
         }
       });
 
-      // Mise à jour locale
       const updatedPaiements = paiements.map(p =>
         p.idEtude === paiement.idEtude && p.idVolontaire === paiement.idVolontaire
           ? { ...p, paye: nouveauStatut }
@@ -441,59 +405,38 @@ const PaiementsPage = () => {
       );
       setPaiements(updatedPaiements);
 
-      const numericEtudeId = typeof paiement.idEtude === 'string' ? parseInt(paiement.idEtude, 10) : paiement.idEtude;
+      const numericEtudeId = typeof paiement.idEtude === 'string' ? parseInt(String(paiement.idEtude), 10) : paiement.idEtude;
       await refreshSummaryForEtude(numericEtudeId);
 
       try {
-        const newEtudePayeStatus = await etudeService.checkAndUpdatePayeStatus(
-          numericEtudeId,
-          updatedPaiements
-        );
-
+        const newEtudePayeStatus = await etudeService.checkAndUpdatePayeStatus(numericEtudeId, updatedPaiements);
         setEtudes(prev => prev.map(e =>
-          e.idEtude === paiement.idEtude
-            ? { ...e, paye: newEtudePayeStatus }
-            : e
+          e.idEtude === paiement.idEtude ? { ...e, paye: newEtudePayeStatus } : e
         ));
       } catch (etudeError) {
         console.error('Erreur mise à jour statut étude:', etudeError);
       }
 
       setUpdateStatus(prev => ({ ...prev, [key]: 'success' }));
-
       setTimeout(() => {
-        setUpdateStatus(prev => {
-          const newStatus = { ...prev };
-          delete newStatus[key];
-          return newStatus;
-        });
+        setUpdateStatus(prev => { const s = { ...prev }; delete s[key]; return s; });
       }, 2000);
-
     } catch (error: any) {
       console.error('Erreur lors de la mise à jour:', error);
       setUpdateStatus(prev => ({ ...prev, [key]: 'error' }));
-
-      const errorMessage = error?.response?.data?.details ||
-        error?.response?.data?.message ||
-        error.message ||
-        t('payments.errorUpdatingStatus');
+      const errorMessage = error?.response?.data?.details || error?.response?.data?.message || error.message || t('payments.errorUpdatingStatus');
       setError(errorMessage);
-
       setTimeout(() => {
-        setUpdateStatus(prev => {
-          const newStatus = { ...prev };
-          delete newStatus[key];
-          return newStatus;
-        });
+        setUpdateStatus(prev => { const s = { ...prev }; delete s[key]; return s; });
       }, 3000);
     }
   };
 
-  // MODIFIÉ : Filtrage des paiements avec option d'affichage des annulés
+  // Filtrage des paiements dans la vue détail
   const paiementsFiltres = useMemo(() => {
     let filtered = paiements;
 
-    // Filtrer selon l'affichage des annulés
+    // Filtrer les annulés
     if (!showAnnules) {
       filtered = filtered.filter(p => !isVolontaireAnnule(p.idVolontaire, p.idEtude));
     }
@@ -505,18 +448,17 @@ const PaiementsPage = () => {
     return filtered;
   }, [paiements, showOnlyUnpaid, showAnnules, isVolontaireAnnule]);
 
-  // MODIFIÉ : Statistiques excluant les annulés par défaut
+  // Statistiques de la vue détail
   const statistics = useMemo(() => {
-    // Séparer les paiements actifs et annulés
     const paiementsActifs = paiementsFiltres.filter(p => !isVolontaireAnnule(p.idVolontaire, p.idEtude));
     const paiementsAnnules = paiements.filter(p => isVolontaireAnnule(p.idVolontaire, p.idEtude));
-
+    const paiementsAvecIv = paiementsActifs.filter(p => (p.iv || 0) > 0);
     const total = paiementsFiltres.length;
-    const payes = paiementsActifs.filter(p => p.paye === 1).length;
-    const nonPayes = paiementsActifs.filter(p => p.paye === 0).length;
-    const enAttente = paiementsActifs.filter(p => p.paye === 2).length;
-    const totalMontant = paiementsActifs.reduce((sum, p) => sum + (p.iv || 0), 0);
-    const montantPaye = paiementsActifs.filter(p => p.paye === 1).reduce((sum, p) => sum + (p.iv || 0), 0);
+    const payes = paiementsAvecIv.filter(p => p.paye === 1).length;
+    const nonPayes = paiementsAvecIv.filter(p => p.paye === 0).length;
+    const enAttente = paiementsAvecIv.filter(p => p.paye === 2).length;
+    const totalMontant = paiementsAvecIv.reduce((sum, p) => sum + (p.iv || 0), 0);
+    const montantPaye = paiementsAvecIv.filter(p => p.paye === 1).reduce((sum, p) => sum + (p.iv || 0), 0);
 
     return {
       total,
@@ -526,8 +468,8 @@ const PaiementsPage = () => {
       totalMontant,
       montantPaye,
       montantRestant: totalMontant - montantPaye,
-      annulesCount: paiementsAnnules.length, // NOUVEAU
-      montantAnnules: paiementsAnnules.reduce((sum, p) => sum + (p.iv || 0), 0) // NOUVEAU
+      annulesCount: paiementsAnnules.length,
+      montantAnnules: paiementsAnnules.reduce((sum, p) => sum + (p.iv || 0), 0)
     };
   }, [paiementsFiltres, paiements, isVolontaireAnnule]);
 
@@ -535,41 +477,27 @@ const PaiementsPage = () => {
   const getVolontaireName = (idVolontaire: string | number) => {
     const volontaire = volontairesInfo[idVolontaire];
     if (!volontaire) return `Volontaire #${idVolontaire}`;
-
     const prenom = volontaire.prenom || volontaire.prenomVol || '';
     const nom = volontaire.nom || volontaire.nomVol || '';
-
     if (prenom && nom) return `${prenom} ${nom}`;
     return volontaire.nomComplet || `Volontaire #${idVolontaire}`;
   };
 
   const getEtudeName = (idEtude: string | number) => {
     const etude = etudes.find(e => e.idEtude == idEtude);
-    return etude ? etude.ref : `Étude #${idEtude}`;
+    return etude ? etude.ref : `Etude #${idEtude}`;
   };
 
   const getGroupeName = (idGroupe: string | number, idEtude: string | number) => {
     const groupe = groupesInfo[idGroupe];
-    if (groupe) {
-      return groupe.nom || groupe.libelle || `Groupe ${idGroupe}`;
-    }
-
+    if (groupe) return groupe.nom || groupe.libelle || `Groupe ${idGroupe}`;
     const groupesEtude = groupesInfo[`etude_${idEtude}`] || [];
     const groupeInEtude = groupesEtude.find((g: any) => g.id === idGroupe || g.idGroupe === idGroupe);
-
-    if (groupeInEtude) {
-      return groupeInEtude.nom || groupeInEtude.libelle || `Groupe ${idGroupe}`;
-    }
-
+    if (groupeInEtude) return groupeInEtude.nom || groupeInEtude.libelle || `Groupe ${idGroupe}`;
     return `Groupe #${idGroupe}`;
   };
 
-  // MODIFIÉ : Composant pour les actions en masse excluant les annulés
-
-  const selectedEtudeData = useMemo(() => {
-    return etudes.find(e => String(e.idEtude) === selectedEtude) || null;
-  }, [etudes, selectedEtude]);
-  // Nouveau endpoint backend: Marquer tout comme paye
+  // Marquer tout comme payé
   const markAllAsPaidBatch = async () => {
     if (!selectedEtudeData || !paiements || paiements.length === 0) return;
 
@@ -588,11 +516,10 @@ const PaiementsPage = () => {
     try {
       if (selectedEtudeData.idEtude != null) {
         await api.post(`/paiements/etudes/${selectedEtudeData.idEtude}/mark-all-paid`);
-        await loadPaiements();
+        await loadPaiements(selectedEtudeId!);
         await refreshSummaryForEtude(selectedEtudeData.idEtude);
-        // rafraichir le statut paye de l'etude
         try {
-          const numericId = typeof selectedEtudeData.idEtude === 'string' ? parseInt(selectedEtudeData.idEtude, 10) : selectedEtudeData.idEtude;
+          const numericId = typeof selectedEtudeData.idEtude === 'string' ? parseInt(String(selectedEtudeData.idEtude), 10) : selectedEtudeData.idEtude;
           const etude = await etudeService.getById(numericId);
           setEtudes(prev => prev.map(e => e.idEtude === selectedEtudeData.idEtude ? { ...e, paye: etude.paye } : e));
         } catch (e) {}
@@ -605,35 +532,82 @@ const PaiementsPage = () => {
     }
   };
 
+  // Marquer tout comme non payé
+  const markAllAsUnpaidBatch = async () => {
+    if (!selectedEtudeData || !paiements || paiements.length === 0) return;
+
+    const paidVolunteers = paiements.filter(p => p.paye === 1 && !isVolontaireAnnule(p.idVolontaire, p.idEtude));
+    if (paidVolunteers.length === 0) { setError('Aucun volontaire payé à modifier.'); return; }
+
+    const confirmed = window.confirm(
+      `Marquer ${paidVolunteers.length} volontaire(s) comme NON PAYÉ pour l'étude ${selectedEtudeData.ref} ?\n\nCette action est irréversible.`
+    );
+    if (!confirmed) return;
+
+    setIsMassUpdating(true);
+    setError('');
+    try {
+      for (const p of paidVolunteers) {
+        await api.patch('/etude-volontaires/update-paye', null, {
+          params: {
+            idEtude: p.idEtude,
+            idGroupe: p.idGroupe,
+            idVolontaire: p.idVolontaire,
+            iv: p.iv,
+            numsujet: p.numsujet,
+            paye: p.paye,
+            statut: p.statut,
+            nouveauPaye: 0
+          }
+        });
+      }
+      await loadPaiements(selectedEtudeId!);
+      if (selectedEtudeData.idEtude != null) {
+        await refreshSummaryForEtude(selectedEtudeData.idEtude);
+        try {
+          const numericId = typeof selectedEtudeData.idEtude === 'string' ? parseInt(String(selectedEtudeData.idEtude), 10) : selectedEtudeData.idEtude;
+          await etudeService.updatePayeStatus(numericId, 0);
+          setEtudes(prev => prev.map(e => e.idEtude === selectedEtudeData.idEtude ? { ...e, paye: 0 } : e));
+        } catch (e) {}
+      }
+    } catch (error) {
+      console.error('Erreur mark-all-unpaid:', error);
+      setError('Erreur lors du marquage en non payé.');
+    } finally {
+      setIsMassUpdating(false);
+    }
+  };
+
   // Vérification des permissions
   const canManagePaiements = useMemo(() => {
-    if (!authContext) {
-      return false;
-    }
-
+    if (!authContext) return false;
     const { isAuthenticated, user, isAdmin, hasPermission } = authContext;
-
-    if (!isAuthenticated || !user) {
-      return false;
-    }
-
+    if (!isAuthenticated || !user) return false;
     let canAccess = false;
-
-    if (typeof isAdmin === 'function') {
-      canAccess = isAdmin();
-    }
-
-    if (!canAccess && typeof hasPermission === 'function') {
-      canAccess = hasPermission(2);
-    }
-
-    if (!canAccess && (user.role === 1 || user.role === 2)) {
-      canAccess = true;
-    }
-
+    if (typeof isAdmin === 'function') canAccess = isAdmin();
+    if (!canAccess && typeof hasPermission === 'function') canAccess = hasPermission(2);
+    if (!canAccess && (user.role === 1 || user.role === 2)) canAccess = true;
     return canAccess;
   }, [authContext]);
 
+  // Fonction pour formater les dates
+  const formatDate = (dateStr?: string) => {
+    if (!dateStr) return '-';
+    try {
+      return new Date(dateStr).toLocaleDateString('fr-FR');
+    } catch {
+      return dateStr;
+    }
+  };
+
+  // Retour à la liste
+  const handleBackToList = () => {
+    setSelectedEtudeId(null);
+    setShowOnlyUnpaid(false);
+    setShowAnnules(false);
+  };
+
+  // Loading initial
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -642,24 +616,18 @@ const PaiementsPage = () => {
     );
   }
 
+  // Accès refusé
   if (!canManagePaiements) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="text-6xl mb-4">🔒</div>
           <h1 className="text-2xl font-bold text-gray-800 mb-2">{t('common.accessDenied')}</h1>
           <p className="text-gray-600">{t('common.adminOnly')}</p>
           <div className="mt-4 space-x-3">
-            <button
-              onClick={() => window.history.back()}
-              className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md transition-colors"
-            >
+            <button onClick={() => window.history.back()} className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md transition-colors">
               {t('common.back')}
             </button>
-            <button
-              onClick={() => window.location.href = '/dashboard'}
-              className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-md transition-colors"
-            >
+            <button onClick={() => window.location.href = '/dashboard'} className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-md transition-colors">
               {t('sidebar.dashboard')}
             </button>
           </div>
@@ -668,124 +636,246 @@ const PaiementsPage = () => {
     );
   }
 
-  // Wrapper function to handle type compatibility with PaymentsTable
   const handleUpdatePaiementStatus = (payment: any, status: number) => {
     updatePaiementStatus(payment as Paiement, status);
   };
 
+  // ===== VUE DÉTAIL =====
+  if (selectedEtudeId !== null) {
+    return (
+      <div className="space-y-6">
+        {/* Bouton retour + titre */}
+        <div className="flex items-center gap-4">
+          <Button variant="outline" size="sm" onClick={handleBackToList}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Retour
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800">
+              {selectedEtudeData?.ref || `Etude #${selectedEtudeId}`}
+            </h1>
+            {selectedEtudeData?.dateDebut && (
+              <p className="text-sm text-gray-500">
+                {formatDate(selectedEtudeData.dateDebut)}
+                {selectedEtudeData.dateFin && ` - ${formatDate(selectedEtudeData.dateFin)}`}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Messages d'erreur */}
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
+            {error}
+            <button onClick={() => setError('')} className="absolute top-0 right-0 mt-2 mr-2 text-red-500 hover:text-red-700">
+              x
+            </button>
+          </div>
+        )}
+
+        {isDetailLoading ? (
+          <div className="flex justify-center items-center h-32">
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary-600"></div>
+          </div>
+        ) : (
+          <>
+            {/* Stats */}
+            <StatsSummary statistics={statistics} />
+
+            {/* Filtres détail + Export */}
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <div className="flex items-center gap-6">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="show-unpaid"
+                    checked={showOnlyUnpaid}
+                    onCheckedChange={(checked) => setShowOnlyUnpaid(checked === true)}
+                  />
+                  <Label htmlFor="show-unpaid" className="text-sm cursor-pointer">
+                    Afficher non payés uniquement
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="show-annules"
+                    checked={showAnnules}
+                    onCheckedChange={(checked) => setShowAnnules(checked === true)}
+                  />
+                  <Label htmlFor="show-annules" className="text-sm cursor-pointer">
+                    Afficher annulés
+                  </Label>
+                </div>
+              </div>
+
+              {selectedEtudeData && paiements.length > 0 && (
+                <ExcelExport
+                  etude={selectedEtudeData}
+                  paiements={paiementsFiltres}
+                  volontairesInfo={volontairesInfo}
+                />
+              )}
+            </div>
+
+            {/* Actions en masse */}
+            <MassActionsPanel
+              selectedEtudeRef={selectedEtudeData?.ref || ''}
+              paiements={paiements}
+              isVolontaireAnnule={isVolontaireAnnule}
+              isMassUpdating={isMassUpdating}
+              statistics={statistics}
+              onMarkAll={markAllAsPaidBatch}
+              onMarkAllUnpaid={markAllAsUnpaidBatch}
+            />
+
+            {/* Table des paiements */}
+            {paiementsFiltres.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-gray-500">{t('payments.noPaymentsFound')}</p>
+              </div>
+            ) : (
+              <PaymentsTable
+                rows={paiementsFiltres}
+                paiementStatusMap={PAIEMENT_STATUS}
+                getEtudeName={getEtudeName}
+                getVolontaireName={getVolontaireName}
+                getGroupeName={getGroupeName}
+                isVolontaireAnnule={isVolontaireAnnule}
+                updatePaiementStatus={handleUpdatePaiementStatus}
+                updateStatus={updateStatus}
+              />
+            )}
+          </>
+        )}
+      </div>
+    );
+  }
+
+  // ===== VUE LISTE =====
   return (
     <div className="space-y-6">
-      <StatsSummary statistics={statistics} />
-      <FiltersPanel
-        etudesFiltrees={etudesFiltrees.filter(e => e.idEtude != null) as Array<{ idEtude: string | number; ref: string; dateDebut?: string }>}
-        selectedEtude={selectedEtude}
-        setSelectedEtude={setSelectedEtude}
-        statutPaiement={statutPaiement}
-        setStatutPaiement={setStatutPaiement}
-        dateDebut={dateDebut}
-        setDateDebut={setDateDebut}
-        dateFin={dateFin}
-        setDateFin={setDateFin}
-        showOnlyUnpaid={showOnlyUnpaid}
-        setShowOnlyUnpaid={setShowOnlyUnpaid}
-        showAnnules={showAnnules}
-        setShowAnnules={setShowAnnules}
-        showCompleted6WeeksUnpaid={showCompleted6WeeksUnpaid}
-        setShowCompleted6WeeksUnpaid={setShowCompleted6WeeksUnpaid}
-        allPaiementsLoaded={allPaiementsLoaded}
-        paiementStatusMap={PAIEMENT_STATUS}
-      />
-      {/* En-tête avec indicateur de mode */}
+      {/* Titre */}
       <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">
-            {t('payments.title')}
-          </h1>
-          {selectedEtude && (
-            <div className="mt-1">
-              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                {t('payments.study')}: {getEtudeName(selectedEtude)}
-              </span>
-            </div>
-          )}
-        </div>
-        <div className="flex items-center space-x-2">
-          <span className="text-sm text-gray-500">
-            {statistics.total} {t('payments.payment', { count: statistics.total })}
-          </span>
-          {(dateDebut || dateFin || statutPaiement !== 'all' || showCompleted6WeeksUnpaid) && (
-            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-              {t('payments.activeFilters')}: {etudesFiltrees.length} {t('payments.studyFiltered', { count: etudesFiltrees.length })}
-              {(statutPaiement !== 'all' || showCompleted6WeeksUnpaid) && isSummaryLoading && (
-                <span className="ml-1 animate-spin">⏳</span>
-              )}
-            </span>
-          )}
-        </div>
+        <h1 className="text-2xl font-bold text-gray-800">{t('payments.title')}</h1>
+        <span className="text-sm text-gray-500">
+          {etudesFiltrees.length} étude{etudesFiltrees.length > 1 ? 's' : ''}
+          {isSummaryLoading && <span className="ml-2 animate-pulse">Chargement...</span>}
+        </span>
       </div>
 
       {/* Messages d'erreur */}
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
           {error}
-          <button
-            onClick={() => setError('')}
-            className="absolute top-0 right-0 mt-2 mr-2 text-red-500 hover:text-red-700"
-          >
-            ×
+          <button onClick={() => setError('')} className="absolute top-0 right-0 mt-2 mr-2 text-red-500 hover:text-red-700">
+            x
           </button>
         </div>
       )}
 
-      {/* MODIFIÉ : Statistiques avec info sur les annulés */}
-      {/* Composant d'export Excel */}
-      {selectedEtudeData && paiements.length > 0 && (
-        <ExcelExport
-          etude={selectedEtudeData}
-          paiements={paiementsFiltres}
-          volontairesInfo={volontairesInfo}
-        />
-      )}
-
-      {/* Composant d'actions en masse */}
-      <MassActionsPanel 
-        selectedEtudeRef={selectedEtudeData?.ref || ''} 
-        paiements={paiements} 
-        isVolontaireAnnule={isVolontaireAnnule} 
-        isMassUpdating={isMassUpdating} 
-        statistics={statistics} 
-        onMarkAll={markAllAsPaidBatch} 
+      {/* Filtres */}
+      <FiltersPanel
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        statutPaiement={statutPaiement}
+        setStatutPaiement={setStatutPaiement}
+        allPaiementsLoaded={allPaiementsLoaded}
+        paiementStatusMap={PAIEMENT_STATUS}
       />
 
- 
-      {etudesFiltrees.length === 0 && (dateDebut || dateFin || statutPaiement !== 'all' || showCompleted6WeeksUnpaid) ? (
-          <div className="text-center py-12">
-            <div className="text-4xl mb-4">(i)</div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">{t('payments.noMatchingStudy')}</h3>
-            <p className="text-gray-500">{t('payments.noMatchingStudyDesc')}</p>
-          </div>
-        ) : (!selectedEtude || selectedEtude === 'none') ? (
-          <div className="text-center py-12">
-            <div className="text-4xl mb-4">(i)</div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">{t('payments.selectStudy')}</h3>
-            <p className="text-gray-500">{t('payments.selectStudyDesc')}</p>
-          </div>
-        ) : paiementsFiltres.length === 0 ? (
-          <div className="text-center py-8">
-            <p className="text-gray-500">{t('payments.noPaymentsFound')}</p>
-          </div>
-        ) : (
-          <PaymentsTable
-            rows={paiementsFiltres}
-            paiementStatusMap={PAIEMENT_STATUS}
-            getEtudeName={getEtudeName}
-            getVolontaireName={getVolontaireName}
-            getGroupeName={getGroupeName}
-            isVolontaireAnnule={isVolontaireAnnule}
-            updatePaiementStatus={handleUpdatePaiementStatus}
-            updateStatus={updateStatus}
-          />
-        )}
+      {/* Tableau des études */}
+      {etudesFiltrees.length === 0 ? (
+        <div className="text-center py-12">
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            {searchQuery || statutPaiement !== 'all' ? t('payments.noMatchingStudy') : 'Aucune étude trouvée'}
+          </h3>
+          <p className="text-gray-500">
+            {searchQuery || statutPaiement !== 'all' ? t('payments.noMatchingStudyDesc') : 'Il n\'y a aucune étude disponible.'}
+          </p>
+        </div>
+      ) : (
+        <Card>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Référence</TableHead>
+                <TableHead>Date début</TableHead>
+                <TableHead>Date fin</TableHead>
+                <TableHead className="text-center">Volontaires</TableHead>
+                <TableHead className="text-center">Payés</TableHead>
+                <TableHead className="text-center">Non payés</TableHead>
+                <TableHead className="text-right">Montant total</TableHead>
+                <TableHead className="text-center">Statut</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {etudesFiltrees.map((etude) => {
+                const summary = paiementsSummaryByEtude[etude.idEtude as string | number];
+                const payes = summary?.payes ?? 0;
+                const nonPayes = summary?.nonPayes ?? 0;
+                const totalVol = payes + nonPayes + (summary?.enAttente ?? 0);
+                const montantTotal = summary?.montantTotal ?? summary?.montantPaye ?? 0;
+                const overdue = isEtudeOverdue(etude);
+                const allPaid = etude.paye === 2 || (totalVol > 0 && nonPayes === 0);
+
+                return (
+                  <TableRow
+                    key={etude.idEtude}
+                    className={`cursor-pointer hover:bg-gray-50 transition-colors ${overdue ? 'bg-red-50 hover:bg-red-100' : ''}`}
+                    onClick={() => setSelectedEtudeId(etude.idEtude as number)}
+                  >
+                    <TableCell className={`font-medium ${overdue ? 'text-red-700' : ''}`}>
+                      {etude.ref || `#${etude.idEtude}`}
+                    </TableCell>
+                    <TableCell className={overdue ? 'text-red-600' : ''}>
+                      {formatDate(etude.dateDebut)}
+                    </TableCell>
+                    <TableCell className={overdue ? 'text-red-600' : ''}>
+                      {formatDate(etude.dateFin)}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {totalVol}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {payes > 0 && (
+                        <Badge variant="secondary" className="bg-green-100 text-green-700 border-green-200">
+                          {payes}
+                        </Badge>
+                      )}
+                      {payes === 0 && '-'}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {nonPayes > 0 && (
+                        <Badge variant="secondary" className="bg-red-100 text-red-700 border-red-200">
+                          {nonPayes}
+                        </Badge>
+                      )}
+                      {nonPayes === 0 && '-'}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {montantTotal > 0 ? `${montantTotal} EUR` : '-'}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {allPaid ? (
+                        <Badge variant="secondary" className="bg-green-100 text-green-700 border-green-200">
+                          Payé
+                        </Badge>
+                      ) : nonPayes > 0 ? (
+                        <Badge variant="secondary" className={`${overdue ? 'bg-red-200 text-red-800 border-red-300' : 'bg-red-100 text-red-700 border-red-200'}`}>
+                          Non payé
+                        </Badge>
+                      ) : (
+                        <Badge variant="secondary" className="bg-gray-100 text-gray-600 border-gray-200">
+                          -
+                        </Badge>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </Card>
+      )}
     </div>
   );
 };

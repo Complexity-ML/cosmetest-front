@@ -35,7 +35,8 @@ import {
   FileText,
   ArrowUpDown,
   ArrowUp,
-  ArrowDown
+  ArrowDown,
+
 } from "lucide-react";
 
 // ===============================
@@ -790,6 +791,7 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
     return updateVolontaire(volontaire, "iv", nouvelleIV, "/etude-volontaires/update-iv");
   }, [updateVolontaire]);
 
+
   const getVolontaireName = useMemo(
     () => (idVolontaire: number) => {
       if (!idVolontaire) return t('indemnity.volunteerNotAssigned');
@@ -963,10 +965,12 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
             const missingVolIds = rdvVolIds.filter(vid => !existingVolIds.has(vid));
 
             if (missingVolIds.length > 0) {
-              // Récupérer un idGroupe valide
+              // Récupérer un idGroupe valide et son IV
               const groupesData: any = await groupeService.getGroupesByIdEtude(etudeIdNum);
               const groupes = Array.isArray(groupesData) ? groupesData : (groupesData?.data || []);
-              const defaultGroupeId = groupes.length > 0 ? (groupes[0].idGroupe || groupes[0].id || 0) : 0;
+              const defaultGroupe = groupes.length > 0 ? groupes[0] : null;
+              const defaultGroupeId = defaultGroupe ? (defaultGroupe.idGroupe || defaultGroupe.id || 0) : 0;
+              const defaultGroupeIv = defaultGroupe?.iv || 0;
 
               if (defaultGroupeId !== 0) {
                 await Promise.allSettled(
@@ -975,7 +979,7 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
                       idEtude: etudeIdNum,
                       idVolontaire: volId,
                       idGroupe: defaultGroupeId,
-                      iv: 0,
+                      iv: defaultGroupeIv,
                       numsujet: 0,
                       paye: 0,
                       statut: "-",
@@ -1413,12 +1417,14 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
 
 
       {/* Info importante */}
-      <Alert>
-        <Save className="h-4 w-4" />
-        <AlertDescription>
-          {t('indemnity.autoSave')}
-        </AlertDescription>
-      </Alert>
+      <div className="flex items-center justify-between gap-4">
+        <Alert className="flex-1">
+          <Save className="h-4 w-4" />
+          <AlertDescription>
+            {t('indemnity.autoSave')}
+          </AlertDescription>
+        </Alert>
+      </div>
 
       {/* Statistiques */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

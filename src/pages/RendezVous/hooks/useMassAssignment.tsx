@@ -708,6 +708,31 @@ const useMassAssignment = (etudeIdFromUrl: string | number | null | undefined): 
 
       const normalizedGroupId = normalizeId(groupId);
 
+      // Récupérer l'association existante AVANT suppression pour préserver l'IV individuel
+      let existingIv = 0;
+      let existingNumsujet = 0;
+      let existingPaye = 0;
+      let existingStatut = 'INSCRIT';
+      try {
+        const response = await etudeVolontaireService.getVolontairesByEtude(etudeId);
+        const associations = Array.isArray(response)
+          ? response
+          : Array.isArray(response?.data)
+            ? response.data
+            : [];
+        const existingAssoc = associations.find(
+          (item: any) => normalizeId(item.idVolontaire) === normalizedVolunteerId,
+        );
+        if (existingAssoc) {
+          existingIv = existingAssoc.iv || 0;
+          existingNumsujet = existingAssoc.numsujet || 0;
+          existingPaye = existingAssoc.paye || 0;
+          existingStatut = existingAssoc.statut || 'INSCRIT';
+        }
+      } catch (err) {
+        console.warn("Impossible de récupérer l'association existante", err);
+      }
+
       try {
         await removeStudyVolunteerAssociation(etudeId, normalizedVolunteerId);
       } catch (err) {
@@ -719,16 +744,19 @@ const useMassAssignment = (etudeIdFromUrl: string | number | null | undefined): 
         selectedGroupeDetails ||
         null;
 
-      const ivValue = groupDetails?.iv ? parseInt(String(groupDetails.iv), 10) || 0 : 0;
+      const groupIv = groupDetails?.iv ? parseInt(String(groupDetails.iv), 10) || 0 : 0;
+
+      // Préserver l'IV individuel existant, sauf si pas d'IV existant (utiliser celui du groupe)
+      const ivValue = existingIv > 0 ? existingIv : groupIv;
 
       const payload = {
         idEtude: etudeId,
         idVolontaire: normalizedVolunteerId,
         idGroupe: normalizedGroupId ?? 0,
         iv: ivValue,
-        numsujet: 0,
-        paye: ivValue > 0 ? 1 : 0,
-        statut: 'INSCRIT',
+        numsujet: existingNumsujet,
+        paye: existingPaye > 0 ? existingPaye : 0,
+        statut: existingStatut,
       };
 
       try {

@@ -329,7 +329,7 @@ const AppointmentsByStudy = ({ onAppointmentClick, onBack }: AppointmentsByStudy
         idGroupe: parseInt(groupeId.toString()) || 0,
         iv: ivGroupe,
         numsujet: 0, // 🎯 Toujours 0 pour un nouveau départ
-        paye: ivGroupe > 0 ? 1 : 0,
+        paye: 0,
         statut: 'INSCRIT'
       };
 

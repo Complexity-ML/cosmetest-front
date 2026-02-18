@@ -272,14 +272,22 @@ const useAppointmentDetails = (initialAppointment: Appointment | null): UseAppoi
         }
       }
 
+      // Préserver l'IV individuel existant si le volontaire en avait un
+      const existingIv = existingAssociation?.iv || 0;
+      const existingNumsujet = existingAssociation?.numsujet || 0;
+      const existingPaye = existingAssociation?.paye || 0;
+      const existingStatut = existingAssociation?.statut || 'INSCRIT';
+      const groupIv = group?.iv ?? 0;
+      const ivValue = existingIv > 0 ? existingIv : groupIv;
+
       const payload = {
         idEtude: etudeId,
         idVolontaire: normalizedVolunteerId,
         idGroupe: normalizedGroupId ?? 0,
-        iv: group?.iv ?? 0,
-        numsujet: 0,
-        paye: group?.iv ? 1 : 0,
-        statut: 'INSCRIT',
+        iv: ivValue,
+        numsujet: existingNumsujet,
+        paye: existingPaye > 0 ? existingPaye : 0,
+        statut: existingStatut,
       };
 
       try {

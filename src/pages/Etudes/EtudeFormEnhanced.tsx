@@ -113,6 +113,7 @@ const EtudeFormEnhanced = () => {
 
   const [selectedProduits, setSelectedProduits] = useState<string[]>([]);
 
+  const [originalPaye, setOriginalPaye] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
@@ -152,6 +153,7 @@ const EtudeFormEnhanced = () => {
         setIsLoading(true);
         const data = await etudeService.getById(Number(id));
 
+        setOriginalPaye(data.paye ?? 0);
         setFormData({
           idEtude: data.idEtude,
           ref: data.ref || "",
@@ -228,7 +230,7 @@ const EtudeFormEnhanced = () => {
 
       const etudeDTO = {
         ...formData,
-        paye: formData.paye ? 1 : 0,
+        paye: isEditMode ? originalPaye : 0,
       };
 
       try {
@@ -607,41 +609,6 @@ const EtudeFormEnhanced = () => {
               />
             </div>
 
-            {/* Étude rémunérée */}
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="paye"
-                name="paye"
-                checked={formData.paye}
-                onChange={handleChange}
-                className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-              />
-              <Label
-                htmlFor="paye"
-                className="font-normal cursor-pointer"
-              >
-                {t('studies.paidStudy')}
-              </Label>
-            </div>
-
-            {/* Montant */}
-            {formData.paye && (
-              <div>
-                <Label htmlFor="montant">
-                  {t('studies.amount')}
-                </Label>
-                <Input
-                  type="number"
-                  id="montant"
-                  name="montant"
-                  value={formData.montant}
-                  onChange={handleChange}
-                  min={0}
-                  step={0.01}
-                />
-              </div>
-            )}
           </div>
 
           {/* Boutons d'action */}

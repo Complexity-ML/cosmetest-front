@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { CheckCircle2, Loader2 } from 'lucide-react';
+import { CheckCircle2, XCircle, Loader2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -24,6 +24,7 @@ interface MassActionsPanelProps {
   isMassUpdating: boolean;
   statistics?: Statistics;
   onMarkAll: () => void;
+  onMarkAllUnpaid?: () => void;
 }
 
 const MassActionsPanel: React.FC<MassActionsPanelProps> = ({
@@ -33,6 +34,7 @@ const MassActionsPanel: React.FC<MassActionsPanelProps> = ({
   isMassUpdating,
   statistics,
   onMarkAll,
+  onMarkAllUnpaid,
 }) => {
   const { t } = useTranslation();
   const { unpaidCount, allPaidCount, annulesCount } = useMemo(() => {
@@ -67,6 +69,29 @@ const MassActionsPanel: React.FC<MassActionsPanelProps> = ({
               <Badge variant="secondary" className="bg-green-50 text-green-600 border-green-200">
                 {t('payments.allActivePaymentsPaid')}
               </Badge>
+            )}
+
+            {onMarkAllUnpaid && allPaidCount > 0 && (
+              <Button
+                variant="outline"
+                onClick={onMarkAllUnpaid}
+                disabled={isMassUpdating || allPaidCount === 0}
+              >
+                {isMassUpdating ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    {t('common.updating')}
+                  </>
+                ) : (
+                  <>
+                    <XCircle className="h-4 w-4 mr-2" />
+                    Marquer tout non payé
+                    <Badge variant="secondary" className="ml-2 bg-red-500 text-white text-xs">
+                      {allPaidCount}
+                    </Badge>
+                  </>
+                )}
+              </Button>
             )}
 
             <Button

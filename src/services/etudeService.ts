@@ -191,8 +191,17 @@ const etudeService = {
         return 0;
       }
 
-      // Vérifier si tous les paiements sont payés (paye = 1)
-      const allPaid = paiements.every(p => p.paye === 1);
+      // Exclure les volontaires avec IV=0 (pas d'indemnité à payer)
+      const paiementsAvecIv = paiements.filter(p => (p.iv || 0) > 0);
+
+      // Si aucun volontaire n'a d'IV, l'étude n'a rien à payer
+      if (paiementsAvecIv.length === 0) {
+        await etudeService.updatePayeStatus(idEtude, 0);
+        return 0;
+      }
+
+      // Vérifier si tous les paiements avec IV > 0 sont payés (paye = 1)
+      const allPaid = paiementsAvecIv.every(p => p.paye === 1);
       const newPayeStatus = allPaid ? 2 : 0;
       await etudeService.updatePayeStatus(idEtude, newPayeStatus);
       return newPayeStatus;
