@@ -885,7 +885,7 @@ const useMassAssignment = (etudeIdFromUrl: string | number | null | undefined): 
           return;
         }
 
-        await Promise.all(
+        const results = await Promise.all(
           assignments.map(async ({ appointment, volunteer }) => {
             const volunteerId = getVolunteerId(volunteer) as number;
             await ensureVolunteerAssociation(selectedEtudeId, selectedGroupeId, volunteerId);
@@ -901,11 +901,20 @@ const useMassAssignment = (etudeIdFromUrl: string | number | null | undefined): 
               commentaires: appointment.commentaires,
             };
 
-            await rdvService.update(selectedEtudeId, getAppointmentId(appointment) as number, payload);
+            return rdvService.update(selectedEtudeId, getAppointmentId(appointment) as number, payload);
           }),
         );
 
+        // Collecter les warnings de chevauchement renvoyés par le backend
+        const allWarnings = results
+          .filter((r: any) => r?.warnings?.length > 0)
+          .flatMap((r: any) => r.warnings);
+        const uniqueWarnings = [...new Set(allWarnings)];
+
         let successMessage = `${assignments.length} assignation(s) effectuée(s) avec succès.`;
+        if (uniqueWarnings.length > 0) {
+          successMessage += `\n\n⚠️ Chevauchement d'études détecté :\n${uniqueWarnings.join('\n')}`;
+        }
         if (selectedGroupeDetails?.iv) {
           successMessage += `\n\nIV du groupe appliqué : ${selectedGroupeDetails.iv}€ par volontaire.`;
         }

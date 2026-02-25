@@ -411,9 +411,19 @@ const VolontaireAppointmentAssigner = ({ volontaireId, volontaire, onAssignmentC
         return rdvService.update(selectedEtudeId, getAppointmentId(rdv), updatedData);
       });
 
-      await Promise.all(rdvPromises);
+      const results = await Promise.all(rdvPromises);
 
-      alert(t('volunteerAppointments.assignmentSuccess', { count: selectedAppointments.length }));
+      // Collecter les warnings de chevauchement renvoyés par le backend
+      const allWarnings = results
+        .filter((r: any) => r?.warnings?.length > 0)
+        .flatMap((r: any) => r.warnings);
+
+      if (allWarnings.length > 0) {
+        const uniqueWarnings = [...new Set(allWarnings)];
+        alert(`⚠️ ${t('studyOverlap.warningTitle', 'Attention : Chevauchement d\'études détecté')}\n\n${uniqueWarnings.join('\n')}\n\n${t('volunteerAppointments.assignmentSuccess', { count: selectedAppointments.length })}`);
+      } else {
+        alert(t('volunteerAppointments.assignmentSuccess', { count: selectedAppointments.length }));
+      }
 
       // Rafraîchir les données
       await loadEtudeData(selectedEtudeId);
@@ -640,7 +650,7 @@ const VolontaireAppointmentAssigner = ({ volontaireId, volontaire, onAssignmentC
                 {t('volunteerAppointments.assignmentInProgress')}
               </h3>
               <p className="text-sm text-blue-600">
-                {t('volunteerAppointments.appointmentsGroup', { count: selectedAppointments.length, group: groupes.find(g => getGroupeId(g) === selectedGroupeId)?.nom || selectedGroupeId })}
+                {t('volunteerAppointments.appointmentsGroup', { count: selectedAppointments.length, group: groupes.find(g => getGroupeId(g) === selectedGroupeId)?.intitule || groupes.find(g => getGroupeId(g) === selectedGroupeId)?.nom || selectedGroupeId })}
                 {selectedGroupeDetails && selectedGroupeDetails.iv > 0 && (
                   <span className="text-green-600 font-medium"> (IV: {selectedGroupeDetails.iv}€)</span>
                 )}
