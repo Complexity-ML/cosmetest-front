@@ -13,6 +13,7 @@ interface Groupe {
   id?: number;
   idGroupe?: number;
   nom?: string;
+  intitule?: string;
   iv?: number;
 }
 
@@ -110,7 +111,7 @@ const StudyControlsPanel = ({
                   const id = group.id ?? group.idGroupe;
                   return (
                     <option key={`group-${id}`} value={id}>
-                      {group.nom ?? `${t('groups.group')} ${id}`}
+                      {group.intitule ?? group.nom ?? `${t('groups.group')} ${id}`}
                       {group.iv !== undefined ? ` (${t('studies.visitAllowance')}: ${group.iv}€)` : ''}
                     </option>
                   );

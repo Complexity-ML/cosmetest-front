@@ -9,7 +9,7 @@ import etudeVolontaireService from "../../services/etudeVolontaireService";
 import groupeService from "../../services/groupeService";
 import volontaireService from "../../services/volontaireService";
 import annulationService from "../../services/annulationService";
-import rdvService from "../../services/rdvService";
+
 import api from "../../services/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -947,56 +947,6 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
         setIsLoading(true);
         const response = await etudeVolontaireService.getVolontairesByEtude(etudeId);
         let assignes: VolontaireAssigne[] = parseEtudeVolontaireResponse(response);
-
-        // Synchroniser les volontaires manquants depuis les RDV
-        try {
-          const etudeIdNum = parseInt(etudeId.toString());
-          const rdvData = await rdvService.getByEtudeId(etudeIdNum);
-
-          if (Array.isArray(rdvData) && rdvData.length > 0) {
-            const rdvVolIds = [...new Set(
-              rdvData
-                .map((rdv: any) => rdv.idVolontaire)
-                .filter((vid: number) => vid && vid !== 0)
-            )] as number[];
-
-            // Trouver les volontaires présents dans RDV mais absents de etude_volontaire
-            const existingVolIds = new Set(assignes.map((a: VolontaireAssigne) => a.idVolontaire));
-            const missingVolIds = rdvVolIds.filter(vid => !existingVolIds.has(vid));
-
-            if (missingVolIds.length > 0) {
-              // Récupérer un idGroupe valide et son IV
-              const groupesData: any = await groupeService.getGroupesByIdEtude(etudeIdNum);
-              const groupes = Array.isArray(groupesData) ? groupesData : (groupesData?.data || []);
-              const defaultGroupe = groupes.length > 0 ? groupes[0] : null;
-              const defaultGroupeId = defaultGroupe ? (defaultGroupe.idGroupe || defaultGroupe.id || 0) : 0;
-              const defaultGroupeIv = defaultGroupe?.iv || 0;
-
-              if (defaultGroupeId !== 0) {
-                await Promise.allSettled(
-                  missingVolIds.map((volId) =>
-                    api.post("/etude-volontaires", {
-                      idEtude: etudeIdNum,
-                      idVolontaire: volId,
-                      idGroupe: defaultGroupeId,
-                      iv: defaultGroupeIv,
-                      numsujet: 0,
-                      paye: 0,
-                      statut: "-",
-                    })
-                  )
-                );
-
-                // Re-charger après création
-                const response2 = await etudeVolontaireService.getVolontairesByEtude(etudeId);
-                assignes = parseEtudeVolontaireResponse(response2);
-                setDebugInfo(`${missingVolIds.length} volontaires synchronisés depuis les RDV (total: ${assignes.length})`);
-              }
-            }
-          }
-        } catch (rdvError) {
-          console.warn("Impossible de synchroniser les volontaires depuis les RDV:", rdvError);
-        }
 
         // Dédupliquer par idVolontaire (garder l'entrée avec le numsujet le plus élevé)
         const deduplicatedAssignes = Object.values(

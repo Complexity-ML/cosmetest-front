@@ -88,7 +88,7 @@ const StudyGroupSelector = ({
               <option value="">-- {t('appointments.chooseGroup')} --</option>
               {groupes.map((groupe: GroupeData, index: number) => (
                 <option key={`groupe-${getGroupeId(groupe)}-${index}`} value={getGroupeId(groupe)}>
-                  {groupe.nom || `${t('appointments.group')} ${getGroupeId(groupe)}`}
+                  {groupe.intitule || groupe.nom || `${t('appointments.group')} ${getGroupeId(groupe)}`}
                   {groupe.iv !== undefined && ` (IV: ${groupe.iv}€)`}
                 </option>
               ))}

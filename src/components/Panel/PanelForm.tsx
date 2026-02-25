@@ -442,7 +442,7 @@ const PanelForm = () => {
                   type="select"
                   value={formData.idGroupe}
                   onChange={handleChange}
-                  options={groupes.map(groupe => groupe.nom || groupe.idGroupe)}
+                  options={groupes.map(groupe => groupe.intitule || groupe.nom || groupe.idGroupe)}
                   required
                   error={errors.idGroupe}
                 />

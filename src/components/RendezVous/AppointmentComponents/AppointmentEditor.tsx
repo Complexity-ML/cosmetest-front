@@ -119,8 +119,8 @@ const AppointmentEditor = ({
   // Charger le nom du groupe via son ID ou via l'étude
   useEffect(() => {
     // D'abord, vérifier si le groupe est déjà dans l'appointment
-    if (appointment?.groupe?.nom) {
-      setGroupeNom(appointment.groupe.nom);
+    if (appointment?.groupe?.intitule || appointment?.groupe?.nom) {
+      setGroupeNom(appointment.groupe.intitule || appointment.groupe.nom);
       setSelectedGroupeId(appointment.groupe.idGroupe || appointment.groupe.id || appointment.idGroupe || null);
       return;
     }
