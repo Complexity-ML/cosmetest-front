@@ -461,7 +461,12 @@ const AppointmentsByStudy = ({ onAppointmentClick, onBack }: AppointmentsByStudy
           commentaires: rdv.commentaires
         };
 
-        await rdvService.update(idEtude, rdvId, updatedData);
+        const result = await rdvService.update(idEtude, rdvId, updatedData);
+
+        // Afficher les warnings de chevauchement d'études renvoyés par le backend
+        if (result?.warnings?.length > 0) {
+          alert(`⚠️ Attention : Chevauchement d'études détecté\n\n${result.warnings.join('\n')}`);
+        }
 
         // Mettre à jour localement les données des rendez-vous
         setAppointments(prevAppointments =>

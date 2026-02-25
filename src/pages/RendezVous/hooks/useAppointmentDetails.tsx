@@ -372,7 +372,13 @@ const useAppointmentDetails = (initialAppointment: Appointment | null): UseAppoi
           idGroupe: targetGroupId,
         };
 
-        await rdvService.update(identifiers.idEtude, identifiers.idRdv, payload);
+        const result = await rdvService.update(identifiers.idEtude, identifiers.idRdv, payload);
+
+        // Afficher les warnings de chevauchement d'études renvoyés par le backend
+        if (result?.warnings?.length > 0) {
+          alert(`⚠️ Attention : Chevauchement d'études détecté\n\n${result.warnings.join('\n')}`);
+        }
+
         await fetchAppointment();
         await refreshContext();
       } catch (err) {
