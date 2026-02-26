@@ -1366,6 +1366,42 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
       )}
 
 
+      {/* Alerte de réparation quand aucun volontaire n'est trouvé */}
+      {volontairesAssignes.length === 0 && !isLoading && (
+        <Alert className="border-orange-300 bg-orange-50">
+          <AlertTriangle className="h-4 w-4 text-orange-600" />
+          <AlertDescription className="flex items-center justify-between">
+            <span className="text-orange-800">
+              Aucun volontaire trouvé pour cette étude. Si des RDV sont assignés, les associations ont peut-être été perdues.
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              className="ml-4 border-orange-400 text-orange-700 hover:bg-orange-100"
+              onClick={async () => {
+                try {
+                  setIsLoading(true);
+                  const response = await api.post(`/etude-volontaires/repair/${etudeId}`);
+                  const result = response.data;
+                  if (result.repaired > 0) {
+                    alert(`${result.repaired} association(s) réparée(s) sur ${result.missing} manquante(s).`);
+                    window.location.reload();
+                  } else {
+                    alert('Aucune association manquante détectée.');
+                  }
+                } catch (err: any) {
+                  alert('Erreur lors de la réparation: ' + (err?.message || 'Erreur inconnue'));
+                } finally {
+                  setIsLoading(false);
+                }
+              }}
+            >
+              Réparer les associations
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Info importante */}
       <div className="flex items-center justify-between gap-4">
         <Alert className="flex-1">
