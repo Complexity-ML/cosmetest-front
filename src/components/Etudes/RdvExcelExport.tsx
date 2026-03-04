@@ -78,7 +78,10 @@ const RdvExcelExport: React.FC<RdvExcelExportProps> = ({
           // Indexer par idVolontaire pour un accès rapide
           associations.forEach((assoc: any) => {
             if (assoc.idVolontaire) {
-              associationsData[assoc.idVolontaire] = assoc;
+              const existing = associationsData[assoc.idVolontaire];
+              if (!existing || (assoc.numsujet || 0) > (existing.numsujet || 0)) {
+                associationsData[assoc.idVolontaire] = assoc;
+              }
             }
           });
         } catch (error) {

@@ -139,6 +139,11 @@ const STATUT_CONFIG: Record<string, StatutConfigItem> = {
     icon: "Handshake",
     style: "bg-purple-100 text-purple-800 border-purple-300",
   },
+  etude_et_parrainage: {
+    label: "Étude et Parrainage",
+    icon: "Handshake",
+    style: "bg-purple-100 text-purple-800 border-purple-300",
+  },
   annule: {
     label: "Annulé",
     icon: "XCircle",

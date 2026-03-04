@@ -130,7 +130,11 @@ const VolunteerExcelExport: React.FC<VolunteerExcelExportProps> = ({
 
           associations.forEach((assoc: any) => {
             if (assoc.idVolontaire) {
-              associationsData[assoc.idVolontaire] = assoc;
+              const existing = associationsData[assoc.idVolontaire];
+              // Si doublon (clé composite avec statut différent), garder celui avec le numsujet le plus élevé
+              if (!existing || (assoc.numsujet || 0) > (existing.numsujet || 0)) {
+                associationsData[assoc.idVolontaire] = assoc;
+              }
             }
           });
         } catch (error) {
