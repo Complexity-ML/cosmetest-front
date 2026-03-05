@@ -580,19 +580,14 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
       await enregistrerAnnulation(volontaire, commentaire, annulePar);
       console.log(`✅ Annulation enregistrée et créneaux RDV libérés automatiquement par le backend`);
 
-      // 2. Supprimer l'association étude-volontaire
+      // 2. Supprimer l'association étude-volontaire (endpoint simplifié, sans clé composite complète)
       console.log(`🔗 Suppression association étude-volontaire...`);
-      const associationParams = {
-        idEtude: parseInt(etudeId.toString()),
-        idGroupe: volontaire.idGroupe || 0,
-        idVolontaire: volontaire.idVolontaire,
-        iv: volontaire.iv || 0,
-        numsujet: volontaire.numsujet || 0,
-        paye: volontaire.paye || 0,
-        statut: volontaire.statut || "-",
-      };
-
-      await api.delete("/etude-volontaires/delete", { params: associationParams });
+      await api.delete("/etude-volontaires/delete-by-etude-volontaire", {
+        params: {
+          idEtude: parseInt(etudeId.toString()),
+          idVolontaire: volontaire.idVolontaire,
+        },
+      });
       console.log(`✅ Association supprimée`);
 
       // 4. Retirer le volontaire de la liste locale (il n'est plus associé à l'étude)
