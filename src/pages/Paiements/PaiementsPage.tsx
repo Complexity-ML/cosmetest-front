@@ -290,9 +290,10 @@ const PaiementsPage = () => {
     }
   };
 
-  // Normaliser les données de paiements
+  // Normaliser les données de paiements et dédupliquer par volontaire
+  // (la clé composite peut créer des lignes orphelines lors des mises à jour)
   const normalizePaiementsData = (paiementsData: any[]) => {
-    return paiementsData.map((paiement: any) => ({
+    const normalized = paiementsData.map((paiement: any) => ({
       ...paiement,
       idGroupe: paiement.idGroupe ?? 0,
       iv: paiement.iv ?? 0,
@@ -302,6 +303,18 @@ const PaiementsPage = () => {
       key: `${paiement.idEtude}_${paiement.idVolontaire}`,
       isComplete: !!(paiement.idEtude && paiement.idVolontaire)
     }));
+
+    // Dédupliquer : garder une seule entrée par volontaire (celle avec le numsujet le plus élevé)
+    const byVolontaire: Record<string, any> = {};
+    normalized.forEach((p: any) => {
+      const key = `${p.idEtude}_${p.idVolontaire}`;
+      const existing = byVolontaire[key];
+      if (!existing || (p.numsujet || 0) > (existing.numsujet || 0)) {
+        byVolontaire[key] = p;
+      }
+    });
+
+    return Object.values(byVolontaire);
   };
 
   // Chargement des volontaires

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import volontaireService from '../../services/volontaireService'
 import { usePagination } from '../../hooks/usePagination'
@@ -26,13 +27,25 @@ const emptyFields: SearchFields = { nom: '', prenom: '', email: '', tel: '', idV
 
 const VolontairesPage = () => {
   const { t } = useTranslation()
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  // Initialiser les champs depuis l'URL (pour la préservation au retour arrière)
+  const getInitialFields = (): SearchFields => ({
+    nom: searchParams.get('nom') || '',
+    prenom: searchParams.get('prenom') || '',
+    email: searchParams.get('email') || '',
+    tel: searchParams.get('tel') || '',
+    idVol: searchParams.get('idVol') || '',
+  })
+
   const [volontaires, setVolontaires] = useState([])
-  const [searchFields, setSearchFields] = useState<SearchFields>(emptyFields)
+  const [searchFields, setSearchFields] = useState<SearchFields>(getInitialFields)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [includeArchived, setIncludeArchived] = useState(false)
+  const [includeArchived, setIncludeArchived] = useState(searchParams.get('archived') === 'true')
   const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false)
-  const { page, size, updateTotal, goToPage, nextPage, prevPage, pageCount, total } = usePagination()
+  const initialPage = Number(searchParams.get('page')) || 0
+  const { page, size, updateTotal, goToPage, nextPage, prevPage, pageCount, total } = usePagination(initialPage)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Vérifie si un champ a assez de caractères pour déclencher la recherche
@@ -91,6 +104,17 @@ const VolontairesPage = () => {
     }, 400)
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current) }
   }, [fetchVolontaires])
+
+  // Synchroniser les champs de recherche dans l'URL (pour le retour arrière)
+  useEffect(() => {
+    const params = new URLSearchParams()
+    for (const [key, value] of Object.entries(searchFields)) {
+      if (value.trim()) params.set(key, value.trim())
+    }
+    if (includeArchived) params.set('archived', 'true')
+    if (page > 0) params.set('page', String(page))
+    setSearchParams(params, { replace: true })
+  }, [searchFields, includeArchived, page])
 
   const updateField = (field: keyof SearchFields, value: string) => {
     setSearchFields(prev => ({ ...prev, [field]: value }))

@@ -39,6 +39,7 @@ interface AvailableAppointmentsListProps {
   formatTime: (time: string) => string;
   getStatusColor: (status: string) => string;
   loading?: boolean;
+  totalAppointmentsCount?: number;
 }
 
 const AvailableAppointmentsList = ({
@@ -60,7 +61,8 @@ const AvailableAppointmentsList = ({
   formatDate,
   formatTime,
   getStatusColor,
-  loading = false
+  loading = false,
+  totalAppointmentsCount
 }: AvailableAppointmentsListProps) => {
   const { t } = useTranslation();
   // time helpers importés depuis utils/timeUtils
@@ -143,7 +145,7 @@ const AvailableAppointmentsList = ({
         availableDates={availableDates}
         formatDate={formatDate}
         selectedCount={selectedCount}
-        totalCount={filteredAppointments.length}
+        totalCount={totalAppointmentsCount ?? filteredAppointments.length}
         availableCount={availableCount}
         onSelectAll={onSelectAllAppointments}
         disabled={loading}

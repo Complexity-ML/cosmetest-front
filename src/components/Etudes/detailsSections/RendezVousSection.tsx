@@ -269,6 +269,44 @@ const RendezVousSection = ({
     }
   }
 
+  // Désassigner les volontaires des RDV sélectionnés (garder le créneau vide)
+  const [isUnassigning, setIsUnassigning] = useState(false)
+
+  const handleUnassignSelected = async () => {
+    setIsUnassigning(true)
+    setUpdateError(null)
+    const selectedRdvsList = getSelectedRdvs().filter((rdv: RendezVousData) => rdv.idVolontaire)
+    let successCount = 0
+    let errorCount = 0
+
+    for (const rdv of selectedRdvsList) {
+      try {
+        const idEtude = rdv.idEtude
+        const idRdv = rdv.idRdv || rdv.id
+        if (idEtude && idRdv) {
+          await rdvService.update(idEtude, idRdv, {
+            ...rdv,
+            idVolontaire: null,
+            volontaire: null,
+          })
+          successCount++
+        }
+      } catch (err) {
+        console.error('Erreur lors de la désassignation du RDV:', err)
+        errorCount++
+      }
+    }
+
+    setIsUnassigning(false)
+
+    if (errorCount > 0) {
+      setUpdateError(`${successCount} désassigné(s), ${errorCount} erreur(s)`)
+    } else {
+      setSelectedRdvIds(new Set())
+      handleRdvUpdate()
+    }
+  }
+
   // Supprimer les RDV sélectionnés
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -619,6 +657,18 @@ const RendezVousSection = ({
                       </svg>
                       {t('appointments.changeTime') || 'Changer l\'heure'}
                     </button>
+                    {getSelectedRdvs().some((rdv: RendezVousData) => rdv.idVolontaire) && (
+                      <button
+                        onClick={handleUnassignSelected}
+                        disabled={isUnassigning}
+                        className="px-3 py-1.5 text-sm bg-orange-600 text-white hover:bg-orange-700 rounded-md inline-flex items-center gap-1 transition-colors disabled:opacity-50"
+                      >
+                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                        </svg>
+                        {isUnassigning ? '...' : (t('appointments.unassign') || 'Désassigner')}
+                      </button>
+                    )}
                     {selectedRdvIds.size === 2 && (
                       <button
                         onClick={() => setShowSwitcher(true)}

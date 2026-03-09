@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import etudeService from '../../services/etudeService'
 import { usePagination } from '../../hooks/usePagination'
@@ -20,7 +20,6 @@ const EtudesPage = () => {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const { page, size, updateTotal, goToPage, nextPage, prevPage, pageCount } = usePagination(0, 15) // 15 études par page
-  const navigate = useNavigate()
   
   useEffect(() => {
     const fetchEtudes = async () => {
@@ -63,7 +62,7 @@ const EtudesPage = () => {
   }
   
   const handleRowClick = (etudeId: number) => {
-    navigate(`/etudes/${etudeId}`)
+    window.open(`/etudes/${etudeId}`, '_blank')
   }
   
   const getStatusBadge = (etude: Etude) => {

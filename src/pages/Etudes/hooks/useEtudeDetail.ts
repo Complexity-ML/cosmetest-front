@@ -344,6 +344,10 @@ export const useEtudeDetail = ({ id, navigate }: UseEtudeDetailParams): UseEtude
       switch (sortField) {
         case 'date':
           comparison = new Date(a.date || '').getTime() - new Date(b.date || '').getTime();
+          // Tri secondaire par heure quand les dates sont identiques
+          if (comparison === 0) {
+            comparison = (a.heure || '').localeCompare(b.heure || '');
+          }
           break;
         case 'heure':
           comparison = (a.heure || '').localeCompare(b.heure || '');
@@ -351,7 +355,10 @@ export const useEtudeDetail = ({ id, navigate }: UseEtudeDetailParams): UseEtude
         case 'volontaire': {
           const volontaireA = getNomVolontaire(a);
           const volontaireB = getNomVolontaire(b);
-          comparison = volontaireA.localeCompare(volontaireB);
+          // Extraire le nom de famille (dernier mot) pour trier par nom
+          const nomA = volontaireA.split(' ').slice(-1)[0] || '';
+          const nomB = volontaireB.split(' ').slice(-1)[0] || '';
+          comparison = nomA.localeCompare(nomB);
           break;
         }
         case 'etat':

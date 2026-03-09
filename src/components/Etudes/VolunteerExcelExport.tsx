@@ -96,6 +96,26 @@ const VolunteerExcelExport: React.FC<VolunteerExcelExportProps> = ({
     return sensibilite.trim();
   };
 
+  // Fonction pour normaliser le phototype (romains → arabes, format "Phototype X")
+  const normalizePhototype = (value: any): string => {
+    if (!value) return '';
+    const str = value.toString().trim().toUpperCase();
+    const romanToArabic: Record<string, string> = {
+      'VI': '6', 'V': '5', 'IV': '4', 'III': '3', 'II': '2', 'I': '1'
+    };
+    for (const [roman, arabic] of Object.entries(romanToArabic)) {
+      if (str === roman) return `Phototype ${arabic}`;
+    }
+    if (/^[1-6]$/.test(str)) return `Phototype ${str}`;
+    const matchArabic = str.match(/^PHOTOTYPE\s*(\d)$/);
+    if (matchArabic) return `Phototype ${matchArabic[1]}`;
+    const matchRoman = str.match(/^PHOTOTYPE\s*(VI|IV|V?I{0,3})$/);
+    if (matchRoman && romanToArabic[matchRoman[1]]) {
+      return `Phototype ${romanToArabic[matchRoman[1]]}`;
+    }
+    return value;
+  };
+
   const exportVolunteersToExcel = async () => {
     try {
       setIsExporting(true);
@@ -305,8 +325,8 @@ const VolunteerExcelExport: React.FC<VolunteerExcelExportProps> = ({
           row.push('');
         }
 
-        // Phototype (utilise l'attribut phototype de l'entité)
-        row.push(volunteer.phototype || '');
+        // Phototype (normalisé: romains → arabes, format "Phototype X")
+        row.push(normalizePhototype(volunteer.phototype));
 
         dataRows.push(row);
       });

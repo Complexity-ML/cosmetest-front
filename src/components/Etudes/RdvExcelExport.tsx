@@ -189,7 +189,17 @@ const RdvExcelExport: React.FC<RdvExcelExportProps> = ({
       const dataRows: any[][] = [];
       let lineNumber = 1; // Compteur de ligne
 
-      Object.entries(rdvsByVolunteer).forEach(([volunteerId, volunteerRdvs]: [string, any[]]) => {
+      // Trier les volontaires par date du 1er RDV (ordre croissant)
+      const sortedEntries = Object.entries(rdvsByVolunteer).sort(([, rdvsA]: [string, any[]], [, rdvsB]: [string, any[]]) => {
+        const dateA = rdvsA[0] ? new Date(rdvsA[0].date).getTime() : 0;
+        const dateB = rdvsB[0] ? new Date(rdvsB[0].date).getTime() : 0;
+        if (dateA !== dateB) return dateA - dateB;
+        const heureA = rdvsA[0]?.heure || '00h00';
+        const heureB = rdvsB[0]?.heure || '00h00';
+        return heureA.localeCompare(heureB);
+      });
+
+      sortedEntries.forEach(([volunteerId, volunteerRdvs]: [string, any[]]) => {
         const row: any[] = [];
 
         // A: Nombre de ligne
@@ -208,8 +218,21 @@ const RdvExcelExport: React.FC<RdvExcelExportProps> = ({
         // E: Nom du volontaire
         row.push(getNomVolontaire(volunteerRdvs[0]));
 
-        // F: Téléphone
-        row.push(getVolunteerInfo(Number(volunteerId), 'telPortable'));
+        // F: Téléphone (formaté)
+        const telPortable = getVolunteerInfo(Number(volunteerId), 'telPortable');
+        const telDomicile = getVolunteerInfo(Number(volunteerId), 'telDomicile');
+        const phone = telPortable || telDomicile;
+        let formattedPhone = '';
+        if (phone) {
+          const phoneStr = String(phone);
+          const cleaned = phoneStr.replace(/\D/g, '');
+          if (cleaned.length === 10) {
+            formattedPhone = cleaned.replace(/(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/, '$1 $2 $3 $4 $5');
+          } else {
+            formattedPhone = phoneStr;
+          }
+        }
+        row.push(formattedPhone);
 
         // G: Phototype
         row.push(normalizePhototype(getVolunteerInfo(Number(volunteerId), 'phototype')));

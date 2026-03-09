@@ -209,7 +209,8 @@ const RecrutementExcelExport: React.FC<RecrutementExcelExportProps> = ({
       // 6. Fonction helper pour récupérer les infos de l'association
       const getAssociationInfo = (volunteerId: number, field: string) => {
         if (associationsData[volunteerId]) {
-          return associationsData[volunteerId][field] || '';
+          const val = associationsData[volunteerId][field];
+          return (val !== null && val !== undefined) ? val : '';
         }
         return '';
       };
@@ -219,8 +220,8 @@ const RecrutementExcelExport: React.FC<RecrutementExcelExportProps> = ({
         'NB',
         'N°sujet',
         'ID Vol',
-        'nom',
-        'prenom',
+        'Nom',
+        'Prénom',
         'Téléphone'
       ];
 
@@ -231,7 +232,7 @@ const RecrutementExcelExport: React.FC<RecrutementExcelExportProps> = ({
       }
 
       // Ajouter les colonnes finales
-      headers.push('Phototype', 'PS/PNS', 'Type de peau', 'Date de naissance', 'age', 'Statut', 'IV', 'Email');
+      headers.push('Phototype', 'PS/PNS', 'Type de peau', 'Date de naissance', 'Âge', 'Statut', 'IV', 'Email');
 
       // 8. Créer les lignes de données
       const dataRows: any[][] = [];
@@ -315,7 +316,10 @@ const RecrutementExcelExport: React.FC<RecrutementExcelExportProps> = ({
         // Statut
         row.push(formatStatut(getAssociationInfo(volunteerIdNum, 'statut'))); // Statut
 
-        row.push(getAssociationInfo(volunteerIdNum, 'iv') || getVolunteerInfo(volunteerIdNum, 'iv')); // IV
+        // IV: afficher 0 si la valeur est 0, sinon la valeur
+        const ivValue = getAssociationInfo(volunteerIdNum, 'iv');
+        const ivFinal = (ivValue !== '' && ivValue !== null && ivValue !== undefined) ? ivValue : getVolunteerInfo(volunteerIdNum, 'iv');
+        row.push((ivFinal !== '' && ivFinal !== null && ivFinal !== undefined) ? ivFinal : 0); // IV
         row.push(getVolunteerInfo(volunteerIdNum, 'email')); // Email
 
         dataRows.push(row);

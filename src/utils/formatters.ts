@@ -63,12 +63,10 @@ export const formatSkinType = (skinType: string | null | undefined): string => {
     'MIXTE À TENDANCE SÈCHE': 'Mixte à tendance sèche',
     'MIXTE A TENDANCE GRASSE': 'Mixte à tendance grasse',
     'MIXTE A TENDANCE SECHE': 'Mixte à tendance sèche',
-    'SENSIBLE': 'Sensible',
     'N': 'Normale',
     'S': 'Sèche',
     'G': 'Grasse',
-    'M': 'Mixte',
-    'SE': 'Sensible'
+    'M': 'Mixte'
   };
 
   return skinTypeMap[skinType?.toUpperCase()] || skinType;

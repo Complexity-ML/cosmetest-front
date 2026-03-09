@@ -597,6 +597,7 @@ const VolontaireAppointmentAssigner = ({ volontaireId, volontaire, onAssignmentC
             formatTime={formatTime}
             getStatusColor={getStatusColor}
             loading={loading}
+            totalAppointmentsCount={appointments.length}
           />
 
           {/* Section des rendez-vous actuels du volontaire */}

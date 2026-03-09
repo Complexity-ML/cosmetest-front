@@ -165,6 +165,7 @@ const EtudeDetail = () => {
               etudeTitle={etude.titre || ''}
               etudeRef={etude.ref}
               onError={(error) => handleIndemniteError(typeof error === 'string' ? error : error.message)}
+              rdvs={rdvs}
             />
           )}
 

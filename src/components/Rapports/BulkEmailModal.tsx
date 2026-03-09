@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Mail, Copy, Download, Eye } from 'lucide-react';
+import { Mail, Copy, Eye, FileSpreadsheet } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import * as XLSX from 'xlsx';
 import emailService from '../../services/emailService';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -121,7 +122,7 @@ const BulkEmailModal: React.FC<BulkEmailModalProps> = ({
     }
   };
 
-  const handleCreateTxtFiles = () => {
+  const handleCreateExcelFile = () => {
     setError('');
 
     // Filter out archived volunteers
@@ -137,66 +138,93 @@ const BulkEmailModal: React.FC<BulkEmailModalProps> = ({
     }
 
     try {
-      // Filtrer les emails valides et exclure "non défini", "undefined", etc.
-      const emailsList = activeVolontaires
-        .map(vol => vol.email)
-        .filter(email => {
-          if (!email) return false;
-          const emailLower = String(email).toLowerCase().trim();
-          // Exclure les valeurs comme "non défini", "undefined", "null", etc.
-          return emailLower !== 'non défini' &&
-                 emailLower !== 'non defini' &&
-                 emailLower !== 'undefined' &&
-                 emailLower !== 'null' &&
-                 emailLower !== '';
-        });
+      // Filtrer les volontaires avec emails valides
+      const validVolontaires = activeVolontaires.filter(vol => {
+        if (!vol.email) return false;
+        const emailLower = String(vol.email).toLowerCase().trim();
+        return emailLower !== 'non défini' &&
+               emailLower !== 'non defini' &&
+               emailLower !== 'undefined' &&
+               emailLower !== 'null' &&
+               emailLower !== '';
+      });
 
-      if (emailsList.length === 0) {
+      if (validVolontaires.length === 0) {
         setError(t('reports.email.noEmailFound'));
         return;
       }
 
-      // Diviser en groupes de 500
-      const groups = [];
-      for (let i = 0; i < emailsList.length; i += 500) {
-        groups.push(emailsList.slice(i, i + 500));
+      // Créer le workbook Excel
+      const wb = XLSX.utils.book_new();
+
+      // Diviser en groupes de 500 pour les onglets
+      const BATCH_SIZE = 500;
+      const groups: Volontaire[][] = [];
+      for (let i = 0; i < validVolontaires.length; i += BATCH_SIZE) {
+        groups.push(validVolontaires.slice(i, i + BATCH_SIZE));
       }
 
-      // Créer les fichiers TXT
+      // Créer un onglet par groupe
       groups.forEach((group, index) => {
-        const content = group.join('\n');
-        const fileName = `recrutement_${index + 1}.txt`;
+        const headers = ['N°', 'Nom', 'Prénom', 'Email'];
 
-        // Créer un blob avec le contenu
-        const blob = new Blob([content], { type: 'text/plain' });
+        const dataRows = group.map((vol, rowIdx) => [
+          rowIdx + 1 + (index * BATCH_SIZE),
+          vol.nom || '',
+          vol.prenom || '',
+          vol.email || ''
+        ]);
 
-        // Créer un lien de téléchargement
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = fileName;
+        const wsData = [headers, ...dataRows];
+        const ws = XLSX.utils.aoa_to_sheet(wsData);
 
-        // Déclencher le téléchargement
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        // Style des en-têtes
+        for (let col = 0; col < headers.length; col++) {
+          const cellRef = XLSX.utils.encode_cell({ r: 0, c: col });
+          if (!ws[cellRef]) ws[cellRef] = { t: 's', v: headers[col] };
+          ws[cellRef].s = {
+            fill: { fgColor: { rgb: "4F81BD" } },
+            font: { color: { rgb: "FFFFFF" }, bold: true },
+            alignment: { horizontal: "center", vertical: "center" },
+            border: {
+              top: { style: "thin", color: { rgb: "000000" } },
+              bottom: { style: "thin", color: { rgb: "000000" } },
+              left: { style: "thin", color: { rgb: "000000" } },
+              right: { style: "thin", color: { rgb: "000000" } }
+            }
+          };
+        }
 
-        // Libérer l'URL
-        window.URL.revokeObjectURL(url);
+        // Largeur des colonnes
+        ws['!cols'] = [
+          { wch: 6 },   // N°
+          { wch: 20 },  // Nom
+          { wch: 20 },  // Prénom
+          { wch: 35 }   // Email
+        ];
+
+        const sheetName = groups.length === 1
+          ? 'Recrutement'
+          : `Recrutement ${index + 1}`;
+        XLSX.utils.book_append_sheet(wb, ws, sheetName);
       });
 
-      alert(t('reports.email.txtFilesCreated', { count: groups.length, total: emailsList.length }));
+      // Télécharger le fichier
+      const fileName = `recrutement_emails.xlsx`;
+      XLSX.writeFile(wb, fileName);
+
+      alert(`Fichier Excel créé avec ${validVolontaires.length} volontaires répartis sur ${groups.length} onglet(s).`);
 
       onEmailSent && onEmailSent({
-        count: emailsList.length,
-        subject: 'Fichiers TXT créés',
-        method: 'txt_files'
+        count: validVolontaires.length,
+        subject: 'Fichier Excel créé',
+        method: 'excel_file'
       });
 
       handleClose();
     } catch (err: any) {
-      console.error('Erreur création fichiers TXT:', err);
-      setError(err.message || 'Erreur lors de la création des fichiers TXT');
+      console.error('Erreur création fichier Excel:', err);
+      setError(err.message || 'Erreur lors de la création du fichier Excel');
     }
   };
 
@@ -423,10 +451,10 @@ const BulkEmailModal: React.FC<BulkEmailModalProps> = ({
                 <Button
                   type="button"
                   variant="secondary"
-                  onClick={handleCreateTxtFiles}
+                  onClick={handleCreateExcelFile}
                 >
-                  <Download className="w-4 h-4 mr-2" />
-                  {t('reports.email.txtFiles')}
+                  <FileSpreadsheet className="w-4 h-4 mr-2" />
+                  Export Excel
                 </Button>
               </div>
               <div className="flex gap-2">
@@ -488,10 +516,10 @@ const BulkEmailModal: React.FC<BulkEmailModalProps> = ({
                 </Button>
                 <Button
                   variant="secondary"
-                  onClick={handleCreateTxtFiles}
+                  onClick={handleCreateExcelFile}
                 >
-                  <Download className="w-4 h-4 mr-2" />
-                  {t('reports.email.txtFiles')}
+                  <FileSpreadsheet className="w-4 h-4 mr-2" />
+                  Export Excel
                 </Button>
               </div>
               <Button onClick={handleOutlookSend}>

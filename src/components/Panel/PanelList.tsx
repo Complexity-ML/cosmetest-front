@@ -68,7 +68,7 @@ const IconUser = ({ className = "", width = 24, height = 24, ...props }: IconPro
 // Composant de filtres
 const FilterPanel = ({ sexeFilter, setSexeFilter, typePeauFilter, setTypePeauFilter, phototypeFilter, setPhototypeFilter, onApplyFilters }: FilterPanelProps) => {
   const sexeOptions = ['Tous', 'Homme', 'Femme'];
-  const typePeauOptions = ['Tous', 'Normale', 'Sèche', 'Grasse', 'Mixte', 'Sensible'];
+  const typePeauOptions = ['Tous', 'Normale', 'Sèche', 'Grasse', 'Mixte', 'Mixte à tendance grasse', 'Mixte à tendance sèche'];
   const phototypeOptions = ['Tous', 'I', 'II', 'III', 'IV', 'V', 'VI'];
 
   const [localSexe, setLocalSexe] = useState(sexeFilter);

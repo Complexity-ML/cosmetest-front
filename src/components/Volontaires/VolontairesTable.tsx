@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { ArrowUpDown } from 'lucide-react'
+import { ArrowUpDown, Copy, Check } from 'lucide-react'
 import {
   Table,
   TableBody,
@@ -39,8 +39,17 @@ type SortKey = keyof Volontaire
 
 const VolontairesTable = ({ volontaires, onArchive }: VolontairesTableProps) => {
   const { t } = useTranslation()
-  const navigate = useNavigate()
   
+  // État pour le copier-coller d'email
+  const [copiedEmail, setCopiedEmail] = useState<string | null>(null)
+
+  const handleCopyEmail = (e: React.MouseEvent, email: string) => {
+    e.stopPropagation()
+    navigator.clipboard.writeText(email)
+    setCopiedEmail(email)
+    setTimeout(() => setCopiedEmail(null), 2000)
+  }
+
   // État pour le tri
   const [sortConfig, setSortConfig] = useState<{
     key: SortKey
@@ -59,9 +68,9 @@ const VolontairesTable = ({ volontaires, onArchive }: VolontairesTableProps) => 
     setSortConfig({ key, direction })
   }
 
-  // Fonction pour gérer le clic sur une ligne
+  // Fonction pour gérer le clic sur une ligne (ouvre dans un nouvel onglet)
   const handleRowClick = (volontaireId: string | number) => {
-    navigate(`/volontaires/${volontaireId}`)
+    window.open(`/volontaires/${volontaireId}`, '_blank')
   }
 
   // Tri des volontaires selon la configuration
@@ -214,13 +223,26 @@ const VolontairesTable = ({ volontaires, onArchive }: VolontairesTableProps) => 
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <a 
-                      href={`mailto:${volontaire.emailVol || volontaire.email}`} 
-                      className="text-primary hover:underline"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      {volontaire.emailVol || volontaire.email}
-                    </a>
+                    <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                      <span className="text-sm select-text cursor-text">
+                        {volontaire.emailVol || volontaire.email}
+                      </span>
+                      {(volontaire.emailVol || volontaire.email) && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0 shrink-0"
+                          onClick={(e) => handleCopyEmail(e, (volontaire.emailVol || volontaire.email) as string)}
+                          title={t('common.copy')}
+                        >
+                          {copiedEmail === (volontaire.emailVol || volontaire.email) ? (
+                            <Check className="h-3 w-3 text-green-600" />
+                          ) : (
+                            <Copy className="h-3 w-3 text-muted-foreground" />
+                          )}
+                        </Button>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell>
                     <Badge className={getTypePeauColor(typePeau)}>
