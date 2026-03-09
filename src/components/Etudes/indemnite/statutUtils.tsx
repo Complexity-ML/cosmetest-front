@@ -3,7 +3,6 @@ import {
   FileText,
   TrendingUp,
   AlertTriangle,
-  Handshake,
   XCircle,
   AlertCircle,
   Check,
@@ -27,15 +26,20 @@ export const STATUT_CONFIG: Record<string, StatutConfigItem> = {
     icon: "AlertTriangle",
     style: "bg-red-100 text-red-800 border-red-300",
   },
-  parrainage: {
-    label: "Parrainage",
-    icon: "Handshake",
-    style: "bg-purple-100 text-purple-800 border-purple-300",
-  },
   etude_et_parrainage: {
     label: "Étude et Parrainage",
-    icon: "Handshake",
+    icon: "FileText",
     style: "bg-purple-100 text-purple-800 border-purple-300",
+  },
+  sortie_etude: {
+    label: "Sortie étude",
+    icon: "XCircle",
+    style: "bg-red-100 text-red-800 border-red-300",
+  },
+  ni: {
+    label: "NI",
+    icon: "XCircle",
+    style: "bg-red-100 text-red-800 border-red-300",
   },
   annule: {
     label: "Annulé",
@@ -98,7 +102,6 @@ export const StatutIcon: React.FC<{ iconName: string; className?: string }> = ({
     FileText: <FileText className={className} />,
     TrendingUp: <TrendingUp className={className} />,
     AlertTriangle: <AlertTriangle className={className} />,
-    Handshake: <Handshake className={className} />,
     XCircle: <XCircle className={className} />,
   };
   return <>{icons[iconName] || <AlertCircle className={className} />}</>;

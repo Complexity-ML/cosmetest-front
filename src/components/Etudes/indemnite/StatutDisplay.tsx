@@ -13,18 +13,20 @@ interface StatutDisplayProps {
   onUpdateStatut: (volontaire: VolontaireAssigne, nouveauStatut: string) => Promise<void>;
 }
 
+const SORTIE_STATUTS = ["sortie_etude", "ni", "penalite"];
+
 const StatutDisplay: React.FC<StatutDisplayProps> = ({ volontaire, updateStatus, onUpdateStatut }) => {
   const { t } = useTranslation();
   const [isEditing, setIsEditing] = useState(false);
   const [tempStatut, setTempStatut] = useState(volontaire.statut || "inscrit");
+  const [tempNote, setTempNote] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+  const noteRef = useRef<HTMLInputElement>(null);
 
   const statutDisplay = getStatutDisplay(volontaire.statut);
 
-  // Quand on passe en mode édition, focus l'input
   useEffect(() => {
     if (isEditing && inputRef.current) {
-      // Petit délai pour s'assurer que l'input est rendu
       const timer = setTimeout(() => {
         inputRef.current?.focus();
         inputRef.current?.select();
@@ -33,15 +35,33 @@ const StatutDisplay: React.FC<StatutDisplayProps> = ({ volontaire, updateStatus,
     }
   }, [isEditing]);
 
+  // Focus la note quand on sélectionne un statut de sortie
+  useEffect(() => {
+    if (isEditing && SORTIE_STATUTS.includes(tempStatut) && noteRef.current) {
+      const timer = setTimeout(() => noteRef.current?.focus(), 50);
+      return () => clearTimeout(timer);
+    }
+  }, [isEditing, tempStatut]);
+
+  const handleSelectStatut = (key: string) => {
+    setTempStatut(key);
+    setTempNote("");
+  };
+
   const handleSaveStatut = async () => {
-    if (tempStatut !== volontaire.statut) {
-      await onUpdateStatut(volontaire, tempStatut);
+    let finalStatut = tempStatut;
+    if (SORTIE_STATUTS.includes(tempStatut) && tempNote.trim()) {
+      finalStatut = `${tempStatut} : ${tempNote.trim()}`;
+    }
+    if (finalStatut !== volontaire.statut) {
+      await onUpdateStatut(volontaire, finalStatut);
     }
     setIsEditing(false);
   };
 
   const handleCancelEdit = () => {
     setTempStatut(volontaire.statut || "inscrit");
+    setTempNote("");
     setIsEditing(false);
   };
 
@@ -54,24 +74,6 @@ const StatutDisplay: React.FC<StatutDisplayProps> = ({ volontaire, updateStatus,
         </Badge>
 
         <div className="space-y-2">
-          <Input
-            ref={inputRef}
-            type="text"
-            value={tempStatut}
-            onChange={(e) => setTempStatut(e.target.value)}
-            placeholder="Ex: surbook, penalite : retard, parrainage"
-            className="text-xs"
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                handleSaveStatut();
-              }
-              if (e.key === "Escape") {
-                handleCancelEdit();
-              }
-            }}
-          />
-
           <div className="flex flex-wrap gap-1">
             {Object.entries(STATUT_CONFIG)
               .filter(([key]) => key !== "annule")
@@ -79,16 +81,49 @@ const StatutDisplay: React.FC<StatutDisplayProps> = ({ volontaire, updateStatus,
                 <Button
                   key={key}
                   type="button"
-                  onClick={() => setTempStatut(key)}
-                  variant="outline"
+                  onClick={() => handleSelectStatut(key)}
+                  variant={tempStatut === key ? "default" : "outline"}
                   size="sm"
                   className="text-xs"
                   title={`Utiliser: ${config.label}`}
                 >
-                  <StatutIcon iconName={config.icon} className="w-3 h-3" />
+                  <StatutIcon iconName={config.icon} className="w-3 h-3 mr-1" />
+                  {config.label}
                 </Button>
               ))}
           </div>
+
+          {/* Champ note pour les statuts de sortie */}
+          {SORTIE_STATUTS.includes(tempStatut) && (
+            <Input
+              ref={noteRef}
+              type="text"
+              value={tempNote}
+              onChange={(e) => setTempNote(e.target.value)}
+              placeholder={`Note pour ${STATUT_CONFIG[tempStatut]?.label || tempStatut}...`}
+              className="text-xs"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") { e.preventDefault(); handleSaveStatut(); }
+                if (e.key === "Escape") handleCancelEdit();
+              }}
+            />
+          )}
+
+          {/* Champ libre pour statut personnalisé (si pas un statut de sortie) */}
+          {!SORTIE_STATUTS.includes(tempStatut) && (
+            <Input
+              ref={inputRef}
+              type="text"
+              value={tempStatut}
+              onChange={(e) => setTempStatut(e.target.value)}
+              placeholder="Ou saisir un statut libre..."
+              className="text-xs"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") { e.preventDefault(); handleSaveStatut(); }
+                if (e.key === "Escape") handleCancelEdit();
+              }}
+            />
+          )}
 
           <div className="flex space-x-1">
             <Button type="button" onClick={handleSaveStatut} variant="default" size="sm">
@@ -121,6 +156,7 @@ const StatutDisplay: React.FC<StatutDisplayProps> = ({ volontaire, updateStatus,
           type="button"
           onClick={() => {
             setTempStatut(volontaire.statut || "inscrit");
+            setTempNote("");
             setIsEditing(true);
           }}
           variant="link"
