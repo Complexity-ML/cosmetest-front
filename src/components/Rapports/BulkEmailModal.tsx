@@ -3,6 +3,7 @@ import { Mail, Copy, Eye, FileSpreadsheet } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import * as XLSX from 'xlsx';
 import emailService from '../../services/emailService';
+import { normalizePhototype } from '@/utils/formatters';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -166,13 +167,15 @@ const BulkEmailModal: React.FC<BulkEmailModalProps> = ({
 
       // Créer un onglet par groupe
       groups.forEach((group, index) => {
-        const headers = ['N°', 'Nom', 'Prénom', 'Email'];
+        const headers = ['N°', 'Nom', 'Prénom', 'Email', 'Âge', 'Phototype'];
 
-        const dataRows = group.map((vol, rowIdx) => [
+        const dataRows = group.map((vol: any, rowIdx) => [
           rowIdx + 1 + (index * BATCH_SIZE),
           vol.nom || '',
           vol.prenom || '',
-          vol.email || ''
+          vol.email || '',
+          vol.age != null ? vol.age : '',
+          normalizePhototype(vol.phototype || vol.details?.phototype) || ''
         ]);
 
         const wsData = [headers, ...dataRows];
@@ -200,7 +203,9 @@ const BulkEmailModal: React.FC<BulkEmailModalProps> = ({
           { wch: 6 },   // N°
           { wch: 20 },  // Nom
           { wch: 20 },  // Prénom
-          { wch: 35 }   // Email
+          { wch: 35 },  // Email
+          { wch: 6 },   // Âge
+          { wch: 14 }   // Phototype
         ];
 
         const sheetName = groups.length === 1

@@ -98,6 +98,41 @@ export const formatDateToFrench = (dateString: string | null | undefined): strin
 };
 
 /**
+ * Normalise n'importe quel format de phototype vers "Phototype N" (chiffres arabes)
+ * Gère : "II"→"Phototype 2", "3"→"Phototype 3", "Phototype III"→"Phototype 3", etc.
+ */
+export const normalizePhototype = (raw: string | number | null | undefined): string => {
+  if (!raw) return '';
+  const s = String(raw).trim();
+  const romanToNum: Record<string, string> = {
+    'I': '1', 'II': '2', 'III': '3', 'IV': '4', 'V': '5', 'VI': '6',
+  };
+  // Chiffre arabe seul
+  if (/^[1-6]$/.test(s)) return `Phototype ${s}`;
+  // Chiffre romain seul
+  const upper = s.toUpperCase();
+  if (romanToNum[upper]) return `Phototype ${romanToNum[upper]}`;
+  // Déjà au bon format "Phototype N"
+  const matchNum = s.match(/^Phototype\s+([1-6])$/i);
+  if (matchNum) return `Phototype ${matchNum[1]}`;
+  // Format "Phototype III" ou similaire
+  const matchRoman = s.match(/(?:phototype[_ ]*)([IViv]+)\s*$/i);
+  if (matchRoman) {
+    const num = romanToNum[matchRoman[1].toUpperCase()];
+    if (num) return `Phototype ${num}`;
+  }
+  // Extraire un chiffre ou romain en fin de chaîne
+  const matchEnd = s.match(/(\d+|[IViv]+)\s*$/);
+  if (matchEnd) {
+    const extracted = matchEnd[1];
+    if (/^[1-6]$/.test(extracted)) return `Phototype ${extracted}`;
+    const num = romanToNum[extracted.toUpperCase()];
+    if (num) return `Phototype ${num}`;
+  }
+  return s;
+};
+
+/**
  * Formate un phototype pour l'affichage
  */
 export const formatPhototype = (phototype: string | number | null | undefined): string => {

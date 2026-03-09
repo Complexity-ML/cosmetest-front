@@ -13,6 +13,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
+import { normalizePhototype } from '@/utils/formatters'
 
 interface Volontaire {
   id?: string | number
@@ -251,7 +252,7 @@ const VolontairesTable = ({ volontaires, onArchive }: VolontairesTableProps) => 
                   </TableCell>
                   <TableCell>
                     <span className="text-sm text-gray-700">
-                      {volontaire.phototype || '-'}
+                      {normalizePhototype(volontaire.phototype) || '-'}
                     </span>
                   </TableCell>
                   <TableCell className="text-right">
