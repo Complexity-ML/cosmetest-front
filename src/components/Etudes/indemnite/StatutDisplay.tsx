@@ -19,9 +19,7 @@ const StatutDisplay: React.FC<StatutDisplayProps> = ({ volontaire, updateStatus,
   const { t } = useTranslation();
   const [isEditing, setIsEditing] = useState(false);
   const [tempStatut, setTempStatut] = useState(volontaire.statut || "inscrit");
-  const [tempNote, setTempNote] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
-  const noteRef = useRef<HTMLInputElement>(null);
 
   const statutDisplay = getStatutDisplay(volontaire.statut);
 
@@ -35,24 +33,16 @@ const StatutDisplay: React.FC<StatutDisplayProps> = ({ volontaire, updateStatus,
     }
   }, [isEditing]);
 
-  // Focus la note quand on sélectionne un statut de sortie
-  useEffect(() => {
-    if (isEditing && SORTIE_STATUTS.includes(tempStatut) && noteRef.current) {
-      const timer = setTimeout(() => noteRef.current?.focus(), 50);
-      return () => clearTimeout(timer);
-    }
-  }, [isEditing, tempStatut]);
-
   const handleSelectStatut = (key: string) => {
-    setTempStatut(key);
-    setTempNote("");
+    if (SORTIE_STATUTS.includes(key)) {
+      setTempStatut(`${key} : `);
+    } else {
+      setTempStatut(key);
+    }
   };
 
   const handleSaveStatut = async () => {
-    let finalStatut = tempStatut;
-    if (SORTIE_STATUTS.includes(tempStatut) && tempNote.trim()) {
-      finalStatut = `${tempStatut} : ${tempNote.trim()}`;
-    }
+    const finalStatut = tempStatut.trim();
     if (finalStatut !== volontaire.statut) {
       await onUpdateStatut(volontaire, finalStatut);
     }
@@ -61,7 +51,6 @@ const StatutDisplay: React.FC<StatutDisplayProps> = ({ volontaire, updateStatus,
 
   const handleCancelEdit = () => {
     setTempStatut(volontaire.statut || "inscrit");
-    setTempNote("");
     setIsEditing(false);
   };
 
@@ -82,7 +71,7 @@ const StatutDisplay: React.FC<StatutDisplayProps> = ({ volontaire, updateStatus,
                   key={key}
                   type="button"
                   onClick={() => handleSelectStatut(key)}
-                  variant={tempStatut === key ? "default" : "outline"}
+                  variant={tempStatut === key || tempStatut.startsWith(`${key} : `) ? "default" : "outline"}
                   size="sm"
                   className="text-xs"
                   title={`Utiliser: ${config.label}`}
@@ -93,37 +82,18 @@ const StatutDisplay: React.FC<StatutDisplayProps> = ({ volontaire, updateStatus,
               ))}
           </div>
 
-          {/* Champ note pour les statuts de sortie */}
-          {SORTIE_STATUTS.includes(tempStatut) && (
-            <Input
-              ref={noteRef}
-              type="text"
-              value={tempNote}
-              onChange={(e) => setTempNote(e.target.value)}
-              placeholder={`Note pour ${STATUT_CONFIG[tempStatut]?.label || tempStatut}...`}
-              className="text-xs"
-              onKeyDown={(e) => {
-                if (e.key === "Enter") { e.preventDefault(); handleSaveStatut(); }
-                if (e.key === "Escape") handleCancelEdit();
-              }}
-            />
-          )}
-
-          {/* Champ libre pour statut personnalisé (si pas un statut de sortie) */}
-          {!SORTIE_STATUTS.includes(tempStatut) && (
-            <Input
-              ref={inputRef}
-              type="text"
-              value={tempStatut}
-              onChange={(e) => setTempStatut(e.target.value)}
-              placeholder="Ou saisir un statut libre..."
-              className="text-xs"
-              onKeyDown={(e) => {
-                if (e.key === "Enter") { e.preventDefault(); handleSaveStatut(); }
-                if (e.key === "Escape") handleCancelEdit();
-              }}
-            />
-          )}
+          <Input
+            ref={inputRef}
+            type="text"
+            value={tempStatut}
+            onChange={(e) => setTempStatut(e.target.value)}
+            placeholder="Saisir un statut..."
+            className="text-xs"
+            onKeyDown={(e) => {
+              if (e.key === "Enter") { e.preventDefault(); handleSaveStatut(); }
+              if (e.key === "Escape") handleCancelEdit();
+            }}
+          />
 
           <div className="flex space-x-1">
             <Button type="button" onClick={handleSaveStatut} variant="default" size="sm">
@@ -156,7 +126,6 @@ const StatutDisplay: React.FC<StatutDisplayProps> = ({ volontaire, updateStatus,
           type="button"
           onClick={() => {
             setTempStatut(volontaire.statut || "inscrit");
-            setTempNote("");
             setIsEditing(true);
           }}
           variant="link"

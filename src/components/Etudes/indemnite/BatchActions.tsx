@@ -132,7 +132,7 @@ const BatchActions: React.FC<BatchActionsProps> = ({
           type="text"
           value={noteValue}
           onChange={(e) => onNoteChange(e.target.value)}
-          placeholder={`Note pour ${STATUT_CONFIG[currentStatut]?.label || currentStatut}...`}
+          placeholder={`${STATUT_CONFIG[currentStatut]?.label || currentStatut} : noter ici...`}
           className="text-xs"
           autoFocus
         />
