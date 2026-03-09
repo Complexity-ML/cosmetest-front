@@ -480,7 +480,7 @@ export const useEtudeDetail = ({ id, navigate }: UseEtudeDetailParams): UseEtude
   }, [fetchEtude]);
 
   useEffect(() => {
-    if (activeTab === 'rdvs') {
+    if (activeTab === 'rdvs' || activeTab === 'indemnites') {
       fetchRdvs();
     }
   }, [activeTab, fetchRdvs]);

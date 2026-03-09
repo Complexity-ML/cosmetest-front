@@ -1591,7 +1591,11 @@
     "statusAnnule": "Annulé",
     "sortByName": "Trier par ordre alphabétique",
     "sortBySubjectNumber": "Trier par numéro de sujet",
-    "sortByIndemnity": "Trier par indemnité"
+    "sortByIndemnity": "Trier par indemnité",
+    "changeIV": "Changer IV",
+    "changeStatus": "Changer statut",
+    "newIVFor": "Nouvelle IV pour",
+    "newStatusFor": "Nouveau statut pour"
   },
   "habitsCosmetiques": {
     "shoppingHabits": "Habitudes d'achat",
