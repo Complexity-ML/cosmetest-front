@@ -144,12 +144,17 @@ const ExcelExport = ({
       const dateMandat = new Date().toLocaleDateString('fr-FR');
       const libelle = `Indemnite ${etude?.ref || ''} - ${nomComplet}`;
 
+      // Nettoyer les retours à la ligne et espaces parasites des données bancaires
+      const cleanStr = (s: string) => s.replace(/[\r\n\t]+/g, '').trim();
+      const iban = bankInfo?.iban ? cleanStr(infoBancaireService.validation.formatIban(bankInfo.iban)) : '';
+      const bic = bankInfo?.bic ? cleanStr(bankInfo.bic) : '';
+
       return {
         'RUM': rum,
         'Date mandat': dateMandat,
         'Nom': nomComplet,
-        'IBAN': bankInfo?.iban ? infoBancaireService.validation.formatIban(bankInfo.iban) : '',
-        'BIC': bankInfo?.bic || '',
+        'IBAN': iban,
+        'BIC': bic,
         'Montant': paiement.iv || 0,
         'Libelle': libelle
       };
@@ -188,9 +193,9 @@ const ExcelExport = ({
         headers.join(';'),
         ...excelData.map(row => headers.map(h => {
           const val = (row as any)[h];
-          // Échapper les valeurs contenant des point-virgules ou guillemets
-          const str = String(val ?? '');
-          if (str.includes(';') || str.includes('"') || str.includes('\n')) {
+          // Nettoyer les retours à la ligne et échapper si nécessaire
+          const str = String(val ?? '').replace(/[\r\n\t]+/g, ' ').trim();
+          if (str.includes(';') || str.includes('"')) {
             return `"${str.replace(/"/g, '""')}"`;
           }
           return str;
