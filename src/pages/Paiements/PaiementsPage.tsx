@@ -455,7 +455,7 @@ const PaiementsPage = () => {
     }
 
     if (showOnlyUnpaid) {
-      filtered = filtered.filter(p => p.paye === 0);
+      filtered = filtered.filter(p => Number(p.paye) === 0);
     }
 
     return filtered;
@@ -467,11 +467,11 @@ const PaiementsPage = () => {
     const paiementsAnnules = paiements.filter(p => isVolontaireAnnule(p.idVolontaire, p.idEtude));
     const paiementsAvecIv = paiementsActifs.filter(p => (p.iv || 0) > 0);
     const total = paiementsFiltres.length;
-    const payes = paiementsAvecIv.filter(p => p.paye === 1).length;
-    const nonPayes = paiementsAvecIv.filter(p => p.paye === 0).length;
-    const enAttente = paiementsAvecIv.filter(p => p.paye === 2).length;
+    const payes = paiementsAvecIv.filter(p => Number(p.paye) === 1).length;
+    const nonPayes = paiementsAvecIv.filter(p => Number(p.paye) === 0).length;
+    const enAttente = paiementsAvecIv.filter(p => Number(p.paye) === 2).length;
     const totalMontant = paiementsAvecIv.reduce((sum, p) => sum + (p.iv || 0), 0);
-    const montantPaye = paiementsAvecIv.filter(p => p.paye === 1).reduce((sum, p) => sum + (p.iv || 0), 0);
+    const montantPaye = paiementsAvecIv.filter(p => Number(p.paye) === 1).reduce((sum, p) => sum + (p.iv || 0), 0);
 
     return {
       total,
@@ -514,7 +514,7 @@ const PaiementsPage = () => {
   const markAllAsPaidBatch = async () => {
     if (!selectedEtudeData || !paiements || paiements.length === 0) return;
 
-    const unpaidCount = paiements.filter(p => p.paye !== 1 && !isVolontaireAnnule(p.idVolontaire, p.idEtude)).length;
+    const unpaidCount = paiements.filter(p => Number(p.paye) !== 1 && !isVolontaireAnnule(p.idVolontaire, p.idEtude)).length;
     const annulesCount = paiements.filter(p => isVolontaireAnnule(p.idVolontaire, p.idEtude)).length;
     if (unpaidCount === 0) { setError(t('payments.allPaid')); return; }
 
@@ -549,7 +549,7 @@ const PaiementsPage = () => {
   const markAllAsUnpaidBatch = async () => {
     if (!selectedEtudeData || !paiements || paiements.length === 0) return;
 
-    const paidVolunteers = paiements.filter(p => p.paye === 1 && !isVolontaireAnnule(p.idVolontaire, p.idEtude));
+    const paidVolunteers = paiements.filter(p => Number(p.paye) === 1 && !isVolontaireAnnule(p.idVolontaire, p.idEtude));
     if (paidVolunteers.length === 0) { setError('Aucun volontaire payé à modifier.'); return; }
 
     const confirmed = window.confirm(
