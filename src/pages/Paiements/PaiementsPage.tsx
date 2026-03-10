@@ -828,7 +828,7 @@ const PaiementsPage = () => {
                 const totalVol = payes + nonPayes + (summary?.enAttente ?? 0);
                 const montantTotal = summary?.montantTotal ?? summary?.montantPaye ?? 0;
                 const overdue = isEtudeOverdue(etude);
-                const allPaid = Number(etude.paye) === 2 || (totalVol > 0 && nonPayes === 0);
+                const allPaid = Number(etude.paye) === 2;
 
                 return (
                   <TableRow
@@ -872,13 +872,9 @@ const PaiementsPage = () => {
                         <Badge variant="secondary" className="bg-green-100 text-green-700 border-green-200">
                           Payé
                         </Badge>
-                      ) : nonPayes > 0 ? (
+                      ) : (
                         <Badge variant="secondary" className={`${overdue ? 'bg-red-200 text-red-800 border-red-300' : 'bg-red-100 text-red-700 border-red-200'}`}>
                           Non payé
-                        </Badge>
-                      ) : (
-                        <Badge variant="secondary" className="bg-gray-100 text-gray-600 border-gray-200">
-                          -
                         </Badge>
                       )}
                     </TableCell>
