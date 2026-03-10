@@ -106,17 +106,19 @@ const VolunteerExcelExport: React.FC<VolunteerExcelExportProps> = ({
     const arabicToRoman: Record<string, string> = {
       '1': 'I', '2': 'II', '3': 'III', '4': 'IV', '5': 'V', '6': 'VI'
     };
-    const validRomans = ['I', 'II', 'III', 'IV', 'V', 'VI'];
+    const validRomans = ['VI', 'IV', 'V', 'III', 'II', 'I'];
     // Déjà un romain valide seul
     if (validRomans.includes(str)) return str;
     // Chiffre arabe seul
     if (arabicToRoman[str]) return arabicToRoman[str];
-    // Format "Phototype X ..." avec arabe (ignore tout texte après le chiffre)
-    const matchArabic = str.match(/PHOTOTYPE\s*(\d)/);
-    if (matchArabic && arabicToRoman[matchArabic[1]]) return arabicToRoman[matchArabic[1]];
-    // Format "Phototype III ..." avec romain (ignore tout texte après le romain)
-    const matchRoman = str.match(/PHOTOTYPE\s*(VI|IV|V?I{1,3})/);
-    if (matchRoman && validRomans.includes(matchRoman[1])) return matchRoman[1];
+    // Extraire un romain n'importe où dans la chaîne (ex: "II - Peau claire", "Phototype III blabla")
+    // Tester du plus long au plus court pour éviter de matcher "I" dans "III"
+    for (const roman of validRomans) {
+      const regex = new RegExp(`(?:^|[\\s_-])${roman}(?:[\\s_-]|$)`);
+      if (regex.test(str) || str.startsWith(roman + ' ') || str.startsWith(roman + '-') || str === roman) {
+        return roman;
+      }
+    }
     // Essayer d'extraire un chiffre arabe n'importe où
     const matchDigit = str.match(/(\d)/);
     if (matchDigit && arabicToRoman[matchDigit[1]]) return arabicToRoman[matchDigit[1]];
