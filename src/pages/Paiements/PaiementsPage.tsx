@@ -295,10 +295,10 @@ const PaiementsPage = () => {
   const normalizePaiementsData = (paiementsData: any[]) => {
     const normalized = paiementsData.map((paiement: any) => ({
       ...paiement,
-      idGroupe: paiement.idGroupe ?? 0,
-      iv: paiement.iv ?? 0,
-      numsujet: paiement.numsujet ?? 0,
-      paye: paiement.paye ?? 0,
+      idGroupe: Number(paiement.idGroupe) || 0,
+      iv: Number(paiement.iv) || 0,
+      numsujet: Number(paiement.numsujet) || 0,
+      paye: Number(paiement.paye) || 0,
       statut: paiement.statut || 'actif',
       key: `${paiement.idEtude}_${paiement.idVolontaire}`,
       isComplete: !!(paiement.idEtude && paiement.idVolontaire)
@@ -828,7 +828,7 @@ const PaiementsPage = () => {
                 const totalVol = payes + nonPayes + (summary?.enAttente ?? 0);
                 const montantTotal = summary?.montantTotal ?? summary?.montantPaye ?? 0;
                 const overdue = isEtudeOverdue(etude);
-                const allPaid = Number(etude.paye) === 2;
+                const allPaid = Number(etude.paye) === 2 || (totalVol > 0 && nonPayes === 0);
 
                 return (
                   <TableRow
