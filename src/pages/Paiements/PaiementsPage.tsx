@@ -826,6 +826,7 @@ const PaiementsPage = () => {
                 <TableHead className="text-center">Volontaires</TableHead>
                 <TableHead className="text-center">Payés</TableHead>
                 <TableHead className="text-center">Non payés</TableHead>
+                <TableHead className="text-center">Annulés</TableHead>
                 <TableHead className="text-right">Montant total</TableHead>
                 <TableHead className="text-center">Statut</TableHead>
               </TableRow>
@@ -835,6 +836,7 @@ const PaiementsPage = () => {
                 const summary = paiementsSummaryByEtude[etude.idEtude as string | number];
                 const payes = summary?.payes ?? 0;
                 const nonPayes = summary?.nonPayes ?? 0;
+                const annules = summary?.annules ?? 0;
                 const totalVol = payes + nonPayes + (summary?.enAttente ?? 0);
                 const montantTotal = summary?.montantTotal ?? summary?.montantPaye ?? 0;
                 const overdue = isEtudeOverdue(etude);
@@ -873,6 +875,14 @@ const PaiementsPage = () => {
                         </Badge>
                       )}
                       {nonPayes === 0 && '-'}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {annules > 0 && (
+                        <Badge variant="secondary" className="bg-orange-100 text-orange-700 border-orange-200">
+                          {annules}
+                        </Badge>
+                      )}
+                      {annules === 0 && '-'}
                     </TableCell>
                     <TableCell className="text-right">
                       {montantTotal > 0 ? `${montantTotal} EUR` : '-'}
