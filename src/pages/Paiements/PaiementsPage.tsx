@@ -219,11 +219,11 @@ const PaiementsPage = () => {
       if (Number.isInteger(statutRecherche)) {
         if (statutRecherche === 0) {
           filtered = filtered.filter(etude =>
-            etude.paye === 0 || (etude.idEtude != null && hasStatutForEtude(etude.idEtude, statutRecherche))
+            Number(etude.paye) === 0 || (etude.idEtude != null && hasStatutForEtude(etude.idEtude, statutRecherche))
           );
         } else if (statutRecherche === 2) {
           filtered = filtered.filter(etude =>
-            etude.paye === 2 || (etude.idEtude != null && hasStatutForEtude(etude.idEtude, statutRecherche))
+            Number(etude.paye) === 2 || (etude.idEtude != null && hasStatutForEtude(etude.idEtude, statutRecherche))
           );
         } else {
           filtered = filtered.filter(etude => etude.idEtude != null && hasStatutForEtude(etude.idEtude, statutRecherche));
@@ -243,7 +243,7 @@ const PaiementsPage = () => {
 
   // Vérifier si une étude est > 6 semaines avec des impayés (pas rouge si statut payé)
   const isEtudeOverdue = useCallback((etude: Etude): boolean => {
-    if (etude.paye === 2) return false; // Étude payée = pas de surbrillance rouge
+    if (Number(etude.paye) === 2) return false; // Étude payée = pas de surbrillance rouge
     if (!etude.dateFin) return false;
     const dateFin = new Date(etude.dateFin);
     const sixWeeksAgo = new Date();
@@ -828,7 +828,7 @@ const PaiementsPage = () => {
                 const totalVol = payes + nonPayes + (summary?.enAttente ?? 0);
                 const montantTotal = summary?.montantTotal ?? summary?.montantPaye ?? 0;
                 const overdue = isEtudeOverdue(etude);
-                const allPaid = etude.paye === 2;
+                const allPaid = Number(etude.paye) === 2;
 
                 return (
                   <TableRow
