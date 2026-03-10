@@ -187,7 +187,7 @@ const etudeService = {
   checkAndUpdatePayeStatus: async (idEtude: number, paiements: any[]): Promise<number> => {
     try {
       // IMPORTANT: filtrer uniquement les paiements de cette étude
-      const paiementsEtude = (paiements || []).filter(p => p.idEtude === idEtude);
+      const paiementsEtude = (paiements || []).filter(p => Number(p.idEtude) === Number(idEtude));
 
       if (paiementsEtude.length === 0) {
         await etudeService.updatePayeStatus(idEtude, 0);

@@ -828,7 +828,7 @@ const PaiementsPage = () => {
                 const totalVol = payes + nonPayes + (summary?.enAttente ?? 0);
                 const montantTotal = summary?.montantTotal ?? summary?.montantPaye ?? 0;
                 const overdue = isEtudeOverdue(etude);
-                const allPaid = etude.paye === 2 || (totalVol > 0 && nonPayes === 0);
+                const allPaid = etude.paye === 2;
 
                 return (
                   <TableRow
