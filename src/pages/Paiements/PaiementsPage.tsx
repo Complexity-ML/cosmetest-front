@@ -516,7 +516,18 @@ const PaiementsPage = () => {
 
     const unpaidCount = paiements.filter(p => Number(p.paye) !== 1 && !isVolontaireAnnule(p.idVolontaire, p.idEtude)).length;
     const annulesCount = paiements.filter(p => isVolontaireAnnule(p.idVolontaire, p.idEtude)).length;
-    if (unpaidCount === 0) { setError(t('payments.allPaid')); return; }
+    if (unpaidCount === 0) {
+      // Tous déjà payés → s'assurer que etude.paye = 2 en base
+      if (selectedEtudeData.idEtude != null && Number(selectedEtudeData.paye) !== 2) {
+        try {
+          const numericId = typeof selectedEtudeData.idEtude === 'string' ? parseInt(String(selectedEtudeData.idEtude), 10) : selectedEtudeData.idEtude;
+          await etudeService.updatePayeStatus(numericId, 2);
+          setEtudes(prev => prev.map(e => e.idEtude === selectedEtudeData.idEtude ? { ...e, paye: 2 } : e));
+        } catch (e) {}
+      }
+      setError(t('payments.allPaid'));
+      return;
+    }
 
     let confirmMessage = t('payments.markAllPaidConfirm', { count: unpaidCount, ref: selectedEtudeData.ref });
     if (annulesCount > 0) confirmMessage += `\n\n${t('payments.cancelledWillBeIgnored', { count: annulesCount })}`;
