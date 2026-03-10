@@ -139,18 +139,24 @@ export const formatPhototype = (phototype: string | number | null | undefined): 
   if (!phototype) return 'Non spécifié';
 
   const phototypes: Record<string, string> = {
-    '1': 'I - Peau très claire, cheveux blonds ou roux, yeux clairs, taches de rousseur',
-    '2': 'II - Peau claire, cheveux blonds à châtains, yeux clairs à noisette',
-    '3': 'III - Peau claire à mate, cheveux châtains, yeux de toutes couleurs',
-    '4': 'IV - Peau mate, cheveux châtains foncés à bruns, yeux foncés',
-    '5': 'V - Peau foncée, cheveux foncés, yeux foncés',
-    '6': 'VI - Peau noire, cheveux noirs, yeux foncés',
-    'I': 'I - Peau très claire, cheveux blonds ou roux, yeux clairs, taches de rousseur',
-    'II': 'II - Peau claire, cheveux blonds à châtains, yeux clairs à noisette',
-    'III': 'III - Peau claire à mate, cheveux châtains, yeux de toutes couleurs',
-    'IV': 'IV - Peau mate, cheveux châtains foncés à bruns, yeux foncés',
-    'V': 'V - Peau foncée, cheveux foncés, yeux foncés',
-    'VI': 'VI - Peau noire, cheveux noirs, yeux foncés'
+    'Phototype 1': 'Phototype 1 - Peau très claire, cheveux blonds ou roux, yeux clairs, taches de rousseur',
+    'Phototype 2': 'Phototype 2 - Peau claire, cheveux blonds à châtains, yeux clairs à noisette',
+    'Phototype 3': 'Phototype 3 - Peau claire à mate, cheveux châtains, yeux de toutes couleurs',
+    'Phototype 4': 'Phototype 4 - Peau mate, cheveux châtains foncés à bruns, yeux foncés',
+    'Phototype 5': 'Phototype 5 - Peau foncée, cheveux foncés, yeux foncés',
+    'Phototype 6': 'Phototype 6 - Peau noire, cheveux noirs, yeux foncés',
+    '1': 'Phototype 1 - Peau très claire',
+    '2': 'Phototype 2 - Peau claire',
+    '3': 'Phototype 3 - Peau claire à mate',
+    '4': 'Phototype 4 - Peau mate',
+    '5': 'Phototype 5 - Peau foncée',
+    '6': 'Phototype 6 - Peau noire',
+    'I': 'Phototype 1 - Peau très claire',
+    'II': 'Phototype 2 - Peau claire',
+    'III': 'Phototype 3 - Peau claire à mate',
+    'IV': 'Phototype 4 - Peau mate',
+    'V': 'Phototype 5 - Peau foncée',
+    'VI': 'Phototype 6 - Peau noire'
   };
 
   // Si c'est un nombre ou une chaîne numérique

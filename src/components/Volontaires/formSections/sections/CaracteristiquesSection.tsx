@@ -181,12 +181,12 @@ const CaracteristiquesSection = ({ formData, onChange }: any) => {
             className="form-select block w-full"
           >
             <option value="">{t('common.select')}</option>
-            <option value="I">{t('volunteers.phototypeOptions.I')}</option>
-            <option value="II">{t('volunteers.phototypeOptions.II')}</option>
-            <option value="III">{t('volunteers.phototypeOptions.III')}</option>
-            <option value="IV">{t('volunteers.phototypeOptions.IV')}</option>
-            <option value="V">{t('volunteers.phototypeOptions.V')}</option>
-            <option value="VI">{t('volunteers.phototypeOptions.VI')}</option>
+            <option value="Phototype 1">Phototype 1 - Peau très claire</option>
+            <option value="Phototype 2">Phototype 2 - Peau claire</option>
+            <option value="Phototype 3">Phototype 3 - Peau claire à mate</option>
+            <option value="Phototype 4">Phototype 4 - Peau mate</option>
+            <option value="Phototype 5">Phototype 5 - Peau foncée</option>
+            <option value="Phototype 6">Phototype 6 - Peau noire</option>
           </select>
         </div>
 

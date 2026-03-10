@@ -186,13 +186,16 @@ const etudeService = {
 
   checkAndUpdatePayeStatus: async (idEtude: number, paiements: any[]): Promise<number> => {
     try {
-      if (!paiements || paiements.length === 0) {
+      // IMPORTANT: filtrer uniquement les paiements de cette étude
+      const paiementsEtude = (paiements || []).filter(p => p.idEtude === idEtude);
+
+      if (paiementsEtude.length === 0) {
         await etudeService.updatePayeStatus(idEtude, 0);
         return 0;
       }
 
       // Exclure les volontaires avec IV=0 (pas d'indemnité à payer)
-      const paiementsAvecIv = paiements.filter(p => (p.iv || 0) > 0);
+      const paiementsAvecIv = paiementsEtude.filter(p => (p.iv || 0) > 0);
 
       // Si aucun volontaire n'a d'IV, l'étude n'a rien à payer
       if (paiementsAvecIv.length === 0) {

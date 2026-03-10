@@ -106,12 +106,13 @@ ${finalMessage}`;
         .map(v => v.email!.trim())
         .join('; ');
 
-      await navigator.clipboard.writeText(emails);
-      return true;
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(emails);
+        return true;
+      }
+      throw new Error('Clipboard API not available');
     } catch (error) {
-      console.error('Erreur lors de la copie des emails:', error);
-
-      // Fallback pour les navigateurs qui ne supportent pas clipboard API
+      // Fallback pour HTTP ou navigateurs sans clipboard API
       const textArea = document.createElement('textarea');
       textArea.value = volontaires
         .filter(v => v.email && v.email.trim())

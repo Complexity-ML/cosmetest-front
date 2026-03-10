@@ -19,34 +19,35 @@ const matchOption = (dbValue: any, options: string[]): string => {
   return match || val;
 };
 
-// Normalise n'importe quel format de phototype vers "I","II",..."VI"
-// Gère : "1"→"I", "III"→"III", "Phototype III"→"III", "Phototype 3"→"III", "phototype_3"→"III", etc.
+// Normalise n'importe quel format de phototype vers "Phototype 1"..."Phototype 6"
+// Gère : "I"→"Phototype 1", "3"→"Phototype 3", "Phototype III"→"Phototype 3", etc.
 const normalizePhototype = (raw: any): string => {
   if (!raw) return '';
   const s = String(raw).trim();
-  // Mapping numérique direct
-  const numToRoman: Record<string, string> = {
-    '1': 'I', '2': 'II', '3': 'III', '4': 'IV', '5': 'V', '6': 'VI',
+  const romanToNum: Record<string, string> = {
+    'I': '1', 'II': '2', 'III': '3', 'IV': '4', 'V': '5', 'VI': '6',
   };
-  if (numToRoman[s]) return numToRoman[s];
-  // Déjà un chiffre romain valide
-  const validRomans = ['I', 'II', 'III', 'IV', 'V', 'VI'];
+  // Déjà au bon format
+  if (/^Phototype [1-6]$/i.test(s)) return `Phototype ${s.slice(-1)}`;
+  // Chiffre arabe seul
+  if (/^[1-6]$/.test(s)) return `Phototype ${s}`;
+  // Chiffre romain seul
   const upper = s.toUpperCase();
-  if (validRomans.includes(upper)) return upper;
-  // Extraire le chiffre ou romain d'une chaîne plus longue (ex: "Phototype III", "Phototype 3")
+  if (romanToNum[upper]) return `Phototype ${romanToNum[upper]}`;
+  // Extraire le chiffre ou romain d'une chaîne plus longue
   const match = s.match(/(\d+|[IViv]+)\s*$/);
   if (match) {
     const extracted = match[1];
-    if (numToRoman[extracted]) return numToRoman[extracted];
-    const extractedUpper = extracted.toUpperCase();
-    if (validRomans.includes(extractedUpper)) return extractedUpper;
+    if (/^[1-6]$/.test(extracted)) return `Phototype ${extracted}`;
+    const num = romanToNum[extracted.toUpperCase()];
+    if (num) return `Phototype ${num}`;
   }
   return s;
 };
 
 // Options valides pour chaque select du formulaire
 const SELECT_OPTIONS = {
-  phototype: ['I', 'II', 'III', 'IV', 'V', 'VI'],
+  phototype: ['Phototype 1', 'Phototype 2', 'Phototype 3', 'Phototype 4', 'Phototype 5', 'Phototype 6'],
   typePeauVisage: ['Normale', 'Sèche', 'Grasse', 'Mixte', 'Mixte à tendance grasse', 'Mixte à tendance sèche', 'Sensible'],
   carnation: ['Très claire', 'Claire', 'Moyenne', 'Mate', 'Foncée', 'Très foncée'],
   sensibiliteCutanee: ['Peau sensible', 'Peau peu sensible', 'Peau non sensible'],

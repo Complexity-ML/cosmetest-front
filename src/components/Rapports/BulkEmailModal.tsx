@@ -167,8 +167,6 @@ const BulkEmailModal: React.FC<BulkEmailModalProps> = ({
 
       // Créer un onglet par groupe
       groups.forEach((group, index) => {
-        const headers = ['N°', 'Nom', 'Prénom', 'Email', 'Âge', 'Phototype'];
-
         const dataRows = group.map((vol: any, rowIdx) => [
           rowIdx + 1 + (index * BATCH_SIZE),
           vol.nom || '',
@@ -178,25 +176,7 @@ const BulkEmailModal: React.FC<BulkEmailModalProps> = ({
           normalizePhototype(vol.phototype || vol.details?.phototype) || ''
         ]);
 
-        const wsData = [headers, ...dataRows];
-        const ws = XLSX.utils.aoa_to_sheet(wsData);
-
-        // Style des en-têtes
-        for (let col = 0; col < headers.length; col++) {
-          const cellRef = XLSX.utils.encode_cell({ r: 0, c: col });
-          if (!ws[cellRef]) ws[cellRef] = { t: 's', v: headers[col] };
-          ws[cellRef].s = {
-            fill: { fgColor: { rgb: "4F81BD" } },
-            font: { color: { rgb: "FFFFFF" }, bold: true },
-            alignment: { horizontal: "center", vertical: "center" },
-            border: {
-              top: { style: "thin", color: { rgb: "000000" } },
-              bottom: { style: "thin", color: { rgb: "000000" } },
-              left: { style: "thin", color: { rgb: "000000" } },
-              right: { style: "thin", color: { rgb: "000000" } }
-            }
-          };
-        }
+        const ws = XLSX.utils.aoa_to_sheet(dataRows);
 
         // Largeur des colonnes
         ws['!cols'] = [

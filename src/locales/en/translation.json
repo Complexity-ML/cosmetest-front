@@ -367,12 +367,12 @@
     "rightProfilePhotoOf": "Right profile photo of",
     "leftProfilePhotoOf": "Left profile photo of",
     "phototypeOptions": {
-      "I": "I - Very fair skin",
-      "II": "II - Fair skin",
-      "III": "III - Fair to medium skin",
-      "IV": "IV - Medium skin",
-      "V": "V - Dark skin",
-      "VI": "VI - Very dark skin"
+      "1": "1 - Very fair skin",
+      "2": "2 - Fair skin",
+      "3": "3 - Fair to medium skin",
+      "4": "4 - Medium skin",
+      "5": "5 - Dark skin",
+      "6": "6 - Very dark skin"
     },
     "ethnicityOptions": {
       "Caucasienne": "Caucasian",

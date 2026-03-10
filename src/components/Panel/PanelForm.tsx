@@ -15,7 +15,7 @@ import { cn } from '@/lib/utils';
 // Options pour les sélections
 const sexeOptions = ['Homme', 'Femme'];
 const typePeauOptions = ['Normale', 'Sèche', 'Grasse', 'Mixte', 'Mixte à tendance grasse', 'Mixte à tendance sèche'];
-const phototypeOptions = ['I', 'II', 'III', 'IV', 'V', 'VI'];
+const phototypeOptions = ['Phototype 1', 'Phototype 2', 'Phototype 3', 'Phototype 4', 'Phototype 5', 'Phototype 6'];
 const carnationOptions = ['Très claire', 'Claire', 'Moyenne', 'Mate', 'Foncée'];
 const intensiteOptions = ['Faible', 'Modéré', 'Fort', 'Très fort', 'Aucun'];
 const expositionSolaireOptions = ['Faible', 'Modérée', 'Forte', 'Très forte', 'Aucune'];

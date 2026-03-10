@@ -134,26 +134,20 @@ const RdvExcelExport: React.FC<RdvExcelExportProps> = ({
         return '';
       };
 
-      // 5b. Fonction helper pour normaliser le phototype (romains → arabes)
+      // 5b. Fonction helper pour normaliser le phototype → chiffres romains
       const normalizePhototype = (value: string): string => {
         if (!value) return '';
         const str = value.toString().trim().toUpperCase();
-        const romanToArabic: Record<string, string> = {
-          'VI': '6', 'V': '5', 'IV': '4', 'III': '3', 'II': '2', 'I': '1'
+        const arabicToRoman: Record<string, string> = {
+          '1': 'I', '2': 'II', '3': 'III', '4': 'IV', '5': 'V', '6': 'VI'
         };
-        for (const [roman, arabic] of Object.entries(romanToArabic)) {
-          if (str === roman) return `Phototype ${arabic}`;
-        }
-        // Si c'est déjà un chiffre seul (1-6)
-        if (/^[1-6]$/.test(str)) return `Phototype ${str}`;
-        // Si c'est déjà au format "Phototype X" avec un chiffre arabe
-        const matchArabic = str.match(/^PHOTOTYPE\s*(\d)$/);
-        if (matchArabic) return `Phototype ${matchArabic[1]}`;
-        // Si c'est au format "Phototype III" avec un chiffre romain
-        const matchRoman = str.match(/^PHOTOTYPE\s*(VI|IV|V?I{0,3})$/);
-        if (matchRoman && romanToArabic[matchRoman[1]]) {
-          return `Phototype ${romanToArabic[matchRoman[1]]}`;
-        }
+        const validRomans = ['I', 'II', 'III', 'IV', 'V', 'VI'];
+        if (validRomans.includes(str)) return str;
+        if (arabicToRoman[str]) return arabicToRoman[str];
+        const matchArabic = str.match(/PHOTOTYPE\s*(\d)/);
+        if (matchArabic && arabicToRoman[matchArabic[1]]) return arabicToRoman[matchArabic[1]];
+        const matchRoman = str.match(/PHOTOTYPE\s*(VI|IV|V?I{0,3})\s*$/);
+        if (matchRoman && validRomans.includes(matchRoman[1])) return matchRoman[1];
         return value;
       };
 

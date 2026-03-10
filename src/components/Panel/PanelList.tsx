@@ -69,7 +69,7 @@ const IconUser = ({ className = "", width = 24, height = 24, ...props }: IconPro
 const FilterPanel = ({ sexeFilter, setSexeFilter, typePeauFilter, setTypePeauFilter, phototypeFilter, setPhototypeFilter, onApplyFilters }: FilterPanelProps) => {
   const sexeOptions = ['Tous', 'Homme', 'Femme'];
   const typePeauOptions = ['Tous', 'Normale', 'Sèche', 'Grasse', 'Mixte', 'Mixte à tendance grasse', 'Mixte à tendance sèche'];
-  const phototypeOptions = ['Tous', 'I', 'II', 'III', 'IV', 'V', 'VI'];
+  const phototypeOptions = ['Tous', 'Phototype 1', 'Phototype 2', 'Phototype 3', 'Phototype 4', 'Phototype 5', 'Phototype 6'];
 
   const [localSexe, setLocalSexe] = useState(sexeFilter);
   const [localTypePeau, setLocalTypePeau] = useState(typePeauFilter);
@@ -314,12 +314,12 @@ const PanelList = () => {
   
   const getPhototypeColorClass = (phototype: string) => {
     switch (phototype) {
-      case 'I': return 'bg-rose-50 text-rose-700';
-      case 'II': return 'bg-orange-50 text-orange-700';
-      case 'III': return 'bg-amber-50 text-amber-700';
-      case 'IV': return 'bg-yellow-50 text-yellow-700';
-      case 'V': return 'bg-lime-50 text-lime-700';
-      case 'VI': return 'bg-emerald-50 text-emerald-700';
+      case 'Phototype 1': case '1': case 'I': return 'bg-rose-50 text-rose-700';
+      case 'Phototype 2': case '2': case 'II': return 'bg-orange-50 text-orange-700';
+      case 'Phototype 3': case '3': case 'III': return 'bg-amber-50 text-amber-700';
+      case 'Phototype 4': case '4': case 'IV': return 'bg-yellow-50 text-yellow-700';
+      case 'Phototype 5': case '5': case 'V': return 'bg-lime-50 text-lime-700';
+      case 'Phototype 6': case '6': case 'VI': return 'bg-emerald-50 text-emerald-700';
       default: return 'bg-gray-50 text-gray-700';
     }
   };

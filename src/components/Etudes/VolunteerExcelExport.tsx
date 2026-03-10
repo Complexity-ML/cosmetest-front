@@ -77,13 +77,16 @@ const VolunteerExcelExport: React.FC<VolunteerExcelExportProps> = ({
     if (singular === 'seche' || singular === 'sec') return 'Sèche';
     if (singular === 'grasse' || singular === 'gras' || singular === 'grass') return 'Grasse';
     if (singular === 'mixte' || singular === 'mixt') return 'Mixte';
-    if (singular === 'sensible') return 'Sensible';
-
     return typePeau.trim();
   };
 
   // Fonction pour normaliser la sensibilité cutanée
-  const normalizeSensibiliteCutanee = (sensibilite: any) => {
+  const normalizeSensibiliteCutanee = (sensibilite: any, typePeau?: any) => {
+    // Si le type de peau est "Sensible", c'est une sensibilité, pas un type de peau
+    const typePeauKey = typePeau?.toString().trim().toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '') || '';
+    if (typePeauKey.replace(/s$/, '') === 'sensible') return 'Peau sensible';
+
     if (!sensibilite) return 'Non spécifié';
 
     const key = sensibilite.trim().toLowerCase()
@@ -96,23 +99,27 @@ const VolunteerExcelExport: React.FC<VolunteerExcelExportProps> = ({
     return sensibilite.trim();
   };
 
-  // Fonction pour normaliser le phototype (romains → arabes, format "Phototype X")
+  // Fonction pour normaliser le phototype → chiffres romains (I, II, III, IV, V, VI)
   const normalizePhototype = (value: any): string => {
     if (!value) return '';
     const str = value.toString().trim().toUpperCase();
-    const romanToArabic: Record<string, string> = {
-      'VI': '6', 'V': '5', 'IV': '4', 'III': '3', 'II': '2', 'I': '1'
+    const arabicToRoman: Record<string, string> = {
+      '1': 'I', '2': 'II', '3': 'III', '4': 'IV', '5': 'V', '6': 'VI'
     };
-    for (const [roman, arabic] of Object.entries(romanToArabic)) {
-      if (str === roman) return `Phototype ${arabic}`;
-    }
-    if (/^[1-6]$/.test(str)) return `Phototype ${str}`;
-    const matchArabic = str.match(/^PHOTOTYPE\s*(\d)$/);
-    if (matchArabic) return `Phototype ${matchArabic[1]}`;
-    const matchRoman = str.match(/^PHOTOTYPE\s*(VI|IV|V?I{0,3})$/);
-    if (matchRoman && romanToArabic[matchRoman[1]]) {
-      return `Phototype ${romanToArabic[matchRoman[1]]}`;
-    }
+    const validRomans = ['I', 'II', 'III', 'IV', 'V', 'VI'];
+    // Déjà un romain valide seul
+    if (validRomans.includes(str)) return str;
+    // Chiffre arabe seul
+    if (arabicToRoman[str]) return arabicToRoman[str];
+    // Format "Phototype X ..." avec arabe (ignore tout texte après le chiffre)
+    const matchArabic = str.match(/PHOTOTYPE\s*(\d)/);
+    if (matchArabic && arabicToRoman[matchArabic[1]]) return arabicToRoman[matchArabic[1]];
+    // Format "Phototype III ..." avec romain (ignore tout texte après le romain)
+    const matchRoman = str.match(/PHOTOTYPE\s*(VI|IV|V?I{1,3})/);
+    if (matchRoman && validRomans.includes(matchRoman[1])) return matchRoman[1];
+    // Essayer d'extraire un chiffre arabe n'importe où
+    const matchDigit = str.match(/(\d)/);
+    if (matchDigit && arabicToRoman[matchDigit[1]]) return arabicToRoman[matchDigit[1]];
     return value;
   };
 
@@ -201,10 +208,11 @@ const VolunteerExcelExport: React.FC<VolunteerExcelExportProps> = ({
             // Utiliser le numsujet de la BDD, laisser vide si 0 ou undefined
             numeroSujet: (numsujetFromDb && numsujetFromDb !== 0) ? numsujetFromDb : '',
             idVolontaire: result.id,
-            // Normaliser le type de peau
-            typePeauVisage: normalizeTypePeau(result.data.typePeauVisage),
-            // Normaliser la sensibilité cutanée
-            sensibiliteCutanee: normalizeSensibiliteCutanee(result.data.sensibiliteCutanee)
+            // Normaliser le type de peau (si "Sensible", on le vide car c'est une sensibilité)
+            typePeauVisage: result.data.typePeauVisage?.toString().trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/s$/, '') === 'sensible'
+              ? '' : normalizeTypePeau(result.data.typePeauVisage),
+            // Normaliser la sensibilité cutanée (récupère "Sensible" du type de peau si besoin)
+            sensibiliteCutanee: normalizeSensibiliteCutanee(result.data.sensibiliteCutanee, result.data.typePeauVisage)
           };
           volunteersData.push(normalizedData);
         }
@@ -325,7 +333,7 @@ const VolunteerExcelExport: React.FC<VolunteerExcelExportProps> = ({
           row.push('');
         }
 
-        // Phototype (normalisé: romains → arabes, format "Phototype X")
+        // Phototype (normalisé en chiffres romains)
         row.push(normalizePhototype(volunteer.phototype));
 
         dataRows.push(row);
@@ -389,7 +397,7 @@ const VolunteerExcelExport: React.FC<VolunteerExcelExportProps> = ({
       }, {});
 
       const phototypesStats: Record<string, number> = volunteersData.reduce((acc: Record<string, number>, v: any) => {
-        const phototype = v.phototype || 'Non spécifié';
+        const phototype = normalizePhototype(v.phototype) || 'Non spécifié';
         acc[phototype] = (acc[phototype] || 0) + 1;
         return acc;
       }, {});
@@ -482,7 +490,7 @@ const VolunteerExcelExport: React.FC<VolunteerExcelExportProps> = ({
       currentRowIndex = dataRows.length;
 
       // === 3. STATISTIQUES DE TYPES DE PEAU ===
-      const orderedTypesPeau = ['Normale', 'Sèche', 'Grasse', 'Mixte à tendance grasse', 'Mixte à tendance sèche', 'Sensible'];
+      const orderedTypesPeau = ['Normale', 'Sèche', 'Grasse', 'Mixte à tendance grasse', 'Mixte à tendance sèche', 'Mixte'];
       const typesPeauPresents = [...new Set(volunteersData.map(v => v.typePeauVisage || 'Non spécifié'))];
       const extraTypes = typesPeauPresents.filter(t => !orderedTypesPeau.includes(t));
       const allTypesPeau = [...orderedTypesPeau, ...extraTypes];
@@ -516,7 +524,7 @@ const VolunteerExcelExport: React.FC<VolunteerExcelExportProps> = ({
       currentRowIndex = dataRows.length;
 
       // === 4. STATISTIQUES DE PHOTOTYPES ===
-      const orderedPhototypes = ['Phototype 1', 'Phototype 2', 'Phototype 3', 'Phototype 4', 'Phototype 5', 'Phototype 6'];
+      const orderedPhototypes = ['I', 'II', 'III', 'IV', 'V', 'VI'];
 
       const phototypesLabels: (string | number)[][] = [['PHOTOTYPES', 'N', '%']];
       orderedPhototypes.forEach(type => {

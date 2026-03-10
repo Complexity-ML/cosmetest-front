@@ -168,14 +168,14 @@ export const DemographicFilters: React.FC<DemographicFiltersProps> = ({
                 <div key={type} className="flex items-center space-x-2">
                   <Checkbox
                     id={`phototype-${type}`}
-                    checked={values.phototypes.includes(type.toString())}
-                    onCheckedChange={() => onPhototypeToggle(type.toString())}
+                    checked={values.phototypes.includes(`Phototype ${type}`)}
+                    onCheckedChange={() => onPhototypeToggle(`Phototype ${type}`)}
                   />
                   <Label
                     htmlFor={`phototype-${type}`}
                     className="text-sm font-normal cursor-pointer"
                   >
-                    {t('reports.matching.type')} {type}
+                    Phototype {type}
                   </Label>
                 </div>
               ))}

@@ -368,12 +368,12 @@
     "rightProfilePhotoOf": "Photo de profil droit de",
     "leftProfilePhotoOf": "Photo de profil gauche de",
     "phototypeOptions": {
-      "I": "I - Peau très claire",
-      "II": "II - Peau claire",
-      "III": "III - Peau claire à mate",
-      "IV": "IV - Peau mate",
-      "V": "V - Peau foncée",
-      "VI": "VI - Peau noire"
+      "1": "1 - Peau très claire",
+      "2": "2 - Peau claire",
+      "3": "3 - Peau claire à mate",
+      "4": "4 - Peau mate",
+      "5": "5 - Peau foncée",
+      "6": "6 - Peau noire"
     },
     "ethnicityOptions": {
       "Caucasienne": "Caucasienne",

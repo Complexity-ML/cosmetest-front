@@ -139,14 +139,19 @@ const ExcelExport = ({
       const prenom = volontaire?.prenom || volontaire?.prenomVol || '';
       const nom = volontaire?.nom || volontaire?.nomVol || '';
 
+      const nomComplet = `${nom} ${prenom}`.trim() || '';
+      const rum = `${etude?.ref || 'ETU'}-${paiement.idVolontaire}`;
+      const dateMandat = new Date().toLocaleDateString('fr-FR');
+      const libelle = `Indemnite ${etude?.ref || ''} - ${nomComplet}`;
+
       return {
-        'N°': index + 1,
-        'Nom': nom || 'Non renseigné',
-        'Prénom': prenom || 'Non renseigné',
-        'IBAN': bankInfo?.iban ? infoBancaireService.validation.formatIban(bankInfo.iban) : 'Non renseigné',
-        'BIC': bankInfo?.bic || 'Non renseigné',
-        'Montant (€)': paiement.iv || 0,
-        'Remarques': bankInfo ? '' : '⚠️ Info bancaire manquante'
+        'RUM': rum,
+        'Date mandat': dateMandat,
+        'Nom': nomComplet,
+        'IBAN': bankInfo?.iban ? infoBancaireService.validation.formatIban(bankInfo.iban) : '',
+        'BIC': bankInfo?.bic || '',
+        'Montant': paiement.iv || 0,
+        'Libelle': libelle
       };
     });
   };
@@ -177,79 +182,30 @@ const ExcelExport = ({
       // 3. Formater les données (seulement les actifs)
       const excelData = formatDataForExcel(paiementsActifs, bankingData);
 
-      // 4. Créer le workbook Excel
-      const wb = XLSX.utils.book_new();
-
-      // Feuille principale avec les données
-      const ws = XLSX.utils.json_to_sheet(excelData);
-
-      // Définir la largeur des colonnes
-      const columnWidths = [
-        { wch: 5 },   // N°
-        { wch: 20 },  // Nom
-        { wch: 20 },  // Prénom
-        { wch: 35 },  // IBAN
-        { wch: 15 },  // BIC
-        { wch: 12 },  // Montant
-        { wch: 25 }   // Remarques
+      // 4. Générer le CSV avec séparateur point-virgule (compatible SepaWin)
+      const headers = Object.keys(excelData[0]);
+      const csvRows = [
+        headers.join(';'),
+        ...excelData.map(row => headers.map(h => {
+          const val = (row as any)[h];
+          // Échapper les valeurs contenant des point-virgules ou guillemets
+          const str = String(val ?? '');
+          if (str.includes(';') || str.includes('"') || str.includes('\n')) {
+            return `"${str.replace(/"/g, '""')}"`;
+          }
+          return str;
+        }).join(';'))
       ];
-      ws['!cols'] = columnWidths;
+      const csvContent = '\uFEFF' + csvRows.join('\r\n'); // BOM UTF-8 pour Excel
 
-      // Ajouter la feuille au workbook
-      XLSX.utils.book_append_sheet(wb, ws, 'Fiches de Paiement');
-
-      // 5. MODIFIÉ : Créer une feuille de résumé avec info sur les annulés
-      const summaryData = [
-        ['FICHE DE PAIEMENT - ÉTUDE'],
-        [''],
-        ['Référence Étude:', etude.ref || 'Non définie'],
-        ['Titre:', etude.titre || 'Non défini'],
-        ['Date d\'export:', new Date().toLocaleDateString('fr-FR')],
-        ['Heure d\'export:', new Date().toLocaleTimeString('fr-FR')],
-        [''],
-        ['STATISTIQUES - VOLONTAIRES ACTIFS UNIQUEMENT'],
-        [''],
-        ['Nombre total de volontaires dans l\'étude:', statistiques.total],
-        ['Nombre de volontaires actifs (exportés):', statistiques.actifs],
-        ['Nombre de volontaires annulés (exclus):', statistiques.annules],
-        [''],
-        ['PAIEMENTS ACTIFS'],
-        [''],
-        ['Nombre de paiements payés:', statistiques.payes],
-        ['Nombre de paiements non payés:', statistiques.nonPayes],
-        ['Nombre de paiements en attente:', statistiques.enAttente],
-        [''],
-        ['MONTANTS ACTIFS'],
-        [''],
-        ['Montant total actif:', `${statistiques.montantTotal.toFixed(2)} €`],
-        ['Montant payé:', `${statistiques.montantPaye.toFixed(2)} €`],
-        ['Montant restant à payer:', `${(statistiques.montantTotal - statistiques.montantPaye).toFixed(2)} €`],
-        [''],
-        ['MONTANTS EXCLUS'],
-        [''],
-        ['Montant des volontaires annulés (exclu):', `${statistiques.montantAnnules.toFixed(2)} €`],
-        [''],
-        ['INFORMATIONS BANCAIRES'],
-        [''],
-        ['Volontaires avec RIB complet:', Object.values(bankingData).filter(b => b && b.iban && b.bic).length],
-        ['Volontaires sans RIB:', Object.values(bankingData).filter(b => !b).length],
-        [''],
-        ['IMPORTANT'],
-        [''],
-        ['⚠️ Les volontaires annulés sont automatiquement exclus de cet export'],
-        ['⚠️ Seuls les volontaires actifs sont inclus dans les calculs'],
-        ['⚠️ Les montants des volontaires annulés ne sont pas comptabilisés']
-      ];
-
-      const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
-      wsSummary['!cols'] = [{ wch: 30 }, { wch: 40 }];
-      XLSX.utils.book_append_sheet(wb, wsSummary, 'Résumé');
-
-      // 6. MODIFIÉ : Générer le nom de fichier avec indication des actifs
-      const fileName = `Fiches_Paiement_Actifs_${etude.ref || 'Etude'}_${new Date().toISOString().split('T')[0]}.xlsx`;
-
-      // 7. Télécharger le fichier
-      XLSX.writeFile(wb, fileName);
+      // 5. Télécharger le fichier CSV
+      const fileName = `Fiches_Paiement_${etude.ref || 'Etude'}_${new Date().toISOString().split('T')[0]}.csv`;
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = fileName;
+      link.click();
+      URL.revokeObjectURL(link.href);
 
       // NOUVEAU : Message de succès avec info sur les exclusions
       if (statistiques.annules > 0) {
