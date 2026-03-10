@@ -193,12 +193,8 @@ const ExcelExport = ({
         headers.join(';'),
         ...excelData.map(row => headers.map(h => {
           const val = (row as any)[h];
-          // Nettoyer les retours à la ligne et échapper si nécessaire
-          const str = String(val ?? '').replace(/[\r\n\t]+/g, ' ').trim();
-          if (str.includes(';') || str.includes('"')) {
-            return `"${str.replace(/"/g, '""')}"`;
-          }
-          return str;
+          // Nettoyer les retours à la ligne, guillemets et point-virgules
+          return String(val ?? '').replace(/[\r\n\t"]+/g, '').replace(/;/g, ',').trim();
         }).join(';'))
       ];
       const csvContent = '\uFEFF' + csvRows.join('\r\n'); // BOM UTF-8 pour Excel
