@@ -13,7 +13,7 @@ const EvaluationSection = ({ formData, errors, onChange }: any) => {
     { name: "evaluationYeux", label: t('volunteers.eyes') },
     { name: "evaluationLevres", label: t('volunteers.lips') },
     { name: "evaluationTeint", label: t('volunteers.complexion') },
-    { name: "evaluationCynetique", label: t('volunteers.kinetic') },
+    { name: "evaluationCinetique", label: t('volunteers.kinetic') },
   ];
 
   const handleStarSelection = (fieldName: string, starValue: number) => {

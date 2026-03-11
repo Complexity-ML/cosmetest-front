@@ -103,7 +103,7 @@ export interface VolontaireData {
   notesYeux?: number;
   notesLevres?: number;
   notesTeint?: number;
-  notesCynetique?: number;
+  notesCinetique?: number;
 
   // Autres propriétés possibles
   [key: string]: any;

@@ -40,7 +40,7 @@ interface VolontaireResult {
     yeux: number | null;
     levres: number | null;
     teint: number | null;
-    cynetique: number | null;
+    cinetique: number | null;
   };
   details: any;
 }
@@ -118,6 +118,21 @@ const MatchingSystem = () => {
           phototypes: exists
             ? prev.demographics.phototypes.filter((type: string) => type !== phototype)
             : [...prev.demographics.phototypes, phototype]
+        }
+      };
+    });
+  };
+
+  const toggleTypePeau = (typePeau: string) => {
+    setFilters((prev) => {
+      const exists = prev.demographics.typesPeau.includes(typePeau);
+      return {
+        ...prev,
+        demographics: {
+          ...prev.demographics,
+          typesPeau: exists
+            ? prev.demographics.typesPeau.filter((t: string) => t !== typePeau)
+            : [...prev.demographics.typesPeau, typePeau]
         }
       };
     });
@@ -362,6 +377,14 @@ const MatchingSystem = () => {
             }
           }
 
+          // Type de peau filter - HARD FILTER
+          if (filters.demographics.typesPeau.length > 0) {
+            const typePeauVolontaire = (volontaire.typePeauVisage || '').trim();
+            if (!typePeauVolontaire || !filters.demographics.typesPeau.includes(typePeauVolontaire)) {
+              return false;
+            }
+          }
+
           // Sex filter - HARD FILTER
           if (sexeCritere && sexeCritere !== sexeVolontaire) {
             return false;
@@ -405,7 +428,7 @@ const MatchingSystem = () => {
             yeux: parseEvaluation(volontaire.notesYeux),
             levres: parseEvaluation(volontaire.notesLevres),
             teint: parseEvaluation(volontaire.notesTeint),
-            cynetique: parseEvaluation(volontaire.notesCynetique)
+            cinetique: parseEvaluation(volontaire.notesCinetique)
           };
 
           const passesEvaluations = EVALUATION_FIELDS.every(({ key }: { key: string }) => {
@@ -422,7 +445,7 @@ const MatchingSystem = () => {
                 notesYeux: volontaire.notesYeux,
                 notesLevres: volontaire.notesLevres,
                 notesTeint: volontaire.notesTeint,
-                notesCynetique: volontaire.notesCynetique,
+                notesCinetique: volontaire.notesCinetique,
                 allVolontaireFields: Object.keys(volontaire)
               });
             }
@@ -542,6 +565,7 @@ const MatchingSystem = () => {
                     sexe: filters.demographics.sexe,
                     phototypes: filters.demographics.phototypes,
                     ethnies: filters.demographics.ethnies,
+                    typesPeau: filters.demographics.typesPeau,
                     excludeEtudeRefs: filters.demographics.excludeEtudeRefs
                   },
                   makeup: filters.makeup,
@@ -558,6 +582,7 @@ const MatchingSystem = () => {
                 onSexChange={handleSexChange}
                 onPhototypeToggle={togglePhototype}
                 onEthnieToggle={toggleEthnie}
+                onTypePeauToggle={toggleTypePeau}
                 onAddExcludeRef={handleAddExcludeRef}
                 onRemoveExcludeRef={handleRemoveExcludeRef}
                 onMakeupToggle={toggleMakeupOption}

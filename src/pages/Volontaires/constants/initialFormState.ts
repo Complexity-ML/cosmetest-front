@@ -167,7 +167,7 @@ export interface InitialFormStateType {
   evaluationYeux: number;
   evaluationLevres: number;
   evaluationTeint: number;
-  evaluationCynetique: number;
+  evaluationCinetique: number;
 }
 
 export const INITIAL_FORM_STATE: InitialFormStateType = {
@@ -339,5 +339,5 @@ export const INITIAL_FORM_STATE: InitialFormStateType = {
   evaluationYeux: 0,
   evaluationLevres: 0,
   evaluationTeint: 0,
-  evaluationCynetique: 0,
+  evaluationCinetique: 0,
 };

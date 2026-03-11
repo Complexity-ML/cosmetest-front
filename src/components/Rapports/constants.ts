@@ -60,7 +60,16 @@ export const EVALUATION_FIELDS: EvaluationField[] = [
   { key: 'yeux', label: 'Evaluation yeux' },
   { key: 'levres', label: 'Evaluation levres' },
   { key: 'teint', label: 'Evaluation teint' },
-  { key: 'cynetique', label: 'Evaluation cynetique' }
+  { key: 'cinetique', label: 'Évaluation cinétique' }
+];
+
+export const TYPE_PEAU_OPTIONS = [
+  'Normale',
+  'Sèche',
+  'Grasse',
+  'Mixte',
+  'Mixte à tendance grasse',
+  'Mixte à tendance sèche'
 ];
 
 export interface EthnieOption {

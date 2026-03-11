@@ -11,7 +11,7 @@ const SPECIFIC_EVALUATIONS = [
   { field: "notesYeux" as keyof VolontaireData, labelKey: "eyes" },
   { field: "notesLevres" as keyof VolontaireData, labelKey: "lips" },
   { field: "notesTeint" as keyof VolontaireData, labelKey: "complexion" },
-  { field: "notesCynetique" as keyof VolontaireData, labelKey: "kinetic" },
+  { field: "notesCinetique" as keyof VolontaireData, labelKey: "kinetic" },
 ];
 
 const getNumericValue = (value: string | number | null | undefined): number => {

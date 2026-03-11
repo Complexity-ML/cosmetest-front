@@ -235,7 +235,7 @@ const FIELD_TO_TAB_MAP: Record<string, string> = {
   evaluationYeux: 'evaluation',
   evaluationLevres: 'evaluation',
   evaluationTeint: 'evaluation',
-  evaluationCynetique: 'evaluation',
+  evaluationCinetique: 'evaluation',
 };
 
 // Fonction pour trouver le premier onglet contenant une erreur
@@ -336,7 +336,7 @@ interface FormData {
   evaluationYeux: number;
   evaluationLevres: number;
   evaluationTeint: number;
-  evaluationCynetique: number;
+  evaluationCinetique: number;
 
   // Caractéristiques supplémentaires
   cicatrices: string;
@@ -631,7 +631,7 @@ export const useVolontaireForm = ({ id, isEditMode, navigate }: UseVolontaireFor
           evaluationYeux: detailsData.notesYeux || 0,
           evaluationLevres: detailsData.notesLevres || 0,
           evaluationTeint: detailsData.notesTeint || 0,
-          evaluationCynetique: detailsData.notesCynetique || 0,
+          evaluationCinetique: detailsData.notesCinetique || 0,
           // Caractéristiques supplémentaires
           cicatrices: detailsData.cicatrices || "Non",
           tatouages: detailsData.tatouages || "Non",
@@ -885,7 +885,7 @@ export const useVolontaireForm = ({ id, isEditMode, navigate }: UseVolontaireFor
         evaluationYeux: formData.evaluationYeux,
         evaluationLevres: formData.evaluationLevres,
         evaluationTeint: formData.evaluationTeint,
-        evaluationCynetique: formData.evaluationCynetique
+        evaluationCinetique: formData.evaluationCinetique
       });
 
       // Fonction helper améliorée pour s'assurer qu'aucune valeur n'est null
@@ -995,7 +995,7 @@ export const useVolontaireForm = ({ id, isEditMode, navigate }: UseVolontaireFor
         notesYeux: Number(formData.evaluationYeux) || 0,
         notesLevres: Number(formData.evaluationLevres) || 0,
         notesTeint: Number(formData.evaluationTeint) || 0,
-        notesCynetique: Number(formData.evaluationCynetique) || 0,
+        notesCinetique: Number(formData.evaluationCinetique) || 0,
 
         //Caractéristiques supplémentaires
         cicatrices: defaultIfNull(formData.cicatrices, "Non"),
@@ -1093,7 +1093,7 @@ export const useVolontaireForm = ({ id, isEditMode, navigate }: UseVolontaireFor
         notesYeux: volontaireCompleteData.notesYeux,
         notesLevres: volontaireCompleteData.notesLevres,
         notesTeint: volontaireCompleteData.notesTeint,
-        notesCynetique: volontaireCompleteData.notesCynetique
+        notesCinetique: volontaireCompleteData.notesCinetique
       });
 
       let volontaireId: string | number;

@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { ExternalLink } from 'lucide-react';
 import { EVALUATION_FIELDS } from './constants';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -102,9 +103,15 @@ export const ResultRow: React.FC<ResultRowProps> = ({ volontaire, formatNote }) 
   return (
     <TableRow className={rowColorClass}>
       <TableCell>
-        <div className="font-medium">
+        <a
+          href={`/volontaires/${volontaire.id}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-medium text-blue-600 hover:text-blue-800 hover:underline inline-flex items-center gap-1"
+        >
           {volontaire.nom} {volontaire.prenom}
-        </div>
+          <ExternalLink className="w-3 h-3" />
+        </a>
         <div className="text-sm text-muted-foreground">ID: {volontaire.id}</div>
         <div className="text-sm text-muted-foreground">
           {volontaire.email || t('reports.matching.emailNotProvided')}

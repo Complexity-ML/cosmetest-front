@@ -5,6 +5,7 @@ export interface DemographicsFilters {
   ageMax: number;
   phototypes: string[];
   ethnies: string[];
+  typesPeau: string[];
   sexe: string;
   excludeEtudeRefs: string[];
 }
@@ -25,7 +26,7 @@ export interface EvaluationFilters {
   yeux: EvaluationRange;
   levres: EvaluationRange;
   teint: EvaluationRange;
-  cynetique: EvaluationRange;
+  cinetique: EvaluationRange;
 }
 
 export interface Filters {
@@ -40,6 +41,7 @@ export const createInitialFilters = (): Filters => ({
     ageMax: 65,
     phototypes: [],
     ethnies: [],
+    typesPeau: [],
     sexe: '',
     excludeEtudeRefs: []
   },
@@ -53,7 +55,7 @@ export const createInitialFilters = (): Filters => ({
     yeux: { min: null, max: null },
     levres: { min: null, max: null },
     teint: { min: null, max: null },
-    cynetique: { min: null, max: null }
+    cinetique: { min: null, max: null }
   }
 });
 

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Search, Plus, Trash2, X } from 'lucide-react';
-import { MAKEUP_OPTIONS, EVALUATION_FIELDS, ETHNIE_OPTIONS } from './constants';
+import { MAKEUP_OPTIONS, EVALUATION_FIELDS, ETHNIE_OPTIONS, TYPE_PEAU_OPTIONS } from './constants';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -40,12 +40,14 @@ interface DemographicFiltersProps {
     sexe: string;
     phototypes: string[];
     ethnies: string[];
+    typesPeau: string[];
     excludeEtudeRefs: string[];
   };
   onAgeChange: (field: string, value: string) => void;
   onSexChange: (value: string) => void;
   onPhototypeToggle: (value: string) => void;
   onEthnieToggle: (value: string) => void;
+  onTypePeauToggle: (value: string) => void;
   onAddExcludeRef: (ref: string) => void;
   onRemoveExcludeRef: (ref: string) => void;
 }
@@ -56,6 +58,7 @@ export const DemographicFilters: React.FC<DemographicFiltersProps> = ({
   onSexChange,
   onPhototypeToggle,
   onEthnieToggle,
+  onTypePeauToggle,
   onAddExcludeRef,
   onRemoveExcludeRef
 }) => {
@@ -200,6 +203,26 @@ export const DemographicFilters: React.FC<DemographicFiltersProps> = ({
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+        <div className="space-y-2">
+          <Label>Type de peau</Label>
+          <div className="flex flex-wrap gap-3 pt-2">
+            {TYPE_PEAU_OPTIONS.map((type) => (
+              <div key={type} className="flex items-center space-x-2">
+                <Checkbox
+                  id={`typepeau-${type}`}
+                  checked={values.typesPeau.includes(type)}
+                  onCheckedChange={() => onTypePeauToggle(type)}
+                />
+                <Label
+                  htmlFor={`typepeau-${type}`}
+                  className="text-sm font-normal cursor-pointer"
+                >
+                  {type}
+                </Label>
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -479,6 +502,7 @@ interface CriteriaPanelProps {
       sexe: string;
       phototypes: string[];
       ethnies: string[];
+      typesPeau: string[];
       excludeEtudeRefs: string[];
     };
     makeup: {
@@ -493,6 +517,7 @@ interface CriteriaPanelProps {
   onSexChange: (value: string) => void;
   onPhototypeToggle: (value: string) => void;
   onEthnieToggle: (value: string) => void;
+  onTypePeauToggle: (value: string) => void;
   onAddExcludeRef: (ref: string) => void;
   onRemoveExcludeRef: (ref: string) => void;
   onMakeupToggle: (category: string, value: string) => void;
@@ -512,6 +537,7 @@ export const CriteriaPanel: React.FC<CriteriaPanelProps> = ({
   onSexChange,
   onPhototypeToggle,
   onEthnieToggle,
+  onTypePeauToggle,
   onAddExcludeRef,
   onRemoveExcludeRef,
   onMakeupToggle,
@@ -532,6 +558,7 @@ export const CriteriaPanel: React.FC<CriteriaPanelProps> = ({
       onSexChange={onSexChange}
       onPhototypeToggle={onPhototypeToggle}
       onEthnieToggle={onEthnieToggle}
+      onTypePeauToggle={onTypePeauToggle}
       onAddExcludeRef={onAddExcludeRef}
       onRemoveExcludeRef={onRemoveExcludeRef}
     />
