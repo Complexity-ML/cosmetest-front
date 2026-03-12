@@ -214,6 +214,7 @@ const MatchingSystem = () => {
     const newCriterion: CustomCriterion = {
       id: `custom-${Date.now()}`,
       label: '',
+      field: '',
       filter: ''
     };
     setCustomCriteria((prev) => [...prev, newCriterion]);
@@ -223,7 +224,7 @@ const MatchingSystem = () => {
     setCustomCriteria((prev) => prev.filter((c) => c.id !== id));
   };
 
-  const handleChangeCustomCriterion = (id: string, field: 'label' | 'filter', value: string) => {
+  const handleChangeCustomCriterion = (id: string, field: 'label' | 'field' | 'filter', value: string) => {
     setCustomCriteria((prev) =>
       prev.map((c) => (c.id === id ? { ...c, [field]: value } : c))
     );
@@ -390,13 +391,12 @@ const MatchingSystem = () => {
             return false;
           }
 
-          // Custom criteria filter - SOFT FILTER (recherche texte dans les données du volontaire)
+          // Custom criteria filter - HARD FILTER (comparaison directe sur le champ du volontaire)
           if (customCriteria.length > 0) {
-            const volontaireString = JSON.stringify(volontaire).toLowerCase();
             for (const criterion of customCriteria) {
-              if (criterion.filter && criterion.filter.trim() !== '') {
-                const filterValue = criterion.filter.toLowerCase().trim();
-                if (!volontaireString.includes(filterValue)) {
+              if (criterion.field && criterion.filter) {
+                const volontaireValue = (volontaire[criterion.field] || '').toString().trim();
+                if (volontaireValue !== criterion.filter.trim()) {
                   return false;
                 }
               }

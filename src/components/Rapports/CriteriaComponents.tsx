@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Search, Plus, Trash2, X } from 'lucide-react';
 import { MAKEUP_OPTIONS, EVALUATION_FIELDS, ETHNIE_OPTIONS, TYPE_PEAU_OPTIONS } from './constants';
+import { CUSTOM_CRITERIA_OPTIONS } from './customCriteriaConstants';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,6 +14,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 export interface CustomCriterion {
   id: string;
   label: string;
+  field: string;
   filter: string;
 }
 
@@ -265,7 +267,7 @@ interface CustomCriteriaSectionProps {
   customCriteria: CustomCriterion[];
   onAdd: () => void;
   onRemove: (id: string) => void;
-  onChange: (id: string, field: 'label' | 'filter', value: string) => void;
+  onChange: (id: string, field: 'label' | 'field' | 'filter', value: string) => void;
 }
 
 export const CustomCriteriaSection: React.FC<CustomCriteriaSectionProps> = ({
@@ -275,6 +277,11 @@ export const CustomCriteriaSection: React.FC<CustomCriteriaSectionProps> = ({
   onChange
 }) => {
   const { t } = useTranslation();
+
+  const getValuesForCriterion = (label: string): string[] => {
+    const found = CUSTOM_CRITERIA_OPTIONS.find((opt) => opt.label === label);
+    return found?.values || [];
+  };
 
   return (
     <div className="mt-6 pt-6 border-t border-gray-200">
@@ -296,43 +303,68 @@ export const CustomCriteriaSection: React.FC<CustomCriteriaSectionProps> = ({
         <p className="text-sm text-gray-500 italic">{t('reports.matching.noCustomCriteria')}</p>
       ) : (
         <div className="space-y-3">
-          {customCriteria.map((criterion) => (
-            <div key={criterion.id} className="flex items-end gap-3 p-3 bg-gray-50 rounded-lg">
-              <div className="flex-1 space-y-1">
-                <Label htmlFor={`criterion-label-${criterion.id}`} className="text-xs text-gray-500">
-                  {t('reports.matching.criterionLabel')}
-                </Label>
-                <Input
-                  id={`criterion-label-${criterion.id}`}
-                  type="text"
-                  placeholder={t('reports.matching.criterionLabelPlaceholder')}
-                  value={criterion.label}
-                  onChange={(e) => onChange(criterion.id, 'label', e.target.value)}
-                />
+          {customCriteria.map((criterion) => {
+            const availableValues = getValuesForCriterion(criterion.label);
+            return (
+              <div key={criterion.id} className="flex items-end gap-3 p-3 bg-gray-50 rounded-lg">
+                <div className="flex-1 space-y-1">
+                  <Label className="text-xs text-gray-500">
+                    {t('reports.matching.criterionLabel')}
+                  </Label>
+                  <Select
+                    value={criterion.label}
+                    onValueChange={(value) => {
+                      const opt = CUSTOM_CRITERIA_OPTIONS.find((o) => o.label === value);
+                      onChange(criterion.id, 'label', value);
+                      onChange(criterion.id, 'field', opt?.field || '');
+                      onChange(criterion.id, 'filter', '');
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionner un critère" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CUSTOM_CRITERIA_OPTIONS.map((opt) => (
+                        <SelectItem key={opt.field} value={opt.label}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex-1 space-y-1">
+                  <Label className="text-xs text-gray-500">
+                    {t('reports.matching.criterionFilter')}
+                  </Label>
+                  <Select
+                    value={criterion.filter}
+                    onValueChange={(value) => onChange(criterion.id, 'filter', value)}
+                    disabled={availableValues.length === 0}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={availableValues.length > 0 ? 'Sélectionner une valeur' : 'Choisir un critère d\'abord'} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableValues.map((val) => (
+                        <SelectItem key={val} value={val}>
+                          {val}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => onRemove(criterion.id)}
+                  className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
               </div>
-              <div className="flex-1 space-y-1">
-                <Label htmlFor={`criterion-filter-${criterion.id}`} className="text-xs text-gray-500">
-                  {t('reports.matching.criterionFilter')}
-                </Label>
-                <Input
-                  id={`criterion-filter-${criterion.id}`}
-                  type="text"
-                  placeholder={t('reports.matching.criterionFilterPlaceholder')}
-                  value={criterion.filter}
-                  onChange={(e) => onChange(criterion.id, 'filter', e.target.value)}
-                />
-              </div>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => onRemove(criterion.id)}
-                className="text-red-500 hover:text-red-700 hover:bg-red-50"
-              >
-                <Trash2 className="w-4 h-4" />
-              </Button>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
@@ -349,7 +381,7 @@ interface MakeupFiltersProps {
   customCriteria?: CustomCriterion[];
   onAddCustomCriterion?: () => void;
   onRemoveCustomCriterion?: (id: string) => void;
-  onChangeCustomCriterion?: (id: string, field: 'label' | 'filter', value: string) => void;
+  onChangeCustomCriterion?: (id: string, field: 'label' | 'field' | 'filter', value: string) => void;
 }
 
 export const MakeupFilters: React.FC<MakeupFiltersProps> = ({
@@ -524,7 +556,7 @@ interface CriteriaPanelProps {
   onEvaluationChange: (key: string, type: 'min' | 'max', value: string) => void;
   onAddCustomCriterion?: () => void;
   onRemoveCustomCriterion?: (id: string) => void;
-  onChangeCustomCriterion?: (id: string, field: 'label' | 'filter', value: string) => void;
+  onChangeCustomCriterion?: (id: string, field: 'label' | 'field' | 'filter', value: string) => void;
   onExecute: () => void;
   onReset: () => void;
   makeupCount: number;
