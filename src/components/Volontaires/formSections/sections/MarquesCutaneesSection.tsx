@@ -9,7 +9,8 @@ const createSyntheticEvent = (name: string, value: string) => ({
 const MarquesCutaneesSection = ({ formData, onChange }: any) => {
   const { t } = useTranslation();
 
-  const isChecked = (val: any) => !!val && val !== 'Non';
+  // Pour cicatrices/tatouages/piercings : truthy = coché (plus de "Oui"/"Non")
+  const isChecked = (val: any) => !!val;
 
   const handleNoneToggle = useCallback((
     groupIds: string[],
@@ -56,7 +57,8 @@ const MarquesCutaneesSection = ({ formData, onChange }: any) => {
         if (formData.caracteristiquesAucun === 'Oui') {
           onChange(createSyntheticEvent('caracteristiquesAucun', ''));
         }
-        onChange(createSyntheticEvent(id, 'Oui'));
+        // Espace = coché sans texte (pas de "Oui" en base)
+        onChange(createSyntheticEvent(id, ' '));
       }
     }
   }, [formData, onChange]);
@@ -139,9 +141,9 @@ const MarquesCutaneesSection = ({ formData, onChange }: any) => {
             <input
               type="text"
               name="cicatrices"
-              value={formData.cicatrices === "Oui" ? "" : formData.cicatrices}
+              value={formData.cicatrices.trim()}
               onChange={(e) => {
-                onChange({ target: { name: 'cicatrices', value: e.target.value || 'Oui', type: 'text' } } as any);
+                onChange({ target: { name: 'cicatrices', value: e.target.value || ' ', type: 'text' } } as any);
               }}
               placeholder={t('volunteers.locationPlaceholder')}
               className="form-input block w-full mt-2"
@@ -167,9 +169,9 @@ const MarquesCutaneesSection = ({ formData, onChange }: any) => {
             <input
               type="text"
               name="tatouages"
-              value={formData.tatouages === "Oui" ? "" : formData.tatouages}
+              value={formData.tatouages.trim()}
               onChange={(e) => {
-                onChange({ target: { name: 'tatouages', value: e.target.value || 'Oui', type: 'text' } } as any);
+                onChange({ target: { name: 'tatouages', value: e.target.value || ' ', type: 'text' } } as any);
               }}
               placeholder={t('volunteers.locationPlaceholder')}
               className="form-input block w-full mt-2"
@@ -195,9 +197,9 @@ const MarquesCutaneesSection = ({ formData, onChange }: any) => {
             <input
               type="text"
               name="piercings"
-              value={formData.piercings === "Oui" ? "" : formData.piercings}
+              value={formData.piercings.trim()}
               onChange={(e) => {
-                onChange({ target: { name: 'piercings', value: e.target.value || 'Oui', type: 'text' } } as any);
+                onChange({ target: { name: 'piercings', value: e.target.value || ' ', type: 'text' } } as any);
               }}
               placeholder={t('volunteers.locationPlaceholder')}
               className="form-input block w-full mt-2"

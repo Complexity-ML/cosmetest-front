@@ -334,9 +334,9 @@ const CaracteristiquesSection = ({ formData, onChange }: any) => {
               type="checkbox"
               id="cicatrices"
               name="cicatrices"
-              checked={!!formData.cicatrices && formData.cicatrices !== "Non"}
+              checked={!!formData.cicatrices}
               onChange={(e) => {
-                onChange({ target: { name: 'cicatrices', value: e.target.checked ? 'Oui' : '', type: 'text' } } as any);
+                onChange({ target: { name: 'cicatrices', value: e.target.checked ? (formData.cicatrices || ' ') : '', type: 'text' } } as any);
               }}
               className="form-checkbox h-5 w-5 text-primary-600"
             />
@@ -347,13 +347,13 @@ const CaracteristiquesSection = ({ formData, onChange }: any) => {
               {t('volunteers.scars')}
             </label>
           </div>
-          {!!formData.cicatrices && formData.cicatrices !== "Non" && (
+          {!!formData.cicatrices && (
             <input
               type="text"
               name="cicatrices"
-              value={formData.cicatrices === "Oui" ? "" : formData.cicatrices}
+              value={formData.cicatrices.trim()}
               onChange={(e) => {
-                onChange({ target: { name: 'cicatrices', value: e.target.value || 'Oui', type: 'text' } } as any);
+                onChange({ target: { name: 'cicatrices', value: e.target.value || ' ', type: 'text' } } as any);
               }}
               placeholder={t('volunteers.locationPlaceholder')}
               className="form-input block w-full mt-2"
@@ -367,9 +367,9 @@ const CaracteristiquesSection = ({ formData, onChange }: any) => {
               type="checkbox"
               id="tatouages"
               name="tatouages"
-              checked={!!formData.tatouages && formData.tatouages !== "Non"}
+              checked={!!formData.tatouages}
               onChange={(e) => {
-                onChange({ target: { name: 'tatouages', value: e.target.checked ? 'Oui' : '', type: 'text' } } as any);
+                onChange({ target: { name: 'tatouages', value: e.target.checked ? (formData.tatouages || ' ') : '', type: 'text' } } as any);
               }}
               className="form-checkbox h-5 w-5 text-primary-600"
             />
@@ -380,13 +380,13 @@ const CaracteristiquesSection = ({ formData, onChange }: any) => {
               {t('volunteers.tattoos')}
             </label>
           </div>
-          {!!formData.tatouages && formData.tatouages !== "Non" && (
+          {!!formData.tatouages && (
             <input
               type="text"
               name="tatouages"
-              value={formData.tatouages === "Oui" ? "" : formData.tatouages}
+              value={formData.tatouages.trim()}
               onChange={(e) => {
-                onChange({ target: { name: 'tatouages', value: e.target.value || 'Oui', type: 'text' } } as any);
+                onChange({ target: { name: 'tatouages', value: e.target.value || ' ', type: 'text' } } as any);
               }}
               placeholder={t('volunteers.locationPlaceholder')}
               className="form-input block w-full mt-2"
@@ -400,9 +400,9 @@ const CaracteristiquesSection = ({ formData, onChange }: any) => {
               type="checkbox"
               id="piercings"
               name="piercings"
-              checked={!!formData.piercings && formData.piercings !== "Non"}
+              checked={!!formData.piercings}
               onChange={(e) => {
-                onChange({ target: { name: 'piercings', value: e.target.checked ? 'Oui' : '', type: 'text' } } as any);
+                onChange({ target: { name: 'piercings', value: e.target.checked ? (formData.piercings || ' ') : '', type: 'text' } } as any);
               }}
               className="form-checkbox h-5 w-5 text-primary-600"
             />
@@ -413,13 +413,13 @@ const CaracteristiquesSection = ({ formData, onChange }: any) => {
               {t('volunteers.piercings')}
             </label>
           </div>
-          {!!formData.piercings && formData.piercings !== "Non" && (
+          {!!formData.piercings && (
             <input
               type="text"
               name="piercings"
-              value={formData.piercings === "Oui" ? "" : formData.piercings}
+              value={formData.piercings.trim()}
               onChange={(e) => {
-                onChange({ target: { name: 'piercings', value: e.target.value || 'Oui', type: 'text' } } as any);
+                onChange({ target: { name: 'piercings', value: e.target.value || ' ', type: 'text' } } as any);
               }}
               placeholder={t('volunteers.locationPlaceholder')}
               className="form-input block w-full mt-2"

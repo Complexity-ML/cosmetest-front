@@ -633,9 +633,9 @@ export const useVolontaireForm = ({ id, isEditMode, navigate }: UseVolontaireFor
           evaluationTeint: detailsData.notesTeint || 0,
           evaluationCinetique: detailsData.notesCinetique || 0,
           // Caractéristiques supplémentaires
-          cicatrices: detailsData.cicatrices || "Non",
-          tatouages: detailsData.tatouages || "Non",
-          piercings: detailsData.piercings || "Non",
+          cicatrices: (detailsData.cicatrices === "Oui" || detailsData.cicatrices === "Non") ? "" : (detailsData.cicatrices || ""),
+          tatouages: (detailsData.tatouages === "Oui" || detailsData.tatouages === "Non") ? "" : (detailsData.tatouages || ""),
+          piercings: (detailsData.piercings === "Oui" || detailsData.piercings === "Non") ? "" : (detailsData.piercings || ""),
 
           // Vergetures
           vergeturesJambes: detailsData.vergeturesJambes || "Non",
@@ -998,9 +998,9 @@ export const useVolontaireForm = ({ id, isEditMode, navigate }: UseVolontaireFor
         notesCinetique: Number(formData.evaluationCinetique) || 0,
 
         //Caractéristiques supplémentaires
-        cicatrices: defaultIfNull(formData.cicatrices, "Non"),
-        tatouages: defaultIfNull(formData.tatouages, "Non"),
-        piercings: defaultIfNull(formData.piercings, "Non"),
+        cicatrices: defaultIfNull(formData.cicatrices, ""),
+        tatouages: defaultIfNull(formData.tatouages, ""),
+        piercings: defaultIfNull(formData.piercings, ""),
 
         // Vergetures
         vergeturesJambes: defaultIfNull(formData.vergeturesJambes, "Non"),

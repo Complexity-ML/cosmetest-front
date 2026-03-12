@@ -244,9 +244,9 @@ export const INITIAL_FORM_STATE: InitialFormStateType = {
   notes: "",
 
   // Caractéristiques supplémentaires
-  cicatrices: "Non",
-  tatouages: "Non",
-  piercings: "Non",
+  cicatrices: "",
+  tatouages: "",
+  piercings: "",
 
   // Vergetures
   vergeturesJambes: "Non",
