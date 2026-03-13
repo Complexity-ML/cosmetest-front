@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../..
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { Alert, AlertDescription } from "../../components/ui/alert";
-import { ShieldAlert, ArrowLeft, RefreshCw, CheckCircle, XCircle, Clock, Activity, ChevronLeft, ChevronRight } from "lucide-react";
+import { ShieldAlert, ArrowLeft, RefreshCw, CheckCircle, XCircle, Clock, Activity, ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
 
 interface ConnectionLog {
     id: number;
@@ -66,6 +66,13 @@ const ConnectionLogsPage = () => {
     const [auditPage, setAuditPage] = useState(0);
     const [auditLoading, setAuditLoading] = useState(false);
     const [auditError, setAuditError] = useState<string | null>(null);
+    const [purgeDate, setPurgeDate] = useState(() => {
+        const d = new Date();
+        d.setMonth(d.getMonth() - 6);
+        return d.toISOString().slice(0, 10);
+    });
+    const [purgeLoading, setPurgeLoading] = useState(false);
+    const [purgeConfirm, setPurgeConfirm] = useState(false);
 
     const fetchLogs = useCallback(async () => {
         try {
@@ -105,6 +112,21 @@ const ConnectionLogsPage = () => {
     useEffect(() => {
         if (tab === "audit") fetchAudit(auditPage);
     }, [auditPage]);
+
+    const handlePurge = async () => {
+        try {
+            setPurgeLoading(true);
+            const result = await parametreService.purgeAuditLogs(purgeDate);
+            setPurgeConfirm(false);
+            fetchAudit(0);
+            setAuditPage(0);
+            alert(`${result.deleted} entrée(s) supprimée(s).`);
+        } catch (err) {
+            setAuditError(err instanceof Error ? err.message : t("logs.unknownError"));
+        } finally {
+            setPurgeLoading(false);
+        }
+    };
 
     const handleRefresh = () => {
         if (tab === "connexions") fetchLogs();
@@ -236,8 +258,35 @@ const ConnectionLogsPage = () => {
 
                     <Card>
                         <CardHeader>
-                            <CardTitle>{t("logs.auditHistory")}</CardTitle>
-                            <CardDescription>{t("logs.auditHistoryDesc")}</CardDescription>
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                <div>
+                                    <CardTitle>{t("logs.auditHistory")}</CardTitle>
+                                    <CardDescription>{t("logs.auditHistoryDesc")}</CardDescription>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    {!purgeConfirm ? (
+                                        <Button variant="outline" size="sm" className="text-destructive border-destructive hover:bg-destructive hover:text-white" onClick={() => setPurgeConfirm(true)}>
+                                            <Trash2 className="mr-2 h-4 w-4" />
+                                            {t("logs.purge")}
+                                        </Button>
+                                    ) : (
+                                        <>
+                                            <input
+                                                type="date"
+                                                className="text-sm border rounded px-2 py-1"
+                                                value={purgeDate}
+                                                max={new Date().toISOString().slice(0, 10)}
+                                                onChange={e => setPurgeDate(e.target.value)}
+                                            />
+                                            <Button variant="destructive" size="sm" disabled={purgeLoading} onClick={handlePurge}>
+                                                {purgeLoading ? <RefreshCw className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
+                                                {t("logs.purgeConfirm")}
+                                            </Button>
+                                            <Button variant="ghost" size="sm" onClick={() => setPurgeConfirm(false)}>{t("logs.cancel")}</Button>
+                                        </>
+                                    )}
+                                </div>
+                            </div>
                         </CardHeader>
                         <CardContent>
                             {auditLoading ? (

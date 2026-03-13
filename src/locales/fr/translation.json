@@ -1746,6 +1746,9 @@
     "auditId": "ID",
     "auditDetails": "Details",
     "page": "Page",
-    "entries": "entrees"
+    "entries": "entrees",
+    "purge": "Purger",
+    "purgeConfirm": "Supprimer avant cette date",
+    "cancel": "Annuler"
   }
 }

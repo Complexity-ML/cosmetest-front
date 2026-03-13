@@ -212,6 +212,18 @@ const parametreService = {
     },
 
     /**
+     * Purge audit logs older than N months (admin only)
+     */
+    purgeAuditLogs: async (before: string) => {
+        try {
+            const response = await api.delete(`/audit/purge?before=${before}`);
+            return response.data;
+        } catch (error: any) {
+            throw new Error(error.response?.data?.message || "Erreur lors de la purge des logs d'audit");
+        }
+    },
+
+    /**
      * Get parameters with pagination
      * @param {number} page - Page number (1-based)
      * @param {number} limit - Number of items per page
