@@ -1732,6 +1732,18 @@
     "dateCol": "Date / Time",
     "success": "Success",
     "failure": "Failure",
-    "unknownError": "Unknown error"
+    "unknownError": "Unknown error",
+    "tabConnexions": "Connections",
+    "tabAudit": "Actions",
+    "auditHistory": "Action history",
+    "auditHistoryDesc": "All mutations performed by users",
+    "noAuditLogs": "No actions recorded",
+    "auditUser": "User",
+    "auditAction": "Action",
+    "auditEntity": "Entity",
+    "auditId": "ID",
+    "auditDetails": "Details",
+    "page": "Page",
+    "entries": "entries"
   }
 }

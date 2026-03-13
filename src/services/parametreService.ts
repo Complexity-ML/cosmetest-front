@@ -196,6 +196,22 @@ const parametreService = {
     },
 
     /**
+     * Get audit logs (admin only)
+     */
+    getAuditLogs: async (page = 0, size = 50, entite?: string, utilisateur?: string) => {
+        try {
+            const params = new URLSearchParams({ page: page.toString(), size: size.toString() });
+            if (entite) params.append('entite', entite);
+            if (utilisateur) params.append('utilisateur', utilisateur);
+            const response = await api.get(`/audit?${params}`);
+            return response.data;
+        } catch (error: any) {
+            console.error('Error fetching audit logs:', error);
+            throw new Error(error.response?.data?.message || "Erreur lors de la recuperation des logs d'audit");
+        }
+    },
+
+    /**
      * Get parameters with pagination
      * @param {number} page - Page number (1-based)
      * @param {number} limit - Number of items per page
