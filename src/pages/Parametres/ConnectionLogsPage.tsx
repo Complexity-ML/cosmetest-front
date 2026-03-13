@@ -204,13 +204,27 @@ const ConnectionLogsPage = () => {
         if (tab === "live") fetchHistory(historyPage);
     }, [historyPage]);
 
+    const extractVolId = (log: AuditLog): number | null => {
+        // 1. Try to extract from details: "vol:#3969" or "volontaire:#42"
+        if (log.details) {
+            const m = log.details.match(/vol(?:ontaire)?:\s*#?(\d+)/i);
+            if (m) return Number(m[1]);
+        }
+        // 2. If entity is exactly VOLONTAIRE, entiteId is the vol ID directly
+        if (log.entite === "VOLONTAIRE" && log.entiteId && /^\d+$/.test(log.entiteId)) {
+            return Number(log.entiteId);
+        }
+        return null;
+    };
+
     const openAuditDetail = useCallback(async (log: AuditLog) => {
         setSelectedLog(log);
         setDetailVol(null);
-        if (log.entite === "VOLONTAIRE" && log.entiteId) {
+        const volId = extractVolId(log);
+        if (log.entite.includes("VOLONTAIRE") && volId) {
             try {
                 setDetailVolLoading(true);
-                const vol = await volontaireService.getById(Number(log.entiteId));
+                const vol = await volontaireService.getById(volId);
                 if (vol) setDetailVol({ nom: vol.nom || "", prenom: vol.prenom || "" });
             } catch {
                 // volontaire introuvable ou supprimé
@@ -661,13 +675,13 @@ const ConnectionLogsPage = () => {
                             </div>
                         </div>
 
-                        {selectedLog.entite === "VOLONTAIRE" && selectedLog.entiteId && (
+                        {selectedLog.entite.includes("VOLONTAIRE") && extractVolId(selectedLog) && (
                             <div className="border rounded-lg p-3 bg-muted/40 flex items-center gap-3">
                                 <div className="p-2 bg-primary/10 rounded-full">
                                     <User className="h-4 w-4 text-primary" />
                                 </div>
                                 <div>
-                                    <p className="text-xs text-muted-foreground">Volontaire #{selectedLog.entiteId}</p>
+                                    <p className="text-xs text-muted-foreground">Volontaire #{extractVolId(selectedLog)}</p>
                                     {detailVolLoading ? (
                                         <p className="text-sm text-muted-foreground animate-pulse">Chargement...</p>
                                     ) : detailVol ? (
