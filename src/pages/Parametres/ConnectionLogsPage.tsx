@@ -225,7 +225,10 @@ const ConnectionLogsPage = () => {
             try {
                 setDetailVolLoading(true);
                 const vol = await volontaireService.getById(volId);
-                if (vol) setDetailVol({ nom: vol.nom || "", prenom: vol.prenom || "" });
+                if (vol) setDetailVol({
+                    nom: vol.nom || (vol as any).nomVol || "",
+                    prenom: vol.prenom || (vol as any).prenomVol || ""
+                });
             } catch {
                 // volontaire introuvable ou supprimé
             } finally {
