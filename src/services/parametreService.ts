@@ -185,10 +185,10 @@ const parametreService = {
      * Get connection logs (admin only)
      * @returns {Promise<Array>} Array of connection logs
      */
-    getConnectionLogs: async () => {
+    getConnectionLogs: async (page = 0, size = 50) => {
         try {
-            const response = await api.get('/connexions');
-            return response.data || [];
+            const response = await api.get(`/connexions?page=${page}&size=${size}`);
+            return response.data;
         } catch (error: any) {
             console.error('Error fetching connection logs:', error);
             throw new Error(error.response?.data?.message || 'Erreur lors de la récupération des logs de connexion');

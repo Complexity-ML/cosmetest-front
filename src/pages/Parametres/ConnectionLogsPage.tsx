@@ -28,13 +28,16 @@ interface AuditLog {
     createdAt: string;
 }
 
-interface AuditPage {
-    content: AuditLog[];
+interface LogPage<T> {
+    content: T[];
     totalElements: number;
     totalPages: number;
     page: number;
     size: number;
 }
+
+type AuditPage = LogPage<AuditLog>;
+type ConnexionPage = LogPage<ConnectionLog>;
 
 const ACTION_COLORS: Record<string, string> = {
     CREATE: "bg-green-100 text-green-800",
@@ -57,7 +60,8 @@ const ConnectionLogsPage = () => {
     const [tab, setTab] = useState<"connexions" | "audit">("connexions");
 
     // Connexions
-    const [logs, setLogs] = useState<ConnectionLog[]>([]);
+    const [logsPage, setLogsPage] = useState<ConnexionPage | null>(null);
+    const [logsCurrentPage, setLogsCurrentPage] = useState(0);
     const [logsLoading, setLogsLoading] = useState(true);
     const [logsError, setLogsError] = useState<string | null>(null);
 
@@ -78,14 +82,14 @@ const ConnectionLogsPage = () => {
         try {
             setLogsLoading(true);
             setLogsError(null);
-            const data = await parametreService.getConnectionLogs();
-            setLogs(data || []);
+            const data = await parametreService.getConnectionLogs(logsCurrentPage, 50);
+            setLogsPage(data);
         } catch (err) {
             setLogsError(err instanceof Error ? err.message : t("logs.unknownError"));
         } finally {
             setLogsLoading(false);
         }
-    }, [t]);
+    }, [t, logsCurrentPage]);
 
     const fetchAudit = useCallback(async (page: number) => {
         try {
@@ -112,6 +116,10 @@ const ConnectionLogsPage = () => {
     useEffect(() => {
         if (tab === "audit") fetchAudit(auditPage);
     }, [auditPage]);
+
+    useEffect(() => {
+        if (tab === "connexions") fetchLogs();
+    }, [logsCurrentPage]);
 
     const handlePurge = async () => {
         try {
@@ -165,7 +173,7 @@ const ConnectionLogsPage = () => {
                 >
                     <Clock className="inline mr-2 h-4 w-4" />
                     {t("logs.tabConnexions")}
-                    <span className="ml-2 bg-muted text-muted-foreground text-xs px-1.5 py-0.5 rounded-full">{logs.length}</span>
+                    {logsPage && <span className="ml-2 bg-muted text-muted-foreground text-xs px-1.5 py-0.5 rounded-full">{logsPage.totalElements}</span>}
                 </button>
                 <button
                     className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${tab === "audit" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
@@ -191,19 +199,19 @@ const ConnectionLogsPage = () => {
                         <Card><CardContent className="pt-6">
                             <div className="flex items-center gap-3">
                                 <Clock className="h-5 w-5 text-muted-foreground" />
-                                <div><p className="text-2xl font-bold">{logs.length}</p><p className="text-sm text-muted-foreground">{t("logs.totalConnections")}</p></div>
+                                <div><p className="text-2xl font-bold">{logsPage?.totalElements ?? 0}</p><p className="text-sm text-muted-foreground">{t("logs.totalConnections")}</p></div>
                             </div>
                         </CardContent></Card>
                         <Card><CardContent className="pt-6">
                             <div className="flex items-center gap-3">
                                 <CheckCircle className="h-5 w-5 text-green-500" />
-                                <div><p className="text-2xl font-bold text-green-600">{logs.filter(l => l.success).length}</p><p className="text-sm text-muted-foreground">{t("logs.successCount")}</p></div>
+                                <div><p className="text-2xl font-bold text-green-600">{logsPage?.content.filter(l => l.success).length ?? 0}</p><p className="text-sm text-muted-foreground">{t("logs.successCount")}</p></div>
                             </div>
                         </CardContent></Card>
                         <Card><CardContent className="pt-6">
                             <div className="flex items-center gap-3">
                                 <XCircle className="h-5 w-5 text-destructive" />
-                                <div><p className="text-2xl font-bold text-destructive">{logs.filter(l => !l.success).length}</p><p className="text-sm text-muted-foreground">{t("logs.failureCount")}</p></div>
+                                <div><p className="text-2xl font-bold text-destructive">{logsPage?.content.filter(l => !l.success).length ?? 0}</p><p className="text-sm text-muted-foreground">{t("logs.failureCount")}</p></div>
                             </div>
                         </CardContent></Card>
                     </div>
@@ -213,33 +221,52 @@ const ConnectionLogsPage = () => {
                         <CardContent>
                             {logsLoading ? (
                                 <div className="text-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-t-2 border-primary mx-auto" /></div>
-                            ) : logs.length === 0 ? (
+                            ) : !logsPage || logsPage.content.length === 0 ? (
                                 <div className="text-center py-12 text-muted-foreground"><Clock className="h-12 w-12 mx-auto mb-3 opacity-30" /><p>{t("logs.noLogs")}</p></div>
                             ) : (
-                                <div className="overflow-x-auto">
-                                    <table className="w-full text-sm">
-                                        <thead><tr className="border-b text-muted-foreground">
-                                            <th className="text-left py-3 px-4 font-medium">{t("logs.loginCol")}</th>
-                                            <th className="text-left py-3 px-4 font-medium">{t("logs.statusCol")}</th>
-                                            <th className="text-left py-3 px-4 font-medium">{t("logs.ipCol")}</th>
-                                            <th className="text-left py-3 px-4 font-medium">{t("logs.dateCol")}</th>
-                                        </tr></thead>
-                                        <tbody>
-                                            {logs.map(log => (
-                                                <tr key={log.id} className="border-b hover:bg-muted/50 transition-colors">
-                                                    <td className="py-3 px-4 font-medium">{log.login}</td>
-                                                    <td className="py-3 px-4">
-                                                        <Badge variant={log.success ? "default" : "destructive"}>
-                                                            {log.success ? <><CheckCircle className="mr-1 h-3 w-3" />{t("logs.success")}</> : <><XCircle className="mr-1 h-3 w-3" />{t("logs.failure")}</>}
-                                                        </Badge>
-                                                    </td>
-                                                    <td className="py-3 px-4 text-muted-foreground font-mono text-xs">{log.ip || "—"}</td>
-                                                    <td className="py-3 px-4 text-muted-foreground">{new Date(log.createdAt).toLocaleString("fr-FR")}</td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
+                                <>
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-sm">
+                                            <thead><tr className="border-b text-muted-foreground">
+                                                <th className="text-left py-3 px-4 font-medium">{t("logs.loginCol")}</th>
+                                                <th className="text-left py-3 px-4 font-medium">{t("logs.statusCol")}</th>
+                                                <th className="text-left py-3 px-4 font-medium">{t("logs.ipCol")}</th>
+                                                <th className="text-left py-3 px-4 font-medium">{t("logs.dateCol")}</th>
+                                            </tr></thead>
+                                            <tbody>
+                                                {logsPage.content.map(log => (
+                                                    <tr key={log.id} className="border-b hover:bg-muted/50 transition-colors">
+                                                        <td className="py-3 px-4 font-medium">{log.login}</td>
+                                                        <td className="py-3 px-4">
+                                                            <Badge variant={log.success ? "default" : "destructive"}>
+                                                                {log.success ? <><CheckCircle className="mr-1 h-3 w-3" />{t("logs.success")}</> : <><XCircle className="mr-1 h-3 w-3" />{t("logs.failure")}</>}
+                                                            </Badge>
+                                                        </td>
+                                                        <td className="py-3 px-4 text-muted-foreground font-mono text-xs">{log.ip || "—"}</td>
+                                                        <td className="py-3 px-4 text-muted-foreground">{new Date(log.createdAt).toLocaleString("fr-FR")}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    {/* Pagination */}
+                                    {logsPage.totalPages > 1 && (
+                                        <div className="flex items-center justify-between pt-4 border-t">
+                                            <p className="text-sm text-muted-foreground">
+                                                {t("logs.page")} {logsPage.page + 1} / {logsPage.totalPages} ({logsPage.totalElements} {t("logs.entries")})
+                                            </p>
+                                            <div className="flex gap-2">
+                                                <Button variant="outline" size="sm" disabled={logsCurrentPage === 0} onClick={() => setLogsCurrentPage(p => p - 1)}>
+                                                    <ChevronLeft className="h-4 w-4" />
+                                                </Button>
+                                                <Button variant="outline" size="sm" disabled={logsCurrentPage >= logsPage.totalPages - 1} onClick={() => setLogsCurrentPage(p => p + 1)}>
+                                                    <ChevronRight className="h-4 w-4" />
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </>
                             )}
                         </CardContent>
                     </Card>
