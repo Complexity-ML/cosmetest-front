@@ -681,7 +681,7 @@ const ConnectionLogsPage = () => {
                                     <User className="h-4 w-4 text-primary" />
                                 </div>
                                 <div>
-                                    <p className="text-xs text-muted-foreground">Volontaire #{extractVolId(selectedLog)}</p>
+                                    <p className="text-xs text-muted-foreground">Volontaire</p>
                                     {detailVolLoading ? (
                                         <p className="text-sm text-muted-foreground animate-pulse">Chargement...</p>
                                     ) : detailVol ? (
