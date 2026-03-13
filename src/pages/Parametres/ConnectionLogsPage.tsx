@@ -45,6 +45,7 @@ interface ActiveSession {
     login: string;
     connectedSince: string;
     durationSeconds: number;
+    idleSeconds: number;
 }
 
 interface SessionHistoryEntry {
@@ -548,18 +549,27 @@ const ConnectionLogsPage = () => {
                                             <th className="text-left py-3 px-4 font-medium">{t("logs.loginCol")}</th>
                                             <th className="text-left py-3 px-4 font-medium">{t("logs.liveConnectedSince")}</th>
                                             <th className="text-left py-3 px-4 font-medium">{t("logs.liveDuration")}</th>
+                                            <th className="text-left py-3 px-4 font-medium">Inactivité</th>
                                         </tr></thead>
                                         <tbody>
-                                            {liveSessions.map(s => (
-                                                <tr key={s.login} className="border-b hover:bg-muted/50 transition-colors">
-                                                    <td className="py-3 px-4 font-medium flex items-center gap-2">
-                                                        <span className="h-2 w-2 rounded-full bg-green-500 inline-block"></span>
-                                                        {s.login}
-                                                    </td>
-                                                    <td className="py-3 px-4 text-muted-foreground">{new Date(s.connectedSince).toLocaleString("fr-FR")}</td>
-                                                    <td className="py-3 px-4 font-mono text-sm">{formatDuration(s.durationSeconds)}</td>
-                                                </tr>
-                                            ))}
+                                            {liveSessions.map(s => {
+                                                const idleColor = s.idleSeconds >= 8 * 60
+                                                    ? "text-red-600 font-semibold"
+                                                    : s.idleSeconds >= 5 * 60
+                                                    ? "text-orange-500"
+                                                    : "text-green-600";
+                                                return (
+                                                    <tr key={s.login} className="border-b hover:bg-muted/50 transition-colors">
+                                                        <td className="py-3 px-4 font-medium flex items-center gap-2">
+                                                            <span className="h-2 w-2 rounded-full bg-green-500 inline-block"></span>
+                                                            {s.login}
+                                                        </td>
+                                                        <td className="py-3 px-4 text-muted-foreground">{new Date(s.connectedSince).toLocaleString("fr-FR")}</td>
+                                                        <td className="py-3 px-4 font-mono text-sm">{formatDuration(s.durationSeconds)}</td>
+                                                        <td className={`py-3 px-4 font-mono text-sm ${idleColor}`}>{formatDuration(s.idleSeconds)}</td>
+                                                    </tr>
+                                                );
+                                            })}
                                         </tbody>
                                     </table>
                                 </div>
