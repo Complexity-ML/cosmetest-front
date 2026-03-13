@@ -11,7 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../../components/ui/dialog";
 import { Alert, AlertDescription } from "../../components/ui/alert";
 import { Badge } from "../../components/ui/badge";
-import { Plus, Eye, Pencil, Trash2, CheckCircle2, XCircle, Settings2 } from "lucide-react";
+import { Plus, Eye, Pencil, Trash2, CheckCircle2, XCircle, Settings2, ShieldAlert } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 // Types
 interface Parametre {
@@ -220,6 +221,7 @@ IsolatedParametreForm.displayName = 'IsolatedParametreForm';
 // ===============================
 const SettingsPage = () => {
     const { t } = useTranslation();
+    const navigate = useNavigate();
     const [parametres, setParametres] = useState<Parametre[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
@@ -436,10 +438,16 @@ const SettingsPage = () => {
                 </div>
 
                 {auth && auth.hasPermission(2) && (
-                    <Button onClick={handleCreate} size="lg">
-                        <Plus className="mr-2 h-4 w-4" />
-                        {t('settings.newParameter')}
-                    </Button>
+                    <div className="flex gap-2">
+                        <Button variant="outline" size="lg" onClick={() => navigate("/parametres/logs")}>
+                            <ShieldAlert className="mr-2 h-4 w-4" />
+                            {t('logs.title')}
+                        </Button>
+                        <Button onClick={handleCreate} size="lg">
+                            <Plus className="mr-2 h-4 w-4" />
+                            {t('settings.newParameter')}
+                        </Button>
+                    </div>
                 )}
             </div>
 

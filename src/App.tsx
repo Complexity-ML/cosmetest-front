@@ -26,6 +26,7 @@ import GroupeForm from './pages/Groupes/GroupeForm';
 import EtudeFormEnhanced from './pages/Etudes/EtudeFormEnhanced';
 import SettingsPage from './pages/Parametres/SettingsPage';
 import ProfilePage from './pages/Parametres/ProfilePage';
+import ConnectionLogsPage from './pages/Parametres/ConnectionLogsPage';
 import PaiementsPage from './pages/Paiements/PaiementsPage';
 import UnauthorizedPage from './pages/Auth/UnauthorizedPage';
 import AppointmentViewerWrapper from './pages/RendezVous/AppointmentViewerWrapper';
@@ -88,6 +89,9 @@ function App() {
 
             <Route path="/parametres" element={<SettingsPage />} />
             <Route path="/profil" element={<ProfilePage />} />
+            <Route element={<ProtectedRoute requiredRole={2} />}>
+              <Route path="/parametres/logs" element={<ConnectionLogsPage />} />
+            </Route>
 
             <Route path="/paiements" element={<PaiementsPage />} />
           </Route>
