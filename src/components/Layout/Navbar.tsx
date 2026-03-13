@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/popover'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Bell, ChevronDown, User, Settings, LogOut, UserPlus, X } from 'lucide-react'
+import { Bell, ChevronDown, User, Settings, LogOut, UserPlus, X, ShieldAlert } from 'lucide-react'
 import LanguageSwitcher from './LanguageSwitcher'
 
 const Navbar = () => {
@@ -223,6 +223,12 @@ const Navbar = () => {
               <Settings className="mr-2 h-4 w-4" />
               {t('sidebar.settings')}
             </DropdownMenuItem>
+            {user?.role === 2 && (
+              <DropdownMenuItem onClick={() => navigate('/parametres/logs')}>
+                <ShieldAlert className="mr-2 h-4 w-4" />
+                {t('logs.title')}
+              </DropdownMenuItem>
+            )}
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout} className="text-destructive">
               <LogOut className="mr-2 h-4 w-4" />
