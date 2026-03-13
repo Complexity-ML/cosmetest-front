@@ -196,6 +196,18 @@ const parametreService = {
     },
 
     /**
+     * Get currently active sessions (admin only)
+     */
+    getActiveSessions: async () => {
+        try {
+            const response = await api.get('/connexions/active');
+            return response.data;
+        } catch (error: any) {
+            throw new Error(error.response?.data?.message || 'Erreur lors de la récupération des sessions actives');
+        }
+    },
+
+    /**
      * Get audit logs (admin only)
      */
     getAuditLogs: async (page = 0, size = 50, entite?: string, utilisateur?: string) => {

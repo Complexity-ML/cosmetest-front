@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../..
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { Alert, AlertDescription } from "../../components/ui/alert";
-import { ShieldAlert, ArrowLeft, RefreshCw, CheckCircle, XCircle, Clock, Activity, ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
+import { ShieldAlert, ArrowLeft, RefreshCw, CheckCircle, XCircle, Clock, Activity, ChevronLeft, ChevronRight, Trash2, Radio } from "lucide-react";
 
 interface ConnectionLog {
     id: number;
@@ -39,6 +39,12 @@ interface LogPage<T> {
 type AuditPage = LogPage<AuditLog>;
 type ConnexionPage = LogPage<ConnectionLog>;
 
+interface ActiveSession {
+    login: string;
+    connectedSince: string;
+    durationSeconds: number;
+}
+
 const ACTION_COLORS: Record<string, string> = {
     CREATE: "bg-green-100 text-green-800",
     UPDATE: "bg-blue-100 text-blue-800",
@@ -57,7 +63,7 @@ const ConnectionLogsPage = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const auth = useContext(AuthContext);
-    const [tab, setTab] = useState<"connexions" | "audit">("connexions");
+    const [tab, setTab] = useState<"connexions" | "audit" | "live">("connexions");
 
     // Connexions
     const [logsPage, setLogsPage] = useState<ConnexionPage | null>(null);
@@ -77,6 +83,12 @@ const ConnectionLogsPage = () => {
     });
     const [purgeLoading, setPurgeLoading] = useState(false);
     const [purgeConfirm, setPurgeConfirm] = useState(false);
+
+    // Live sessions
+    const [liveSessions, setLiveSessions] = useState<ActiveSession[]>([]);
+    const [liveLoading, setLiveLoading] = useState(false);
+    const [liveError, setLiveError] = useState<string | null>(null);
+    const [liveCount, setLiveCount] = useState(0);
 
     const fetchLogs = useCallback(async () => {
         try {
@@ -121,6 +133,28 @@ const ConnectionLogsPage = () => {
         if (tab === "connexions") fetchLogs();
     }, [logsCurrentPage]);
 
+    const fetchLive = useCallback(async () => {
+        try {
+            setLiveLoading(true);
+            setLiveError(null);
+            const data = await parametreService.getActiveSessions();
+            setLiveSessions(data.sessions);
+            setLiveCount(data.count);
+        } catch (err) {
+            setLiveError(err instanceof Error ? err.message : t("logs.unknownError"));
+        } finally {
+            setLiveLoading(false);
+        }
+    }, [t]);
+
+    useEffect(() => {
+        if (tab === "live") {
+            fetchLive();
+            const interval = setInterval(fetchLive, 30000);
+            return () => clearInterval(interval);
+        }
+    }, [tab, fetchLive]);
+
     const handlePurge = async () => {
         try {
             setPurgeLoading(true);
@@ -138,10 +172,11 @@ const ConnectionLogsPage = () => {
 
     const handleRefresh = () => {
         if (tab === "connexions") fetchLogs();
-        else fetchAudit(auditPage);
+        else if (tab === "audit") fetchAudit(auditPage);
+        else fetchLive();
     };
 
-    const isLoading = tab === "connexions" ? logsLoading : auditLoading;
+    const isLoading = tab === "connexions" ? logsLoading : tab === "audit" ? auditLoading : liveLoading;
 
     return (
         <div className="container max-w-7xl mx-auto p-6 space-y-6">
@@ -182,6 +217,14 @@ const ConnectionLogsPage = () => {
                     <Activity className="inline mr-2 h-4 w-4" />
                     {t("logs.tabAudit")}
                     {audit && <span className="ml-2 bg-muted text-muted-foreground text-xs px-1.5 py-0.5 rounded-full">{audit.totalElements}</span>}
+                </button>
+                <button
+                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${tab === "live" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+                    onClick={() => setTab("live")}
+                >
+                    <Radio className="inline mr-2 h-4 w-4" />
+                    {t("logs.tabLive")}
+                    {liveCount > 0 && <span className="ml-2 bg-green-100 text-green-800 text-xs px-1.5 py-0.5 rounded-full">{liveCount}</span>}
                 </button>
             </div>
 
@@ -375,8 +418,78 @@ const ConnectionLogsPage = () => {
                     </Card>
                 </>
             )}
+            {/* ONGLET EN DIRECT */}
+            {tab === "live" && (
+                <>
+                    {liveError && (
+                        <Alert variant="destructive">
+                            <XCircle className="h-4 w-4" />
+                            <AlertDescription>{liveError}</AlertDescription>
+                        </Alert>
+                    )}
+
+                    <Card>
+                        <CardHeader>
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <CardTitle className="flex items-center gap-2">
+                                        <span className="relative flex h-2 w-2">
+                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                            <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                                        </span>
+                                        {t("logs.liveTitle")}
+                                    </CardTitle>
+                                    <CardDescription>{t("logs.liveDesc")}</CardDescription>
+                                </div>
+                                <span className="text-sm text-muted-foreground">{t("logs.liveRefresh")}</span>
+                            </div>
+                        </CardHeader>
+                        <CardContent>
+                            {liveLoading ? (
+                                <div className="text-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-t-2 border-primary mx-auto" /></div>
+                            ) : liveSessions.length === 0 ? (
+                                <div className="text-center py-12 text-muted-foreground">
+                                    <Radio className="h-12 w-12 mx-auto mb-3 opacity-30" />
+                                    <p>{t("logs.liveEmpty")}</p>
+                                </div>
+                            ) : (
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-sm">
+                                        <thead><tr className="border-b text-muted-foreground">
+                                            <th className="text-left py-3 px-4 font-medium">{t("logs.loginCol")}</th>
+                                            <th className="text-left py-3 px-4 font-medium">{t("logs.liveConnectedSince")}</th>
+                                            <th className="text-left py-3 px-4 font-medium">{t("logs.liveDuration")}</th>
+                                        </tr></thead>
+                                        <tbody>
+                                            {liveSessions.map(s => (
+                                                <tr key={s.login} className="border-b hover:bg-muted/50 transition-colors">
+                                                    <td className="py-3 px-4 font-medium flex items-center gap-2">
+                                                        <span className="h-2 w-2 rounded-full bg-green-500 inline-block"></span>
+                                                        {s.login}
+                                                    </td>
+                                                    <td className="py-3 px-4 text-muted-foreground">{new Date(s.connectedSince).toLocaleString("fr-FR")}</td>
+                                                    <td className="py-3 px-4 font-mono text-sm">{formatDuration(s.durationSeconds)}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+                </>
+            )}
         </div>
     );
 };
+
+function formatDuration(seconds: number): string {
+    if (seconds < 60) return `${seconds}s`;
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    if (h > 0) return `${h}h ${m.toString().padStart(2, "0")}min`;
+    return `${m}min ${s.toString().padStart(2, "0")}s`;
+}
 
 export default ConnectionLogsPage;

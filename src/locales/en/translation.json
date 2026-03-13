@@ -1747,6 +1747,13 @@
     "entries": "entries",
     "purge": "Purge",
     "purgeConfirm": "Delete before this date",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "tabLive": "Live",
+    "liveTitle": "Active sessions",
+    "liveDesc": "Currently connected users (auto-refresh every 30s)",
+    "liveRefresh": "↻ every 30s",
+    "liveEmpty": "No active sessions",
+    "liveConnectedSince": "Connected since",
+    "liveDuration": "Duration"
   }
 }
