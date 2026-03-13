@@ -224,10 +224,11 @@ const ConnectionLogsPage = () => {
         if (log.entite.includes("VOLONTAIRE") && volId) {
             try {
                 setDetailVolLoading(true);
-                const vol = await volontaireService.getById(volId);
+                const response = await volontaireService.getById(volId);
+                const vol = (response as any)?.data ?? response;
                 if (vol) setDetailVol({
-                    nom: vol.nom || (vol as any).nomVol || "",
-                    prenom: vol.prenom || (vol as any).prenomVol || ""
+                    nom: vol.nom || vol.nomVol || "",
+                    prenom: vol.prenom || vol.prenomVol || ""
                 });
             } catch {
                 // volontaire introuvable ou supprimé
