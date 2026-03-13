@@ -109,6 +109,8 @@ const ConnectionLogsPage = () => {
     const [liveLoading, setLiveLoading] = useState(false);
     const [liveError, setLiveError] = useState<string | null>(null);
     const [liveCount, setLiveCount] = useState(0);
+    const [liveFetchedAt, setLiveFetchedAt] = useState<number>(Date.now());
+    const [, setLiveTick] = useState(0);
 
     // Session history
     const [sessionHistory, setSessionHistory] = useState<SessionHistoryPage | null>(null);
@@ -171,6 +173,7 @@ const ConnectionLogsPage = () => {
             const data = await parametreService.getActiveSessions();
             setLiveSessions(data.sessions);
             setLiveCount(data.count);
+            setLiveFetchedAt(Date.now());
         } catch (err) {
             setLiveError(err instanceof Error ? err.message : t("logs.unknownError"));
         } finally {
@@ -197,7 +200,8 @@ const ConnectionLogsPage = () => {
             fetchHistory(0);
             setHistoryPage(0);
             const interval = setInterval(fetchLive, 30000);
-            return () => clearInterval(interval);
+            const ticker = setInterval(() => setLiveTick(t => t + 1), 1000);
+            return () => { clearInterval(interval); clearInterval(ticker); };
         }
     }, [tab, fetchLive]);
 
@@ -553,9 +557,12 @@ const ConnectionLogsPage = () => {
                                         </tr></thead>
                                         <tbody>
                                             {liveSessions.map(s => {
-                                                const idleColor = s.idleSeconds >= 8 * 60
+                                                const elapsed = Math.floor((Date.now() - liveFetchedAt) / 1000);
+                                                const currentIdle = s.idleSeconds + elapsed;
+                                                const currentDuration = s.durationSeconds + elapsed;
+                                                const idleColor = currentIdle >= 8 * 60
                                                     ? "text-red-600 font-semibold"
-                                                    : s.idleSeconds >= 5 * 60
+                                                    : currentIdle >= 5 * 60
                                                     ? "text-orange-500"
                                                     : "text-green-600";
                                                 return (
@@ -565,8 +572,8 @@ const ConnectionLogsPage = () => {
                                                             {s.login}
                                                         </td>
                                                         <td className="py-3 px-4 text-muted-foreground">{new Date(s.connectedSince).toLocaleString("fr-FR")}</td>
-                                                        <td className="py-3 px-4 font-mono text-sm">{formatDuration(s.durationSeconds)}</td>
-                                                        <td className={`py-3 px-4 font-mono text-sm ${idleColor}`}>{formatDuration(s.idleSeconds)}</td>
+                                                        <td className="py-3 px-4 font-mono text-sm">{formatDuration(currentDuration)}</td>
+                                                        <td className={`py-3 px-4 font-mono text-sm ${idleColor}`}>{formatDuration(currentIdle)}</td>
                                                     </tr>
                                                 );
                                             })}
