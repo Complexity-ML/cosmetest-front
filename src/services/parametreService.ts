@@ -236,6 +236,20 @@ const parametreService = {
     },
 
     /**
+     * Get session history (admin only)
+     */
+    getSessionHistory: async (page = 0, size = 50, login?: string) => {
+        try {
+            const params = new URLSearchParams({ page: page.toString(), size: size.toString() });
+            if (login) params.append('login', login);
+            const response = await api.get(`/connexions/session-history?${params}`);
+            return response.data;
+        } catch (error: any) {
+            throw new Error(error.response?.data?.message || "Erreur lors de la récupération de l'historique des sessions");
+        }
+    },
+
+    /**
      * Get parameters with pagination
      * @param {number} page - Page number (1-based)
      * @param {number} limit - Number of items per page

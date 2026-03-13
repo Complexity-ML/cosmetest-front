@@ -1756,6 +1756,11 @@
     "liveRefresh": "↻ toutes les 30s",
     "liveEmpty": "Aucune session active",
     "liveConnectedSince": "Connecté depuis",
-    "liveDuration": "Durée"
+    "liveDuration": "Durée",
+    "sessionHistoryTitle": "Historique des sessions",
+    "sessionHistoryDesc": "Sessions terminées (déconnexion ou expiration)",
+    "sessionHistoryEmpty": "Aucune session terminée enregistrée",
+    "sessionHistoryEnd": "Fin de session",
+    "sessionHistoryReason": "Motif"
   }
 }

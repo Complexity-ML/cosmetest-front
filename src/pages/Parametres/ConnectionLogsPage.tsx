@@ -45,6 +45,23 @@ interface ActiveSession {
     durationSeconds: number;
 }
 
+interface SessionHistoryEntry {
+    id: number;
+    login: string;
+    loginTime: string;
+    logoutTime: string | null;
+    durationSeconds: number | null;
+    reason: string;
+}
+
+interface SessionHistoryPage {
+    content: SessionHistoryEntry[];
+    totalElements: number;
+    totalPages: number;
+    page: number;
+    size: number;
+}
+
 const ACTION_COLORS: Record<string, string> = {
     CREATE: "bg-green-100 text-green-800",
     UPDATE: "bg-blue-100 text-blue-800",
@@ -89,6 +106,12 @@ const ConnectionLogsPage = () => {
     const [liveLoading, setLiveLoading] = useState(false);
     const [liveError, setLiveError] = useState<string | null>(null);
     const [liveCount, setLiveCount] = useState(0);
+
+    // Session history
+    const [sessionHistory, setSessionHistory] = useState<SessionHistoryPage | null>(null);
+    const [historyPage, setHistoryPage] = useState(0);
+    const [historyLoading, setHistoryLoading] = useState(false);
+    const [historyError, setHistoryError] = useState<string | null>(null);
 
     const fetchLogs = useCallback(async () => {
         try {
@@ -147,13 +170,32 @@ const ConnectionLogsPage = () => {
         }
     }, [t]);
 
+    const fetchHistory = useCallback(async (page: number) => {
+        try {
+            setHistoryLoading(true);
+            setHistoryError(null);
+            const data = await parametreService.getSessionHistory(page, 50);
+            setSessionHistory(data);
+        } catch (err) {
+            setHistoryError(err instanceof Error ? err.message : t("logs.unknownError"));
+        } finally {
+            setHistoryLoading(false);
+        }
+    }, [t]);
+
     useEffect(() => {
         if (tab === "live") {
             fetchLive();
+            fetchHistory(0);
+            setHistoryPage(0);
             const interval = setInterval(fetchLive, 30000);
             return () => clearInterval(interval);
         }
     }, [tab, fetchLive]);
+
+    useEffect(() => {
+        if (tab === "live") fetchHistory(historyPage);
+    }, [historyPage]);
 
     const handlePurge = async () => {
         try {
@@ -474,6 +516,77 @@ const ConnectionLogsPage = () => {
                                         </tbody>
                                     </table>
                                 </div>
+                            )}
+                        </CardContent>
+                    </Card>
+
+                    {/* Historique des sessions */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Clock className="h-5 w-5" />
+                                {t("logs.sessionHistoryTitle")}
+                            </CardTitle>
+                            <CardDescription>{t("logs.sessionHistoryDesc")}</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            {historyError && (
+                                <Alert variant="destructive" className="mb-4">
+                                    <XCircle className="h-4 w-4" />
+                                    <AlertDescription>{historyError}</AlertDescription>
+                                </Alert>
+                            )}
+                            {historyLoading ? (
+                                <div className="text-center py-8"><div className="animate-spin rounded-full h-8 w-8 border-t-2 border-primary mx-auto" /></div>
+                            ) : !sessionHistory || sessionHistory.content.length === 0 ? (
+                                <div className="text-center py-8 text-muted-foreground">
+                                    <Clock className="h-10 w-10 mx-auto mb-2 opacity-30" />
+                                    <p>{t("logs.sessionHistoryEmpty")}</p>
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-sm">
+                                            <thead><tr className="border-b text-muted-foreground">
+                                                <th className="text-left py-3 px-4 font-medium">{t("logs.loginCol")}</th>
+                                                <th className="text-left py-3 px-4 font-medium">{t("logs.liveConnectedSince")}</th>
+                                                <th className="text-left py-3 px-4 font-medium">{t("logs.sessionHistoryEnd")}</th>
+                                                <th className="text-left py-3 px-4 font-medium">{t("logs.liveDuration")}</th>
+                                                <th className="text-left py-3 px-4 font-medium">{t("logs.sessionHistoryReason")}</th>
+                                            </tr></thead>
+                                            <tbody>
+                                                {sessionHistory.content.map(s => (
+                                                    <tr key={s.id} className="border-b hover:bg-muted/50 transition-colors">
+                                                        <td className="py-3 px-4 font-medium">{s.login}</td>
+                                                        <td className="py-3 px-4 text-muted-foreground">{new Date(s.loginTime).toLocaleString("fr-FR")}</td>
+                                                        <td className="py-3 px-4 text-muted-foreground">{s.logoutTime ? new Date(s.logoutTime).toLocaleString("fr-FR") : "—"}</td>
+                                                        <td className="py-3 px-4 font-mono text-sm">{s.durationSeconds != null ? formatDuration(s.durationSeconds) : "—"}</td>
+                                                        <td className="py-3 px-4">
+                                                            <span className={`text-xs font-semibold px-2 py-1 rounded-full ${s.reason === "LOGOUT" ? "bg-slate-100 text-slate-700" : "bg-orange-100 text-orange-700"}`}>
+                                                                {s.reason}
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    {sessionHistory.totalPages > 1 && (
+                                        <div className="flex items-center justify-between pt-4 border-t">
+                                            <p className="text-sm text-muted-foreground">
+                                                {t("logs.page")} {sessionHistory.page + 1} / {sessionHistory.totalPages} ({sessionHistory.totalElements} {t("logs.entries")})
+                                            </p>
+                                            <div className="flex gap-2">
+                                                <Button variant="outline" size="sm" disabled={historyPage === 0} onClick={() => setHistoryPage(p => p - 1)}>
+                                                    <ChevronLeft className="h-4 w-4" />
+                                                </Button>
+                                                <Button variant="outline" size="sm" disabled={historyPage >= sessionHistory.totalPages - 1} onClick={() => setHistoryPage(p => p + 1)}>
+                                                    <ChevronRight className="h-4 w-4" />
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </>
                             )}
                         </CardContent>
                     </Card>
