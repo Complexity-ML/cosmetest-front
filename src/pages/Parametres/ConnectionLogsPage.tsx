@@ -3,11 +3,13 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext";
 import parametreService from "../../services/parametreService";
+import volontaireService from "../../services/volontaireService";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { Alert, AlertDescription } from "../../components/ui/alert";
-import { ShieldAlert, ArrowLeft, RefreshCw, CheckCircle, XCircle, Clock, Activity, ChevronLeft, ChevronRight, Trash2, Radio } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../../components/ui/dialog";
+import { ShieldAlert, ArrowLeft, RefreshCw, CheckCircle, XCircle, Clock, Activity, ChevronLeft, ChevronRight, Trash2, Radio, Eye, User } from "lucide-react";
 
 interface ConnectionLog {
     id: number;
@@ -113,6 +115,11 @@ const ConnectionLogsPage = () => {
     const [historyLoading, setHistoryLoading] = useState(false);
     const [historyError, setHistoryError] = useState<string | null>(null);
 
+    // Audit detail modal
+    const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null);
+    const [detailVol, setDetailVol] = useState<{ nom: string; prenom: string } | null>(null);
+    const [detailVolLoading, setDetailVolLoading] = useState(false);
+
     const fetchLogs = useCallback(async () => {
         try {
             setLogsLoading(true);
@@ -196,6 +203,22 @@ const ConnectionLogsPage = () => {
     useEffect(() => {
         if (tab === "live") fetchHistory(historyPage);
     }, [historyPage]);
+
+    const openAuditDetail = useCallback(async (log: AuditLog) => {
+        setSelectedLog(log);
+        setDetailVol(null);
+        if (log.entite === "VOLONTAIRE" && log.entiteId) {
+            try {
+                setDetailVolLoading(true);
+                const vol = await volontaireService.getById(Number(log.entiteId));
+                if (vol) setDetailVol({ nom: vol.nom || "", prenom: vol.prenom || "" });
+            } catch {
+                // volontaire introuvable ou supprimé
+            } finally {
+                setDetailVolLoading(false);
+            }
+        }
+    }, []);
 
     const handlePurge = async () => {
         try {
@@ -417,6 +440,7 @@ const ConnectionLogsPage = () => {
                                                 <th className="text-left py-3 px-4 font-medium">{t("logs.auditDetails")}</th>
                                                 <th className="text-left py-3 px-4 font-medium">{t("logs.ipCol")}</th>
                                                 <th className="text-left py-3 px-4 font-medium">{t("logs.dateCol")}</th>
+                                                <th className="py-3 px-4"></th>
                                             </tr></thead>
                                             <tbody>
                                                 {audit.content.map(log => (
@@ -432,6 +456,11 @@ const ConnectionLogsPage = () => {
                                                         <td className="py-3 px-4 text-muted-foreground text-xs max-w-[200px] truncate">{log.details || "—"}</td>
                                                         <td className="py-3 px-4 text-muted-foreground font-mono text-xs">{log.ip || "—"}</td>
                                                         <td className="py-3 px-4 text-muted-foreground">{new Date(log.createdAt).toLocaleString("fr-FR")}</td>
+                                                        <td className="py-3 px-2">
+                                                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openAuditDetail(log)}>
+                                                                <Eye className="h-4 w-4" />
+                                                            </Button>
+                                                        </td>
                                                     </tr>
                                                 ))}
                                             </tbody>
@@ -592,9 +621,77 @@ const ConnectionLogsPage = () => {
                     </Card>
                 </>
             )}
-        </div>
+        {/* Modal détail audit */}
+        <Dialog open={!!selectedLog} onOpenChange={open => { if (!open) setSelectedLog(null); }}>
+            <DialogContent className="max-w-lg">
+                <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                        <Eye className="h-5 w-5" />
+                        Détail de l'action #{selectedLog?.id}
+                    </DialogTitle>
+                </DialogHeader>
+                {selectedLog && (
+                    <div className="space-y-4 text-sm">
+                        <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+                            <div>
+                                <p className="text-xs text-muted-foreground mb-0.5">Utilisateur</p>
+                                <p className="font-medium">{selectedLog.utilisateur}</p>
+                            </div>
+                            <div>
+                                <p className="text-xs text-muted-foreground mb-0.5">Action</p>
+                                <span className={`text-xs font-semibold px-2 py-1 rounded-full ${ACTION_COLORS[selectedLog.action] || "bg-gray-100 text-gray-800"}`}>
+                                    {selectedLog.action}
+                                </span>
+                            </div>
+                            <div>
+                                <p className="text-xs text-muted-foreground mb-0.5">Entité</p>
+                                <p className="font-medium">{selectedLog.entite}</p>
+                            </div>
+                            <div>
+                                <p className="text-xs text-muted-foreground mb-0.5">ID entité</p>
+                                <p className="font-mono">{selectedLog.entiteId || "—"}</p>
+                            </div>
+                            <div>
+                                <p className="text-xs text-muted-foreground mb-0.5">IP</p>
+                                <p className="font-mono text-xs">{selectedLog.ip || "—"}</p>
+                            </div>
+                            <div>
+                                <p className="text-xs text-muted-foreground mb-0.5">Date</p>
+                                <p>{new Date(selectedLog.createdAt).toLocaleString("fr-FR")}</p>
+                            </div>
+                        </div>
+
+                        {selectedLog.entite === "VOLONTAIRE" && selectedLog.entiteId && (
+                            <div className="border rounded-lg p-3 bg-muted/40 flex items-center gap-3">
+                                <div className="p-2 bg-primary/10 rounded-full">
+                                    <User className="h-4 w-4 text-primary" />
+                                </div>
+                                <div>
+                                    <p className="text-xs text-muted-foreground">Volontaire #{selectedLog.entiteId}</p>
+                                    {detailVolLoading ? (
+                                        <p className="text-sm text-muted-foreground animate-pulse">Chargement...</p>
+                                    ) : detailVol ? (
+                                        <p className="font-semibold">{detailVol.prenom} {detailVol.nom}</p>
+                                    ) : (
+                                        <p className="text-sm text-muted-foreground italic">Introuvable ou supprimé</p>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {selectedLog.details && (
+                            <div>
+                                <p className="text-xs text-muted-foreground mb-1">Détails</p>
+                                <pre className="text-xs bg-muted p-3 rounded-lg whitespace-pre-wrap break-words font-mono">{selectedLog.details}</pre>
+                            </div>
+                        )}
+                    </div>
+                )}
+            </DialogContent>
+        </Dialog>
+    </div>
     );
-};
+}
 
 function formatDuration(seconds: number): string {
     if (seconds < 60) return `${seconds}s`;
