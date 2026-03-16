@@ -452,7 +452,7 @@ const etudeVolontaireService = {
         idGroupe: parseNum(idGroupe),
         iv: parseNum(iv), // Convertir en entier
         numsujet: 0,
-        paye: parseNum(iv) > 0 ? 1 : 0, // Si IV > 0, alors payé
+        paye: 0, // Non payé par défaut
         statut: String(statut),
       };
 
