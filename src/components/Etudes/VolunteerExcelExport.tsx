@@ -230,16 +230,13 @@ const VolunteerExcelExport: React.FC<VolunteerExcelExportProps> = ({
       const headers = [
         'N° Sujet',
         'ID Vol',
-        'Code',
         'AGE',
-        'Sensibilité cutanée',
-        'TYPE DE PEAU',
-        'D0', // Date de début d'étude
-        'ETHNIE', // Ajout de l'ethnie
-        '', // Colonne vide
         'TYPE DE PEAU (EN)',
-        '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', // Colonnes vides
-        'Phototype'
+        'Phototype',
+        'TYPE DE PEAU',
+        'Sensibilité cutanée',
+        'D0', // Date de début d'étude
+        'ETHNIE',
       ];
 
       // 3. Créer les lignes de données
@@ -286,39 +283,7 @@ const VolunteerExcelExport: React.FC<VolunteerExcelExportProps> = ({
       volunteersData.forEach((volunteer) => {
         const row = [];
 
-        // N° Sujet
-        row.push(volunteer.numeroSujet || '');
-
-        // ID Vol
-        row.push(volunteer.idVol || '');
-
-        // Code (initiales générées à partir du nom/prénom)
-        const code = volunteer.nomVol && volunteer.prenomVol ?
-          `${volunteer.nomVol.substring(0, 3).toUpperCase()}${volunteer.prenomVol.substring(0, 2).toUpperCase()}` :
-          '';
-        row.push(code);
-
-        // Age (calculé à partir de dateNaissance)
-        const age = volunteer.dateNaissance ?
-          Math.floor((new Date().getTime() - new Date(volunteer.dateNaissance).getTime()) / (365.25 * 24 * 60 * 60 * 1000)) :
-          '';
-        row.push(age);
-
-        // Sensibilité cutanée (utilise l'attribut sensibiliteCutanee de l'entité)
-        row.push(volunteer.sensibiliteCutanee || '');
-
-        // Type de peau (utilise typePeauVisage normalisé)
-        row.push(volunteer.typePeauVisage || '');
-
-        // D0 (Date de début d'étude en anglais)
-        row.push(studyStartDate);
-
-        // Ethnie du volontaire
-        row.push(formatEthnieEnglish(volunteer.ethnie) || '');
-        // Colonne vide
-        row.push('');
-
-        // Type de peau en anglais
+        // Type de peau en anglais (lookup)
         const typesPeauEn: Record<string, string> = {
           'Sèche': 'Dry',
           'Normale': 'Normal',
@@ -328,15 +293,28 @@ const VolunteerExcelExport: React.FC<VolunteerExcelExportProps> = ({
           'Mixte à tendance grasse': 'Combination to oily',
           'Mixte à tendance sèche': 'Combination to dry',
         };
+
+        // N° Sujet
+        row.push(volunteer.numeroSujet || '');
+        // ID Vol
+        row.push(volunteer.idVol || '');
+        // AGE
+        const age = volunteer.dateNaissance ?
+          Math.floor((new Date().getTime() - new Date(volunteer.dateNaissance).getTime()) / (365.25 * 24 * 60 * 60 * 1000)) :
+          '';
+        row.push(age);
+        // TYPE DE PEAU (EN)
         row.push(typesPeauEn[volunteer.typePeauVisage as string] || volunteer.typePeauVisage || '');
-
-        // Colonnes vides supplémentaires
-        for (let i = 0; i < 20; i++) {
-          row.push('');
-        }
-
-        // Phototype (normalisé en chiffres romains)
+        // Phototype
         row.push(normalizePhototype(volunteer.phototype));
+        // TYPE DE PEAU
+        row.push(volunteer.typePeauVisage || '');
+        // Sensibilité cutanée
+        row.push(volunteer.sensibiliteCutanee || '');
+        // D0
+        row.push(studyStartDate);
+        // ETHNIE
+        row.push(formatEthnieEnglish(volunteer.ethnie) || '');
 
         dataRows.push(row);
       });
@@ -348,12 +326,12 @@ const VolunteerExcelExport: React.FC<VolunteerExcelExportProps> = ({
       const dataStartRowExcel = 4; // Ligne Excel (1-indexed)
       const dataEndRowExcel = dataStartRowExcel + volunteersData.length - 1;
 
-      // Colonnes: D=Age, E=Sensibilité, F=Type peau, H=Ethnie, AE=Phototype
-      const ageRange = `D${dataStartRowExcel}:D${dataEndRowExcel}`;
-      const sensibiliteRange = `E${dataStartRowExcel}:E${dataEndRowExcel}`;
+      // Colonnes: C=Age, D=Type peau EN, E=Phototype, F=Type peau, G=Sensibilité, I=Ethnie
+      const ageRange = `C${dataStartRowExcel}:C${dataEndRowExcel}`;
+      const sensibiliteRange = `G${dataStartRowExcel}:G${dataEndRowExcel}`;
       const typePeauRange = `F${dataStartRowExcel}:F${dataEndRowExcel}`;
-      const ethnieRange = `H${dataStartRowExcel}:H${dataEndRowExcel}`;
-      const phototypeRange = `AE${dataStartRowExcel}:AE${dataEndRowExcel}`;
+      const ethnieRange = `I${dataStartRowExcel}:I${dataEndRowExcel}`;
+      const phototypeRange = `E${dataStartRowExcel}:E${dataEndRowExcel}`;
 
       // === CALCULS PRÉALABLES (pour les valeurs initiales) ===
       const ages = volunteersData.map(v => {
@@ -486,13 +464,16 @@ const VolunteerExcelExport: React.FC<VolunteerExcelExportProps> = ({
           formulesToApply.push({row: currentRowIndex + idx, col: 1, formula: `COUNTIF(${sensibiliteRange},"${value}")`, value: count});
           formulesToApply.push({row: currentRowIndex + idx, col: 2, formula: `ROUND(COUNTIF(${sensibiliteRange},"${value}")/COUNTA(${sensibiliteRange})*100,1)`, value: pct});
         } else if (idx === sensibiliteValues.length + 1) {
-          formulesToApply.push({row: currentRowIndex + idx, col: 1, formula: `COUNTA(${sensibiliteRange})`, value: volunteersData.length});
+          const firstRow = currentRowIndex + 1 + 1; // +1 for 0-index to Excel row, data starts at idx=1
+          const lastRow = currentRowIndex + sensibiliteValues.length + 1;
+          formulesToApply.push({row: currentRowIndex + idx, col: 1, formula: `SUM(B${firstRow}:B${lastRow})`, value: volunteersData.length});
+          formulesToApply.push({row: currentRowIndex + idx, col: 2, formula: `SUM(C${firstRow}:C${lastRow})`, value: 100});
         }
       });
       currentRowIndex = dataRows.length;
 
       // === 3. STATISTIQUES DE TYPES DE PEAU ===
-      const orderedTypesPeau = ['Normale', 'Sèche', 'Grasse', 'Mixte à tendance grasse', 'Mixte à tendance sèche', 'Mixte'];
+      const orderedTypesPeau = ['Mixte', 'Normale', 'Sèche', 'Grasse', 'Mixte à tendance grasse', 'Mixte à tendance sèche'];
       const typesPeauPresents = [...new Set(volunteersData.map(v => v.typePeauVisage || 'Non spécifié'))];
       const extraTypes = typesPeauPresents.filter(t => !orderedTypesPeau.includes(t));
       const allTypesPeau = [...orderedTypesPeau, ...extraTypes];
@@ -520,7 +501,10 @@ const VolunteerExcelExport: React.FC<VolunteerExcelExportProps> = ({
           formulesToApply.push({row: currentRowIndex + idx, col: 1, formula: `COUNTIF(${typePeauRange},"${type}")`, value: count});
           formulesToApply.push({row: currentRowIndex + idx, col: 2, formula: `ROUND(COUNTIF(${typePeauRange},"${type}")/COUNTA(${typePeauRange})*100,1)`, value: pct});
         } else if (idx === allTypesPeau.length + 1) {
-          formulesToApply.push({row: currentRowIndex + idx, col: 1, formula: `COUNTA(${typePeauRange})`, value: volunteersData.length});
+          const firstRow = currentRowIndex + 1 + 1;
+          const lastRow = currentRowIndex + allTypesPeau.length + 1;
+          formulesToApply.push({row: currentRowIndex + idx, col: 1, formula: `SUM(B${firstRow}:B${lastRow})`, value: volunteersData.length});
+          formulesToApply.push({row: currentRowIndex + idx, col: 2, formula: `SUM(C${firstRow}:C${lastRow})`, value: 100});
         }
       });
       currentRowIndex = dataRows.length;
@@ -551,7 +535,10 @@ const VolunteerExcelExport: React.FC<VolunteerExcelExportProps> = ({
           formulesToApply.push({row: currentRowIndex + idx, col: 1, formula: `COUNTIF(${phototypeRange},"${type}")`, value: count});
           formulesToApply.push({row: currentRowIndex + idx, col: 2, formula: `ROUND(COUNTIF(${phototypeRange},"${type}")/COUNTA(${phototypeRange})*100,1)`, value: pct});
         } else if (idx === orderedPhototypes.length + 1) {
-          formulesToApply.push({row: currentRowIndex + idx, col: 1, formula: `COUNTA(${phototypeRange})`, value: volunteersData.length});
+          const firstRow = currentRowIndex + 1 + 1;
+          const lastRow = currentRowIndex + orderedPhototypes.length + 1;
+          formulesToApply.push({row: currentRowIndex + idx, col: 1, formula: `SUM(B${firstRow}:B${lastRow})`, value: volunteersData.length});
+          formulesToApply.push({row: currentRowIndex + idx, col: 2, formula: `SUM(C${firstRow}:C${lastRow})`, value: 100});
         }
       });
       currentRowIndex = dataRows.length;
@@ -581,7 +568,10 @@ const VolunteerExcelExport: React.FC<VolunteerExcelExportProps> = ({
           formulesToApply.push({row: currentRowIndex + idx, col: 1, formula: `COUNTIF(${ethnieRange},"${ethnie}")`, value: count});
           formulesToApply.push({row: currentRowIndex + idx, col: 2, formula: `ROUND(COUNTIF(${ethnieRange},"${ethnie}")/COUNTA(${ethnieRange})*100,1)`, value: pct});
         } else if (idx === ethniesPresentes.length + 1) {
-          formulesToApply.push({row: currentRowIndex + idx, col: 1, formula: `COUNTA(${ethnieRange})`, value: volunteersData.length});
+          const firstRow = currentRowIndex + 1 + 1;
+          const lastRow = currentRowIndex + ethniesPresentes.length + 1;
+          formulesToApply.push({row: currentRowIndex + idx, col: 1, formula: `SUM(B${firstRow}:B${lastRow})`, value: volunteersData.length});
+          formulesToApply.push({row: currentRowIndex + idx, col: 2, formula: `SUM(C${firstRow}:C${lastRow})`, value: 100});
         }
       });
 
@@ -778,19 +768,15 @@ const VolunteerExcelExport: React.FC<VolunteerExcelExportProps> = ({
 
       // 12. Définir la largeur des colonnes
       const colWidths = [
-        { width: 10 },  // ID Vol
         { width: 10 },  // N° Sujet
-        { width: 8 },   // Code
-        { width: 6 },   // Age
+        { width: 10 },  // ID Vol
+        { width: 6 },   // AGE
+        { width: 22 },  // TYPE DE PEAU (EN)
+        { width: 12 },  // Phototype
+        { width: 25 },  // TYPE DE PEAU
         { width: 20 },  // Sensibilité cutanée
-        { width: 25 },  // Type de peau
-        { width: 12 },  // D0 (date début)
-        { width: 15 },  // Ethnie
-        { width: 3 },   // Vide
-        { width: 20 },  // Type de peau EN
-        // Colonnes vides (20 colonnes)
-        ...Array(20).fill({ width: 3 }),
-        { width: 15 },  // Phototype
+        { width: 12 },  // D0
+        { width: 15 },  // ETHNIE
       ];
 
       ws['!cols'] = colWidths;
