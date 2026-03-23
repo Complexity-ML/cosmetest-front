@@ -62,7 +62,7 @@ const EtudesPage = () => {
   }
   
   const handleRowClick = (etudeId: number) => {
-    window.open(`/etudes/${etudeId}`, '_blank')
+    window.location.href = `/etudes/${etudeId}`
   }
   
   const getStatusBadge = (etude: Etude) => {

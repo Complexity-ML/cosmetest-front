@@ -82,7 +82,7 @@ const VolontairesTable = ({ volontaires, onArchive }: VolontairesTableProps) => 
 
   // Fonction pour gérer le clic sur une ligne (ouvre dans un nouvel onglet)
   const handleRowClick = (volontaireId: string | number) => {
-    window.open(`/volontaires/${volontaireId}`, '_blank')
+    window.location.href = `/volontaires/${volontaireId}`
   }
 
   // Tri des volontaires selon la configuration

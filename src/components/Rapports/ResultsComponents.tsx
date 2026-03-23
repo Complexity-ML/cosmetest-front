@@ -105,8 +105,6 @@ export const ResultRow: React.FC<ResultRowProps> = ({ volontaire, formatNote }) 
       <TableCell>
         <a
           href={`/volontaires/${volontaire.id}`}
-          target="_blank"
-          rel="noopener noreferrer"
           className="font-medium text-blue-600 hover:text-blue-800 hover:underline inline-flex items-center gap-1"
         >
           {volontaire.nom} {volontaire.prenom}
