@@ -55,6 +55,7 @@ export interface Etude {
   type?: string;
   paye?: number;
   rdvCount?: number;
+  archive?: boolean;
   [key: string]: any;
 }
 

@@ -106,9 +106,11 @@ const EtudeDetail = () => {
           <Button asChild variant="outline">
             <Link to={`/etudes/${etude.idEtude}/edit`}>{t('common.edit')}</Link>
           </Button>
-          <Button onClick={handleDelete} variant="destructive">
-            {t('common.delete')}
-          </Button>
+          {etude.archive && (
+            <Button onClick={handleDelete} variant="destructive">
+              {t('common.delete')}
+            </Button>
+          )}
         </div>
       </div>
 
