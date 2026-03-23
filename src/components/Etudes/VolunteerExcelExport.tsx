@@ -289,7 +289,6 @@ const VolunteerExcelExport: React.FC<VolunteerExcelExportProps> = ({
           'Mixte': 'Combination',
           'Normale': 'Normal',
           'Sèche': 'Dry',
-          'Sensible': 'Sensitive',
           'Mixte à tendance grasse': 'Combination to oily',
           'Mixte à tendance sèche': 'Combination to dry',
         };
@@ -473,7 +472,7 @@ const VolunteerExcelExport: React.FC<VolunteerExcelExportProps> = ({
       currentRowIndex = dataRows.length;
 
       // === 3. STATISTIQUES DE TYPES DE PEAU ===
-      const orderedTypesPeau = ['Grasse', 'Mixte', 'Normale', 'Sèche', 'Sensible', 'Mixte à tendance grasse', 'Mixte à tendance sèche'];
+      const orderedTypesPeau = ['Grasse', 'Mixte', 'Normale', 'Sèche', 'Mixte à tendance grasse', 'Mixte à tendance sèche'];
       const typesPeauPresents = [...new Set(volunteersData.map(v => v.typePeauVisage || 'Non spécifié'))];
       const extraTypes = typesPeauPresents.filter(t => !orderedTypesPeau.includes(t));
       const allTypesPeau = [...orderedTypesPeau, ...extraTypes];
