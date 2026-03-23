@@ -224,7 +224,13 @@ const VolontairesTable = ({ volontaires, onArchive }: VolontairesTableProps) => 
                     {id}
                   </TableCell>
                   <TableCell className="font-medium">
-                    {volontaire.nomVol || volontaire.nom}
+                    <a
+                      href={`/volontaires/${id}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="text-blue-600 hover:text-blue-800 hover:underline"
+                    >
+                      {volontaire.nomVol || volontaire.nom}
+                    </a>
                   </TableCell>
                   <TableCell>
                     {volontaire.prenomVol || volontaire.prenom}

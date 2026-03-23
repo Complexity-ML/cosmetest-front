@@ -650,9 +650,9 @@ const PaiementsPage = () => {
             <button onClick={() => window.history.back()} className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md transition-colors">
               {t('common.back')}
             </button>
-            <button onClick={() => window.location.href = '/dashboard'} className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-md transition-colors">
+            <a href="/dashboard" className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-md transition-colors inline-block">
               {t('sidebar.dashboard')}
-            </button>
+            </a>
           </div>
         </div>
       </div>

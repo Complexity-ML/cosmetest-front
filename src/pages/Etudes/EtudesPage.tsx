@@ -230,7 +230,15 @@ const EtudesPage = () => {
                         className={`cursor-pointer ${etude.archive ? 'bg-gray-50 opacity-75' : ''}`}
                         onClick={() => etude.idEtude && handleRowClick(etude.idEtude)}
                       >
-                        <TableCell className="font-medium">{etude.ref}</TableCell>
+                        <TableCell className="font-medium">
+                          <a
+                            href={`/etudes/${etude.idEtude}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="text-blue-600 hover:text-blue-800 hover:underline"
+                          >
+                            {etude.ref}
+                          </a>
+                        </TableCell>
                         <TableCell>{etude.titre}</TableCell>
                         <TableCell>{formatDate(etude.dateDebut || etude.debut)}</TableCell>
                         <TableCell>{formatDate(etude.dateFin || etude.fin)}</TableCell>

@@ -588,12 +588,12 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
                       <div>
                         <div className="font-medium">
                           {volontaire.idVolontaire !== 0 ? (
-                            <button
-                              onClick={() => { window.location.href = `/volontaires/${volontaire.idVolontaire}`; }}
+                            <a
+                              href={`/volontaires/${volontaire.idVolontaire}`}
                               className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left"
                             >
                               {getVolontaireName(volontaire.idVolontaire)}
-                            </button>
+                            </a>
                           ) : (
                             <>
                               {getVolontaireName(volontaire.idVolontaire)}
