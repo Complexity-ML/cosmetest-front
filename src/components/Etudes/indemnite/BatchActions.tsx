@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Euro, FileText, Check, X, Loader2, Settings2 } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Euro, FileText, Check, X, Loader2, Settings2, UserX, AlertTriangle } from "lucide-react";
 import { STATUT_CONFIG, StatutIcon } from "./statutUtils";
 import type { VolontaireAssigne } from "./types";
 
@@ -11,6 +12,7 @@ interface BatchActionsProps {
   volontaires: VolontaireAssigne[];
   onBatchUpdateIV: (ids: number[], newIV: number) => Promise<void>;
   onBatchUpdateStatut: (ids: number[], newStatut: string) => Promise<void>;
+  onBatchAnnuler: (volontaires: VolontaireAssigne[], commentaire: string, annulePar: 'COSMETEST' | 'VOLONTAIRE') => Promise<void>;
   onClearSelection: () => void;
 }
 
@@ -22,18 +24,21 @@ const BatchActions: React.FC<BatchActionsProps> = ({
   volontaires,
   onBatchUpdateIV,
   onBatchUpdateStatut,
+  onBatchAnnuler,
   onClearSelection,
 }) => {
   const { t } = useTranslation();
   const [showIVForm, setShowIVForm] = useState(false);
   const [showStatutForm, setShowStatutForm] = useState(false);
   const [showComboForm, setShowComboForm] = useState(false);
+  const [showAnnulerForm, setShowAnnulerForm] = useState(false);
   const [batchIV, setBatchIV] = useState("");
   const [batchStatut, setBatchStatut] = useState("");
   const [batchNote, setBatchNote] = useState("");
   const [comboIV, setComboIV] = useState("");
   const [comboStatut, setComboStatut] = useState("");
   const [comboNote, setComboNote] = useState("");
+  const [annulerCommentaire, setAnnulerCommentaire] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
 
   if (selectedIds.size === 0) return null;
@@ -42,12 +47,14 @@ const BatchActions: React.FC<BatchActionsProps> = ({
     setShowIVForm(false);
     setShowStatutForm(false);
     setShowComboForm(false);
+    setShowAnnulerForm(false);
     setBatchIV("");
     setBatchStatut("");
     setBatchNote("");
     setComboIV("");
     setComboStatut("");
     setComboNote("");
+    setAnnulerCommentaire("");
   };
 
   const buildStatutWithNote = (statut: string, note: string) => {
@@ -101,6 +108,19 @@ const BatchActions: React.FC<BatchActionsProps> = ({
     }
   };
 
+  const handleBatchAnnuler = async () => {
+    if (!annulerCommentaire.trim()) return;
+    setIsUpdating(true);
+    try {
+      const selectedVolontaires = volontaires.filter(v => selectedIds.has(v.idVolontaire) && v.idVolontaire !== 0);
+      await onBatchAnnuler(selectedVolontaires, annulerCommentaire.trim(), 'COSMETEST');
+      closeAll();
+      onClearSelection();
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   const isSortieStatut = (statut: string) => SORTIE_STATUTS.includes(statut);
 
   const renderStatutButtons = (
@@ -147,7 +167,7 @@ const BatchActions: React.FC<BatchActionsProps> = ({
           <strong>{selectedIds.size}</strong> volontaire{selectedIds.size > 1 ? 's' : ''} sélectionné{selectedIds.size > 1 ? 's' : ''}
         </span>
         <div className="flex gap-2">
-          {!showIVForm && !showStatutForm && !showComboForm && (
+          {!showIVForm && !showStatutForm && !showComboForm && !showAnnulerForm && (
             <>
               <Button
                 size="sm"
@@ -175,6 +195,15 @@ const BatchActions: React.FC<BatchActionsProps> = ({
               >
                 <Settings2 className="w-3 h-3 mr-1" />
                 IV + Statut
+              </Button>
+              <Button
+                size="sm"
+                variant="destructive"
+                onClick={() => { closeAll(); setShowAnnulerForm(true); }}
+                className="text-xs"
+              >
+                <UserX className="w-3 h-3 mr-1" />
+                Annuler par nous
               </Button>
             </>
           )}
@@ -277,6 +306,45 @@ const BatchActions: React.FC<BatchActionsProps> = ({
             >
               {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4 mr-1" />}
               {t('common.apply') || 'Appliquer'}
+            </Button>
+            <Button size="sm" variant="ghost" onClick={closeAll}>
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Formulaire annulation par nous */}
+      {showAnnulerForm && (
+        <div className="bg-white p-3 rounded border border-red-300 space-y-3">
+          <div className="flex items-center gap-2 text-red-800">
+            <AlertTriangle className="w-4 h-4" />
+            <span className="text-sm font-medium">
+              Annuler {selectedIds.size} volontaire{selectedIds.size > 1 ? 's' : ''} (par Cosmetest)
+            </span>
+          </div>
+          <p className="text-xs text-red-600">
+            {t('indemnity.cancelWarning') || 'Cette action est irréversible. Les volontaires seront retirés de l\'étude.'}
+          </p>
+          <Textarea
+            value={annulerCommentaire}
+            onChange={(e) => setAnnulerCommentaire(e.target.value)}
+            placeholder={t('indemnity.cancelReasonPlaceholder') || 'Raison de l\'annulation...'}
+            className="w-full text-xs"
+            rows={3}
+            maxLength={200}
+            autoFocus
+          />
+          <div className="text-xs text-gray-500">{annulerCommentaire.length}/200</div>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="destructive"
+              onClick={handleBatchAnnuler}
+              disabled={isUpdating || !annulerCommentaire.trim()}
+            >
+              {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4 mr-1" />}
+              {t('indemnity.confirmCancellation') || 'Confirmer l\'annulation'}
             </Button>
             <Button size="sm" variant="ghost" onClick={closeAll}>
               <X className="w-4 h-4" />

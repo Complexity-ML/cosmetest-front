@@ -118,6 +118,16 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
     }
   }, [etudeId, enregistrerAnnulation]);
 
+  const batchAnnuler = useCallback(async (
+    volontairesAannuler: VolontaireAssigne[],
+    commentaire: string,
+    annulePar: 'COSMETEST' | 'VOLONTAIRE'
+  ) => {
+    for (const volontaire of volontairesAannuler) {
+      await changerStatutVersAnnule(volontaire, commentaire, annulePar);
+    }
+  }, [changerStatutVersAnnule]);
+
   // Fonction générique de mise à jour
   const updateVolontaire = useCallback(async (
     volontaire: VolontaireAssigne,
@@ -501,6 +511,7 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
         volontaires={volontairesAssignes}
         onBatchUpdateIV={batchUpdateIV}
         onBatchUpdateStatut={batchUpdateStatut}
+        onBatchAnnuler={batchAnnuler}
         onClearSelection={() => setSelectedIds(new Set())}
       />
 
