@@ -173,22 +173,36 @@ const VolunteerExcelExport: React.FC<VolunteerExcelExportProps> = ({
 
       setExportProgress(10);
 
-      // 1b. Récupérer les RDV de l'étude pour calculer le D0 (premier passage) de chaque volontaire
+      // 1b. Récupérer TOUS les RDV de l'étude (paginés par 50 max côté backend)
       const firstPassageDateByVolunteer: Record<number, string> = {};
       if (studyId) {
         try {
-          const rdvsResponse = await api.get(`/rdvs/search?idEtude=${studyId}&size=10000`);
-          let rdvs: any[] = [];
-          if (Array.isArray(rdvsResponse.data)) {
-            rdvs = rdvsResponse.data;
-          } else if (rdvsResponse.data?.content && Array.isArray(rdvsResponse.data.content)) {
-            rdvs = rdvsResponse.data.content;
-          } else if (rdvsResponse.data?.data && Array.isArray(rdvsResponse.data.data)) {
-            rdvs = rdvsResponse.data.data;
+          let allRdvs: any[] = [];
+          let currentPage = 0;
+          let totalPages = 1;
+
+          while (currentPage < totalPages) {
+            const rdvsResponse = await api.get(`/rdvs/search?idEtude=${studyId}&size=50&page=${currentPage}`);
+            const responseData = rdvsResponse.data;
+
+            let pageRdvs: any[] = [];
+            if (responseData?.content && Array.isArray(responseData.content)) {
+              pageRdvs = responseData.content;
+              totalPages = responseData.totalPages || 1;
+            } else if (Array.isArray(responseData)) {
+              pageRdvs = responseData;
+              totalPages = 1; // pas de pagination
+            } else if (responseData?.data && Array.isArray(responseData.data)) {
+              pageRdvs = responseData.data;
+              totalPages = 1;
+            }
+
+            allRdvs = allRdvs.concat(pageRdvs);
+            currentPage++;
           }
 
-          // Grouper par volontaire et trouver la date la plus ancienne
-          rdvs.forEach((rdv: any) => {
+          // Grouper par volontaire et trouver la date la plus ancienne (D0)
+          allRdvs.forEach((rdv: any) => {
             if (rdv.idVolontaire && rdv.date) {
               const volId = rdv.idVolontaire;
               const rdvDate = new Date(rdv.date);
