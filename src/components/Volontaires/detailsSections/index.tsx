@@ -14,6 +14,7 @@ import RendezVousSection from './RendezVousSection';
 import EtudesSection from './EtudesSection';
 import AssignationSection from './AssignationSection';
 import PhotosSection from './PhotosSection';
+import AnnulationsSection from './AnnulationsSection';
 
 const SECTION_COMPONENTS = {
   info: InfoSection,
@@ -32,6 +33,7 @@ const SECTION_COMPONENTS = {
   etudes: EtudesSection,
   assignation: AssignationSection,
   photos: PhotosSection,
+  annulations: AnnulationsSection,
 } as const;
 
 type SectionKey = keyof typeof SECTION_COMPONENTS;

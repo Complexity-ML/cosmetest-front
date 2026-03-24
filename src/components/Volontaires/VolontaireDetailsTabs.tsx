@@ -34,6 +34,7 @@ const VolontaireDetailsTabs: React.FC<VolontaireDetailsTabsProps> = ({
     { id: "etudes", label: t('studies.studies') },
     { id: "assignation", label: t('volunteers.rdvAssignment') },
     { id: "photos", label: t('volunteers.photos') },
+    { id: "annulations", label: t('volunteers.cancellations', 'Annulations') },
   ];
   const getLabel = (id: string, baseLabel: string) => {
     if (id === "rdvs" && rdvCount > 0) {

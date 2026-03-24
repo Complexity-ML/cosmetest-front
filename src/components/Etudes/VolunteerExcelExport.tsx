@@ -173,6 +173,36 @@ const VolunteerExcelExport: React.FC<VolunteerExcelExportProps> = ({
 
       setExportProgress(10);
 
+      // 1b. Récupérer les RDV de l'étude pour calculer le D0 (premier passage) de chaque volontaire
+      const firstPassageDateByVolunteer: Record<number, string> = {};
+      if (studyId) {
+        try {
+          const rdvsResponse = await api.get(`/rdvs/search?idEtude=${studyId}&size=10000`);
+          let rdvs: any[] = [];
+          if (Array.isArray(rdvsResponse.data)) {
+            rdvs = rdvsResponse.data;
+          } else if (rdvsResponse.data?.content && Array.isArray(rdvsResponse.data.content)) {
+            rdvs = rdvsResponse.data.content;
+          } else if (rdvsResponse.data?.data && Array.isArray(rdvsResponse.data.data)) {
+            rdvs = rdvsResponse.data.data;
+          }
+
+          // Grouper par volontaire et trouver la date la plus ancienne
+          rdvs.forEach((rdv: any) => {
+            if (rdv.idVolontaire && rdv.date) {
+              const volId = rdv.idVolontaire;
+              const rdvDate = new Date(rdv.date);
+              const existing = firstPassageDateByVolunteer[volId];
+              if (!existing || rdvDate < new Date(existing)) {
+                firstPassageDateByVolunteer[volId] = rdv.date;
+              }
+            }
+          });
+        } catch (error) {
+          console.error('Erreur lors de la récupération des RDV:', error);
+        }
+      }
+
       // 2. Récupérer les détails complets de tous les volontaires
       const volunteersData: any[] = [];
       let processedCount = 0;
@@ -278,8 +308,6 @@ const VolunteerExcelExport: React.FC<VolunteerExcelExportProps> = ({
         }
       }
 
-      const studyStartDate = studyInfo?.dateDebut ? formatDateEnglish(studyInfo.dateDebut) : '';
-
       volunteersData.forEach((volunteer) => {
         const row = [];
 
@@ -310,8 +338,11 @@ const VolunteerExcelExport: React.FC<VolunteerExcelExportProps> = ({
         row.push(volunteer.typePeauVisage || '');
         // Sensibilité cutanée
         row.push(volunteer.sensibiliteCutanee || '');
-        // D0
-        row.push(studyStartDate);
+        // D0 - Date du premier passage propre à chaque volontaire
+        const volunteerD0 = firstPassageDateByVolunteer[volunteer.idVolontaire]
+          ? formatDateEnglish(firstPassageDateByVolunteer[volunteer.idVolontaire])
+          : '';
+        row.push(volunteerD0);
         // ETHNIE
         row.push(formatEthnieEnglish(volunteer.ethnie) || '');
 
