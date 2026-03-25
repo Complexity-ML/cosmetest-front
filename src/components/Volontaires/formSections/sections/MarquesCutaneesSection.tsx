@@ -57,8 +57,8 @@ const MarquesCutaneesSection = ({ formData, onChange }: any) => {
         if (formData.caracteristiquesAucun === 'Oui') {
           onChange(createSyntheticEvent('caracteristiquesAucun', ''));
         }
-        // Espace = coché sans texte (pas de "Oui" en base)
-        onChange(createSyntheticEvent(id, ' '));
+        // Zero-width space = coché sans texte (permet de taper des espaces)
+        onChange(createSyntheticEvent(id, '\u200B'));
       }
     }
   }, [formData, onChange]);
@@ -141,9 +141,9 @@ const MarquesCutaneesSection = ({ formData, onChange }: any) => {
             <input
               type="text"
               name="cicatrices"
-              value={formData.cicatrices.trim()}
+              value={formData.cicatrices.replace(/\u200B/g, '')}
               onChange={(e) => {
-                onChange({ target: { name: 'cicatrices', value: e.target.value || ' ', type: 'text' } } as any);
+                onChange({ target: { name: 'cicatrices', value: e.target.value || '\u200B', type: 'text' } } as any);
               }}
               placeholder={t('volunteers.locationPlaceholder')}
               className="form-input block w-full mt-2"
@@ -169,9 +169,9 @@ const MarquesCutaneesSection = ({ formData, onChange }: any) => {
             <input
               type="text"
               name="tatouages"
-              value={formData.tatouages.trim()}
+              value={formData.tatouages.replace(/\u200B/g, '')}
               onChange={(e) => {
-                onChange({ target: { name: 'tatouages', value: e.target.value || ' ', type: 'text' } } as any);
+                onChange({ target: { name: 'tatouages', value: e.target.value || '\u200B', type: 'text' } } as any);
               }}
               placeholder={t('volunteers.locationPlaceholder')}
               className="form-input block w-full mt-2"
@@ -197,9 +197,9 @@ const MarquesCutaneesSection = ({ formData, onChange }: any) => {
             <input
               type="text"
               name="piercings"
-              value={formData.piercings.trim()}
+              value={formData.piercings.replace(/\u200B/g, '')}
               onChange={(e) => {
-                onChange({ target: { name: 'piercings', value: e.target.value || ' ', type: 'text' } } as any);
+                onChange({ target: { name: 'piercings', value: e.target.value || '\u200B', type: 'text' } } as any);
               }}
               placeholder={t('volunteers.locationPlaceholder')}
               className="form-input block w-full mt-2"

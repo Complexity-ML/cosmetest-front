@@ -336,7 +336,7 @@ const CaracteristiquesSection = ({ formData, onChange }: any) => {
               name="cicatrices"
               checked={!!formData.cicatrices}
               onChange={(e) => {
-                onChange({ target: { name: 'cicatrices', value: e.target.checked ? (formData.cicatrices || ' ') : '', type: 'text' } } as any);
+                onChange({ target: { name: 'cicatrices', value: e.target.checked ? (formData.cicatrices || '\u200B') : '', type: 'text' } } as any);
               }}
               className="form-checkbox h-5 w-5 text-primary-600"
             />
@@ -351,9 +351,9 @@ const CaracteristiquesSection = ({ formData, onChange }: any) => {
             <input
               type="text"
               name="cicatrices"
-              value={formData.cicatrices.trim()}
+              value={formData.cicatrices.replace(/\u200B/g, '')}
               onChange={(e) => {
-                onChange({ target: { name: 'cicatrices', value: e.target.value || ' ', type: 'text' } } as any);
+                onChange({ target: { name: 'cicatrices', value: e.target.value || '\u200B', type: 'text' } } as any);
               }}
               placeholder={t('volunteers.locationPlaceholder')}
               className="form-input block w-full mt-2"
@@ -369,7 +369,7 @@ const CaracteristiquesSection = ({ formData, onChange }: any) => {
               name="tatouages"
               checked={!!formData.tatouages}
               onChange={(e) => {
-                onChange({ target: { name: 'tatouages', value: e.target.checked ? (formData.tatouages || ' ') : '', type: 'text' } } as any);
+                onChange({ target: { name: 'tatouages', value: e.target.checked ? (formData.tatouages || '\u200B') : '', type: 'text' } } as any);
               }}
               className="form-checkbox h-5 w-5 text-primary-600"
             />
@@ -384,9 +384,9 @@ const CaracteristiquesSection = ({ formData, onChange }: any) => {
             <input
               type="text"
               name="tatouages"
-              value={formData.tatouages.trim()}
+              value={formData.tatouages.replace(/\u200B/g, '')}
               onChange={(e) => {
-                onChange({ target: { name: 'tatouages', value: e.target.value || ' ', type: 'text' } } as any);
+                onChange({ target: { name: 'tatouages', value: e.target.value || '\u200B', type: 'text' } } as any);
               }}
               placeholder={t('volunteers.locationPlaceholder')}
               className="form-input block w-full mt-2"
@@ -402,7 +402,7 @@ const CaracteristiquesSection = ({ formData, onChange }: any) => {
               name="piercings"
               checked={!!formData.piercings}
               onChange={(e) => {
-                onChange({ target: { name: 'piercings', value: e.target.checked ? (formData.piercings || ' ') : '', type: 'text' } } as any);
+                onChange({ target: { name: 'piercings', value: e.target.checked ? (formData.piercings || '\u200B') : '', type: 'text' } } as any);
               }}
               className="form-checkbox h-5 w-5 text-primary-600"
             />
@@ -417,9 +417,9 @@ const CaracteristiquesSection = ({ formData, onChange }: any) => {
             <input
               type="text"
               name="piercings"
-              value={formData.piercings.trim()}
+              value={formData.piercings.replace(/\u200B/g, '')}
               onChange={(e) => {
-                onChange({ target: { name: 'piercings', value: e.target.value || ' ', type: 'text' } } as any);
+                onChange({ target: { name: 'piercings', value: e.target.value || '\u200B', type: 'text' } } as any);
               }}
               placeholder={t('volunteers.locationPlaceholder')}
               className="form-input block w-full mt-2"
