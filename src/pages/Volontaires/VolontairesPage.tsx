@@ -13,7 +13,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Card, CardContent } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 
-const MIN_CHARS = 3
+const MIN_CHARS = 2
 
 interface SearchFields {
   nom: string
@@ -168,7 +168,7 @@ const VolontairesPage = () => {
               <Input
                 id="searchNom"
                 type="text"
-                placeholder="3 lettres min."
+                placeholder="2 lettres min."
                 value={searchFields.nom}
                 onChange={(e) => updateField('nom', e.target.value)}
                 className="h-9 text-sm"
@@ -179,7 +179,7 @@ const VolontairesPage = () => {
               <Input
                 id="searchPrenom"
                 type="text"
-                placeholder="3 lettres min."
+                placeholder="2 lettres min."
                 value={searchFields.prenom}
                 onChange={(e) => updateField('prenom', e.target.value)}
                 className="h-9 text-sm"
@@ -190,7 +190,7 @@ const VolontairesPage = () => {
               <Input
                 id="searchEmail"
                 type="text"
-                placeholder="3 lettres min."
+                placeholder="2 lettres min."
                 value={searchFields.email}
                 onChange={(e) => updateField('email', e.target.value)}
                 className="h-9 text-sm"
