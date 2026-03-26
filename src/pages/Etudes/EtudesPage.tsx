@@ -10,7 +10,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Loader2, Plus, Search, Archive, Trash2, AlertTriangle } from 'lucide-react'
+import { Loader2, Plus, Search, Archive, ArchiveRestore, Trash2, AlertTriangle } from 'lucide-react'
 import type { Etude } from '../../types/types'
 
 const EtudesPage = () => {
@@ -135,6 +135,23 @@ const EtudesPage = () => {
     }
   }
 
+  const handleArchiveToggle = async (e: React.MouseEvent, etude: Etude) => {
+    e.stopPropagation()
+    const newArchiveState = !etude.archive
+    const confirmMsg = newArchiveState
+      ? (t('studies.archiveConfirm') || 'Archiver cette étude ?')
+      : (t('studies.unarchiveConfirm') || 'Désarchiver cette étude ?')
+    if (window.confirm(confirmMsg)) {
+      try {
+        await etudeService.update(etude.idEtude!, { archive: newArchiveState })
+        setEtudes(etudes.filter(e => e.idEtude !== etude.idEtude))
+      } catch (error) {
+        console.error('Erreur lors de l\'archivage:', error)
+        alert(t('studies.archiveError') || 'Erreur lors de l\'archivage')
+      }
+    }
+  }
+
   const handleEditClick = (e: React.MouseEvent) => {
     e.stopPropagation()
   }
@@ -254,6 +271,18 @@ const EtudesPage = () => {
                             >
                               {t('common.edit')}
                             </Link>
+
+                            {/* Archiver / Désarchiver */}
+                            <button
+                              onClick={(e) => handleArchiveToggle(e, etude)}
+                              className="text-gray-600 hover:text-gray-800 flex items-center gap-1"
+                            >
+                              {etude.archive ? (
+                                <><ArchiveRestore className="w-3 h-3" />{t('studies.unarchive') || 'Désarchiver'}</>
+                              ) : (
+                                <><Archive className="w-3 h-3" />{t('common.archive') || 'Archiver'}</>
+                              )}
+                            </button>
 
                             {/* Suppression uniquement pour les études archivées (2 niveaux) */}
                             {etude.archive && (
