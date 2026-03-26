@@ -757,7 +757,7 @@ export const useVolontaireForm = ({ id, isEditMode, navigate }: UseVolontaireFor
     // Validation IBAN si fourni
     if (formData.iban && formData.iban.trim()) {
       if (!infoBancaireService.validation.validateIban(formData.iban)) {
-        bankErrors.iban = 'Format IBAN invalide (format français attendu: FR + 25 caractères)';
+        bankErrors.iban = 'Format IBAN invalide (2 lettres pays + 2 chiffres de contrôle + 10 à 30 caractères)';
       }
     }
 

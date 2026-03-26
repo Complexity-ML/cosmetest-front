@@ -143,7 +143,7 @@ const EtudesPage = () => {
       : (t('studies.unarchiveConfirm') || 'Désarchiver cette étude ?')
     if (window.confirm(confirmMsg)) {
       try {
-        await etudeService.update(etude.idEtude!, { archive: newArchiveState })
+        await etudeService.toggleArchive(etude.idEtude!, newArchiveState)
         setEtudes(etudes.filter(e => e.idEtude !== etude.idEtude))
       } catch (error) {
         console.error('Erreur lors de l\'archivage:', error)

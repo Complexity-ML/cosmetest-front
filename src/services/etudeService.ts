@@ -82,6 +82,16 @@ const etudeService = {
     }
   },
 
+  toggleArchive: async (id: number, archive: boolean): Promise<Etude> => {
+    try {
+      const response = await api.patch<Etude>(`/etudes/${id}/archive`, { archive });
+      return response.data;
+    } catch (error) {
+      console.error(`Erreur lors de l'archivage de l'étude ${id}:`, error);
+      throw error;
+    }
+  },
+
   delete: async (id: number): Promise<void> => {
     try {
       await api.delete(`/etudes/${id}`);
