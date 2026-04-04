@@ -122,6 +122,32 @@ const AnnulationsSection = ({ volontaireId }: AnnulationsSectionProps) => {
     );
   };
 
+  // Grouper par année et trier par ordre croissant
+  const getYear = (dateStr: string): number => {
+    if (!dateStr) return 0;
+    try {
+      const date = new Date(dateStr);
+      return isNaN(date.getTime()) ? 0 : date.getFullYear();
+    } catch {
+      return 0;
+    }
+  };
+
+  const sortedAnnulations = [...annulations].sort((a, b) => {
+    const dateA = new Date(a.dateAnnulation).getTime() || 0;
+    const dateB = new Date(b.dateAnnulation).getTime() || 0;
+    return dateA - dateB; // ordre croissant
+  });
+
+  const annulationsByYear: Record<number, Annulation[]> = {};
+  sortedAnnulations.forEach(a => {
+    const year = getYear(a.dateAnnulation);
+    if (!annulationsByYear[year]) annulationsByYear[year] = [];
+    annulationsByYear[year].push(a);
+  });
+
+  const sortedYears = Object.keys(annulationsByYear).map(Number).sort((a, b) => a - b);
+
   return (
     <Card>
       <CardHeader>
@@ -133,34 +159,44 @@ const AnnulationsSection = ({ volontaireId }: AnnulationsSectionProps) => {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="space-y-3">
-          {annulations.map((annulation, index) => (
-            <div
-              key={annulation.idAnnuler ?? index}
-              className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
-            >
-              <div className="flex flex-wrap items-center gap-3 mb-2">
-                <div className="flex items-center gap-1.5 text-sm text-gray-600">
-                  <Calendar className="h-4 w-4" />
-                  <span className="font-medium">{formatDate(annulation.dateAnnulation)}</span>
-                </div>
-                <div className="flex items-center gap-1.5 text-sm text-gray-600">
-                  <BookOpen className="h-4 w-4" />
-                  <span>{t('studies.study', 'Étude')} {etudeRefs[annulation.idEtude] || `#${annulation.idEtude}`}</span>
-                </div>
-                {annulation.annulePar && (
-                  <div className="flex items-center gap-1.5">
-                    <User className="h-4 w-4 text-gray-400" />
-                    {getAnnuleParBadge(annulation.annulePar)}
-                  </div>
-                )}
+        <div className="space-y-6">
+          {sortedYears.map(year => (
+            <div key={year}>
+              <div className="flex items-center gap-2 mb-3">
+                <h4 className="text-sm font-semibold text-gray-700">{year || 'Date inconnue'}</h4>
+                <Badge variant="outline" className="text-xs">{annulationsByYear[year].length}</Badge>
               </div>
-              {annulation.commentaire && (
-                <div className="flex items-start gap-1.5 text-sm text-gray-700">
-                  <MessageSquare className="h-4 w-4 mt-0.5 text-gray-400 shrink-0" />
-                  <span>{annulation.commentaire}</span>
-                </div>
-              )}
+              <div className="space-y-3">
+                {annulationsByYear[year].map((annulation, index) => (
+                  <div
+                    key={annulation.idAnnuler ?? index}
+                    className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex flex-wrap items-center gap-3 mb-2">
+                      <div className="flex items-center gap-1.5 text-sm text-gray-600">
+                        <Calendar className="h-4 w-4" />
+                        <span className="font-medium">{formatDate(annulation.dateAnnulation)}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-sm text-gray-600">
+                        <BookOpen className="h-4 w-4" />
+                        <span>{t('studies.study', 'Étude')} {etudeRefs[annulation.idEtude] || `#${annulation.idEtude}`}</span>
+                      </div>
+                      {annulation.annulePar && (
+                        <div className="flex items-center gap-1.5">
+                          <User className="h-4 w-4 text-gray-400" />
+                          {getAnnuleParBadge(annulation.annulePar)}
+                        </div>
+                      )}
+                    </div>
+                    {annulation.commentaire && (
+                      <div className="flex items-start gap-1.5 text-sm text-gray-700">
+                        <MessageSquare className="h-4 w-4 mt-0.5 text-gray-400 shrink-0" />
+                        <span>{annulation.commentaire}</span>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
           ))}
         </div>

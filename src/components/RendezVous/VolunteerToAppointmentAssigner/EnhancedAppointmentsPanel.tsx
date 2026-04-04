@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import volontaireService from '../../../services/volontaireService';
@@ -57,6 +57,22 @@ const EnhancedAppointmentsPanel: React.FC<EnhancedAppointmentsPanelProps> = ({
   const [sortOption, setSortOption] = useState('time');
   const [selectedDate, setSelectedDate] = useState('');
   const [volunteerCache, setVolunteerCache] = useState<Record<number, VolunteerInfo>>({});
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const savedScrollTop = useRef<number>(0);
+
+  const handleDateChange = useCallback((date: string) => {
+    // Sauvegarder la position de scroll avant le changement
+    if (scrollContainerRef.current) {
+      savedScrollTop.current = scrollContainerRef.current.scrollTop;
+    }
+    setSelectedDate(date);
+    // Restaurer la position après le re-render
+    requestAnimationFrame(() => {
+      if (scrollContainerRef.current) {
+        scrollContainerRef.current.scrollTop = savedScrollTop.current;
+      }
+    });
+  }, []);
 
   // Fonction pour récupérer les infos d'un volontaire avec cache
   const getVolunteerInfo = async (volunteerIdToFetch: number): Promise<VolunteerInfo | null> => {
@@ -350,7 +366,7 @@ const EnhancedAppointmentsPanel: React.FC<EnhancedAppointmentsPanelProps> = ({
           </label>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
             <button
-              onClick={() => setSelectedDate('')}
+              onClick={() => handleDateChange('')}
               className={`px-3 py-2 text-sm rounded border ${
                 !selectedDate
                   ? 'bg-blue-600 text-white border-blue-600'
@@ -362,7 +378,7 @@ const EnhancedAppointmentsPanel: React.FC<EnhancedAppointmentsPanelProps> = ({
             {availableDates.map(date => (
               <button
                 key={date}
-                onClick={() => setSelectedDate(date)}
+                onClick={() => handleDateChange(date)}
                 className={`px-3 py-2 text-sm rounded border ${
                   selectedDate === date
                     ? 'bg-blue-600 text-white border-blue-600'
@@ -400,7 +416,7 @@ const EnhancedAppointmentsPanel: React.FC<EnhancedAppointmentsPanelProps> = ({
       </div>
 
       {/* Liste des rendez-vous */}
-      <div className="p-4 max-h-96 overflow-y-auto">
+      <div ref={scrollContainerRef} className="p-4 max-h-96 overflow-y-auto">
         {filteredAppointments.length === 0 ? (
           <div className="text-center text-gray-500 py-8">
             {t('appointments.noAppointmentsFound')}

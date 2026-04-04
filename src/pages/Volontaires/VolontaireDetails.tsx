@@ -153,9 +153,25 @@ const VolontaireDetails = () => {
               {t('volunteers.unarchive')}
             </Button>
           ) : (
-            <Button onClick={handleArchive} variant="outline">
-              {t('common.archive')}
-            </Button>
+            <>
+              <Button onClick={handleArchive} variant="outline">
+                {t('common.archive')}
+              </Button>
+              <Button
+                onClick={async () => {
+                  const dateFinStandby = new Date();
+                  dateFinStandby.setMonth(dateFinStandby.getMonth() + 3);
+                  const dateStr = dateFinStandby.toLocaleDateString('fr-FR');
+                  if (window.confirm(`Mettre ce volontaire en stand-by pour 3 mois (jusqu'au ${dateStr}) ?\n\nLe volontaire sera archivé provisoirement.`)) {
+                    await handleArchive();
+                  }
+                }}
+                variant="outline"
+                className="text-orange-600 border-orange-300 hover:bg-orange-50"
+              >
+                Stand by 3 mois
+              </Button>
+            </>
           )}
 
           <Button onClick={handleDelete} variant="destructive">

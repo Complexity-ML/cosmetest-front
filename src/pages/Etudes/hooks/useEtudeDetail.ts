@@ -277,8 +277,12 @@ export const useEtudeDetail = ({ id, navigate }: UseEtudeDetailParams): UseEtude
         if (response.data) {
           const volontaire = response.data;
           const nomAffiche =
-            volontaire.prenom && volontaire.nom
-              ? `${volontaire.prenom} ${volontaire.nom}`.trim()
+            volontaire.nom && volontaire.prenom
+              ? `${volontaire.nom.toUpperCase()} ${volontaire.prenom}`.trim()
+              : volontaire.prenom && !volontaire.nom
+              ? volontaire.prenom
+              : volontaire.nom
+              ? volontaire.nom.toUpperCase()
               : volontaire.nomComplet || `Volontaire #${idVolontaire}`;
 
           setInfosVolontaires((prev) => ({
@@ -308,7 +312,7 @@ export const useEtudeDetail = ({ id, navigate }: UseEtudeDetailParams): UseEtude
           const nom = rdv.volontaire.nom || rdv.volontaire.nomVolontaire || '';
 
           if (prenom || nom) {
-            return `${prenom} ${nom}`.trim();
+            return `${nom.toUpperCase()} ${prenom}`.trim();
           }
           if (rdv.volontaire.nomComplet) {
             return rdv.volontaire.nomComplet;
@@ -319,7 +323,7 @@ export const useEtudeDetail = ({ id, navigate }: UseEtudeDetailParams): UseEtude
       }
 
       if (rdv.prenomVolontaire && rdv.nomVolontaire) {
-        return `${rdv.prenomVolontaire} ${rdv.nomVolontaire}`;
+        return `${rdv.nomVolontaire.toUpperCase()} ${rdv.prenomVolontaire}`;
       }
       if (rdv.nomCompletVolontaire) {
         return rdv.nomCompletVolontaire;
@@ -355,10 +359,7 @@ export const useEtudeDetail = ({ id, navigate }: UseEtudeDetailParams): UseEtude
         case 'volontaire': {
           const volontaireA = getNomVolontaire(a);
           const volontaireB = getNomVolontaire(b);
-          // Extraire le nom de famille (dernier mot) pour trier par nom
-          const nomA = volontaireA.split(' ').slice(-1)[0] || '';
-          const nomB = volontaireB.split(' ').slice(-1)[0] || '';
-          comparison = nomA.localeCompare(nomB);
+          comparison = volontaireA.localeCompare(volontaireB, 'fr', { sensitivity: 'base' });
           break;
         }
         case 'etat':

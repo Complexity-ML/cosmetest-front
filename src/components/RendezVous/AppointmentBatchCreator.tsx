@@ -666,7 +666,15 @@ const AppointmentBatchCreator = ({
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">{t('appointments.createMultipleAppointments')}</h2>
+        <div>
+          <h2 className="text-2xl font-bold">{t('appointments.createMultipleAppointments')}</h2>
+          {selectedStudy && (
+            <p className="text-sm text-gray-600 mt-1">
+              <Badge variant="outline" className="mr-2">{selectedStudy.ref}</Badge>
+              {selectedStudy.titre}
+            </p>
+          )}
+        </div>
         <Button
           variant="ghost"
           onClick={onBack}
