@@ -248,7 +248,7 @@ export const useVolontaireDetails = ({ id, navigate }: UseVolontaireDetailsParam
   const handleDelete = useCallback(async () => {
     if (!id) return;
 
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer ce volontaire ? Cette action est irréversible.')) {
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer ce volontaire ?\n\nATTENTION : Cette action est irréversible et supprimera également :\n- Tous ses rendez-vous\n- Toutes ses associations aux études\n- Toutes ses annulations')) {
       try {
         await volontaireService.delete(id);
         navigate('/volontaires');

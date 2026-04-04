@@ -132,13 +132,20 @@ const VolontaireDetails = () => {
             </BreadcrumbList>
           </Breadcrumb>
           
-          {/* Badge d'alerte pour les annulations */}
-          {annulationsEtudes && annulationsEtudes.length > 0 && (
-            <Badge variant="destructive" className="flex items-center gap-1 text-sm px-3 py-1.5">
-              <AlertTriangle className="h-4 w-4" />
-              {annulationsEtudes.length} {t('volunteers.cancellation', { count: annulationsEtudes.length })}
-            </Badge>
-          )}
+          {/* Badge d'alerte pour les annulations (année en cours + N-1 uniquement) */}
+          {(() => {
+            const currentYear = new Date().getFullYear();
+            const recentAnnulations = (annulationsEtudes || []).filter((a: any) => {
+              const year = new Date(a.dateAnnulation).getFullYear();
+              return year >= currentYear - 1;
+            });
+            return recentAnnulations.length > 0 ? (
+              <Badge variant="destructive" className="flex items-center gap-1 text-sm px-3 py-1.5">
+                <AlertTriangle className="h-4 w-4" />
+                {recentAnnulations.length} {t('volunteers.cancellation', { count: recentAnnulations.length })}
+              </Badge>
+            ) : null;
+          })()}
         </div>
 
         <div className="flex gap-2">

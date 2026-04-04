@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import groupeService from '../../../services/groupeService';
 import { EtudeData, GroupeData } from '../../../types/etude.types';
-import React from 'react';
+import React, { useState } from 'react';
 
 interface GroupesSectionProps {
   etude: EtudeData;
@@ -37,6 +37,31 @@ const GroupesSection = ({
   fetchGroupes,
 }: GroupesSectionProps) => {
   const { t } = useTranslation();
+  const [editingIv, setEditingIv] = useState<number | null>(null);
+  const [editIvValue, setEditIvValue] = useState<number>(0);
+  const [isSavingIv, setIsSavingIv] = useState(false);
+
+  const handleEditIv = (groupe: GroupeData) => {
+    setEditingIv(groupe.idGroupe || null);
+    setEditIvValue(groupe.iv || 0);
+  };
+
+  const handleSaveIv = async (groupe: GroupeData) => {
+    if (!groupe.idGroupe) return;
+    setIsSavingIv(true);
+    try {
+      await groupeService.update(groupe.idGroupe, { ...groupe, iv: editIvValue });
+      setEditingIv(null);
+      if (typeof fetchGroupes === 'function') {
+        await fetchGroupes();
+      }
+    } catch (err) {
+      console.error('Erreur lors de la mise à jour de l\'IV:', err);
+      alert('Erreur lors de la mise à jour de l\'IV');
+    } finally {
+      setIsSavingIv(false);
+    }
+  };
 
   const onPhototypeChange = (phototype: string) => {
     if (handlePhototypeChange) {
@@ -292,9 +317,49 @@ const GroupesSection = ({
                           {groupe.nbSujet} {t('studies.subjects')}
                         </span>
                       )}
-                      {groupe.iv && (
-                        <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
-                          {groupe.iv}€ IV
+                      {editingIv === groupe.idGroupe ? (
+                        <span className="flex items-center space-x-1">
+                          <input
+                            type="number"
+                            value={editIvValue}
+                            onChange={(e) => setEditIvValue(Number(e.target.value))}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') handleSaveIv(groupe);
+                              if (e.key === 'Escape') setEditingIv(null);
+                            }}
+                            min="0"
+                            className="w-16 px-1 py-0.5 text-xs border border-green-300 rounded focus:ring-green-500 focus:border-green-500"
+                            autoFocus
+                            disabled={isSavingIv}
+                          />
+                          <span className="text-xs text-gray-500">€</span>
+                          <button
+                            onClick={() => handleSaveIv(groupe)}
+                            disabled={isSavingIv}
+                            className="text-green-600 hover:text-green-800"
+                            title="Enregistrer"
+                          >
+                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={() => setEditingIv(null)}
+                            className="text-gray-400 hover:text-gray-600"
+                            title="Annuler"
+                          >
+                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </span>
+                      ) : (
+                        <span
+                          className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full cursor-pointer hover:bg-green-200"
+                          onClick={() => handleEditIv(groupe)}
+                          title="Cliquer pour modifier l'IV"
+                        >
+                          {groupe.iv != null ? `${groupe.iv}€ IV` : 'IV non défini'}
                         </span>
                       )}
                     </div>

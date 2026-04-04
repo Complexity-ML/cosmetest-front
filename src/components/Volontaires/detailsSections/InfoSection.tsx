@@ -63,6 +63,13 @@ const InfoSection = ({
     (annulation) => annulation.annulePar !== 'COSMETEST'
   );
 
+  // Pour l'alerte/compteur : ne compter que année en cours + N-1
+  const currentYear = new Date().getFullYear();
+  const annulationsRecentes = annulationsParVolontaire.filter((a) => {
+    const year = new Date(a.dateAnnulation || '').getFullYear();
+    return year >= currentYear - 1;
+  });
+
   useEffect(() => {
     const fetchEtudesEnCours = async () => {
       if (!volontaireId) return;
@@ -319,8 +326,13 @@ const InfoSection = ({
                 <AlertTriangle className="h-5 w-5" />
                 {t('volunteers.studyCancellations')}
                 <Badge variant="destructive" className="ml-2 text-base px-3 py-1">
-                  {annulationsParVolontaire.length}
+                  {annulationsRecentes.length}
                 </Badge>
+                {annulationsParVolontaire.length > annulationsRecentes.length && (
+                  <span className="text-xs text-red-600 font-normal">
+                    ({annulationsParVolontaire.length} au total)
+                  </span>
+                )}
               </CardTitle>
               {annulationsParVolontaire.length > 3 && (
                 <Button
@@ -335,13 +347,13 @@ const InfoSection = ({
             </div>
           </CardHeader>
           <CardContent className="space-y-4 pt-4">
-            {annulationsParVolontaire.length >= 5 && (
+            {annulationsRecentes.length >= 1 && (
               <Alert variant="destructive" className="bg-red-100 border-red-400">
                 <AlertTriangle className="h-4 w-4" />
                 <AlertDescription className="flex items-center justify-between text-sm">
-                  <span className="font-bold">{t('common.warning')} : {t('volunteers.manyStudyCancellations', { count: annulationsParVolontaire.length })}</span>
+                  <span className="font-bold">{t('common.warning')} : {t('volunteers.manyStudyCancellations', { count: annulationsRecentes.length })}</span>
                   <span className="text-xs">
-                    {t('volunteers.lastCancellation')} : {formatCompactDate(annulationsParVolontaire[0]?.dateAnnulation)}
+                    {t('volunteers.lastCancellation')} : {formatCompactDate(annulationsRecentes[0]?.dateAnnulation)}
                   </span>
                 </AlertDescription>
               </Alert>

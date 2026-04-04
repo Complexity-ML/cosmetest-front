@@ -743,7 +743,19 @@ const RendezVousSection = ({
                       <tr key={rdv.id || `${rdv.idEtude}-${rdv.idRdv}`} className="hover:bg-gray-50 cursor-pointer" onClick={() => handleRdvClick(rdv)} title={t('studyDetails.clickToViewDetails')}>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{formatDate(rdv.date)}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{normalizeTime(rdv.heure)}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{getNomVolontaire(rdv)}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {(rdv.idVolontaire || rdv.volontaire?.idVol || rdv.volontaire?.id) ? (
+                            <a
+                              href={`/volontaires/${rdv.idVolontaire || rdv.volontaire?.idVol || rdv.volontaire?.id}`}
+                              className="text-blue-600 hover:text-blue-800 hover:underline"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              {getNomVolontaire(rdv)}
+                            </a>
+                          ) : (
+                            getNomVolontaire(rdv)
+                          )}
+                        </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${rdv.etat === 'CONFIRME' ? 'bg-green-100 text-green-800' : rdv.etat === 'EN_ATTENTE' ? 'bg-yellow-100 text-yellow-800' : rdv.etat === 'ANNULE' ? 'bg-red-100 text-red-800' : rdv.etat === 'COMPLETE' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}`}>
                             {rdv.etat || 'PLANIFIE'}
