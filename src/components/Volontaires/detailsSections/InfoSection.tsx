@@ -318,7 +318,7 @@ const InfoSection = ({
         </Card>
       )}
 
-      {annulationsParVolontaire.length > 0 && (
+      {annulationsRecentes.length > 0 && (
         <Card className="border-red-300 bg-red-50/50 shadow-lg">
           <CardHeader className="bg-red-100 border-b border-red-200">
             <div className="flex justify-between items-center">
@@ -334,33 +334,31 @@ const InfoSection = ({
                   </span>
                 )}
               </CardTitle>
-              {annulationsParVolontaire.length > 3 && (
+              {annulationsRecentes.length > 3 && (
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={onToggleAnnulations}
                   className="text-red-700 hover:text-red-900 hover:bg-red-200"
                 >
-                  {showAllAnnulations ? t('common.seeLess') : `${t('common.seeAll')} (${annulationsParVolontaire.length})`}
+                  {showAllAnnulations ? t('common.seeLess') : `${t('common.seeAll')} (${annulationsRecentes.length})`}
                 </Button>
               )}
             </div>
           </CardHeader>
           <CardContent className="space-y-4 pt-4">
-            {annulationsRecentes.length >= 1 && (
-              <Alert variant="destructive" className="bg-red-100 border-red-400">
-                <AlertTriangle className="h-4 w-4" />
-                <AlertDescription className="flex items-center justify-between text-sm">
-                  <span className="font-bold">{t('common.warning')} : {t('volunteers.manyStudyCancellations', { count: annulationsRecentes.length })}</span>
-                  <span className="text-xs">
-                    {t('volunteers.lastCancellation')} : {formatCompactDate(annulationsRecentes[0]?.dateAnnulation)}
-                  </span>
-                </AlertDescription>
-              </Alert>
-            )}
+            <Alert variant="destructive" className="bg-red-100 border-red-400">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription className="flex items-center justify-between text-sm">
+                <span className="font-bold">{t('common.warning')} : {t('volunteers.manyStudyCancellations', { count: annulationsRecentes.length })}</span>
+                <span className="text-xs">
+                  {t('volunteers.lastCancellation')} : {formatCompactDate(annulationsRecentes[0]?.dateAnnulation)}
+                </span>
+              </AlertDescription>
+            </Alert>
 
             <div className="space-y-3">
-              {(showAllAnnulations ? annulationsParVolontaire : annulationsParVolontaire.slice(0, 3)).map((annulation: AnnulationEtude, index: number) => (
+              {(showAllAnnulations ? annulationsRecentes : annulationsRecentes.slice(0, 3)).map((annulation: AnnulationEtude, index: number) => (
                 <Card key={`${annulation.idEtude}-${index}`} className="border-red-300 bg-white hover:shadow-md transition-shadow">
                   <CardContent className="pt-4">
                     <div className="flex items-start gap-3">
