@@ -13,12 +13,11 @@ interface RdvExcelExportProps {
   getNomVolontaire?: (rdv: any) => string;
 }
 
-const RdvExcelExport: React.FC<RdvExcelExportProps> = ({ 
-  rdvs = [], 
-  studyRef = '', 
-  studyId = null, 
-  studyTitle = '', 
-  getNomVolontaire = () => '' 
+const RdvExcelExport: React.FC<RdvExcelExportProps> = ({
+  rdvs = [],
+  studyRef = '',
+  studyId = null,
+  studyTitle = ''
 }) => {
   const [isExporting, setIsExporting] = useState(false);
   const [exportProgress, setExportProgress] = useState(0);
@@ -165,7 +164,8 @@ const RdvExcelExport: React.FC<RdvExcelExportProps> = ({
         'Num Sujet',
         'Statut',
         'ID Volontaire',
-        'Volontaire',
+        'Nom',
+        'Prénom',
         'Téléphone',
         'Phototype',
         'Email',
@@ -210,9 +210,12 @@ const RdvExcelExport: React.FC<RdvExcelExportProps> = ({
         row.push(volunteerId);
 
         // E: Nom du volontaire
-        row.push(getNomVolontaire(volunteerRdvs[0]));
+        row.push(getVolunteerInfo(Number(volunteerId), 'nom'));
 
-        // F: Téléphone (formaté)
+        // F: Prénom du volontaire
+        row.push(getVolunteerInfo(Number(volunteerId), 'prenom'));
+
+        // G: Téléphone (formaté)
         const telPortable = getVolunteerInfo(Number(volunteerId), 'telPortable');
         const telDomicile = getVolunteerInfo(Number(volunteerId), 'telDomicile');
         const phone = telPortable || telDomicile;
@@ -228,16 +231,16 @@ const RdvExcelExport: React.FC<RdvExcelExportProps> = ({
         }
         row.push(formattedPhone);
 
-        // G: Phototype
+        // H: Phototype
         row.push(normalizePhototype(getVolunteerInfo(Number(volunteerId), 'phototype')));
 
-        // H: Email
+        // I: Email
         row.push(getVolunteerInfo(Number(volunteerId), 'email'));
 
-        // I: Date du premier RDV (T0)
+        // J: Date du premier RDV (T0)
         row.push(volunteerRdvs[0] ? formatDate(volunteerRdvs[0].date) : '');
 
-        // J: Heure du premier RDV (T0)
+        // K: Heure du premier RDV (T0)
         row.push(volunteerRdvs[0] ? volunteerRdvs[0].heure || '' : '');
 
         // Ajouter les données des passages supplémentaires T1, T2, T3...
@@ -276,22 +279,25 @@ const RdvExcelExport: React.FC<RdvExcelExportProps> = ({
         // D: ID Volontaire
         row.push('');
 
-        // E: Volontaire
+        // E: Nom
         row.push('Non assigné');
 
-        // F: Téléphone
+        // F: Prénom
         row.push('');
 
-        // G: Phototype
+        // G: Téléphone
         row.push('');
 
-        // H: Email
+        // H: Phototype
         row.push('');
 
-        // I: Date
+        // I: Email
+        row.push('');
+
+        // J: Date
         row.push(formatDate(rdv.date));
 
-        // J: Heure
+        // K: Heure
         row.push(rdv.heure || '');
 
         // Remplir les autres passages avec des cellules vides
@@ -336,7 +342,7 @@ const RdvExcelExport: React.FC<RdvExcelExportProps> = ({
       // 13.1. Fusionner les cellules de la première ligne pour le titre de l'étude
       const mergeRange = {
         s: { r: 0, c: 0 }, // Start: ligne 0, colonne 0
-        e: { r: 0, c: Math.min(6, headers.length - 1) } // End: ligne 0, jusqu'à la colonne 6 ou la dernière colonne des headers
+        e: { r: 0, c: Math.min(7, headers.length - 1) } // End: ligne 0, jusqu'à la colonne 7 ou la dernière colonne des headers
       };
       
       if (!ws['!merges']) ws['!merges'] = [];
@@ -424,12 +430,13 @@ const RdvExcelExport: React.FC<RdvExcelExportProps> = ({
         { width: 12 }, // B: Num Sujet
         { width: 12 }, // C: Statut
         { width: 14 }, // D: ID Volontaire
-        { width: 30 }, // E: Volontaire
-        { width: 15 }, // F: Téléphone
-        { width: 12 }, // G: Phototype
-        { width: 30 }, // H: Email
-        { width: 12 }, // I: Date
-        { width: 8 }   // J: Heure
+        { width: 20 }, // E: Nom
+        { width: 20 }, // F: Prénom
+        { width: 15 }, // G: Téléphone
+        { width: 12 }, // H: Phototype
+        { width: 30 }, // I: Email
+        { width: 12 }, // J: Date
+        { width: 8 }   // K: Heure
       ];
 
       // Ajouter les largeurs pour T1, T2, T3...

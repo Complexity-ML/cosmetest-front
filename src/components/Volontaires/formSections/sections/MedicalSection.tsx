@@ -1,8 +1,71 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useTranslation } from "react-i18next";
+import { useCallback, KeyboardEvent } from "react";
+
+const CONTRACEPTION_OPTIONS = [
+  "Pilule",
+  "Stérilet",
+  "Implant",
+  "Patch",
+  "Anneau vaginal",
+  "Préservatif",
+  "Abstinence",
+  "Aucune",
+  "Autre",
+] as const;
+
+const stripAccents = (s: string) =>
+  s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
 const MedicalSection = ({ formData, onChange }: any) => {
   const { t } = useTranslation();
+
+  const handleContraceptionKey = useCallback(
+    (e: KeyboardEvent<HTMLInputElement>) => {
+      const k = e.key;
+      const current = formData.contraception || "";
+
+      if (k === "Backspace" || k === "Delete") {
+        e.preventDefault();
+        onChange({ target: { name: "contraception", value: "", type: "text" } } as any);
+        return;
+      }
+
+      if (k === "ArrowDown" || k === "ArrowRight") {
+        e.preventDefault();
+        const idx = CONTRACEPTION_OPTIONS.indexOf(current as any);
+        const next = idx === -1 ? 0 : (idx + 1) % CONTRACEPTION_OPTIONS.length;
+        onChange({ target: { name: "contraception", value: CONTRACEPTION_OPTIONS[next], type: "text" } } as any);
+        return;
+      }
+
+      if (k === "ArrowUp" || k === "ArrowLeft") {
+        e.preventDefault();
+        const idx = CONTRACEPTION_OPTIONS.indexOf(current as any);
+        const prev = idx <= 0 ? CONTRACEPTION_OPTIONS.length - 1 : idx - 1;
+        onChange({ target: { name: "contraception", value: CONTRACEPTION_OPTIONS[prev], type: "text" } } as any);
+        return;
+      }
+
+      if (k === "Tab" || k === "Enter" || k === "Shift") return;
+
+      if (k.length === 1 && /[a-zA-ZÀ-ÿ]/.test(k)) {
+        e.preventDefault();
+        const letter = stripAccents(k).toLowerCase();
+        const matches = CONTRACEPTION_OPTIONS.filter(
+          (o) => stripAccents(o).toLowerCase().charAt(0) === letter,
+        );
+        if (matches.length === 0) return;
+        const curIdx = matches.indexOf(current as any);
+        const next = curIdx === -1 ? matches[0] : matches[(curIdx + 1) % matches.length];
+        onChange({ target: { name: "contraception", value: next, type: "text" } } as any);
+        return;
+      }
+
+      e.preventDefault();
+    },
+    [formData.contraception, onChange],
+  );
 
   return (
     <Card>
@@ -54,24 +117,17 @@ const MedicalSection = ({ formData, onChange }: any) => {
           >
             {t('volunteers.contraception')}
           </label>
-          <select
+          <input
+            type="text"
             id="contraception"
             name="contraception"
-            value={formData.contraception}
-            onChange={onChange}
-            className="form-select block w-full"
-          >
-            <option value="">{t('common.select')}</option>
-            <option value="Pilule">{t('volunteers.contraceptionOptions.Pilule')}</option>
-            <option value="Stérilet">{t('volunteers.contraceptionOptions.Stérilet')}</option>
-            <option value="Implant">{t('volunteers.contraceptionOptions.Implant')}</option>
-            <option value="Patch">{t('volunteers.contraceptionOptions.Patch')}</option>
-            <option value="Anneau vaginal">{t('volunteers.contraceptionOptions.Anneau vaginal')}</option>
-            <option value="Préservatif">{t('volunteers.contraceptionOptions.Préservatif')}</option>
-            <option value="Autre">{t('volunteers.contraceptionOptions.Autre')}</option>
-            <option value="Aucune">{t('volunteers.contraceptionOptions.Aucune')}</option>
-            <option value="Abstinence">{t('volunteers.contraceptionOptions.Abstinence')}</option>
-          </select>
+            value={formData.contraception || ""}
+            readOnly
+            onKeyDown={handleContraceptionKey}
+            placeholder="Tapez la 1ère lettre (P, S, I, A...)"
+            title={`Options: ${CONTRACEPTION_OPTIONS.join(", ")}`}
+            className="form-input block w-full"
+          />
         </div>
 
         <div className="flex items-center">
