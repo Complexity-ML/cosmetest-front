@@ -6,15 +6,21 @@ const STAR_ICON_PATH = "M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0
 
 const getNumericValue = (value: any) => Number.parseInt(value || 0, 10);
 
+const BOOLEAN_FIELDS = [
+  { name: "tenueLevres", labelKey: "volunteers.resume.fields.tenueLevres" },
+  { name: "tenueTeint", labelKey: "volunteers.resume.fields.tenueTeint" },
+  { name: "tenueBlush", labelKey: "volunteers.resume.fields.tenueBlush" },
+  { name: "tenueSourcil", labelKey: "volunteers.resume.fields.tenueSourcil" },
+  { name: "tenueLiner", labelKey: "volunteers.resume.fields.tenueLiner" },
+  { name: "demaquillant", labelKey: "volunteers.resume.fields.demaquillant" },
+  { name: "etudeCils", labelKey: "volunteers.resume.fields.etudeCils" },
+  { name: "corneoLevre", labelKey: "volunteers.resume.fields.corneoLevre" },
+  { name: "corneoBras", labelKey: "volunteers.resume.fields.corneoBras" },
+  { name: "dtm", labelKey: "volunteers.resume.fields.dtm" },
+];
+
 const EvaluationSection = ({ formData, errors, onChange }: any) => {
   const { t } = useTranslation();
-
-  const SPECIFIC_EVALUATIONS = [
-    { name: "evaluationYeux", label: t('volunteers.eyes') },
-    { name: "evaluationLevres", label: t('volunteers.lips') },
-    { name: "evaluationTeint", label: t('volunteers.complexion') },
-    { name: "evaluationCinetique", label: t('volunteers.kinetic') },
-  ];
 
   const handleStarSelection = (fieldName: string, starValue: number) => {
     const currentValue = getNumericValue(formData[fieldName]);
@@ -103,12 +109,24 @@ const EvaluationSection = ({ formData, errors, onChange }: any) => {
         </div>
 
         <div>
-          <p className="text-sm font-medium text-gray-700 mb-4">{t('volunteers.specificAreasEvaluation')}</p>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            {SPECIFIC_EVALUATIONS.map(({ name, label }) => (
-              <div key={name}>
-                <p className="text-sm font-medium text-gray-700 mb-1">{label}</p>
-                {renderStarRow(name, label)}
+          <p className="text-sm font-medium text-gray-700 mb-4">{t('volunteers.studyCriteria', 'Critères d\'étude')}</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {BOOLEAN_FIELDS.map(({ name, labelKey }) => (
+              <div key={name} className="flex items-center">
+                <input
+                  type="checkbox"
+                  id={name}
+                  name={name}
+                  checked={formData[name] === "Oui"}
+                  onChange={onChange}
+                  className="form-checkbox h-5 w-5 text-primary-600"
+                />
+                <label
+                  htmlFor={name}
+                  className="ml-2 block text-sm font-medium text-gray-700"
+                >
+                  {t(labelKey)}
+                </label>
               </div>
             ))}
           </div>

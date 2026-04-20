@@ -23,10 +23,17 @@ export interface EvaluationRange {
 
 export interface EvaluationFilters {
   globale: EvaluationRange;
-  yeux: EvaluationRange;
-  levres: EvaluationRange;
-  teint: EvaluationRange;
-  cinetique: EvaluationRange;
+  tenueLevres: string;
+  tenueTeint: string;
+  tenueBlush: string;
+  tenueSourcil: string;
+  tenueLiner: string;
+  demaquillant: string;
+  etudeCils: string;
+  corneoLevre: string;
+  corneoBras: string;
+  dtm: string;
+  [key: string]: EvaluationRange | string;
 }
 
 export interface Filters {
@@ -52,10 +59,16 @@ export const createInitialFilters = (): Filters => ({
   },
   evaluations: {
     globale: { min: null, max: null },
-    yeux: { min: null, max: null },
-    levres: { min: null, max: null },
-    teint: { min: null, max: null },
-    cinetique: { min: null, max: null }
+    tenueLevres: '',
+    tenueTeint: '',
+    tenueBlush: '',
+    tenueSourcil: '',
+    tenueLiner: '',
+    demaquillant: '',
+    etudeCils: '',
+    corneoLevre: '',
+    corneoBras: '',
+    dtm: '',
   }
 });
 

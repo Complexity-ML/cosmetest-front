@@ -169,38 +169,45 @@ const MatchingSystem = () => {
     });
   };
 
-  const handleEvaluationThresholdChange = (key: string, type: 'min' | 'max', value: string) => {
-    if (value === '') {
+  const handleEvaluationThresholdChange = (key: string, type: 'min' | 'max' | 'value', value: string) => {
+    if (key === 'globale') {
+      // Note globale: range min/max
+      if (value === '') {
+        setFilters((prev) => ({
+          ...prev,
+          evaluations: {
+            ...prev.evaluations,
+            [key]: {
+              ...(prev.evaluations[key] as EvaluationRange),
+              [type]: null
+            }
+          }
+        }));
+        return;
+      }
+      const parsed = Number.parseFloat(value);
+      if (Number.isNaN(parsed)) return;
+      const clamped = Math.min(5, Math.max(0, Math.round(parsed)));
       setFilters((prev) => ({
         ...prev,
         evaluations: {
           ...prev.evaluations,
           [key]: {
-            ...prev.evaluations[key as keyof EvaluationFilters],
-            [type]: null
+            ...(prev.evaluations[key] as EvaluationRange),
+            [type]: clamped
           }
         }
       }));
-      return;
-    }
-
-    const parsed = Number.parseFloat(value);
-    if (Number.isNaN(parsed)) {
-      return;
-    }
-
-    const clamped = Math.min(5, Math.max(0, Math.round(parsed)));
-
-    setFilters((prev) => ({
-      ...prev,
-      evaluations: {
-        ...prev.evaluations,
-        [key]: {
-          ...prev.evaluations[key as keyof EvaluationFilters],
-          [type]: clamped
+    } else {
+      // Boolean fields: 'Oui', 'Non', or '' (all)
+      setFilters((prev) => ({
+        ...prev,
+        evaluations: {
+          ...prev.evaluations,
+          [key]: value
         }
-      }
-    }));
+      }));
+    }
   };
 
   const resetFilters = () => {
@@ -423,48 +430,38 @@ const MatchingSystem = () => {
             ? scoreMaquillage * 0.8 + scoreDemo * 0.2
             : scoreDemo;
 
-          const evaluationValues = {
+          const evaluationValues: Record<string, any> = {
             globale: parseEvaluation(volontaire.notes),
-            yeux: parseEvaluation(volontaire.notesYeux),
-            levres: parseEvaluation(volontaire.notesLevres),
-            teint: parseEvaluation(volontaire.notesTeint),
-            cinetique: parseEvaluation(volontaire.notesCinetique)
+            tenueLevres: volontaire.tenueLevres || 'Oui',
+            tenueTeint: volontaire.tenueTeint || 'Oui',
+            tenueBlush: volontaire.tenueBlush || 'Oui',
+            tenueSourcil: volontaire.tenueSourcil || 'Oui',
+            tenueLiner: volontaire.tenueLiner || 'Oui',
+            demaquillant: volontaire.demaquillant || 'Oui',
+            etudeCils: volontaire.etudeCils || 'Oui',
+            corneoLevre: volontaire.corneoLevre || 'Oui',
+            corneoBras: volontaire.corneoBras || 'Oui',
+            dtm: volontaire.dtm || 'Oui',
           };
 
           const passesEvaluations = EVALUATION_FIELDS.every(({ key }: { key: string }) => {
-            const thresholds = filters.evaluations[key as keyof EvaluationFilters];
-            if (!thresholds || (thresholds.min === null && thresholds.max === null)) {
+            const filter = filters.evaluations[key as keyof EvaluationFilters];
+
+            if (key === 'globale') {
+              // Note globale: range min/max
+              const thresholds = filter as EvaluationRange;
+              if (!thresholds || (thresholds.min === null && thresholds.max === null)) return true;
+              const note = evaluationValues[key];
+              if (typeof note !== 'number') return false;
+              if (thresholds.min !== null && note < thresholds.min) return false;
+              if (thresholds.max !== null && note > thresholds.max) return false;
               return true;
             }
-            const note = evaluationValues[key as keyof typeof evaluationValues];
 
-            // Debug logging
-            if (volontaire.idVol <= 3) {
-              console.log(`Volontaire ${volontaire.idVol} - All fields:`, {
-                notes: volontaire.notes,
-                notesYeux: volontaire.notesYeux,
-                notesLevres: volontaire.notesLevres,
-                notesTeint: volontaire.notesTeint,
-                notesCinetique: volontaire.notesCinetique,
-                allVolontaireFields: Object.keys(volontaire)
-              });
-            }
-
-            if (typeof note !== 'number') {
-              return false;
-            }
-
-            // Check min threshold
-            if (thresholds.min !== null && note < thresholds.min) {
-              return false;
-            }
-
-            // Check max threshold
-            if (thresholds.max !== null && note > thresholds.max) {
-              return false;
-            }
-
-            return true;
+            // Boolean fields: filter by Oui/Non or '' (any)
+            const filterVal = filter as string;
+            if (!filterVal) return true;
+            return evaluationValues[key] === filterVal;
           });
 
           if (!passesEvaluations) {

@@ -91,6 +91,23 @@ const MedicalSection = ({ formData, onChange }: any) => {
           </label>
         </div>
 
+        <div className="flex items-center">
+          <input
+            type="checkbox"
+            id="bouffeeChaleurMenaupose"
+            name="bouffeeChaleurMenaupose"
+            checked={formData.bouffeeChaleurMenaupose === "Oui"}
+            onChange={onChange}
+            className="form-checkbox h-5 w-5 text-primary-600"
+          />
+          <label
+            htmlFor="bouffeeChaleurMenaupose"
+            className="ml-2 block text-sm font-medium text-gray-700"
+          >
+            {t('volunteers.hotFlashes', 'Bouffées de chaleur (ménopause)')}
+          </label>
+        </div>
+
         <div className="md:col-span-2">
           <label
             htmlFor="allergiesCommentaires"

@@ -34,7 +34,26 @@ const CheveuxSection = ({ formData, onChange }: any) => {
     }
   }, [formData, onChange]);
 
-  const cheveuxIds = ['cuirCheveluSensible', 'chuteDeCheveux', 'cheveuxCassants', 'cheveuxProblemeAucun'];
+  // Multi-select helpers
+  const getSelectedArray = (fieldName: string): string[] => {
+    const val = formData[fieldName];
+    if (!val) return [];
+    return val.split(', ').filter(Boolean);
+  };
+
+  const toggleMulti = (fieldName: string, option: string) => {
+    const selected = getSelectedArray(fieldName);
+    let next: string[];
+    if (selected.includes(option)) {
+      next = selected.filter((s: string) => s !== option);
+    } else {
+      next = [...selected, option];
+    }
+    onChange(createSyntheticEvent(fieldName, next.join(', ')));
+  };
+
+  const problemesCapillairesOptions = ["Aucun", "Cuir chevelu sensible", "Chute de cheveux", "Cheveux cassants"];
+
   const onglesIds = ['onglesCassants', 'onglesDedoubles', 'onglesProblemeAucun'];
 
   const NoneCheckbox = ({ groupIds, noneId }: { groupIds: string[], noneId: string }) => (
@@ -93,18 +112,6 @@ const CheveuxSection = ({ formData, onChange }: any) => {
           </select>
         </div>
         <div>
-          <label htmlFor="longueurCheveux" className="block text-sm font-medium text-gray-700 mb-1">
-            {t('volunteers.hairLength')}
-          </label>
-          <select id="longueurCheveux" name="longueurCheveux" value={formData.longueurCheveux} onChange={onChange} className="form-select block w-full">
-            <option value="">{t('common.select')}</option>
-            <option value="Courts">{t('volunteers.hairLengthOptions.Courts')}</option>
-            <option value="Mi-longs">{t('volunteers.hairLengthOptions.Mi-longs')}</option>
-            <option value="Longs">{t('volunteers.hairLengthOptions.Longs')}</option>
-            <option value="Très longs">{t('volunteers.hairLengthOptions.Très longs')}</option>
-          </select>
-        </div>
-        <div>
           <label htmlFor="natureCheveux" className="block text-sm font-medium text-gray-700 mb-1">
             {t('volunteers.hairNature')}
           </label>
@@ -146,13 +153,69 @@ const CheveuxSection = ({ formData, onChange }: any) => {
       </div>
 
       <h3 className="text-md font-medium text-gray-800 mt-6 mb-3">
-        Problèmes capillaires
+        {t('volunteers.resume.fields.problemesCapillaires', 'Problèmes capillaires')}
       </h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <NoneCheckbox groupIds={cheveuxIds} noneId="cheveuxProblemeAucun" />
-        <GroupCheckbox id="cuirCheveluSensible" label={t('volunteers.sensitiveScalp')} groupIds={cheveuxIds} noneId="cheveuxProblemeAucun" />
-        <GroupCheckbox id="chuteDeCheveux" label={t('volunteers.hairLoss')} groupIds={cheveuxIds} noneId="cheveuxProblemeAucun" />
-        <GroupCheckbox id="cheveuxCassants" label={t('volunteers.brittleHair')} groupIds={cheveuxIds} noneId="cheveuxProblemeAucun" />
+      <div className="flex flex-wrap gap-2">
+        {problemesCapillairesOptions.map((option) => {
+          const selected = getSelectedArray('problemesCapillaires');
+          const isSelected = selected.includes(option);
+          return (
+            <button
+              key={option}
+              type="button"
+              onClick={() => toggleMulti('problemesCapillaires', option)}
+              className={`px-3 py-1.5 rounded text-sm border transition-colors ${
+                isSelected
+                  ? "bg-blue-100 border-blue-400 text-blue-800 font-medium"
+                  : "bg-white border-gray-300 text-gray-500 hover:border-gray-400"
+              }`}
+            >
+              {option}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+        <div className="flex items-center">
+          <input
+            type="checkbox"
+            id="calvitie"
+            name="calvitie"
+            checked={formData.calvitie === "Oui"}
+            onChange={onChange}
+            className="form-checkbox h-5 w-5 text-primary-600"
+          />
+          <label htmlFor="calvitie" className="ml-2 block text-sm font-medium text-gray-700">
+            {t('volunteers.resume.fields.calvitie', 'Calvitie')}
+          </label>
+        </div>
+        <div className="flex items-center">
+          <input
+            type="checkbox"
+            id="pellicules"
+            name="pellicules"
+            checked={formData.pellicules === "Oui"}
+            onChange={onChange}
+            className="form-checkbox h-5 w-5 text-primary-600"
+          />
+          <label htmlFor="pellicules" className="ml-2 block text-sm font-medium text-gray-700">
+            {t('volunteers.resume.fields.pellicules', 'Pellicules')}
+          </label>
+        </div>
+        <div className="flex items-center">
+          <input
+            type="checkbox"
+            id="demangeaisonsCuirChevelu"
+            name="demangeaisonsCuirChevelu"
+            checked={formData.demangeaisonsCuirChevelu === "Oui"}
+            onChange={onChange}
+            className="form-checkbox h-5 w-5 text-primary-600"
+          />
+          <label htmlFor="demangeaisonsCuirChevelu" className="ml-2 block text-sm font-medium text-gray-700">
+            {t('volunteers.resume.fields.demangeaisonsCuirChevelu', 'Démangeaisons du cuir chevelu')}
+          </label>
+        </div>
       </div>
 
       <h3 className="text-md font-medium text-gray-800 mt-6 mb-3">

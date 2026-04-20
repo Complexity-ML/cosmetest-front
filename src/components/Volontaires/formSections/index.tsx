@@ -6,10 +6,10 @@ import ProblemesSection from './sections/ProblemesSection';
 import MedicalSection from './sections/MedicalSection';
 import NotesSection from './sections/NotesSection';
 import CilsSection from './sections/CilsSection';
-import MesuresSection from './sections/MesuresSection';
 import MarquesCutaneesSection from './sections/MarquesCutaneesSection';
 import RibSection from './sections/RibSection';
 import EvaluationSection from './sections/EvaluationSection';
+import ResumeSection from './sections/ResumeSection';
 
 const SECTION_COMPONENTS = {
   'infos-personnelles': InfosPersonnellesSection,
@@ -20,10 +20,10 @@ const SECTION_COMPONENTS = {
   medical: MedicalSection,
   notes: NotesSection,
   cils: CilsSection,
-  mesures: MesuresSection,
   'marques-cutanees': MarquesCutaneesSection,
   RIB: RibSection,
   evaluation: EvaluationSection,
+  resume: ResumeSection,
 } as const;
 
 type SectionKey = keyof typeof SECTION_COMPONENTS;

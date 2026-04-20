@@ -9,9 +9,6 @@ const createSyntheticEvent = (name: string, value: string) => ({
 const MarquesCutaneesSection = ({ formData, onChange }: any) => {
   const { t } = useTranslation();
 
-  // Pour cicatrices/tatouages/piercings : truthy = coché (plus de "Oui"/"Non")
-  const isChecked = (val: any) => !!val;
-
   const handleNoneToggle = useCallback((
     groupIds: string[],
     noneId: string,
@@ -34,32 +31,6 @@ const MarquesCutaneesSection = ({ formData, onChange }: any) => {
         onChange(createSyntheticEvent(noneId, ''));
       }
       onChange(createSyntheticEvent(clickedId, isCurrentlyChecked ? '' : 'Oui'));
-    }
-  }, [formData, onChange]);
-
-  const handleToggleCarac = useCallback((id: string) => {
-    if (id === 'caracteristiquesAucun') {
-      const isCurrentlyChecked = formData.caracteristiquesAucun === 'Oui';
-      if (!isCurrentlyChecked) {
-        ['cicatrices', 'tatouages', 'piercings'].forEach(fieldId => {
-          if (isChecked(formData[fieldId])) {
-            onChange(createSyntheticEvent(fieldId, ''));
-          }
-        });
-        onChange(createSyntheticEvent('caracteristiquesAucun', 'Oui'));
-      } else {
-        onChange(createSyntheticEvent('caracteristiquesAucun', ''));
-      }
-    } else {
-      if (isChecked(formData[id])) {
-        onChange(createSyntheticEvent(id, ''));
-      } else {
-        if (formData.caracteristiquesAucun === 'Oui') {
-          onChange(createSyntheticEvent('caracteristiquesAucun', ''));
-        }
-        // Zero-width space = coché sans texte (permet de taper des espaces)
-        onChange(createSyntheticEvent(id, '\u200B'));
-      }
     }
   }, [formData, onChange]);
 
@@ -104,109 +75,6 @@ const MarquesCutaneesSection = ({ formData, onChange }: any) => {
         <CardTitle>{t('volunteers.skinMarks')}</CardTitle>
       </CardHeader>
       <CardContent>
-
-      <h3 className="text-md font-medium text-gray-800 mt-6 mb-3">
-        {t('volunteers.characteristics')}
-      </h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="flex items-center col-span-full">
-          <input
-            type="checkbox"
-            id="caracteristiquesAucun"
-            name="caracteristiquesAucun"
-            checked={formData.caracteristiquesAucun === "Oui"}
-            onChange={() => handleToggleCarac('caracteristiquesAucun')}
-            className="form-checkbox h-5 w-5 text-primary-600"
-          />
-          <label htmlFor="caracteristiquesAucun" className="ml-2 block text-sm font-medium text-gray-700">
-            Aucun
-          </label>
-        </div>
-
-        <div>
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              id="cicatrices"
-              name="cicatrices"
-              checked={isChecked(formData.cicatrices)}
-              onChange={() => handleToggleCarac('cicatrices')}
-              className="form-checkbox h-5 w-5 text-primary-600"
-            />
-            <label htmlFor="cicatrices" className="ml-2 block text-sm font-medium text-gray-700">
-              {t('volunteers.scars')}
-            </label>
-          </div>
-          {isChecked(formData.cicatrices) && (
-            <input
-              type="text"
-              name="cicatrices"
-              value={formData.cicatrices.replace(/\u200B/g, '')}
-              onChange={(e) => {
-                onChange({ target: { name: 'cicatrices', value: e.target.value || '\u200B', type: 'text' } } as any);
-              }}
-              placeholder={t('volunteers.locationPlaceholder')}
-              className="form-input block w-full mt-2"
-            />
-          )}
-        </div>
-
-        <div>
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              id="tatouages"
-              name="tatouages"
-              checked={isChecked(formData.tatouages)}
-              onChange={() => handleToggleCarac('tatouages')}
-              className="form-checkbox h-5 w-5 text-primary-600"
-            />
-            <label htmlFor="tatouages" className="ml-2 block text-sm font-medium text-gray-700">
-              {t('volunteers.tattoos')}
-            </label>
-          </div>
-          {isChecked(formData.tatouages) && (
-            <input
-              type="text"
-              name="tatouages"
-              value={formData.tatouages.replace(/\u200B/g, '')}
-              onChange={(e) => {
-                onChange({ target: { name: 'tatouages', value: e.target.value || '\u200B', type: 'text' } } as any);
-              }}
-              placeholder={t('volunteers.locationPlaceholder')}
-              className="form-input block w-full mt-2"
-            />
-          )}
-        </div>
-
-        <div>
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              id="piercings"
-              name="piercings"
-              checked={isChecked(formData.piercings)}
-              onChange={() => handleToggleCarac('piercings')}
-              className="form-checkbox h-5 w-5 text-primary-600"
-            />
-            <label htmlFor="piercings" className="ml-2 block text-sm font-medium text-gray-700">
-              {t('volunteers.piercings')}
-            </label>
-          </div>
-          {isChecked(formData.piercings) && (
-            <input
-              type="text"
-              name="piercings"
-              value={formData.piercings.replace(/\u200B/g, '')}
-              onChange={(e) => {
-                onChange({ target: { name: 'piercings', value: e.target.value || '\u200B', type: 'text' } } as any);
-              }}
-              placeholder={t('volunteers.locationPlaceholder')}
-              className="form-input block w-full mt-2"
-            />
-          )}
-        </div>
-      </div>
 
       <h3 className="text-md font-medium text-gray-800 mt-6 mb-3">
         {t('volunteers.pigmentSpots')}

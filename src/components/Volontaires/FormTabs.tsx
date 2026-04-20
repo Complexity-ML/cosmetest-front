@@ -18,10 +18,10 @@ const FormTabs = ({ activeTab, setActiveTab }: FormTabsProps) => {
     { id: "cils", label: t('volunteers.eyelashesAndEyebrows') },
     { id: "problemes", label: t('volunteers.specificProblems') },
     { id: "medical", label: t('volunteers.medicalInformation') },
-    { id: "mesures", label: t('volunteers.measurements') },
     { id: "notes", label: t('volunteers.comments') },
     { id: "RIB", label: t('volunteers.bankDetails') },
-    { id: "evaluation", label: t('volunteers.evaluation') }
+    { id: "evaluation", label: t('volunteers.evaluation') },
+    { id: "resume", label: t('volunteers.summary', 'Résumé') }
   ];
   return (
     <div className="mb-6">

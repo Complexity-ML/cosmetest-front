@@ -125,8 +125,12 @@ export const ResultRow: React.FC<ResultRowProps> = ({ volontaire, formatNote }) 
         <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
           {EVALUATION_FIELDS.map(({ key, label }) => (
             <div key={key} className="flex justify-between">
-              <span className="text-muted-foreground">{label.replace('Evaluation ', '')}:</span>
-              <span className="font-medium">{formatNote(volontaire.evaluations[key])}</span>
+              <span className="text-muted-foreground">{label}:</span>
+              <span className="font-medium">
+                {key === 'globale'
+                  ? formatNote(volontaire.evaluations[key])
+                  : (volontaire.evaluations[key] || 'Oui')}
+              </span>
             </div>
           ))}
         </div>

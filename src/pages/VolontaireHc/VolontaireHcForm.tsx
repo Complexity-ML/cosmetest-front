@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, Link, useLocation, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api from '../../services/api';
+import { calculateAgeFromDate } from '../../utils/dateUtils';
 
 // Import des sections de formulaire et fonctions d'initialisation
 import { getFormSections, FormItem } from '../../components/VolontaireHc/formConfig';
@@ -250,7 +251,7 @@ const FormField: React.FC<FormFieldProps> = ({
 };
 
 // Composant CollapsibleSection
-const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({ title, children, isOpen = false, icon = null }) => {
+const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({ title, children, isOpen = true, icon = null }) => {
   const [open, setOpen] = useState(isOpen);
 
   return (
@@ -756,7 +757,10 @@ const VolontaireHcForm = () => {
                     <div>
                       <p className="font-medium">{volontaireInfo.nom} {volontaireInfo.prenom}</p>
                       <p className="text-sm text-gray-600">
-                        ID: {isEditMode ? idVol : formData.idVol} • {volontaireInfo.sexe}, {volontaireInfo.age} ans
+                        ID: {isEditMode ? idVol : formData.idVol} • {volontaireInfo.sexe}{(() => {
+                          const age = volontaireInfo.age ?? calculateAgeFromDate(volontaireInfo.dateNaissance);
+                          return age != null ? `, ${age} ans` : '';
+                        })()}
                         {volontaireInfo.phototype && ` - Phototype ${volontaireInfo.phototype}`}
                       </p>
                     </div>
@@ -831,7 +835,7 @@ const VolontaireHcForm = () => {
           <CollapsibleSection
             key={section.title}
             title={section.title}
-            isOpen={false}
+            isOpen={true}
             icon={getIconComponent(section.icon)}
           >
             {section.groups.map((group, groupIndex) => (

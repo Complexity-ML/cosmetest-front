@@ -45,6 +45,64 @@ const normalizePhototype = (raw: any): string => {
   return s;
 };
 
+// ── Multi-select ↔ individual backend fields mapping ──
+
+// Build a multi-select string from individual "Oui"/"Non" backend fields
+const buildMultiSelect = (data: any, mapping: Record<string, string>): string => {
+  const selected: string[] = [];
+  for (const [label, backendField] of Object.entries(mapping)) {
+    if (data[backendField] === 'Oui') selected.push(label);
+  }
+  return selected.join(', ');
+};
+
+// Decompose a multi-select string into individual "Oui"/"Non" values
+const decomposeMultiSelect = (value: string, mapping: Record<string, string>): Record<string, string> => {
+  const selected = value ? value.split(', ').filter(Boolean) : [];
+  const result: Record<string, string> = {};
+  for (const [label, backendField] of Object.entries(mapping)) {
+    result[backendField] = selected.includes(label) ? 'Oui' : 'Non';
+  }
+  return result;
+};
+
+// Mapping: multi-select label → backend field name
+const SECHERESSE_MAP: Record<string, string> = {
+  'Lèvres': 'secheresseLevres',
+  'Cou': 'secheresseCou',
+  'Poitrine / Décolleté': 'secheressePoitrineDecollete',
+  'Ventre / Taille': 'secheresseVentreTaille',
+  'Fesses / Hanches': 'secheresseFessesHanches',
+  'Bras': 'secheresseBras',
+  'Mains': 'secheresseMains',
+  'Avant-bras': 'secheresseJambes', // mapped to secheresseJambes in DB
+};
+
+const FERMETE_MAP: Record<string, string> = {
+  'Visage': 'perteDeFermeteVisage',
+  'Cou': 'perteDeFermeteCou',
+  'Décolleté / Poitrine': 'perteDeFermeteDecollete',
+  'Avant-bras': 'perteDeFermeteAvantBras',
+};
+
+const PROBLEMES_CAPILLAIRES_MAP: Record<string, string> = {
+  'Cuir chevelu sensible': 'cuirCheveluSensible',
+  'Chute de cheveux': 'chuteDeCheveux',
+  'Cheveux cassants': 'cheveuxCassants',
+};
+
+const PROBLEMES_CILS_MAP: Record<string, string> = {
+  'Cils abîmés': 'cilsAbimes',
+  'Cils broussailleux': 'cilsBroussailleux',
+  'Chute de cils': 'chuteDeCils',
+};
+
+const PROBLEMES_YEUX_MAP: Record<string, string> = {
+  'Cernes pigmentaires': 'cernesPigmentaires',
+  'Cernes vasculaires': 'cernesVasculaires',
+  'Poches': 'poches',
+};
+
 // Options valides pour chaque select du formulaire
 const SELECT_OPTIONS = {
   phototype: ['Phototype 1', 'Phototype 2', 'Phototype 3', 'Phototype 4', 'Phototype 5', 'Phototype 6'],
@@ -196,32 +254,17 @@ const FIELD_TO_TAB_MAP: Record<string, string> = {
   allergiesCommentaires: 'medical',
   santeCompatible: 'medical',
   bouffeeChaleurMenaupose: 'medical',
-  cernesVasculaires: 'medical',
-  cernesPigmentaires: 'medical',
-  poches: 'medical',
-  nbCigarettesJour: 'medical',
-  ths: 'medical',
+  // Multi-select fields
+  secheressePeau: 'peau',
+  perteDeFermete: 'peau',
+  problemesYeux: 'peau',
+  problemesCapillaires: 'cheveux',
+  problemesCils: 'cils',
+  demangeaisonsCuirChevelu: 'cheveux',
+  calvitie: 'cheveux',
 
   // Mesures
-  ihBrasDroit: 'mesures',
-  ihBrasGauche: 'mesures',
-  scorePod: 'mesures',
-  scorePog: 'mesures',
-  scoreFront: 'mesures',
-  scoreLion: 'mesures',
-  scorePpd: 'mesures',
-  scorePpg: 'mesures',
-  scoreDod: 'mesures',
-  scoreDog: 'mesures',
-  scoreSngd: 'mesures',
-  scoreSngg: 'mesures',
-  scoreLevsup: 'mesures',
-  scoreComlevd: 'mesures',
-  scoreComlevg: 'mesures',
-  scorePtose: 'mesures',
-  ita: 'mesures',
-  levres: 'mesures',
-  hauteurSiege: 'mesures',
+  levres: 'cils',
 
   // Notes
   notes: 'notes',
@@ -379,6 +422,14 @@ interface FormData {
   cilsBroussailleux: string;
   chuteDeCils: string;
 
+  // Multi-select (frontend only)
+  secheressePeau: string;
+  perteDeFermete: string;
+  problemesCapillaires: string;
+  problemesCils: string;
+  problemesYeux: string;
+  demangeaisonsCuirChevelu: string;
+
   // Problèmes médicaux supplémentaires
   angiome: string;
   pityriasis: string;
@@ -467,6 +518,7 @@ interface UseVolontaireFormReturn {
   formSuccess: string | null;
   handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
   handleSubmit: (e: React.FormEvent<HTMLFormElement>) => Promise<void>;
+  saveForm: (options?: { skipRedirect?: boolean }) => Promise<boolean>;
 }
 
 export const useVolontaireForm = ({ id, isEditMode, navigate }: UseVolontaireFormParams): UseVolontaireFormReturn => {
@@ -607,6 +659,11 @@ export const useVolontaireForm = ({ id, isEditMode, navigate }: UseVolontaireFor
           cuirCheveluSensible: detailsData.cuirCheveluSensible || "Non",
           chuteDeCheveux: detailsData.chuteDeCheveux || "Non",
           cheveuxCassants: detailsData.cheveuxCassants || "Non",
+          // Multi-select built from individual fields
+          problemesCapillaires: buildMultiSelect(detailsData, PROBLEMES_CAPILLAIRES_MAP),
+          calvitie: detailsData.calvitie || "Non",
+          pellicules: detailsData.pellicules || "Non",
+          demangeaisonsCuirChevelu: detailsData.demangeaisonsDuCuirChevelu || "Non",
           onglesCassants: detailsData.onglesCassants || "Non",
           onglesDedoubles: detailsData.onglesDedoubles || "Non",
 
@@ -632,6 +689,18 @@ export const useVolontaireForm = ({ id, isEditMode, navigate }: UseVolontaireFor
           evaluationLevres: detailsData.notesLevres || 0,
           evaluationTeint: detailsData.notesTeint || 0,
           evaluationCinetique: detailsData.notesCinetique || 0,
+
+          // Critères d'étude
+          tenueLevres: detailsData.tenueLevres || "",
+          tenueTeint: detailsData.tenueTeint || "",
+          tenueBlush: detailsData.tenueBlush || "",
+          tenueSourcil: detailsData.tenueSourcil || "",
+          tenueLiner: detailsData.tenueLiner || "",
+          demaquillant: detailsData.demaquillant || "",
+          etudeCils: detailsData.etudeCils || "",
+          corneoLevre: detailsData.corneoLevre || "",
+          corneoBras: detailsData.corneoBras || "",
+          dtm: detailsData.dtm || "",
           // Caractéristiques supplémentaires
           cicatrices: (detailsData.cicatrices === "Oui" || detailsData.cicatrices === "Non") ? "" : (detailsData.cicatrices || ""),
           tatouages: (detailsData.tatouages === "Oui" || detailsData.tatouages === "Non") ? "" : (detailsData.tatouages || ""),
@@ -644,7 +713,7 @@ export const useVolontaireForm = ({ id, isEditMode, navigate }: UseVolontaireFor
           vergeturesPoitrineDecollete:
             detailsData.vergeturesPoitrineDecollete || "Non",
 
-          // Sécheresse de la peau
+          // Sécheresse de la peau (keep individual for backward compat)
           secheresseLevres: detailsData.secheresseLevres || "Non",
           secheresseCou: detailsData.secheresseCou || "Non",
           secheressePoitrineDecollete:
@@ -655,6 +724,8 @@ export const useVolontaireForm = ({ id, isEditMode, navigate }: UseVolontaireFor
           secheresseMains: detailsData.secheresseMains || "Non",
           secheresseJambes: detailsData.secheresseJambes || "Non",
           secheressePieds: detailsData.secheressePieds || "Non",
+          // Multi-select built from individual fields
+          secheressePeau: buildMultiSelect(detailsData, SECHERESSE_MAP),
 
           // Taches pigmentaires
           tachesPigmentairesVisage:
@@ -664,19 +735,23 @@ export const useVolontaireForm = ({ id, isEditMode, navigate }: UseVolontaireFor
             detailsData.tachesPigmentairesDecollete || "Non",
           tachesPigmentairesMains: detailsData.tachesPigmentairesMains || "Non",
 
-          // Perte de fermeté
+          // Perte de fermeté (keep individual for backward compat)
           perteDeFermeteVisage: detailsData.perteDeFermeteVisage || "Non",
           perteDeFermeteCou: detailsData.perteDeFermeteCou || "Non",
           perteDeFermeteDecollete: detailsData.perteDeFermeteDecollete || "Non",
           perteDeFermeteAvantBras: detailsData.perteDeFermeteAvantBras || "Non",
+          // Multi-select built from individual fields
+          perteDeFermete: buildMultiSelect(detailsData, FERMETE_MAP),
 
-          // Cils
+          // Cils (keep individual for backward compat)
           epaisseurCils: matchOption(detailsData.epaisseurCils, SELECT_OPTIONS.epaisseurCils),
           longueurCils: matchOption(detailsData.longueurCils, SELECT_OPTIONS.longueurCils),
           courbureCils: matchOption(detailsData.courbureCils, SELECT_OPTIONS.courbureCils),
           cilsAbimes: detailsData.cilsAbimes || "Non",
           cilsBroussailleux: detailsData.cilsBroussailleux || "Non",
           chuteDeCils: detailsData.chuteDeCils || "Non",
+          // Multi-select built from individual fields
+          problemesCils: buildMultiSelect(detailsData, PROBLEMES_CILS_MAP),
 
           // Problèmes médicaux supplémentaires
           angiome: detailsData.angiome || "Non",
@@ -717,6 +792,8 @@ export const useVolontaireForm = ({ id, isEditMode, navigate }: UseVolontaireFor
           cernesVasculaires: detailsData.cernesVasculaires || "Non",
           cernesPigmentaires: detailsData.cernesPigmentaires || "Non",
           poches: detailsData.poches || "Non",
+          // Multi-select built from individual fields
+          problemesYeux: buildMultiSelect(detailsData, PROBLEMES_YEUX_MAP),
           nbCigarettesJour: detailsData.nbCigarettesJour || "",
           caracteristiqueSourcils: matchOption(detailsData.caracteristiqueSourcils, SELECT_OPTIONS.caracteristiqueSourcils),
           mapyeux: detailsData.mapyeux || "",
@@ -864,13 +941,11 @@ export const useVolontaireForm = ({ id, isEditMode, navigate }: UseVolontaireFor
   // Soumission du formulaire
   // Modification de la fonction handleSubmit pour s'assurer que tous les champs obligatoires ont des valeurs
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
+  const saveForm = async (options?: { skipRedirect?: boolean }): Promise<boolean> => {
     // Validation
     if (!validateForm()) {
       window.scrollTo(0, 0);
-      return;
+      return false;
     }
 
     try {
@@ -948,9 +1023,8 @@ export const useVolontaireForm = ({ id, isEditMode, navigate }: UseVolontaireFor
         natureCheveux: defaultIfNull(formData.natureCheveux, ""),
         epaisseurCheveux: defaultIfNull(formData.epaisseurCheveux, ""),
         natureCuirChevelu: defaultIfNull(formData.natureCuirChevelu, ""),
-        cuirCheveluSensible: defaultIfNull(formData.cuirCheveluSensible, "Non"),
-        chuteDeCheveux: defaultIfNull(formData.chuteDeCheveux, "Non"),
-        cheveuxCassants: defaultIfNull(formData.cheveuxCassants, "Non"),
+        // Problèmes capillaires (decomposed from multi-select)
+        ...decomposeMultiSelect(formData.problemesCapillaires || '', PROBLEMES_CAPILLAIRES_MAP),
         onglesCassants: defaultIfNull(formData.onglesCassants, "Non"),
         onglesDedoubles: defaultIfNull(formData.onglesDedoubles, "Non"),
 
@@ -962,7 +1036,7 @@ export const useVolontaireForm = ({ id, isEditMode, navigate }: UseVolontaireFor
         onglesMous: defaultIfNull(formData.onglesMous, "Non"),
         onglesStries: defaultIfNull(formData.onglesStries, "Non"),
         pellicules: defaultIfNull(formData.pellicules, "Non"),
-        demangeaisonsDuCuirChevelu: defaultIfNull(formData.demangeaisonsDuCuirChevelu, "Non"),
+        demangeaisonsDuCuirChevelu: defaultIfNull(formData.demangeaisonsCuirChevelu, "Non"),
         pointesFourchues: defaultIfNull(formData.pointesFourchues, "Non"),
         calvitie: defaultIfNull(formData.calvitie, "Non"),
         caracteristiqueSourcils: defaultIfNull(formData.caracteristiqueSourcils, "Non spécifié"),
@@ -997,6 +1071,18 @@ export const useVolontaireForm = ({ id, isEditMode, navigate }: UseVolontaireFor
         notesTeint: Number(formData.evaluationTeint) || 0,
         notesCinetique: Number(formData.evaluationCinetique) || 0,
 
+        // Critères d'étude
+        tenueLevres: defaultIfNull(formData.tenueLevres, "Oui"),
+        tenueTeint: defaultIfNull(formData.tenueTeint, "Oui"),
+        tenueBlush: defaultIfNull(formData.tenueBlush, "Oui"),
+        tenueSourcil: defaultIfNull(formData.tenueSourcil, "Oui"),
+        tenueLiner: defaultIfNull(formData.tenueLiner, "Oui"),
+        demaquillant: defaultIfNull(formData.demaquillant, "Oui"),
+        etudeCils: defaultIfNull(formData.etudeCils, "Oui"),
+        corneoLevre: defaultIfNull(formData.corneoLevre, "Oui"),
+        corneoBras: defaultIfNull(formData.corneoBras, "Oui"),
+        dtm: defaultIfNull(formData.dtm, "Oui"),
+
         //Caractéristiques supplémentaires
         cicatrices: defaultIfNull(formData.cicatrices, ""),
         tatouages: defaultIfNull(formData.tatouages, ""),
@@ -1008,16 +1094,9 @@ export const useVolontaireForm = ({ id, isEditMode, navigate }: UseVolontaireFor
         vergeturesVentreTaille: defaultIfNull(formData.vergeturesVentreTaille, "Non"),
         vergeturesPoitrineDecollete: defaultIfNull(formData.vergeturesPoitrineDecollete, "Non"),
 
-        // Sécheresse de la peau
-        secheresseLevres: defaultIfNull(formData.secheresseLevres, "Non"),
-        secheresseCou: defaultIfNull(formData.secheresseCou, "Non"),
-        secheressePoitrineDecollete: defaultIfNull(formData.secheressePoitrineDecollete, "Non"),
-        secheresseVentreTaille: defaultIfNull(formData.secheresseVentreTaille, "Non"),
-        secheresseFessesHanches: defaultIfNull(formData.secheresseFessesHanches, "Non"),
-        secheresseBras: defaultIfNull(formData.secheresseBras, "Non"),
-        secheresseMains: defaultIfNull(formData.secheresseMains, "Non"),
-        secheresseJambes: defaultIfNull(formData.secheresseJambes, "Non"),
-        secheressePieds: defaultIfNull(formData.secheressePieds, "Non"),
+        // Sécheresse de la peau (decomposed from multi-select)
+        ...decomposeMultiSelect(formData.secheressePeau || '', SECHERESSE_MAP),
+        secheressePieds: "Non", // no longer in UI, keep default
 
         //Taches pigmentaires
         tachesPigmentairesVisage: defaultIfNull(formData.tachesPigmentairesVisage, "Non"),
@@ -1025,19 +1104,14 @@ export const useVolontaireForm = ({ id, isEditMode, navigate }: UseVolontaireFor
         tachesPigmentairesDecollete: defaultIfNull(formData.tachesPigmentairesDecollete, "Non"),
         tachesPigmentairesMains: defaultIfNull(formData.tachesPigmentairesMains, "Non"),
 
-        // Perte de fermeté
-        perteDeFermeteVisage: defaultIfNull(formData.perteDeFermeteVisage, "Non"),
-        perteDeFermeteCou: defaultIfNull(formData.perteDeFermeteCou, "Non"),
-        perteDeFermeteDecollete: defaultIfNull(formData.perteDeFermeteDecollete, "Non"),
-        perteDeFermeteAvantBras: defaultIfNull(formData.perteDeFermeteAvantBras, "Non"),
+        // Perte de fermeté (decomposed from multi-select)
+        ...decomposeMultiSelect(formData.perteDeFermete || '', FERMETE_MAP),
 
-        // Cils
+        // Cils (decomposed from multi-select)
         epaisseurCils: defaultIfNull(formData.epaisseurCils, ""),
         longueurCils: defaultIfNull(formData.longueurCils, ""),
         courbureCils: defaultIfNull(formData.courbureCils, ""),
-        cilsAbimes: defaultIfNull(formData.cilsAbimes, "Non"),
-        cilsBroussailleux: defaultIfNull(formData.cilsBroussailleux, "Non"),
-        chuteDeCils: defaultIfNull(formData.chuteDeCils, "Non"),
+        ...decomposeMultiSelect(formData.problemesCils || '', PROBLEMES_CILS_MAP),
 
         //Problèmes médicaux supplémentaires
         angiome: defaultIfNull(formData.angiome, "Non"),
@@ -1075,9 +1149,8 @@ export const useVolontaireForm = ({ id, isEditMode, navigate }: UseVolontaireFor
         //Autres attributs
         levres: defaultIfNull(formData.levres, ""),
         bouffeeChaleurMenaupose: defaultIfNull(formData.bouffeeChaleurMenaupose, "Non"),
-        cernesVasculaires: defaultIfNull(formData.cernesVasculaires, "Non"),
-        cernesPigmentaires: defaultIfNull(formData.cernesPigmentaires, "Non"),
-        poches: defaultIfNull(formData.poches, "Non"),
+        // Problèmes yeux (decomposed from multi-select)
+        ...decomposeMultiSelect(formData.problemesYeux || '', PROBLEMES_YEUX_MAP),
         nbCigarettesJour: defaultIfNull(formData.nbCigarettesJour, ""),
         ths: defaultIfNull(formData.ths, "Non"),
 
@@ -1123,12 +1196,13 @@ export const useVolontaireForm = ({ id, isEditMode, navigate }: UseVolontaireFor
       await saveBankInfo(volontaireId);
 
       //  Une seule redirection, après un délai
-      if (!isEditMode) {
+      if (!isEditMode && !options?.skipRedirect) {
         redirectTimeoutRef.current = setTimeout(() => {
           navigate(`/volontaires/${volontaireId}`);
         }, 1500);
       }
 
+      return true;
     } catch (error) {
       // Gestion des erreurs Axios
       const errorMessage =
@@ -1138,9 +1212,15 @@ export const useVolontaireForm = ({ id, isEditMode, navigate }: UseVolontaireFor
       console.error("Erreur lors de l'enregistrement du volontaire:", error);
       setFormError(errorMessage);
       window.scrollTo(0, 0);
+      return false;
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    await saveForm();
   };
 
   return {
@@ -1154,5 +1234,6 @@ export const useVolontaireForm = ({ id, isEditMode, navigate }: UseVolontaireFor
     formSuccess,
     handleChange,
     handleSubmit,
+    saveForm,
   };
 };

@@ -145,6 +145,14 @@ export interface InitialFormStateType {
   scorePtose: string;
   ita: string;
 
+  // Multi-select (frontend only, mapped to/from individual backend fields)
+  secheressePeau: string;
+  perteDeFermete: string;
+  problemesCapillaires: string;
+  problemesCils: string;
+  problemesYeux: string;
+  demangeaisonsCuirChevelu: string;
+
   // Autres attributs
   levres: string;
   bouffeeChaleurMenaupose: string;
@@ -162,12 +170,24 @@ export interface InitialFormStateType {
   iban: string;
   bic: string;
 
-  // Champs pour les évaluations
+  // Évaluation
   evaluation: number;
   evaluationYeux: number;
   evaluationLevres: number;
   evaluationTeint: number;
   evaluationCinetique: number;
+
+  // Critères d'étude (booléens, défaut Oui)
+  tenueLevres: string;
+  tenueTeint: string;
+  tenueBlush: string;
+  tenueSourcil: string;
+  tenueLiner: string;
+  demaquillant: string;
+  etudeCils: string;
+  corneoLevre: string;
+  corneoBras: string;
+  dtm: string;
 }
 
 export const INITIAL_FORM_STATE: InitialFormStateType = {
@@ -317,7 +337,15 @@ export const INITIAL_FORM_STATE: InitialFormStateType = {
   scorePtose: "",
   ita: "",
 
-  // Autres attributs manquants
+  // Multi-select (frontend only)
+  secheressePeau: "",
+  perteDeFermete: "",
+  problemesCapillaires: "",
+  problemesCils: "",
+  problemesYeux: "",
+  demangeaisonsCuirChevelu: "Non",
+
+  // Autres attributs
   levres: "",
   bouffeeChaleurMenaupose: "Non",
   cernesVasculaires: "Non",
@@ -334,10 +362,22 @@ export const INITIAL_FORM_STATE: InitialFormStateType = {
   iban: "",
   bic: "",
 
-  // Champs pour les évaluations
+  // Évaluation
   evaluation: 0,
   evaluationYeux: 0,
   evaluationLevres: 0,
   evaluationTeint: 0,
   evaluationCinetique: 0,
+
+  // Critères d'étude (défaut Oui)
+  tenueLevres: "Oui",
+  tenueTeint: "Oui",
+  tenueBlush: "Oui",
+  tenueSourcil: "Oui",
+  tenueLiner: "Oui",
+  demaquillant: "Oui",
+  etudeCils: "Oui",
+  corneoLevre: "Oui",
+  corneoBras: "Oui",
+  dtm: "Oui",
 };

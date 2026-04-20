@@ -1,6 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useTranslation } from "react-i18next";
-import { useCallback } from "react";
 
 const createSyntheticEvent = (name: string, value: string) => ({
   target: { name, value, type: 'text' }
@@ -9,46 +8,25 @@ const createSyntheticEvent = (name: string, value: string) => ({
 const CilsSection = ({ formData, onChange }: any) => {
   const { t } = useTranslation();
 
-  const cilsIds = ['cilsAbimes', 'cilsBroussailleux', 'chuteDeCils', 'cilsProblemeAucun'];
+  // Multi-select helpers
+  const getSelectedArray = (fieldName: string): string[] => {
+    const val = formData[fieldName];
+    if (!val) return [];
+    return val.split(', ').filter(Boolean);
+  };
 
-  const handleNoneToggle = useCallback((
-    clickedId: string,
-    isCurrentlyChecked: boolean,
-  ) => {
-    if (clickedId === 'cilsProblemeAucun') {
-      if (!isCurrentlyChecked) {
-        cilsIds.forEach(id => {
-          if (id !== 'cilsProblemeAucun' && formData[id] === 'Oui') {
-            onChange(createSyntheticEvent(id, ''));
-          }
-        });
-        onChange(createSyntheticEvent('cilsProblemeAucun', 'Oui'));
-      } else {
-        onChange(createSyntheticEvent('cilsProblemeAucun', ''));
-      }
+  const toggleMulti = (fieldName: string, option: string) => {
+    const selected = getSelectedArray(fieldName);
+    let next: string[];
+    if (selected.includes(option)) {
+      next = selected.filter((s: string) => s !== option);
     } else {
-      if (!isCurrentlyChecked && formData.cilsProblemeAucun === 'Oui') {
-        onChange(createSyntheticEvent('cilsProblemeAucun', ''));
-      }
-      onChange(createSyntheticEvent(clickedId, isCurrentlyChecked ? '' : 'Oui'));
+      next = [...selected, option];
     }
-  }, [formData, onChange]);
+    onChange(createSyntheticEvent(fieldName, next.join(', ')));
+  };
 
-  const GroupCheckbox = ({ id, label }: { id: string, label: string }) => (
-    <div className="flex items-center">
-      <input
-        type="checkbox"
-        id={id}
-        name={id}
-        checked={formData[id] === "Oui"}
-        onChange={() => handleNoneToggle(id, formData[id] === "Oui")}
-        className="form-checkbox h-5 w-5 text-primary-600"
-      />
-      <label htmlFor={id} className="ml-2 block text-sm font-medium text-gray-700">
-        {label}
-      </label>
-    </div>
-  );
+  const problemesCilsOptions = ["Cils abîmés", "Cils broussailleux", "Chute de cils"];
 
   return (
     <Card>
@@ -96,25 +74,27 @@ const CilsSection = ({ formData, onChange }: any) => {
       </div>
 
       <h3 className="text-md font-medium text-gray-800 mt-6 mb-3">
-        Problèmes des cils
+        {t('volunteers.resume.fields.problemesCils', 'Problèmes des cils')}
       </h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="flex items-center col-span-full">
-          <input
-            type="checkbox"
-            id="cilsProblemeAucun"
-            name="cilsProblemeAucun"
-            checked={formData.cilsProblemeAucun === "Oui"}
-            onChange={() => handleNoneToggle('cilsProblemeAucun', formData.cilsProblemeAucun === "Oui")}
-            className="form-checkbox h-5 w-5 text-primary-600"
-          />
-          <label htmlFor="cilsProblemeAucun" className="ml-2 block text-sm font-medium text-gray-700">
-            Aucun
-          </label>
-        </div>
-        <GroupCheckbox id="cilsAbimes" label={t('volunteers.damagedLashes')} />
-        <GroupCheckbox id="cilsBroussailleux" label={t('volunteers.bushyLashes')} />
-        <GroupCheckbox id="chuteDeCils" label={t('volunteers.lashLoss')} />
+      <div className="flex flex-wrap gap-2">
+        {problemesCilsOptions.map((option) => {
+          const selected = getSelectedArray('problemesCils');
+          const isSelected = selected.includes(option);
+          return (
+            <button
+              key={option}
+              type="button"
+              onClick={() => toggleMulti('problemesCils', option)}
+              className={`px-3 py-1.5 rounded text-sm border transition-colors ${
+                isSelected
+                  ? "bg-blue-100 border-blue-400 text-blue-800 font-medium"
+                  : "bg-white border-gray-300 text-gray-500 hover:border-gray-400"
+              }`}
+            >
+              {option}
+            </button>
+          );
+        })}
       </div>
 
       <h3 className="text-md font-medium text-gray-800 mt-6 mb-3">

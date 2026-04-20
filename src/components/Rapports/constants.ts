@@ -57,10 +57,16 @@ export interface EvaluationField {
 
 export const EVALUATION_FIELDS: EvaluationField[] = [
   { key: 'globale', label: 'Note globale' },
-  { key: 'yeux', label: 'Evaluation yeux' },
-  { key: 'levres', label: 'Evaluation levres' },
-  { key: 'teint', label: 'Evaluation teint' },
-  { key: 'cinetique', label: 'Évaluation cinétique' }
+  { key: 'tenueLevres', label: 'Tenue lèvres' },
+  { key: 'tenueTeint', label: 'Tenue teint' },
+  { key: 'tenueBlush', label: 'Tenue blush' },
+  { key: 'tenueSourcil', label: 'Tenue sourcil' },
+  { key: 'tenueLiner', label: 'Tenue liner' },
+  { key: 'demaquillant', label: 'Démaquillant' },
+  { key: 'etudeCils', label: 'Étude cils' },
+  { key: 'corneoLevre', label: 'Cornéo lèvre' },
+  { key: 'corneoBras', label: 'Cornéo bras' },
+  { key: 'dtm', label: 'DTM' },
 ];
 
 export const TYPE_PEAU_OPTIONS = [

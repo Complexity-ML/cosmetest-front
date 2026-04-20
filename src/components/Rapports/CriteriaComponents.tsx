@@ -431,8 +431,8 @@ export const MakeupFilters: React.FC<MakeupFiltersProps> = ({
 };
 
 interface EvaluationFiltersProps {
-  values: Record<string, { min?: string; max?: string }>;
-  onChange: (key: string, type: 'min' | 'max', value: string) => void;
+  values: Record<string, any>;
+  onChange: (key: string, type: 'min' | 'max' | 'value', value: string) => void;
 }
 
 export const EvaluationFilters: React.FC<EvaluationFiltersProps> = ({ values, onChange }) => {
@@ -444,38 +444,51 @@ export const EvaluationFilters: React.FC<EvaluationFiltersProps> = ({ values, on
         {EVALUATION_FIELDS.map(({ key, label }) => (
           <div key={key} className="space-y-2">
             <Label className="text-sm font-medium">{label}</Label>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="space-y-1">
-                <Label htmlFor={`${key}-min`} className="text-xs text-muted-foreground">
-                  {t('reports.matching.min')}
-                </Label>
-                <Input
-                  id={`${key}-min`}
-                  type="number"
-                  min="0"
-                  max="5"
-                  step="1"
-                  value={values[key]?.min ?? ''}
-                  placeholder="0"
-                  onChange={(e) => onChange(key, 'min', e.target.value)}
-                />
+            {key === 'globale' ? (
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <Label htmlFor={`${key}-min`} className="text-xs text-muted-foreground">
+                    {t('reports.matching.min')}
+                  </Label>
+                  <Input
+                    id={`${key}-min`}
+                    type="number"
+                    min="0"
+                    max="5"
+                    step="1"
+                    value={values[key]?.min ?? ''}
+                    placeholder="0"
+                    onChange={(e) => onChange(key, 'min', e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor={`${key}-max`} className="text-xs text-muted-foreground">
+                    {t('reports.matching.max')}
+                  </Label>
+                  <Input
+                    id={`${key}-max`}
+                    type="number"
+                    min="0"
+                    max="5"
+                    step="1"
+                    value={values[key]?.max ?? ''}
+                    placeholder="5"
+                    onChange={(e) => onChange(key, 'max', e.target.value)}
+                  />
+                </div>
               </div>
-              <div className="space-y-1">
-                <Label htmlFor={`${key}-max`} className="text-xs text-muted-foreground">
-                  {t('reports.matching.max')}
-                </Label>
-                <Input
-                  id={`${key}-max`}
-                  type="number"
-                  min="0"
-                  max="5"
-                  step="1"
-                  value={values[key]?.max ?? ''}
-                  placeholder="5"
-                  onChange={(e) => onChange(key, 'max', e.target.value)}
-                />
-              </div>
-            </div>
+            ) : (
+              <select
+                id={key}
+                value={values[key] || ''}
+                onChange={(e) => onChange(key, 'value', e.target.value)}
+                className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm"
+              >
+                <option value="">Tous</option>
+                <option value="Oui">Oui</option>
+                <option value="Non">Non</option>
+              </select>
+            )}
           </div>
         ))}
       </div>

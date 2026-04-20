@@ -35,9 +35,56 @@ const PeauSection = ({ formData, errors, onChange }: any) => {
   }, [formData, onChange]);
 
   const celluliteIds = ['celluliteBras', 'celluliteFessesHanches', 'celluliteJambes', 'celluliteVentreTaille', 'celluliteAucun'];
-  const secheresseIds = ['secheresseLevres', 'secheresseCou', 'secheressePoitrineDecollete', 'secheresseVentreTaille', 'secheresseFessesHanches', 'secheresseBras', 'secheresseMains', 'secheresseJambes', 'secheressePieds', 'secheresseAucun'];
-  const yeuxIds = ['cernesPigmentaires', 'cernesVasculaires', 'poches', 'yeuxAucun'];
-  const fermeteIds = ['perteDeFermeteVisage', 'perteDeFermeteCou', 'perteDeFermeteDecollete', 'perteDeFermeteAvantBras', 'fermeteAucun'];
+
+  // Multi-select helpers
+  const getSelectedArray = (fieldName: string): string[] => {
+    const val = formData[fieldName];
+    if (!val) return [];
+    return val.split(', ').filter(Boolean);
+  };
+
+  const toggleMulti = (fieldName: string, option: string) => {
+    const selected = getSelectedArray(fieldName);
+    let next: string[];
+    if (selected.includes(option)) {
+      next = selected.filter((s: string) => s !== option);
+    } else {
+      next = [...selected, option];
+    }
+    onChange(createSyntheticEvent(fieldName, next.join(', ')));
+  };
+
+  const secheresseOptions = ["Aucune", "Lèvres", "Cou", "Poitrine / Décolleté", "Ventre / Taille", "Fesses / Hanches", "Bras", "Mains", "Avant-bras"];
+  const yeuxOptions = ["Aucun", "Cernes pigmentaires", "Cernes vasculaires", "Poches"];
+  const fermeteOptions = ["Aucune", "Visage", "Cou", "Décolleté / Poitrine", "Avant-bras"];
+
+  const MultiSelectGroup = ({ fieldName, options, title }: { fieldName: string, options: string[], title: string }) => {
+    const selected = getSelectedArray(fieldName);
+    return (
+      <>
+        <h3 className="text-md font-medium text-gray-800 mt-6 mb-3">{title}</h3>
+        <div className="flex flex-wrap gap-2">
+          {options.map((option) => {
+            const isSelected = selected.includes(option);
+            return (
+              <button
+                key={option}
+                type="button"
+                onClick={() => toggleMulti(fieldName, option)}
+                className={`px-3 py-1.5 rounded text-sm border transition-colors ${
+                  isSelected
+                    ? "bg-blue-100 border-blue-400 text-blue-800 font-medium"
+                    : "bg-white border-gray-300 text-gray-500 hover:border-gray-400"
+                }`}
+              >
+                {option}
+              </button>
+            );
+          })}
+        </div>
+      </>
+    );
+  };
 
   const NoneCheckbox = ({ groupIds, noneId }: { groupIds: string[], noneId: string }) => (
     <div className="flex items-center col-span-full">
@@ -80,30 +127,23 @@ const PeauSection = ({ formData, errors, onChange }: any) => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label
-            htmlFor="typePeau"
+            htmlFor="sensibiliteCutanee"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
-            {t('volunteers.skinType')} <span className="text-red-500">*</span>
+            {t('volunteers.skinSensitivity')}
           </label>
           <select
-            id="typePeau"
-            name="typePeauVisage"
-            value={formData.typePeauVisage || ""}
+            id="sensibiliteCutanee"
+            name="sensibiliteCutanee"
+            value={formData.sensibiliteCutanee}
             onChange={onChange}
-            className={`form-select block w-full ${errors.typePeauVisage ? "border-red-500" : ""}`}
-            required
+            className="form-select block w-full"
           >
             <option value="">{t('common.select')}</option>
-            <option value="Normale">{t('volunteers.skinTypeOptions.Normale')}</option>
-            <option value="Sèche">{t('volunteers.skinTypeOptions.Sèche')}</option>
-            <option value="Grasse">{t('volunteers.skinTypeOptions.Grasse')}</option>
-            <option value="Mixte">{t('volunteers.skinTypeOptions.Mixte')}</option>
-            <option value="Mixte à tendance grasse">{t('volunteers.skinTypeOptions.Mixte à tendance grasse')}</option>
-            <option value="Mixte à tendance sèche">{t('volunteers.skinTypeOptions.Mixte à tendance sèche')}</option>
+            <option value="Peau sensible">{t('volunteers.skinSensitivityOptions.Peau sensible')}</option>
+            <option value="Peau peu sensible">{t('volunteers.skinSensitivityOptions.Peau peu sensible')}</option>
+            <option value="Peau non sensible">{t('volunteers.skinSensitivityOptions.Peau non sensible')}</option>
           </select>
-          {errors.typePeauVisage && (
-            <p className="mt-1 text-sm text-red-500">{errors.typePeauVisage}</p>
-          )}
         </div>
 
         <div>
@@ -132,46 +172,31 @@ const PeauSection = ({ formData, errors, onChange }: any) => {
 
         <div>
           <label
-            htmlFor="phototype"
+            htmlFor="typePeau"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
-            {t('volunteers.phototype')}
+            {t('volunteers.skinType')} <span className="text-red-500">*</span>
           </label>
           <select
-            id="phototype"
-            name="phototype"
-            value={formData.phototype}
+            id="typePeau"
+            name="typePeauVisage"
+            value={formData.typePeauVisage || ""}
             onChange={onChange}
-            className="form-select block w-full"
+            className={`form-select block w-full ${errors.typePeauVisage ? "border-red-500" : ""}`}
+            required
           >
             <option value="">{t('common.select')}</option>
-            <option value="Phototype 1">Phototype 1 - Peau très claire</option>
-            <option value="Phototype 2">Phototype 2 - Peau claire</option>
-            <option value="Phototype 3">Phototype 3 - Peau claire à mate</option>
-            <option value="Phototype 4">Phototype 4 - Peau mate</option>
-            <option value="Phototype 5">Phototype 5 - Peau foncée</option>
-            <option value="Phototype 6">Phototype 6 - Peau noire</option>
+            <option value="Normale">{t('volunteers.skinTypeOptions.Normale')}</option>
+            <option value="Sèche">{t('volunteers.skinTypeOptions.Sèche')}</option>
+            <option value="Grasse">{t('volunteers.skinTypeOptions.Grasse')}</option>
+            <option value="Mixte">{t('volunteers.skinTypeOptions.Mixte')}</option>
+            <option value="Mixte à tendance grasse">{t('volunteers.skinTypeOptions.Mixte à tendance grasse')}</option>
+            <option value="Mixte à tendance sèche">{t('volunteers.skinTypeOptions.Mixte à tendance sèche')}</option>
+            <option value="Sensible">{t('volunteers.skinTypeOptions.Sensible')}</option>
           </select>
-        </div>
-
-        <div>
-          <label
-            htmlFor="sensibiliteCutanee"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            {t('volunteers.skinSensitivity')}
-          </label>
-          <select
-            id="sensibiliteCutanee"
-            name="sensibiliteCutanee"
-            value={formData.sensibiliteCutanee}
-            onChange={onChange}
-            className="form-select block w-full"
-          >
-            <option value="">{t('common.select')}</option>
-            <option value="Peau sensible">{t('volunteers.skinSensitivityOptions.Peau sensible')}</option>
-            <option value="Peau non sensible">{t('volunteers.skinSensitivityOptions.Peau non sensible')}</option>
-          </select>
+          {errors.typePeauVisage && (
+            <p className="mt-1 text-sm text-red-500">{errors.typePeauVisage}</p>
+          )}
         </div>
 
         <div className="flex items-center">
@@ -305,40 +330,25 @@ const PeauSection = ({ formData, errors, onChange }: any) => {
         <GroupCheckbox id="celluliteJambes" label={t('volunteers.celluliteLegs')} groupIds={celluliteIds} noneId="celluliteAucun" />
         <GroupCheckbox id="celluliteVentreTaille" label={t('volunteers.celluliteBellyWaist')} groupIds={celluliteIds} noneId="celluliteAucun" />
       </div>
-      <h3 className="text-md font-medium text-gray-800 mt-6 mb-3">
-        {t('volunteers.skinDryness')}
-      </h3>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <NoneCheckbox groupIds={secheresseIds} noneId="secheresseAucun" />
-        <GroupCheckbox id="secheresseLevres" label={t('volunteers.lips')} groupIds={secheresseIds} noneId="secheresseAucun" />
-        <GroupCheckbox id="secheresseCou" label={t('volunteers.neck')} groupIds={secheresseIds} noneId="secheresseAucun" />
-        <GroupCheckbox id="secheressePoitrineDecollete" label={t('volunteers.chestNeckline')} groupIds={secheresseIds} noneId="secheresseAucun" />
-        <GroupCheckbox id="secheresseVentreTaille" label={t('volunteers.bellyWaist')} groupIds={secheresseIds} noneId="secheresseAucun" />
-        <GroupCheckbox id="secheresseFessesHanches" label={t('volunteers.buttocksHips')} groupIds={secheresseIds} noneId="secheresseAucun" />
-        <GroupCheckbox id="secheresseBras" label={t('volunteers.arms')} groupIds={secheresseIds} noneId="secheresseAucun" />
-        <GroupCheckbox id="secheresseMains" label={t('volunteers.hands')} groupIds={secheresseIds} noneId="secheresseAucun" />
-        <GroupCheckbox id="secheresseJambes" label={t('volunteers.legs')} groupIds={secheresseIds} noneId="secheresseAucun" />
-        <GroupCheckbox id="secheressePieds" label={t('volunteers.feet')} groupIds={secheresseIds} noneId="secheresseAucun" />
-      </div>
-      <h3 className="text-md font-medium text-gray-800 mt-6 mb-3">
-        {t('volunteers.eyeProblems')}
-      </h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <NoneCheckbox groupIds={yeuxIds} noneId="yeuxAucun" />
-        <GroupCheckbox id="cernesPigmentaires" label={t('volunteers.pigmentaryCircles')} groupIds={yeuxIds} noneId="yeuxAucun" />
-        <GroupCheckbox id="cernesVasculaires" label={t('volunteers.vascularCircles')} groupIds={yeuxIds} noneId="yeuxAucun" />
-        <GroupCheckbox id="poches" label={t('volunteers.bags')} groupIds={yeuxIds} noneId="yeuxAucun" />
-      </div>
-      <h3 className="text-md font-medium text-gray-800 mt-6 mb-3">
-        {t('volunteers.lossOfFirmness')}
-      </h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <NoneCheckbox groupIds={fermeteIds} noneId="fermeteAucun" />
-        <GroupCheckbox id="perteDeFermeteVisage" label={t('volunteers.face')} groupIds={fermeteIds} noneId="fermeteAucun" />
-        <GroupCheckbox id="perteDeFermeteCou" label={t('volunteers.neck')} groupIds={fermeteIds} noneId="fermeteAucun" />
-        <GroupCheckbox id="perteDeFermeteDecollete" label={t('volunteers.neckline')} groupIds={fermeteIds} noneId="fermeteAucun" />
-        <GroupCheckbox id="perteDeFermeteAvantBras" label="Avant-bras" groupIds={fermeteIds} noneId="fermeteAucun" />
-      </div>
+
+      <MultiSelectGroup
+        fieldName="secheressePeau"
+        options={secheresseOptions}
+        title={t('volunteers.skinDryness')}
+      />
+
+      <MultiSelectGroup
+        fieldName="perteDeFermete"
+        options={fermeteOptions}
+        title={t('volunteers.lossOfFirmness')}
+      />
+
+      <MultiSelectGroup
+        fieldName="problemesYeux"
+        options={yeuxOptions}
+        title={t('volunteers.eyeProblems')}
+      />
+
       </CardContent>
     </Card>
   );
