@@ -703,6 +703,15 @@ export const useVolontaireForm = ({ id, isEditMode, navigate }: UseVolontaireFor
           cicatrices: (detailsData.cicatrices === "Oui" || detailsData.cicatrices === "Non") ? "" : (detailsData.cicatrices || ""),
           tatouages: (detailsData.tatouages === "Oui" || detailsData.tatouages === "Non") ? "" : (detailsData.tatouages || ""),
           piercings: (detailsData.piercings === "Oui" || detailsData.piercings === "Non") ? "" : (detailsData.piercings || ""),
+          maquillagePermanent: (detailsData.maquillagePermanent === "Oui" || detailsData.maquillagePermanent === "Non") ? "" : (detailsData.maquillagePermanent || ""),
+
+          // Médecine esthétique
+          injectionsVisage: detailsData.injectionsVisage || "Non",
+          injectionsVisageZone: detailsData.injectionsVisageZone || "",
+          injectionsVisageDate: detailsData.injectionsVisageDate ? toISODateString(detailsData.injectionsVisageDate) : "",
+          maquillagePermanentVisage: detailsData.maquillagePermanentVisage || "Non",
+          maquillagePermanentVisageZone: detailsData.maquillagePermanentVisageZone || "",
+          maquillagePermanentVisageDate: detailsData.maquillagePermanentVisageDate ? toISODateString(detailsData.maquillagePermanentVisageDate) : "",
 
           // Vergetures
           vergeturesJambes: detailsData.vergeturesJambes || "Non",
@@ -1085,6 +1094,15 @@ export const useVolontaireForm = ({ id, isEditMode, navigate }: UseVolontaireFor
         cicatrices: defaultIfNull(formData.cicatrices, ""),
         tatouages: defaultIfNull(formData.tatouages, ""),
         piercings: defaultIfNull(formData.piercings, ""),
+        maquillagePermanent: defaultIfNull(formData.maquillagePermanent, ""),
+
+        // Médecine esthétique
+        injectionsVisage: defaultIfNull(formData.injectionsVisage, "Non"),
+        injectionsVisageZone: defaultIfNull(formData.injectionsVisageZone, ""),
+        injectionsVisageDate: defaultIfNull(formData.injectionsVisageDate, ""),
+        maquillagePermanentVisage: defaultIfNull(formData.maquillagePermanentVisage, "Non"),
+        maquillagePermanentVisageZone: defaultIfNull(formData.maquillagePermanentVisageZone, ""),
+        maquillagePermanentVisageDate: defaultIfNull(formData.maquillagePermanentVisageDate, ""),
 
         // Vergetures
         vergeturesJambes: defaultIfNull(formData.vergeturesJambes, "Non"),

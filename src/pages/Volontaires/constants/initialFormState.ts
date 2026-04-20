@@ -75,6 +75,15 @@ export interface InitialFormStateType {
   cicatrices: string;
   tatouages: string;
   piercings: string;
+  maquillagePermanent: string;
+
+  // Médecine esthétique
+  injectionsVisage: string;
+  injectionsVisageZone: string;
+  injectionsVisageDate: string;
+  maquillagePermanentVisage: string;
+  maquillagePermanentVisageZone: string;
+  maquillagePermanentVisageDate: string;
 
   // Vergetures
   vergeturesJambes: string;
@@ -267,6 +276,15 @@ export const INITIAL_FORM_STATE: InitialFormStateType = {
   cicatrices: "",
   tatouages: "",
   piercings: "",
+  maquillagePermanent: "",
+
+  // Médecine esthétique
+  injectionsVisage: "Non",
+  injectionsVisageZone: "",
+  injectionsVisageDate: "",
+  maquillagePermanentVisage: "Non",
+  maquillagePermanentVisageZone: "",
+  maquillagePermanentVisageDate: "",
 
   // Vergetures
   vergeturesJambes: "Non",

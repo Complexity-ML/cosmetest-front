@@ -241,7 +241,8 @@
         "measurements": "Measurements",
         "notes": "Notes",
         "bankDetails": "Bank details",
-        "evaluation": "Evaluation"
+        "evaluation": "Evaluation",
+        "medecineEsthetique": "Aesthetic medicine"
       },
       "subtitles": {
         "subtitle_cellulite": "Cellulite",
@@ -287,6 +288,13 @@
         "cicatrices": "Scars",
         "tatouages": "Tattoos",
         "piercings": "Piercings",
+        "maquillagePermanent": "Permanent makeup",
+        "injectionsVisage": "Face injections",
+        "injectionsVisageZone": "Injection zone",
+        "injectionsVisageDate": "Last injection date",
+        "maquillagePermanentVisage": "Permanent face makeup",
+        "maquillagePermanentVisageZone": "Permanent makeup zone",
+        "maquillagePermanentVisageDate": "Last permanent makeup date",
         "vergeturesJambes": "Stretch marks legs",
         "vergeturesFessesHanches": "Stretch marks buttocks/hips",
         "vergeturesVentreTaille": "Stretch marks belly/waist",

@@ -426,6 +426,39 @@ const CaracteristiquesSection = ({ formData, onChange }: any) => {
             />
           )}
         </div>
+
+        <div className="md:col-span-2">
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              id="maquillagePermanent"
+              name="maquillagePermanent"
+              checked={!!formData.maquillagePermanent}
+              onChange={(e) => {
+                onChange({ target: { name: 'maquillagePermanent', value: e.target.checked ? (formData.maquillagePermanent || '\u200B') : '', type: 'text' } } as any);
+              }}
+              className="form-checkbox h-5 w-5 text-primary-600"
+            />
+            <label
+              htmlFor="maquillagePermanent"
+              className="ml-2 block text-sm font-medium text-gray-700"
+            >
+              {t('volunteers.permanentMakeup', 'Maquillage permanent')}
+            </label>
+          </div>
+          {!!formData.maquillagePermanent && (
+            <input
+              type="text"
+              name="maquillagePermanent"
+              value={formData.maquillagePermanent.replace(/\u200B/g, '')}
+              onChange={(e) => {
+                onChange({ target: { name: 'maquillagePermanent', value: e.target.value || '\u200B', type: 'text' } } as any);
+              }}
+              placeholder={t('volunteers.locationPlaceholder')}
+              className="form-input block w-full mt-2"
+            />
+          )}
+        </div>
       </div>
       </CardContent>
     </Card>

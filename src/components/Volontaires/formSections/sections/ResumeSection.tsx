@@ -142,6 +142,17 @@ const GROUPS: GroupDef[] = [
     ],
   },
   {
+    titleKey: "medecineEsthetique",
+    fields: [
+      { key: "injectionsVisage", type: "boolean" },
+      { key: "injectionsVisageZone", type: "text" },
+      { key: "injectionsVisageDate", type: "date" },
+      { key: "maquillagePermanentVisage", type: "boolean" },
+      { key: "maquillagePermanentVisageZone", type: "text" },
+      { key: "maquillagePermanentVisageDate", type: "date" },
+    ],
+  },
+  {
     titleKey: "skin",
     fields: [
       { key: "sensibiliteCutanee", type: "preset", options: OPT.sensibiliteCutanee },
