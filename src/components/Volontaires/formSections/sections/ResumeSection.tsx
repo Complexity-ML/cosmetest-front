@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useTranslation } from "react-i18next";
 import { useCallback, KeyboardEvent } from "react";
 
-type FieldType = "text" | "boolean" | "number" | "date" | "textarea" | "preset" | "multipreset";
+type FieldType = "text" | "boolean" | "number" | "date" | "textarea" | "preset" | "multipreset" | "subtitle";
 
 interface FieldDef {
   key: string;
@@ -153,15 +153,30 @@ const GROUPS: GroupDef[] = [
       { key: "expositionSolaire", type: "preset", options: OPT.expositionSolaire },
       { key: "bronzage", type: "preset", options: OPT.bronzage },
       { key: "coupsDeSoleil", type: "preset", options: OPT.coupsDeSoleil },
+      { key: "subtitle_cellulite", type: "subtitle" },
       { key: "celluliteBras", type: "boolean" },
       { key: "celluliteFessesHanches", type: "boolean" },
       { key: "celluliteJambes", type: "boolean" },
       { key: "celluliteVentreTaille", type: "boolean" },
+      { key: "subtitle_secheressePeau", type: "subtitle" },
+      { key: "secheresseLevres", type: "boolean" },
+      { key: "secheresseCou", type: "boolean" },
+      { key: "secheressePoitrineDecollete", type: "boolean" },
+      { key: "secheresseVentreTaille", type: "boolean" },
+      { key: "secheresseFessesHanches", type: "boolean" },
+      { key: "secheresseBras", type: "boolean" },
+      { key: "secheresseMains", type: "boolean" },
+      { key: "secheresseJambes", type: "boolean" },
+      { key: "secheressePieds", type: "boolean" },
+      { key: "subtitle_problemesYeux", type: "subtitle" },
       { key: "cernesVasculaires", type: "boolean" },
       { key: "cernesPigmentaires", type: "boolean" },
       { key: "poches", type: "boolean" },
-      { key: "perteDeFermete", type: "multipreset", options: OPT.perteDeFermete },
-      { key: "secheressePeau", type: "multipreset", options: OPT.secheressePeau },
+      { key: "subtitle_perteDeFermete", type: "subtitle" },
+      { key: "perteDeFermeteVisage", type: "boolean" },
+      { key: "perteDeFermeteCou", type: "boolean" },
+      { key: "perteDeFermeteDecollete", type: "boolean" },
+      { key: "perteDeFermeteAvantBras", type: "boolean" },
     ],
   },
   {
@@ -184,7 +199,9 @@ const GROUPS: GroupDef[] = [
       { key: "natureCheveux", type: "preset", options: OPT.natureCheveux },
       { key: "epaisseurCheveux", type: "preset", options: OPT.epaisseurCheveux },
       { key: "natureCuirChevelu", type: "preset", options: OPT.natureCuirChevelu },
-      { key: "problemesCapillaires", type: "multipreset", options: OPT.problemesCapillaires },
+      { key: "cuirCheveluSensible", type: "boolean" },
+      { key: "chuteDeCheveux", type: "boolean" },
+      { key: "cheveuxCassants", type: "boolean" },
       { key: "calvitie", type: "boolean" },
       { key: "pellicules", type: "boolean" },
       { key: "demangeaisonsCuirChevelu", type: "boolean" },
@@ -198,7 +215,9 @@ const GROUPS: GroupDef[] = [
       { key: "epaisseurCils", type: "preset", options: OPT.epaisseurCils },
       { key: "longueurCils", type: "preset", options: OPT.longueurCils },
       { key: "courbureCils", type: "preset", options: OPT.courbureCils },
-      { key: "problemesCils", type: "multipreset", options: OPT.problemesCils },
+      { key: "cilsAbimes", type: "boolean" },
+      { key: "cilsBroussailleux", type: "boolean" },
+      { key: "chuteDeCils", type: "boolean" },
       { key: "caracteristiqueSourcils", type: "preset", options: OPT.caracteristiqueSourcils },
       { key: "levres", type: "preset", options: OPT.levres },
     ],
@@ -588,6 +607,16 @@ const ResumeSection = ({ formData, onChange }: any) => {
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-3">
               {group.fields.map((field) => {
+                if (field.type === "subtitle") {
+                  const subtitleLabel = t(`volunteers.resume.subtitles.${field.key}`);
+                  return (
+                    <div key={field.key} className="col-span-full mt-3 mb-1">
+                      <h4 className="text-sm font-semibold text-gray-600 border-b border-gray-100 pb-1">
+                        {subtitleLabel}
+                      </h4>
+                    </div>
+                  );
+                }
                 const label = t(`volunteers.resume.fields.${field.key}`);
                 return (
                   <div

@@ -260,8 +260,6 @@ const FIELD_TO_TAB_MAP: Record<string, string> = {
   problemesYeux: 'peau',
   problemesCapillaires: 'cheveux',
   problemesCils: 'cils',
-  demangeaisonsCuirChevelu: 'cheveux',
-  calvitie: 'cheveux',
 
   // Mesures
   levres: 'cils',

@@ -124,39 +124,63 @@ const IconUser: React.FC<IconProps> = ({ className = "", width = 24, height = 24
   <img src={userSvg} width={width} height={height} className={className} alt="User" {...props} />
 );
 
-// Composant CheckboxField amélioré
-const CheckboxField: React.FC<CheckboxFieldProps> = ({ label, id, checked, onChange, className = "" }) => {
-  // On convertit en booléen pour le composant React
-  // Mais gardons des strings "oui"/"non" pour l'API
-  const isChecked = checked === "oui";
+// Composant BooleanYesNo (O/N au clavier, vert/rouge)
+const BooleanYesNoField: React.FC<CheckboxFieldProps> = ({ label, id, checked, onChange }) => {
+  const isOui = checked === "oui";
+  const isNon = checked === "non";
+  const display = isOui ? "Oui" : isNon ? "Non" : "";
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const k = e.key.toLowerCase();
+    if (k === "o" || k === "y") {
+      e.preventDefault();
+      onChange(id, "oui");
+    } else if (k === "n") {
+      e.preventDefault();
+      onChange(id, "non");
+    } else if (k === "backspace" || k === "delete") {
+      e.preventDefault();
+      onChange(id, "");
+    } else if (["tab", "enter", "arrowright", "arrowleft", "arrowup", "arrowdown", "shift"].includes(k)) {
+      // allow default
+    } else {
+      e.preventDefault();
+    }
+  };
+
+  const colorClass = isOui
+    ? "bg-green-50 border-green-400 text-green-700"
+    : isNon
+      ? "bg-red-50 border-red-400 text-red-700"
+      : "bg-white border-gray-300 text-gray-500";
 
   return (
-    <div className={`flex items-center mb-2 ${className}`}>
-      <input
-        type="checkbox"
-        id={id}
-        name={id}
-        checked={isChecked}
-        onChange={(e) => {
-          // On convertit explicitement en "oui" ou "non"
-          onChange(id, e.target.checked ? "oui" : "non");
-        }}
-        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-      />
-      <label htmlFor={id} className="ml-2 block text-sm text-gray-700">
+    <div className="flex items-center justify-between gap-3 mb-1">
+      <label htmlFor={id} className="text-sm text-gray-700 flex-1 min-w-0 truncate" title={label}>
         {label}
       </label>
+      <input
+        type="text"
+        id={id}
+        name={id}
+        value={display}
+        readOnly
+        onKeyDown={handleKeyDown}
+        placeholder="o / n"
+        title="Tapez 'o' pour Oui, 'n' pour Non, Tab pour passer au champ suivant"
+        className={`w-20 text-center font-semibold border rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 ${colorClass}`}
+      />
     </div>
   );
 };
 
-// CheckboxGroup adapté
+// CheckboxGroup adapté avec BooleanYesNo
 const CheckboxGroup: React.FC<CheckboxGroupProps> = ({ title, items, onChange }) => (
   <div className="mb-4">
     {title && <p className="mb-2 font-medium text-gray-700">{title}</p>}
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-1">
       {items.map((item: CheckboxItem) => (
-        <CheckboxField
+        <BooleanYesNoField
           key={item.id}
           label={item.label}
           id={item.id}
