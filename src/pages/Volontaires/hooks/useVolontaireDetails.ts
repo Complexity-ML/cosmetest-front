@@ -73,6 +73,7 @@ interface UseVolontaireDetailsReturn {
   handleDelete: () => Promise<void>;
   handleArchive: () => Promise<void>;
   handleUnarchive: () => Promise<void>;
+  handleStandby: () => Promise<void>;
 }
 
 export const useVolontaireDetails = ({ id, navigate }: UseVolontaireDetailsParams): UseVolontaireDetailsReturn => {
@@ -282,13 +283,41 @@ export const useVolontaireDetails = ({ id, navigate }: UseVolontaireDetailsParam
   const handleUnarchive = useCallback(async () => {
     if (!id) return;
 
-    if (window.confirm('Êtes-vous sûr de vouloir désarchiver ce volontaire ?')) {
+    const isStandby = volontaire?.standby;
+    const confirmMsg = isStandby
+      ? 'Êtes-vous sûr de vouloir retirer le stand-by de ce volontaire ?'
+      : 'Êtes-vous sûr de vouloir désarchiver ce volontaire ?';
+
+    if (window.confirm(confirmMsg)) {
       try {
-        await volontaireService.unarchive(id);
+        if (isStandby) {
+          await volontaireService.removeStandby(id);
+        } else {
+          await volontaireService.unarchive(id);
+        }
         await reloadVolontaire();
       } catch (unarchiveError) {
         console.error("Erreur lors du désarchivage du volontaire:", unarchiveError);
         alert("Une erreur est survenue lors du désarchivage du volontaire");
+      }
+    }
+  }, [id, reloadVolontaire, volontaire?.standby]);
+
+  const handleStandby = useCallback(async () => {
+    if (!id) return;
+
+    const dateFinStandby = new Date();
+    dateFinStandby.setMonth(dateFinStandby.getMonth() + 3);
+    const dateStr = dateFinStandby.toLocaleDateString('fr-FR');
+    const isoDate = dateFinStandby.toISOString().split('T')[0];
+
+    if (window.confirm(`Mettre ce volontaire en stand-by pour 3 mois (jusqu'au ${dateStr}) ?\n\nLe volontaire sera archivé provisoirement et automatiquement distingué des archivages définitifs.`)) {
+      try {
+        await volontaireService.setStandby(id, isoDate);
+        await reloadVolontaire();
+      } catch (standbyError) {
+        console.error("Erreur lors de la mise en stand-by:", standbyError);
+        alert("Une erreur est survenue lors de la mise en stand-by");
       }
     }
   }, [id, reloadVolontaire]);
@@ -430,6 +459,7 @@ export const useVolontaireDetails = ({ id, navigate }: UseVolontaireDetailsParam
     handleDelete,
     handleArchive,
     handleUnarchive,
+    handleStandby,
   };
 };
 

@@ -28,6 +28,8 @@ const transformVolontaireData = (data: VolontaireData | null): VolontaireTransfo
     dateNaissance: data.dateNaissance,
     dateI: data.dateI, // Date d'inclusion
     archive: data.archive,
+    standby: data.standby || (data as any).standby || false,
+    dateFinStandby: data.dateFinStandby || (data as any).dateFinStandby || undefined,
     phototype: data.phototype,
     ethnie: data.ethnie,
 
@@ -299,6 +301,26 @@ const volontaireService = {
       return Promise.reject(new Error('ID de volontaire invalide'));
     }
     return api.put(`/volontaires/${id}/unarchive`);
+  },
+
+  /**
+   * Met un volontaire en stand-by (archive + flag standby)
+   */
+  setStandby: (id: number | string, dateFinStandby: string) => {
+    if (!isValidId(id)) {
+      return Promise.reject(new Error('ID de volontaire invalide'));
+    }
+    return api.put(`/volontaires/${id}/standby`, null, { params: { dateFinStandby } });
+  },
+
+  /**
+   * Retire le stand-by d'un volontaire (désarchive + retire le flag standby)
+   */
+  removeStandby: (id: number | string) => {
+    if (!isValidId(id)) {
+      return Promise.reject(new Error('ID de volontaire invalide'));
+    }
+    return api.put(`/volontaires/${id}/remove-standby`);
   },
 
   // ==================== MÉTHODES DE RECHERCHE ====================

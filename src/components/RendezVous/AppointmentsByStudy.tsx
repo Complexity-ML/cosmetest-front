@@ -44,7 +44,7 @@ const AppointmentsByStudy = ({ onAppointmentClick, onBack }: AppointmentsByStudy
   const [assignmentStatus, setAssignmentStatus] = useState<Record<string, string>>({});
   const [filterByStatus, setFilterByStatus] = useState<string>('');
   const [showOnlyUnassigned, setShowOnlyUnassigned] = useState<boolean>(false);
-  const [sortOrder, setSortOrder] = useState<'dateAsc' | 'dateDesc' | 'hourAsc' | 'hourDesc'>('dateAsc');
+  const [sortOrder, setSortOrder] = useState<'dateAsc' | 'dateDesc' | 'hourAsc' | 'hourDesc' | 'volontaireAsc' | 'volontaireDesc'>('dateAsc');
   const [selectedDateFilter, setSelectedDateFilter] = useState<string>('');
 
   // États pour le switcher
@@ -665,6 +665,16 @@ const AppointmentsByStudy = ({ onAppointmentClick, onBack }: AppointmentsByStudy
             return (a.heure || '').localeCompare(b.heure || '');
           case 'hourDesc':
             return (b.heure || '').localeCompare(a.heure || '');
+          case 'volontaireAsc': {
+            const nomA = (a.volontaire?.nom || a.nomVolontaire || a.nomVol || '').toUpperCase();
+            const nomB = (b.volontaire?.nom || b.nomVolontaire || b.nomVol || '').toUpperCase();
+            return nomA.localeCompare(nomB, 'fr', { sensitivity: 'base' });
+          }
+          case 'volontaireDesc': {
+            const nomA = (a.volontaire?.nom || a.nomVolontaire || a.nomVol || '').toUpperCase();
+            const nomB = (b.volontaire?.nom || b.nomVolontaire || b.nomVol || '').toUpperCase();
+            return nomB.localeCompare(nomA, 'fr', { sensitivity: 'base' });
+          }
           default:
             return 0;
         }
@@ -843,6 +853,8 @@ const AppointmentsByStudy = ({ onAppointmentClick, onBack }: AppointmentsByStudy
                           <SelectItem value="dateDesc">{t('appointments.dateDesc')}</SelectItem>
                           <SelectItem value="hourAsc">{t('appointments.hourAsc')}</SelectItem>
                           <SelectItem value="hourDesc">{t('appointments.hourDesc')}</SelectItem>
+                          <SelectItem value="volontaireAsc">{t('appointments.volunteerAsc') || 'Volontaire A-Z'}</SelectItem>
+                          <SelectItem value="volontaireDesc">{t('appointments.volunteerDesc') || 'Volontaire Z-A'}</SelectItem>
                         </SelectContent>
                       </Select>
 

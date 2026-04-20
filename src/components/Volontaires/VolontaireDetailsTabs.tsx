@@ -28,12 +28,12 @@ const VolontaireDetailsTabs: React.FC<VolontaireDetailsTabsProps> = ({
     { id: "medical", label: t('volunteers.medicalInformation') },
     { id: "mesures", label: t('volunteers.measurements') },
     { id: "rib", label: t('volunteers.bankDetails') },
+    { id: "photos", label: t('volunteers.photos') },
     { id: "evaluation", label: t('volunteers.evaluation') },
     { id: "notes", label: t('volunteers.comments') },
     { id: "etudes", label: t('studies.studies') },
     { id: "rdvs", label: t('appointments.title') },
     { id: "assignation", label: t('volunteers.rdvAssignment') },
-    { id: "photos", label: t('volunteers.photos') },
     { id: "annulations", label: t('volunteers.cancellations', 'Annulations') },
   ];
   const getLabel = (id: string, baseLabel: string) => {

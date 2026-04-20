@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api from '../../services/api';
+import { calculateAgeFromDate } from '../../utils/dateUtils';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Alert, AlertDescription } from '../../components/ui/alert';
@@ -341,7 +342,7 @@ const VolontaireHcDetail = () => {
               <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
                 <p><span className="font-medium">ID:</span> {idVol}</p>
                 <p><span className="font-medium">{t('volunteers.gender')}:</span> {volontaireInfo.sexe}</p>
-                <p><span className="font-medium">{t('volunteers.age')}:</span> {volontaireInfo.age} {t('dates.years')}</p>
+                <p><span className="font-medium">{t('volunteers.age')}:</span> {volontaireInfo.age ?? calculateAgeFromDate(volontaireInfo.dateNaissance) ?? '-'} {t('dates.years')}</p>
                 {volontaireInfo.phototype && (
                   <p><span className="font-medium">{t('volunteers.phototype')}:</span> {volontaireInfo.phototype}</p>
                 )}
@@ -452,7 +453,7 @@ const VolontaireHcDetail = () => {
               <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
                 <p><span className="font-medium">ID:</span> {idVol}</p>
                 <p><span className="font-medium">{t('volunteers.gender')}:</span> {volontaireInfo.sexe}</p>
-                <p><span className="font-medium">{t('volunteers.age')}:</span> {volontaireInfo.age} {t('dates.years')}</p>
+                <p><span className="font-medium">{t('volunteers.age')}:</span> {volontaireInfo.age ?? calculateAgeFromDate(volontaireInfo.dateNaissance) ?? '-'} {t('dates.years')}</p>
                 {volontaireInfo.phototype && (
                   <p><span className="font-medium">{t('volunteers.phototype')}:</span> {volontaireInfo.phototype}</p>
                 )}

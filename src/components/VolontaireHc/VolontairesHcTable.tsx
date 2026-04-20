@@ -238,6 +238,10 @@ const VolontairesHcTable = ({ volontaires, onArchive }: VolontairesHcTableProps)
                         >
                           {t('common.archive')}
                         </Button>
+                      ) : volontaire.standby ? (
+                        <Badge className="bg-orange-100 text-orange-800 border-orange-300">
+                          Stand-by
+                        </Badge>
                       ) : (
                         <Badge variant="secondary">
                           {t('volunteers.archived')}

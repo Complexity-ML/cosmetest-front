@@ -62,6 +62,7 @@ const VolontaireDetails = () => {
     handleDelete,
     handleArchive,
     handleUnarchive,
+    handleStandby,
   } = useVolontaireDetails({ id, navigate });
 
   // Écouter les changements de location state pour changer d'onglet
@@ -157,7 +158,7 @@ const VolontaireDetails = () => {
 
           {volontaire.archive ? (
             <Button onClick={handleUnarchive} variant="outline">
-              {t('volunteers.unarchive')}
+              {volontaire.standby ? 'Retirer le stand-by' : t('volunteers.unarchive')}
             </Button>
           ) : (
             <>
@@ -165,18 +166,11 @@ const VolontaireDetails = () => {
                 {t('common.archive')}
               </Button>
               <Button
-                onClick={async () => {
-                  const dateFinStandby = new Date();
-                  dateFinStandby.setMonth(dateFinStandby.getMonth() + 3);
-                  const dateStr = dateFinStandby.toLocaleDateString('fr-FR');
-                  if (window.confirm(`Mettre ce volontaire en stand-by pour 3 mois (jusqu'au ${dateStr}) ?\n\nLe volontaire sera archivé provisoirement.`)) {
-                    await handleArchive();
-                  }
-                }}
+                onClick={handleStandby}
                 variant="outline"
                 className="text-orange-600 border-orange-300 hover:bg-orange-50"
               >
-                Stand by 3 mois
+                Stand-by 3 mois
               </Button>
             </>
           )}
@@ -188,9 +182,21 @@ const VolontaireDetails = () => {
       </div>
 
       {volontaire.archive && (
-        <Alert>
+        <Alert className={volontaire.standby ? 'border-orange-300 bg-orange-50' : undefined}>
           <AlertDescription>
-            Ce volontaire est archivé et n'apparaîtra pas dans les recherches par défaut.
+            {volontaire.standby ? (
+              <>
+                <span className="font-semibold text-orange-700">Stand-by</span> — Ce volontaire est en stand-by
+                {volontaire.dateFinStandby && (
+                  <> jusqu'au <span className="font-semibold">{new Date(volontaire.dateFinStandby).toLocaleDateString('fr-FR')}</span></>
+                )}
+                . Il n'apparaîtra pas dans les recherches par défaut.
+              </>
+            ) : (
+              <>
+                <span className="font-semibold text-red-700">Archivé</span> — Ce volontaire est archivé définitivement et n'apparaîtra pas dans les recherches par défaut.
+              </>
+            )}
           </AlertDescription>
         </Alert>
       )}

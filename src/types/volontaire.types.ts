@@ -26,6 +26,8 @@ export interface VolontaireData {
 
   // État
   archive?: boolean | number;
+  standby?: boolean | number;
+  dateFinStandby?: string;
 
   // Caractéristiques physiques
   taille?: number;
@@ -121,6 +123,8 @@ export interface VolontaireTransformed {
   dateNaissance?: string;
   dateI?: string; // Date d'inclusion/ajout du volontaire
   archive?: boolean | number;
+  standby?: boolean | number;
+  dateFinStandby?: string;
   phototype?: string;
   ethnie?: string;
   titre?: string;

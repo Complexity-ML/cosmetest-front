@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import volontaireService from '../../services/volontaireService'
 import { usePagination } from '../../hooks/usePagination'
-import { Search, Plus } from 'lucide-react'
+import { Plus, X, Search } from 'lucide-react'
 import VolontairesTable from '../../components/VolontaireHc/VolontairesHcTable'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -12,73 +12,123 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Card, CardContent } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 
+const MIN_CHARS = 2
+
+interface SearchFields {
+  nom: string
+  prenom: string
+  email: string
+  tel: string
+  idVol: string
+}
+
+const emptyFields: SearchFields = { nom: '', prenom: '', email: '', tel: '', idVol: '' }
+
 const VolontairesHcPage = () => {
   const { t } = useTranslation()
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  const getInitialFields = (): SearchFields => ({
+    nom: searchParams.get('nom') || '',
+    prenom: searchParams.get('prenom') || '',
+    email: searchParams.get('email') || '',
+    tel: searchParams.get('tel') || '',
+    idVol: searchParams.get('idVol') || '',
+  })
+
   const [volontaires, setVolontaires] = useState([])
-  const [searchQuery, setSearchQuery] = useState('')
+  const [searchFields, setSearchFields] = useState<SearchFields>(getInitialFields)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [includeArchived, setIncludeArchived] = useState(false)
-  const { page, size, updateTotal, goToPage, nextPage, prevPage, pageCount, total } = usePagination()
+  const [includeArchived, setIncludeArchived] = useState(searchParams.get('archived') === 'true')
+  const initialPage = Number(searchParams.get('page')) || 0
+  const { page, size, updateTotal, goToPage, nextPage, prevPage, pageCount, total } = usePagination(initialPage)
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const isFieldActive = (field: string, value: string) => {
+    if (field === 'idVol') return value.trim().length >= 1
+    return value.trim().length >= MIN_CHARS
+  }
+
+  const hasActiveSearch = Object.entries(searchFields).some(
+    ([field, value]) => isFieldActive(field, value)
+  )
+
+  const fetchVolontaires = useCallback(async () => {
+    try {
+      setIsLoading(true)
+      setError(null)
+
+      const activeParams: Record<string, string | boolean | number> = {
+        page,
+        size,
+        includeArchived,
+      }
+
+      let useMultiSearch = false
+      for (const [field, value] of Object.entries(searchFields)) {
+        if (isFieldActive(field, value)) {
+          activeParams[field] = value.trim()
+          useMultiSearch = true
+        }
+      }
+
+      let response
+      if (useMultiSearch) {
+        response = await volontaireService.searchMulti(activeParams as any)
+      } else {
+        response = await volontaireService.getAll({ page, size, includeArchived })
+      }
+
+      setVolontaires(response.data?.content || [])
+      updateTotal(response.data?.totalElements || 0)
+    } catch (error) {
+      console.error('Erreur lors du chargement des volontaires:', error)
+      setError(t('volunteers.loadError'))
+    } finally {
+      setIsLoading(false)
+    }
+  }, [page, size, searchFields, includeArchived])
 
   useEffect(() => {
-    const fetchVolontaires = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => {
+      fetchVolontaires()
+    }, 400)
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current) }
+  }, [fetchVolontaires])
 
-        // Envoyer `includeArchived` pour que le serveur gère le filtrage
-        const response = await volontaireService.getAll({
-          page,
-          size,
-          search: searchQuery.trim() || undefined,
-          includeArchived
-        });
+  useEffect(() => {
+    const params = new URLSearchParams()
+    for (const [key, value] of Object.entries(searchFields)) {
+      if (value.trim()) params.set(key, value.trim())
+    }
+    if (includeArchived) params.set('archived', 'true')
+    if (page > 0) params.set('page', String(page))
+    setSearchParams(params, { replace: true })
+  }, [searchFields, includeArchived, page])
 
-        // Met à jour la liste directement depuis l'API
-        setVolontaires(response.data?.content || []);
-        updateTotal(response.data?.totalElements || 0);
+  const updateField = (field: keyof SearchFields, value: string) => {
+    setSearchFields(prev => ({ ...prev, [field]: value }))
+    goToPage(0)
+  }
 
-      } catch (error) {
-        console.error('Erreur lors du chargement des volontaires:', error);
-        setError(t('volunteers.loadError'));
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchVolontaires();
-  }, [page, size, searchQuery, includeArchived]);
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault()
-    // Reset à la première page lors d'une nouvelle recherche
+  const clearSearch = () => {
+    setSearchFields(emptyFields)
     goToPage(0)
   }
 
   const handleDeleteVolontaire = async (id: string | number) => {
     if (window.confirm(t('volunteers.archiveConfirm'))) {
       try {
-        await volontaireService.archive(id);
-
-        //  Rafraîchir la liste après suppression, en conservant les filtres et la pagination actuelle
-        const response = await volontaireService.getAll({
-          page,
-          size,
-          search: searchQuery,
-          includeArchived
-        });
-
-        setVolontaires(response.data?.content || []);
-        updateTotal(response.data?.totalElements || 0);
-
+        await volontaireService.archive(id)
+        fetchVolontaires()
       } catch (error) {
-        console.error("Erreur lors de l'archivage du volontaire:", error);
-        alert(t('volunteers.archiveError'));
+        console.error("Erreur lors de l'archivage du volontaire:", error)
+        alert(t('volunteers.archiveError'))
       }
     }
-  };
-
+  }
 
   return (
     <div className="space-y-6">
@@ -93,45 +143,99 @@ const VolontairesHcPage = () => {
       </div>
 
       <Card>
-        <CardContent className="pt-6">
-          <form onSubmit={handleSearch} className="flex flex-col space-y-4 sm:flex-row sm:space-y-0 sm:space-x-4 sm:items-end">
-            <div className="flex-grow space-y-2">
-              <Label htmlFor="searchQuery">{t('common.search')}</Label>
-              <div className="relative">
-                <Input
-                  id="searchQuery"
-                  type="text"
-                  placeholder={t('volunteers.searchPlaceholder')}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pr-10"
-                />
-                <Button
-                  type="submit"
-                  variant="ghost"
-                  size="icon"
-                  className="absolute right-0 top-0 h-full"
-                >
-                  <Search className="h-4 w-4" />
-                </Button>
-              </div>
+        <CardContent className="pt-6 space-y-4">
+          {/* Champs de recherche multi-critères */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+            <div className="space-y-1">
+              <Label htmlFor="searchId" className="text-xs font-medium">ID</Label>
+              <Input
+                id="searchId"
+                type="text"
+                placeholder="ex: 1023"
+                value={searchFields.idVol}
+                onChange={(e) => updateField('idVol', e.target.value)}
+                className="h-9 text-sm"
+              />
             </div>
+            <div className="space-y-1">
+              <Label htmlFor="searchNom" className="text-xs font-medium">Nom</Label>
+              <Input
+                id="searchNom"
+                type="text"
+                placeholder="2 lettres min."
+                value={searchFields.nom}
+                onChange={(e) => updateField('nom', e.target.value)}
+                className="h-9 text-sm"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="searchPrenom" className="text-xs font-medium">Pr&eacute;nom</Label>
+              <Input
+                id="searchPrenom"
+                type="text"
+                placeholder="2 lettres min."
+                value={searchFields.prenom}
+                onChange={(e) => updateField('prenom', e.target.value)}
+                className="h-9 text-sm"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="searchEmail" className="text-xs font-medium">Email</Label>
+              <Input
+                id="searchEmail"
+                type="text"
+                placeholder="2 lettres min."
+                value={searchFields.email}
+                onChange={(e) => updateField('email', e.target.value)}
+                className="h-9 text-sm"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="searchTel" className="text-xs font-medium">T&eacute;l&eacute;phone</Label>
+              <Input
+                id="searchTel"
+                type="text"
+                placeholder="3 chiffres min."
+                value={searchFields.tel}
+                onChange={(e) => updateField('tel', e.target.value)}
+                className="h-9 text-sm"
+              />
+            </div>
+            <div className="flex items-end gap-2">
+              {hasActiveSearch && (
+                <Button
+                  onClick={clearSearch}
+                  variant="ghost"
+                  size="sm"
+                  className="h-9 text-xs"
+                  title="Effacer la recherche"
+                >
+                  <X className="h-4 w-4 mr-1" />
+                  Effacer
+                </Button>
+              )}
+            </div>
+          </div>
 
+          {/* Options */}
+          <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="includeArchived"
                 checked={includeArchived}
                 onCheckedChange={(checked) => setIncludeArchived(checked as boolean)}
               />
-              <Label htmlFor="includeArchived" className="font-normal">
+              <Label htmlFor="includeArchived" className="font-normal text-sm">
                 {t('volunteers.includeArchived')}
               </Label>
             </div>
-
-            <Button type="submit">
-              {t('common.search')}
-            </Button>
-          </form>
+            {hasActiveSearch && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Search className="h-4 w-4" />
+                {total} r&eacute;sultat{total !== 1 ? 's' : ''}
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
 
@@ -180,7 +284,7 @@ const VolontairesHcPage = () => {
                           onClick={() => goToPage(i)}
                           variant={page === i ? "default" : "outline"}
                           size="sm"
-                          className="w-8 h-8"
+                          className="w-8 h-8 p-0"
                         >
                           {i + 1}
                         </Button>

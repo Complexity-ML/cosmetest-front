@@ -41,7 +41,6 @@ interface RendezVousSectionProps {
   selectedRdv: RendezVousData | null;
   handleBackToRdvList: () => void;
   handleRdvUpdate: () => void;
-  navigate: (path: string) => void;
   getUniqueVolunteerIds: () => number[];
   handleOpenEmailSender: () => void;
   showActionsMenu: boolean;
@@ -64,7 +63,6 @@ const RendezVousSection = ({
   selectedRdv,
   handleBackToRdvList,
   handleRdvUpdate,
-  navigate,
   getUniqueVolunteerIds,
   handleOpenEmailSender,
   showActionsMenu,
@@ -367,13 +365,16 @@ const RendezVousSection = ({
   const finalRdvs = useMemo(() => {
     const base = typeof sortedRdvs === 'function' ? sortedRdvs() : (sortedRdvs || rdvs || [])
     const filtered = selectedDate ? base.filter((r: RendezVousData) => r.date === selectedDate) : base
-    // Si une seule date (ou une date sélectionnée), trier par heure de façon numérique
+    // Si une seule date (ou une date sélectionnée) ET tri par défaut (date), trier par heure
     const onlyOneDate = selectedDate || uniqueDates.length === 1
-    if (onlyOneDate) {
-      return [...filtered].sort((a: RendezVousData, b: RendezVousData) => timeToMinutes(a.heure) - timeToMinutes(b.heure))
+    if (onlyOneDate && sortField === 'date') {
+      return [...filtered].sort((a: RendezVousData, b: RendezVousData) => {
+        const comparison = timeToMinutes(a.heure) - timeToMinutes(b.heure)
+        return sortDirection === 'asc' ? comparison : -comparison
+      })
     }
     return filtered
-  }, [rdvs, sortedRdvs, selectedDate, uniqueDates.length])
+  }, [rdvs, sortedRdvs, selectedDate, uniqueDates.length, sortField, sortDirection])
 
   return (
     <div>
@@ -518,8 +519,6 @@ const RendezVousSection = ({
                           <div className="px-4 py-3 hover:bg-gray-50">
                             <VolontairesCommunsExport
                               studyRef={etude.ref}
-                              studyId={etude.idEtude}
-                              studyTitle={etude.titre}
                             />
                             <p className="text-xs text-gray-500 mt-1">
                               Volontaires présents dans plusieurs études de même référence

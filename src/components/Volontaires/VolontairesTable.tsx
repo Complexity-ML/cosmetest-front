@@ -29,6 +29,10 @@ interface Volontaire {
   typePeau?: string
   phototype?: string
   archive?: boolean
+  standby?: boolean
+  dateFinStandby?: string
+  commentairesVol?: string
+  commentaires?: string
 }
 
 interface VolontairesTableProps {
@@ -293,6 +297,10 @@ const VolontairesTable = ({ volontaires, onArchive }: VolontairesTableProps) => 
                         >
                           {t('common.archive')}
                         </Button>
+                      ) : volontaire.standby ? (
+                        <Badge className="bg-orange-100 text-orange-800 border-orange-300">
+                          Stand-by
+                        </Badge>
                       ) : (
                         <Badge variant="secondary">
                           {t('volunteers.archived')}

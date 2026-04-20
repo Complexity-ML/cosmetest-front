@@ -3,10 +3,11 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent } from '@/components/ui/card';
-import { Loader2, ChevronRight } from 'lucide-react';
+import { Loader2, ChevronRight, Sparkles } from 'lucide-react';
 import FormTabs from '../../components/Volontaires/FormTabs';
 import { renderVolontaireFormSection } from '../../components/Volontaires/formSections';
 import { useVolontaireForm } from './hooks/useVolontaireForm';
+import api from '../../services/api';
 
 const VolontaireForm = () => {
   const { t } = useTranslation();
@@ -25,7 +26,22 @@ const VolontaireForm = () => {
     formSuccess,
     handleChange,
     handleSubmit,
+    saveForm,
   } = useVolontaireForm({ id, isEditMode, navigate });
+
+  const handleGoToHc = async () => {
+    if (!isEditMode || !id) return;
+    const ok = await saveForm({ skipRedirect: true });
+    if (!ok) return;
+    // Vérifier si des HC existent déjà pour ce volontaire.
+    // Si non, aller sur la création, sinon sur l'édition.
+    try {
+      await api.get(`/volontaires-hc/volontaire/${id}`);
+      navigate(`/volontaires-hc/${id}/edit`);
+    } catch {
+      navigate(`/volontaires-hc/nouveau?idVol=${id}`);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -84,12 +100,33 @@ const VolontaireForm = () => {
             })}
 
             {/* Boutons de formulaire */}
-            <div className="flex justify-end gap-3">
+            <div className="flex flex-wrap justify-end gap-3">
               <Button asChild variant="outline">
                 <Link to={isEditMode ? `/volontaires/${id}` : "/volontaires"}>
                   {t('common.cancel')}
                 </Link>
               </Button>
+              {isEditMode && (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={handleGoToHc}
+                  disabled={isSaving}
+                  title={t('volunteers.goToHcAutosaveHint', 'Enregistre les modifications puis ouvre les habitudes cosmétiques')}
+                >
+                  {isSaving ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      {t('volunteers.saving')}
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      {t('volunteers.goToHc', 'Habitudes cosmétiques')}
+                    </>
+                  )}
+                </Button>
+              )}
               <Button
                 type="submit"
                 disabled={isSaving}
