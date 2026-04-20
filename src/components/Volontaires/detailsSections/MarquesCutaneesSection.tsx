@@ -12,33 +12,6 @@ const MarquesCutaneesSection = ({ volontaireDisplayData }: { volontaireDisplayDa
         <CardTitle>{t('volunteers.skinMarks')}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="space-y-1">
-            <p className="text-sm font-medium text-brand-cyan">Aucun</p>
-            <p className="text-sm text-gray-900">{displayYesNo(volontaireDisplayData.caracteristiquesAucun)}</p>
-          </div>
-          <div className="space-y-1">
-            <p className="text-sm font-medium text-brand-cyan">{t('volunteers.scars')}</p>
-            <p className="text-sm text-gray-900">
-              {!volontaireDisplayData.cicatrices || volontaireDisplayData.cicatrices === 'Non' ? displayYesNo('Non') : volontaireDisplayData.cicatrices === 'Oui' ? displayYesNo('Oui') : `${displayYesNo('Oui')} — ${volontaireDisplayData.cicatrices}`}
-            </p>
-          </div>
-          <div className="space-y-1">
-            <p className="text-sm font-medium text-brand-cyan">{t('volunteers.tattoos')}</p>
-            <p className="text-sm text-gray-900">
-              {!volontaireDisplayData.tatouages || volontaireDisplayData.tatouages === 'Non' ? displayYesNo('Non') : volontaireDisplayData.tatouages === 'Oui' ? displayYesNo('Oui') : `${displayYesNo('Oui')} — ${volontaireDisplayData.tatouages}`}
-            </p>
-          </div>
-          <div className="space-y-1">
-            <p className="text-sm font-medium text-brand-cyan">{t('volunteers.piercings')}</p>
-            <p className="text-sm text-gray-900">
-              {!volontaireDisplayData.piercings || volontaireDisplayData.piercings === 'Non' ? displayYesNo('Non') : volontaireDisplayData.piercings === 'Oui' ? displayYesNo('Oui') : `${displayYesNo('Oui')} — ${volontaireDisplayData.piercings}`}
-            </p>
-          </div>
-        </div>
-
-        <Separator />
-
         <div>
           <h3 className="text-sm font-semibold text-gray-800 mb-4">{t('volunteers.pigmentSpots')}</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

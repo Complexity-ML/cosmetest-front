@@ -6,7 +6,7 @@ import CilsSection from './CilsSection';
 import MarquesCutaneesSection from './MarquesCutaneesSection';
 import ProblemesSection from './ProblemesSection';
 import MedicalSection from './MedicalSection';
-import MesuresSection from './MesuresSection';
+import MedecineEsthetiqueSection from './MedecineEsthetiqueSection';
 import RibSection from './RibSection';
 import EvaluationSection from './EvaluationSection';
 import NotesSection from './NotesSection';
@@ -25,7 +25,7 @@ const SECTION_COMPONENTS = {
   marques: MarquesCutaneesSection,
   problemes: ProblemesSection,
   medical: MedicalSection,
-  mesures: MesuresSection,
+  medecineEsthetique: MedecineEsthetiqueSection,
   rib: RibSection,
   evaluation: EvaluationSection,
   notes: NotesSection,

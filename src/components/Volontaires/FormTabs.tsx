@@ -18,6 +18,7 @@ const FormTabs = ({ activeTab, setActiveTab }: FormTabsProps) => {
     { id: "cils", label: t('volunteers.eyelashesAndEyebrows') },
     { id: "problemes", label: t('volunteers.specificProblems') },
     { id: "medical", label: t('volunteers.medicalInformation') },
+    { id: "medecineEsthetique", label: t('volunteers.resume.groups.medecineEsthetique', 'Médecine esthétique') },
     { id: "notes", label: t('volunteers.comments') },
     { id: "RIB", label: t('volunteers.bankDetails') },
     { id: "evaluation", label: t('volunteers.evaluation') },

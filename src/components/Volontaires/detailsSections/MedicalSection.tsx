@@ -34,6 +34,12 @@ const MedicalSection = ({ volontaireDisplayData }: { volontaireDisplayData: any 
           <p className="text-sm text-gray-900">{displayYesNo(volontaireDisplayData.menopause)}</p>
         </div>
         <div className="space-y-1">
+          <p className="text-sm font-medium text-brand-cyan">
+            {t('volunteers.resume.fields.bouffeeChaleurMenaupose', 'Bouffées de chaleur (ménopause)')}
+          </p>
+          <p className="text-sm text-gray-900">{displayYesNo(volontaireDisplayData.bouffeeChaleurMenaupose)}</p>
+        </div>
+        <div className="space-y-1">
           <p className="text-sm font-medium text-brand-cyan">{t('volunteers.compatibleHealth')}</p>
           <div className="mt-1">
             {volontaireDisplayData.santeCompatible ? (

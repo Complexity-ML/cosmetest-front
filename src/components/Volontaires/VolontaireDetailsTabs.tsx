@@ -26,7 +26,7 @@ const VolontaireDetailsTabs: React.FC<VolontaireDetailsTabsProps> = ({
     { id: "marques", label: t('volunteers.skinMarks') },
     { id: "problemes", label: t('volunteers.specificProblems') },
     { id: "medical", label: t('volunteers.medicalInformation') },
-    { id: "mesures", label: t('volunteers.measurements') },
+    { id: "medecineEsthetique", label: t('volunteers.resume.groups.medecineEsthetique', 'Médecine esthétique') },
     { id: "rib", label: t('volunteers.bankDetails') },
     { id: "photos", label: t('volunteers.photos') },
     { id: "evaluation", label: t('volunteers.evaluation') },

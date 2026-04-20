@@ -111,6 +111,14 @@ const CaracteristiquesSection = ({ volontaireDisplayData }: CaracteristiquesSect
               {!volontaireDisplayData.piercings || volontaireDisplayData.piercings === 'Non' ? t('common.no') : volontaireDisplayData.piercings.trim() ? `${t('common.yes')} — ${volontaireDisplayData.piercings.trim()}` : t('common.yes')}
             </p>
           </div>
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-brand-cyan">
+              {t('volunteers.resume.fields.maquillagePermanent', 'Maquillage permanent')}
+            </p>
+            <p className="text-sm text-gray-900">
+              {!(volontaireDisplayData as any).maquillagePermanent || (volontaireDisplayData as any).maquillagePermanent === 'Non' ? t('common.no') : String((volontaireDisplayData as any).maquillagePermanent).trim() ? `${t('common.yes')} — ${String((volontaireDisplayData as any).maquillagePermanent).trim()}` : t('common.yes')}
+            </p>
+          </div>
         </div>
       </CardContent>
     </Card>

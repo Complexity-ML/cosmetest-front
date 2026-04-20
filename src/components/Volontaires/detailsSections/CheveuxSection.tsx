@@ -18,10 +18,6 @@ const CheveuxSection = ({ volontaireDisplayData }: { volontaireDisplayData: any 
           <p className="text-sm text-gray-900">{displayValue(volontaireDisplayData.couleurCheveux)}</p>
         </div>
         <div className="space-y-1">
-          <p className="text-sm font-medium text-brand-cyan">{t('volunteers.hairLength')}</p>
-          <p className="text-sm text-gray-900">{displayValue(volontaireDisplayData.longueurCheveux)}</p>
-        </div>
-        <div className="space-y-1">
           <p className="text-sm font-medium text-brand-cyan">{t('volunteers.hairNature')}</p>
           <p className="text-sm text-gray-900">{displayValue(volontaireDisplayData.natureCheveux)}</p>
         </div>
@@ -34,10 +30,6 @@ const CheveuxSection = ({ volontaireDisplayData }: { volontaireDisplayData: any 
           <p className="text-sm text-gray-900">{displayValue(volontaireDisplayData.natureCuirChevelu)}</p>
         </div>
         <div className="space-y-1">
-          <p className="text-sm font-medium text-brand-cyan">Aucun problème capillaire</p>
-          <p className="text-sm text-gray-900">{displayYesNo(volontaireDisplayData.cheveuxProblemeAucun)}</p>
-        </div>
-        <div className="space-y-1">
           <p className="text-sm font-medium text-brand-cyan">{t('volunteers.sensitiveScalp')}</p>
           <p className="text-sm text-gray-900">{displayYesNo(volontaireDisplayData.cuirCheveluSensible)}</p>
         </div>
@@ -48,6 +40,18 @@ const CheveuxSection = ({ volontaireDisplayData }: { volontaireDisplayData: any 
         <div className="space-y-1">
           <p className="text-sm font-medium text-brand-cyan">{t('volunteers.brittleHair')}</p>
           <p className="text-sm text-gray-900">{displayYesNo(volontaireDisplayData.cheveuxCassants)}</p>
+        </div>
+        <div className="space-y-1">
+          <p className="text-sm font-medium text-brand-cyan">{t('volunteers.resume.fields.calvitie', 'Calvitie')}</p>
+          <p className="text-sm text-gray-900">{displayYesNo(volontaireDisplayData.calvitie)}</p>
+        </div>
+        <div className="space-y-1">
+          <p className="text-sm font-medium text-brand-cyan">{t('volunteers.resume.fields.pellicules', 'Pellicules')}</p>
+          <p className="text-sm text-gray-900">{displayYesNo(volontaireDisplayData.pellicules)}</p>
+        </div>
+        <div className="space-y-1">
+          <p className="text-sm font-medium text-brand-cyan">{t('volunteers.resume.fields.demangeaisonsCuirChevelu', 'Démangeaisons du cuir chevelu')}</p>
+          <p className="text-sm text-gray-900">{displayYesNo(volontaireDisplayData.demangeaisonsCuirChevelu || volontaireDisplayData.demangeaisonsDuCuirChevelu)}</p>
         </div>
       </div>
 

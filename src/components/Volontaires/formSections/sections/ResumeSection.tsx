@@ -139,17 +139,7 @@ const GROUPS: GroupDef[] = [
       { key: "cicatrices", type: "text" },
       { key: "tatouages", type: "text" },
       { key: "piercings", type: "text" },
-    ],
-  },
-  {
-    titleKey: "medecineEsthetique",
-    fields: [
-      { key: "injectionsVisage", type: "boolean" },
-      { key: "injectionsVisageZone", type: "text" },
-      { key: "injectionsVisageDate", type: "date" },
-      { key: "maquillagePermanentVisage", type: "boolean" },
-      { key: "maquillagePermanentVisageZone", type: "text" },
-      { key: "maquillagePermanentVisageDate", type: "date" },
+      { key: "maquillagePermanent", type: "text" },
     ],
   },
   {
@@ -253,6 +243,17 @@ const GROUPS: GroupDef[] = [
       { key: "bouffeeChaleurMenaupose", type: "boolean" },
       { key: "allergiesCommentaires", type: "textarea" },
       { key: "santeCompatible", type: "boolean" },
+    ],
+  },
+  {
+    titleKey: "medecineEsthetique",
+    fields: [
+      { key: "injectionsVisage", type: "boolean" },
+      { key: "injectionsVisageZone", type: "text" },
+      { key: "injectionsVisageDate", type: "date" },
+      { key: "maquillagePermanentVisage", type: "boolean" },
+      { key: "maquillagePermanentVisageZone", type: "text" },
+      { key: "maquillagePermanentVisageDate", type: "date" },
     ],
   },
   {
