@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import groupeService from '../../../services/groupeService';
+import etudeVolontaireService from '../../../services/etudeVolontaireService';
 import { EtudeData, GroupeData } from '../../../types/etude.types';
 import React, { useState } from 'react';
 
@@ -50,7 +51,22 @@ const GroupesSection = ({
     if (!groupe.idGroupe) return;
     setIsSavingIv(true);
     try {
-      await groupeService.update(groupe.idGroupe, { ...groupe, iv: editIvValue });
+      // 1. Mettre à jour l'IV du groupe
+      await groupeService.update(groupe.idGroupe, { ...groupe, iv: editIvValue } as any);
+
+      // 2. Propager l'IV à tous les volontaires du groupe
+      try {
+        const volontaires = await etudeVolontaireService.getByGroupe(groupe.idGroupe);
+        if (Array.isArray(volontaires) && volontaires.length > 0) {
+          const updatePromises = volontaires.map((vol: any) =>
+            etudeVolontaireService.updateIV(vol, editIvValue)
+          );
+          await Promise.all(updatePromises);
+        }
+      } catch (propagateErr) {
+        console.error('Erreur lors de la propagation de l\'IV aux volontaires:', propagateErr);
+      }
+
       setEditingIv(null);
       if (typeof fetchGroupes === 'function') {
         await fetchGroupes();
