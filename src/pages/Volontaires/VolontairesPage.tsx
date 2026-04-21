@@ -21,9 +21,11 @@ interface SearchFields {
   email: string
   tel: string
   idVol: string
+  dateModifFrom: string
+  dateModifTo: string
 }
 
-const emptyFields: SearchFields = { nom: '', prenom: '', email: '', tel: '', idVol: '' }
+const emptyFields: SearchFields = { nom: '', prenom: '', email: '', tel: '', idVol: '', dateModifFrom: '', dateModifTo: '' }
 
 const VolontairesPage = () => {
   const { t } = useTranslation()
@@ -36,6 +38,8 @@ const VolontairesPage = () => {
     email: searchParams.get('email') || '',
     tel: searchParams.get('tel') || '',
     idVol: searchParams.get('idVol') || '',
+    dateModifFrom: searchParams.get('dateModifFrom') || '',
+    dateModifTo: searchParams.get('dateModifTo') || '',
   })
 
   const [volontaires, setVolontaires] = useState([])
@@ -51,6 +55,7 @@ const VolontairesPage = () => {
   // Vérifie si un champ a assez de caractères pour déclencher la recherche
   const isFieldActive = (field: string, value: string) => {
     if (field === 'idVol') return value.trim().length >= 1
+    if (field === 'dateModifFrom' || field === 'dateModifTo') return value.trim().length > 0
     return value.trim().length >= MIN_CHARS
   }
 
@@ -151,7 +156,7 @@ const VolontairesPage = () => {
       <Card>
         <CardContent className="pt-6 space-y-4">
           {/* Champs de recherche multi-critères */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-8 gap-3">
             <div className="space-y-1">
               <Label htmlFor="searchId" className="text-xs font-medium">ID</Label>
               <Input
@@ -204,6 +209,26 @@ const VolontairesPage = () => {
                 placeholder="3 chiffres min."
                 value={searchFields.tel}
                 onChange={(e) => updateField('tel', e.target.value)}
+                className="h-9 text-sm"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="searchDateFrom" className="text-xs font-medium">Mise à jour du</Label>
+              <Input
+                id="searchDateFrom"
+                type="date"
+                value={searchFields.dateModifFrom}
+                onChange={(e) => updateField('dateModifFrom', e.target.value)}
+                className="h-9 text-sm"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="searchDateTo" className="text-xs font-medium">au</Label>
+              <Input
+                id="searchDateTo"
+                type="date"
+                value={searchFields.dateModifTo}
+                onChange={(e) => updateField('dateModifTo', e.target.value)}
                 className="h-9 text-sm"
               />
             </div>

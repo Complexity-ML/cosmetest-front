@@ -31,11 +31,16 @@ const AnnulationsSection = ({ volontaireId }: AnnulationsSectionProps) => {
       try {
         setIsLoading(true);
         setError(null);
-        const data = await annulationService.getRecentByVolontaire(Number(volontaireId));
-        setAnnulations(data as Annulation[]);
+        const rawData = (await annulationService.getRecentByVolontaire(Number(volontaireId))) as Annulation[];
+        // Exclure les annulations faites par Cosmetest (on ne garde que celles du volontaire)
+        const data = rawData.filter(a => {
+          const par = (a.annulePar || '').toUpperCase();
+          return par !== 'COSMETEST';
+        });
+        setAnnulations(data);
 
         // Récupérer la ref de chaque étude unique
-        const uniqueEtudeIds = [...new Set((data as Annulation[]).map(a => a.idEtude))];
+        const uniqueEtudeIds = [...new Set(data.map(a => a.idEtude))];
         const refs: Record<number, string> = {};
         await Promise.all(
           uniqueEtudeIds.map(async (idEtude) => {

@@ -41,6 +41,53 @@ const GroupesSection = ({
   const [editingIv, setEditingIv] = useState<number | null>(null);
   const [editIvValue, setEditIvValue] = useState<number>(0);
   const [isSavingIv, setIsSavingIv] = useState(false);
+  const [editingGroupe, setEditingGroupe] = useState<GroupeData | null>(null);
+  const [isSavingGroupe, setIsSavingGroupe] = useState(false);
+
+  const toArray = (val: any): string[] => {
+    if (Array.isArray(val)) return val;
+    if (typeof val === 'string' && val.trim()) return val.split(/[;,]/).map((s) => s.trim()).filter(Boolean);
+    return [];
+  };
+
+  const handleOpenEdit = (groupe: GroupeData) => {
+    setEditingGroupe({
+      ...groupe,
+      ethnie: toArray(groupe.ethnie) as any,
+      phototype: toArray(groupe.phototype) as any,
+    });
+  };
+
+  const handleEditFieldChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    if (!editingGroupe) return;
+    const { name, value, type } = e.target;
+    const v = type === 'number' ? (value === '' ? '' : Number(value)) : value;
+    setEditingGroupe({ ...editingGroupe, [name]: v } as GroupeData);
+  };
+
+  const toggleEditArray = (field: 'ethnie' | 'phototype', option: string) => {
+    if (!editingGroupe) return;
+    const current = toArray((editingGroupe as any)[field]);
+    const next = current.includes(option) ? current.filter((v) => v !== option) : [...current, option];
+    setEditingGroupe({ ...editingGroupe, [field]: next } as GroupeData);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingGroupe || !editingGroupe.idGroupe) return;
+    setIsSavingGroupe(true);
+    try {
+      await groupeService.update(editingGroupe.idGroupe, editingGroupe as any);
+      setEditingGroupe(null);
+      if (typeof fetchGroupes === 'function') {
+        await fetchGroupes();
+      }
+    } catch (err) {
+      console.error('Erreur lors de la mise à jour du groupe', err);
+      alert('Erreur lors de la mise à jour du groupe');
+    } finally {
+      setIsSavingGroupe(false);
+    }
+  };
 
   const handleEditIv = (groupe: GroupeData) => {
     setEditingIv(groupe.idGroupe || null);
@@ -418,6 +465,15 @@ const GroupesSection = ({
                 </div>
                 <div className="ml-4 flex items-start space-x-2">
                   <button
+                    onClick={() => handleOpenEdit(groupe)}
+                    className="inline-flex items-center p-2 text-blue-500 hover:text-blue-700"
+                    title="Modifier ce groupe"
+                  >
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                  </button>
+                  <button
                     onClick={() => groupe.idGroupe && handleDeleteGroupe(groupe.idGroupe)}
                     className="inline-flex items-center p-2 text-red-500 hover:text-red-700"
                     title={t('studyDetails.deleteThisGroup')}
@@ -430,6 +486,168 @@ const GroupesSection = ({
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Modale d'édition d'un groupe */}
+      {editingGroupe && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          onClick={() => !isSavingGroupe && setEditingGroupe(null)}
+        >
+          <div
+            className="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center p-6 border-b">
+              <h4 className="text-lg font-medium text-gray-900">Modifier le groupe</h4>
+              <button
+                onClick={() => setEditingGroupe(null)}
+                className="text-gray-400 hover:text-gray-600"
+                disabled={isSavingGroupe}
+              >
+                <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('groups.groupTitle')} *</label>
+                  <input
+                    type="text"
+                    name="intitule"
+                    value={editingGroupe.intitule || ''}
+                    onChange={handleEditFieldChange}
+                    className="form-input w-full"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('groups.subjectCount')}</label>
+                  <input
+                    type="number"
+                    name="nbSujet"
+                    value={editingGroupe.nbSujet ?? ''}
+                    onChange={handleEditFieldChange}
+                    min="0"
+                    className="form-input w-full"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('studies.description')}</label>
+                <textarea
+                  name="description"
+                  value={editingGroupe.description || ''}
+                  onChange={handleEditFieldChange}
+                  rows={2}
+                  className="form-textarea w-full"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('groups.ageMin')}</label>
+                  <input
+                    type="number"
+                    name="ageMinimum"
+                    value={editingGroupe.ageMinimum ?? ''}
+                    onChange={handleEditFieldChange}
+                    min="0"
+                    className="form-input w-full"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('groups.ageMax')}</label>
+                  <input
+                    type="number"
+                    name="ageMaximum"
+                    value={editingGroupe.ageMaximum ?? ''}
+                    onChange={handleEditFieldChange}
+                    min="0"
+                    className="form-input w-full"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('groups.volunteerCompensation')}</label>
+                  <input
+                    type="number"
+                    name="iv"
+                    value={editingGroupe.iv ?? ''}
+                    onChange={handleEditFieldChange}
+                    min="0"
+                    className="form-input w-full"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('groups.ethnicities')}</label>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+                  {ethniesDisponibles.map((ethnieOption: string) => (
+                    <label key={ethnieOption} className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={toArray(editingGroupe.ethnie).includes(ethnieOption)}
+                        onChange={() => toggleEditArray('ethnie', ethnieOption)}
+                        className="form-checkbox h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                      />
+                      <span className="ml-2 text-sm text-gray-700 capitalize">{ethnieOption.toLowerCase()}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('groups.phototypes') || 'Phototypes'}</label>
+                <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
+                  {phototypesDisponibles.map((phototypeOption: string) => (
+                    <label key={phototypeOption} className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={toArray(editingGroupe.phototype).includes(phototypeOption)}
+                        onChange={() => toggleEditArray('phototype', phototypeOption)}
+                        className="form-checkbox h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                      />
+                      <span className="ml-2 text-sm text-gray-700">{phototypeOption}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('studyDetails.criteria')}</label>
+                <textarea
+                  name="criteresSupplementaires"
+                  value={editingGroupe.criteresSupplementaires || ''}
+                  onChange={handleEditFieldChange}
+                  rows={2}
+                  className="form-textarea w-full"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end space-x-3 p-6 border-t">
+              <button
+                type="button"
+                onClick={() => setEditingGroupe(null)}
+                disabled={isSavingGroupe}
+                className="btn btn-secondary"
+              >
+                {t('common.cancel')}
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveEdit}
+                disabled={isSavingGroupe}
+                className="btn btn-primary"
+              >
+                {isSavingGroupe ? 'Enregistrement...' : 'Enregistrer'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

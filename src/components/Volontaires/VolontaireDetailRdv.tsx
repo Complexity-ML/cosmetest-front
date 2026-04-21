@@ -42,6 +42,10 @@ const VolontaireDetailRdv = ({ rdvs = [], volontaireId }: VolontaireDetailRdvPro
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error] = useState<string | null>(null);
   const [annulationsMap, setAnnulationsMap] = useState<Map<string, AnnulationRdv>>(new Map());
+  const [hideAssigned, setHideAssigned] = useState<boolean>(false);
+
+  const isAssigned = (rdv: Rdv) => Boolean((rdv as any).volontaire || rdv.idVol || (rdv as any).idVolontaire);
+  const applyAssignedFilter = (list: Rdv[]) => (hideAssigned ? list.filter((r) => !isAssigned(r)) : list);
 
   // Charger les annulations pour ce volontaire
   useEffect(() => {
@@ -125,9 +129,11 @@ const VolontaireDetailRdv = ({ rdvs = [], volontaireId }: VolontaireDetailRdvPro
   };
 
   // Filtrer et trier les RDVs à venir (plus récents en premier)
-  const upcomingRdvs = rdvs
-    .filter(rdv => isUpcoming(rdv.date))
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  const upcomingRdvs = applyAssignedFilter(
+    rdvs
+      .filter(rdv => isUpcoming(rdv.date))
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+  );
 
   // RDVs du jour uniquement (pour affichage séparé)
   const todayRdvs = upcomingRdvs.filter(rdv => isToday(rdv.date));
@@ -136,9 +142,11 @@ const VolontaireDetailRdv = ({ rdvs = [], volontaireId }: VolontaireDetailRdvPro
   const futureRdvs = upcomingRdvs.filter(rdv => !isToday(rdv.date));
 
   // RDVs passés des 8 dernières semaines (triés du plus récent au plus ancien)
-  const pastRdvs = rdvs
-    .filter(rdv => isPastEightWeeks(rdv.date))
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const pastRdvs = applyAssignedFilter(
+    rdvs
+      .filter(rdv => isPastEightWeeks(rdv.date))
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+  );
 
   // Export Excel des RDVs du jour et à venir
   const exportToExcel = () => {
@@ -187,6 +195,20 @@ const VolontaireDetailRdv = ({ rdvs = [], volontaireId }: VolontaireDetailRdvPro
 
   return (
     <div>
+      {/* Filtre RDV vides */}
+      <div className="flex items-center gap-2 mb-3">
+        <input
+          type="checkbox"
+          id="hideAssignedVol"
+          checked={hideAssigned}
+          onChange={(e) => setHideAssigned(e.target.checked)}
+          className="h-4 w-4"
+        />
+        <label htmlFor="hideAssignedVol" className="text-sm cursor-pointer select-none">
+          Masquer les RDV déjà attribués (ne montrer que les RDV vides)
+        </label>
+      </div>
+
       {/* Alerte si des RDVs annulés */}
       {Array.from(annulationsMap.values()).length > 0 && (
         <Alert variant="destructive" className="mb-4">

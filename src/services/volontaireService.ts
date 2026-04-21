@@ -397,6 +397,8 @@ const volontaireService = {
     email?: string;
     tel?: string;
     idVol?: string;
+    dateModifFrom?: string;
+    dateModifTo?: string;
     includeArchived?: boolean;
     page?: number;
     size?: number;
