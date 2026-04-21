@@ -56,6 +56,7 @@ const EnhancedAppointmentsPanel: React.FC<EnhancedAppointmentsPanelProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOption, setSortOption] = useState('time');
   const [selectedDate, setSelectedDate] = useState('');
+  const [hideAssigned, setHideAssigned] = useState<boolean>(false);
   const [volunteerCache, setVolunteerCache] = useState<Record<number, VolunteerInfo>>({});
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const savedScrollTop = useRef<number>(0);
@@ -154,6 +155,11 @@ const EnhancedAppointmentsPanel: React.FC<EnhancedAppointmentsPanelProps> = ({
           return false;
         }
 
+        // Filtre "masquer les RDV déjà attribués"
+        if (hideAssigned && (rdv.idVolontaire || rdv.volontaire)) {
+          return false;
+        }
+
         // Filtre par recherche
         if (searchQuery.trim() === '') return true;
         const searchLower = searchQuery.toLowerCase();
@@ -187,7 +193,7 @@ const EnhancedAppointmentsPanel: React.FC<EnhancedAppointmentsPanelProps> = ({
             return 0;
         }
       });
-  }, [appointments, selectedDate, searchQuery, sortOption]);
+  }, [appointments, selectedDate, searchQuery, sortOption, hideAssigned]);
 
   // Grouper les rendez-vous par heure quand une date est sélectionnée
   const groupedAppointments = useMemo(() => {
@@ -399,6 +405,19 @@ const EnhancedAppointmentsPanel: React.FC<EnhancedAppointmentsPanelProps> = ({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
+        </div>
+
+        <div className="flex items-center gap-2 mb-4">
+          <input
+            type="checkbox"
+            id="hideAssignedEnhanced"
+            checked={hideAssigned}
+            onChange={(e) => setHideAssigned(e.target.checked)}
+            className="h-4 w-4"
+          />
+          <label htmlFor="hideAssignedEnhanced" className="text-sm cursor-pointer select-none">
+            Masquer les RDV déjà attribués
+          </label>
         </div>
 
         <div className="flex justify-between items-center">

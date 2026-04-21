@@ -51,12 +51,6 @@ const Calendar = () => {
   const [showStudyModal, setShowStudyModal] = useState<boolean>(false);
   const [studyRdvs, setStudyRdvs] = useState<StudyRdvs>({ selectedDate: [], past: [], today: [], upcoming: [] });
   const [loadingRdvs, setLoadingRdvs] = useState<boolean>(false);
-  const [hideAssigned, setHideAssigned] = useState<boolean>(false);
-
-  const isAssigned = (rdv: Appointment) => Boolean(rdv.volontaire || rdv.idVolontaire);
-  const filteredSelectedDate = hideAssigned
-    ? studyRdvs.selectedDate.filter((rdv) => !isAssigned(rdv))
-    : studyRdvs.selectedDate;
 
   // --- Helpers ---
   const formatLocalDate = useCallback((date: Date): string => {
@@ -416,24 +410,8 @@ const Calendar = () => {
                 </div>
               ) : (
                 <div className="rdv-sections">
-                  {/* Filtre */}
-                  {studyRdvs.selectedDate && studyRdvs.selectedDate.length > 0 && (
-                    <div className="flex items-center gap-2 mb-3">
-                      <input
-                        type="checkbox"
-                        id="hideAssignedCal"
-                        checked={hideAssigned}
-                        onChange={(e) => setHideAssigned(e.target.checked)}
-                        className="h-4 w-4"
-                      />
-                      <label htmlFor="hideAssignedCal" className="text-sm cursor-pointer select-none">
-                        Masquer les RDV déjà attribués
-                      </label>
-                    </div>
-                  )}
-
                   {/* RDV du jour sélectionné */}
-                  {filteredSelectedDate && filteredSelectedDate.length > 0 ? (
+                  {studyRdvs.selectedDate && studyRdvs.selectedDate.length > 0 ? (
                     <div className="rdv-section selected-date-section">
                       <div className="section-header">
                         <div className="time-badge selected-date-badge">
@@ -441,11 +419,11 @@ const Calendar = () => {
                           <span className="badge-text">
                             RDV du {selectedDate ? formatDateFr(formatLocalDate(selectedDate)) : 'jour sélectionné'}
                           </span>
-                          <span className="badge-count">({filteredSelectedDate.length})</span>
+                          <span className="badge-count">({studyRdvs.selectedDate.length})</span>
                         </div>
                       </div>
                       <div className="rdv-list">
-                        {filteredSelectedDate.map((rdv, index) => (
+                        {studyRdvs.selectedDate.map((rdv, index) => (
                           <div key={`rdv-${index}`} className="rdv-card selected-date-card">
                             <div className="rdv-time-slot">
                               <span className="time-display">{rdv.heure || '--:--'}</span>

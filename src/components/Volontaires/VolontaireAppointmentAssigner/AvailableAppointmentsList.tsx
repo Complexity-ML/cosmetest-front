@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import AppointmentFilter from './AppointmentFilter';
 import AppointmentItem from './AppointmentItem';
 import { timeToMinutes, normalizeTime } from '../../../utils/timeUtils';
@@ -65,6 +66,7 @@ const AvailableAppointmentsList = ({
   totalAppointmentsCount
 }: AvailableAppointmentsListProps) => {
   const { t } = useTranslation();
+  const [hideAssigned, setHideAssigned] = useState<boolean>(false);
   // time helpers importés depuis utils/timeUtils
 
   // Filtrage et tri des rendez-vous disponibles
@@ -72,6 +74,11 @@ const AvailableAppointmentsList = ({
     .filter((rdv: RendezVousData) => {
       // Filtre par date sélectionnée
       if (selectedDate && rdv.date !== selectedDate) {
+        return false;
+      }
+
+      // Filtre "masquer les RDV déjà attribués"
+      if (hideAssigned && (rdv.volontaire || rdv.idVolontaire)) {
         return false;
       }
 
@@ -150,6 +157,19 @@ const AvailableAppointmentsList = ({
         onSelectAll={onSelectAllAppointments}
         disabled={loading}
       />
+
+      <div className="flex items-center gap-2 px-4 py-2 border-b border-gray-200 bg-gray-50">
+        <input
+          type="checkbox"
+          id="hideAssignedAssigner"
+          checked={hideAssigned}
+          onChange={(e) => setHideAssigned(e.target.checked)}
+          className="h-4 w-4"
+        />
+        <label htmlFor="hideAssignedAssigner" className="text-sm cursor-pointer select-none">
+          Masquer les RDV déjà attribués
+        </label>
+      </div>
 
       <div className="max-h-96 overflow-y-auto">
         {filteredAppointments.length === 0 ? (
