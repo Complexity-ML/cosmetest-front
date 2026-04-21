@@ -514,9 +514,11 @@ interface UseVolontaireFormReturn {
   isSaving: boolean;
   formError: string | null;
   formSuccess: string | null;
+  dateModif: string | null;
   handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
   handleSubmit: (e: React.FormEvent<HTMLFormElement>) => Promise<void>;
   saveForm: (options?: { skipRedirect?: boolean }) => Promise<boolean>;
+  touchDateModif: () => Promise<void>;
 }
 
 export const useVolontaireForm = ({ id, isEditMode, navigate }: UseVolontaireFormParams): UseVolontaireFormReturn => {
@@ -527,6 +529,7 @@ export const useVolontaireForm = ({ id, isEditMode, navigate }: UseVolontaireFor
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [formSuccess, setFormSuccess] = useState<string | null>(null);
+  const [dateModif, setDateModif] = useState<string | null>(null);
   const redirectTimeoutRef = useRef<NodeJS.Timeout>();
 
   useEffect(() => () => {
@@ -817,6 +820,7 @@ export const useVolontaireForm = ({ id, isEditMode, navigate }: UseVolontaireFor
 
         // Mise à jour du formulaire
         setFormData(formattedData);
+        setDateModif(detailsData.dateModif || null);
       } catch (error) {
         // Gestion des erreurs Axios
         const errorMessage =
@@ -1189,9 +1193,14 @@ export const useVolontaireForm = ({ id, isEditMode, navigate }: UseVolontaireFor
 
       // Création ou mise à jour du volontaire
       if (isEditMode) {
-        const updateResponse = await volontaireService.updateDetails(id!, volontaireCompleteData);
+        const today = new Date().toISOString().split('T')[0];
+        const updateResponse = await volontaireService.updateDetails(id!, {
+          ...volontaireCompleteData,
+          dateModif: today,
+        });
         console.log("✅ Réponse backend après update:", updateResponse);
         volontaireId = id!; //  Assigner l'ID existant
+        setDateModif(today);
         setFormSuccess("Volontaire mis à jour avec succès");
       } else {
         // Création d'un nouveau volontaire
@@ -1239,6 +1248,22 @@ export const useVolontaireForm = ({ id, isEditMode, navigate }: UseVolontaireFor
     await saveForm();
   };
 
+  const touchDateModif = async () => {
+    if (!isEditMode || !id) return;
+    try {
+      const response = await volontaireService.touchDateModif(id);
+      const newDate = response.data?.dateModif || new Date().toISOString().split('T')[0];
+      setDateModif(newDate);
+      setFormSuccess('Date de mise à jour enregistrée');
+    } catch (error) {
+      const errorMessage =
+        (error as any).response?.data?.message ||
+        "Impossible d'enregistrer la date de mise à jour";
+      console.error('Erreur lors de la mise à jour de dateModif:', error);
+      setFormError(errorMessage);
+    }
+  };
+
   return {
     activeTab,
     setActiveTab,
@@ -1248,8 +1273,10 @@ export const useVolontaireForm = ({ id, isEditMode, navigate }: UseVolontaireFor
     isSaving,
     formError,
     formSuccess,
+    dateModif,
     handleChange,
     handleSubmit,
     saveForm,
+    touchDateModif,
   };
 };

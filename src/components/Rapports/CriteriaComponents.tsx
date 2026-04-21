@@ -111,7 +111,7 @@ export const DemographicFilters: React.FC<DemographicFiltersProps> = ({
           </div>
           <div className="space-y-2">
             <Label htmlFor="sexe">{t('reports.matching.sex')}</Label>
-            <Select value={values.sexe} onValueChange={onSexChange}>
+            <Select value={values.sexe || 'TOUS'} onValueChange={onSexChange}>
               <SelectTrigger id="sexe">
                 <SelectValue placeholder={t('reports.matching.all')} />
               </SelectTrigger>
@@ -478,16 +478,30 @@ export const EvaluationFilters: React.FC<EvaluationFiltersProps> = ({ values, on
                 </div>
               </div>
             ) : (
-              <select
-                id={key}
-                value={values[key] || ''}
-                onChange={(e) => onChange(key, 'value', e.target.value)}
-                className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm"
-              >
-                <option value="">Tous</option>
-                <option value="Oui">Oui</option>
-                <option value="Non">Non</option>
-              </select>
+              <div className="flex gap-2">
+                {['Oui', 'Non', ''].map((opt) => {
+                  const isActive = (values[key] || '') === opt;
+                  const label = opt === '' ? 'Aucun' : opt;
+                  const activeClass =
+                    opt === 'Oui'
+                      ? 'bg-green-600 text-white border-green-600 hover:bg-green-700'
+                      : opt === 'Non'
+                      ? 'bg-red-600 text-white border-red-600 hover:bg-red-700'
+                      : 'bg-gray-700 text-white border-gray-700 hover:bg-gray-800';
+                  return (
+                    <Button
+                      key={label}
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => onChange(key, 'value', opt)}
+                      className={`flex-1 ${isActive ? activeClass : ''}`}
+                    >
+                      {label}
+                    </Button>
+                  );
+                })}
+              </div>
             )}
           </div>
         ))}

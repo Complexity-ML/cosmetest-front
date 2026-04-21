@@ -83,7 +83,7 @@ const MatchingSystem = () => {
       ...prev,
       demographics: {
         ...prev.demographics,
-        sexe: value
+        sexe: value === 'TOUS' ? '' : value
       }
     }));
   };
@@ -568,10 +568,12 @@ const MatchingSystem = () => {
                   makeup: filters.makeup,
                   evaluations: Object.entries(filters.evaluations).reduce((acc, [key, val]) => ({
                     ...acc,
-                    [key]: {
-                      min: val.min !== null ? String(val.min) : undefined,
-                      max: val.max !== null ? String(val.max) : undefined
-                    }
+                    [key]: typeof val === 'string'
+                      ? val
+                      : {
+                          min: val.min !== null ? String(val.min) : undefined,
+                          max: val.max !== null ? String(val.max) : undefined
+                        }
                   }), {}),
                   customCriteria: customCriteria
                 }}

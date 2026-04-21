@@ -13,6 +13,7 @@ export interface VolontaireData {
   sexe?: string;
   dateNaissance?: string;
   dateI?: string; // Date d'inclusion/ajout du volontaire
+  dateModif?: string; // Date de dernière mise à jour de la fiche
 
   // Contact
   telPortableVol?: string;
@@ -122,6 +123,7 @@ export interface VolontaireTransformed {
   ville?: string;
   dateNaissance?: string;
   dateI?: string; // Date d'inclusion/ajout du volontaire
+  dateModif?: string; // Date de dernière mise à jour de la fiche
   archive?: boolean | number;
   standby?: boolean | number;
   dateFinStandby?: string;

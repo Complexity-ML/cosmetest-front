@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { VolontaireData } from '../../../types/volontaire.types';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { Separator } from '../../ui/separator';
+import { Badge } from '../../ui/badge';
 
 const STAR_VALUES = [1, 2, 3, 4, 5];
 
@@ -13,6 +14,30 @@ const SPECIFIC_EVALUATIONS = [
   { field: "notesTeint" as keyof VolontaireData, labelKey: "complexion" },
   { field: "notesCinetique" as keyof VolontaireData, labelKey: "kinetic" },
 ];
+
+const STUDY_CRITERIA: { field: keyof VolontaireData; label: string }[] = [
+  { field: "tenueLevres", label: "Tenue lèvres" },
+  { field: "tenueTeint", label: "Tenue teint" },
+  { field: "tenueBlush", label: "Tenue blush" },
+  { field: "tenueSourcil", label: "Tenue sourcil" },
+  { field: "tenueLiner", label: "Tenue liner" },
+  { field: "demaquillant", label: "Démaquillant" },
+  { field: "etudeCils", label: "Étude cils" },
+  { field: "corneoLevre", label: "Cornéo lèvre" },
+  { field: "corneoBras", label: "Cornéo bras" },
+  { field: "dtm", label: "DTM" },
+];
+
+const renderYesNo = (value: any): JSX.Element => {
+  const str = String(value ?? '').trim();
+  if (str.toLowerCase() === 'oui') {
+    return <Badge className="bg-green-600 hover:bg-green-700">Oui</Badge>;
+  }
+  if (str.toLowerCase() === 'non') {
+    return <Badge className="bg-red-600 hover:bg-red-700">Non</Badge>;
+  }
+  return <span className="text-sm text-gray-400">—</span>;
+};
 
 const getNumericValue = (value: string | number | null | undefined): number => {
   return Number.parseInt(String(value || 0), 10);
@@ -73,6 +98,20 @@ const EvaluationSection = ({ volontaireDisplayData }: EvaluationSectionProps) =>
             <div key={field} className="space-y-2">
               <p className="text-sm text-gray-700">{t(`volunteers.${labelKey}`)}</p>
               {renderStars(volontaireDisplayData[field])}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <Separator />
+
+      <div className="space-y-4">
+        <p className="text-sm font-medium text-brand-cyan">Critères d'étude</p>
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
+          {STUDY_CRITERIA.map(({ field, label }) => (
+            <div key={String(field)} className="flex items-center justify-between gap-2 rounded-md border border-gray-200 px-3 py-2">
+              <span className="text-sm text-gray-700">{label}</span>
+              {renderYesNo(volontaireDisplayData[field])}
             </div>
           ))}
         </div>

@@ -219,7 +219,7 @@ const CaracteristiquesSection = ({ formData, onChange }: any) => {
           </div>
         </div>
 
-        {/* Section Sous-ethnie avec checkboxes filtrées (multi-sélection) */}
+        {/* Section Sous-ethnie avec checkboxes filtrées (multi-sélection illimitée) */}
         <div className="md:col-span-2">
           <label className="block text-sm font-medium text-gray-700 mb-2">
             {t('volunteers.subEthnicity')}

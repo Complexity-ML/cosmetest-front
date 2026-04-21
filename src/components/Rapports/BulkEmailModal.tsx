@@ -167,8 +167,8 @@ const BulkEmailModal: React.FC<BulkEmailModalProps> = ({
 
       // Créer un onglet par groupe
       groups.forEach((group, index) => {
-        const dataRows = group.map((vol: any, rowIdx) => [
-          rowIdx + 1 + (index * BATCH_SIZE),
+        const dataRows = group.map((vol: any) => [
+          vol.id || '',
           vol.nom || '',
           vol.prenom || '',
           vol.email || '',
@@ -180,7 +180,7 @@ const BulkEmailModal: React.FC<BulkEmailModalProps> = ({
 
         // Largeur des colonnes
         ws['!cols'] = [
-          { wch: 6 },   // N°
+          { wch: 10 },  // ID
           { wch: 20 },  // Nom
           { wch: 20 },  // Prénom
           { wch: 35 },  // Email

@@ -192,7 +192,6 @@ const PeauSection = ({ formData, errors, onChange }: any) => {
             <option value="Mixte">{t('volunteers.skinTypeOptions.Mixte')}</option>
             <option value="Mixte à tendance grasse">{t('volunteers.skinTypeOptions.Mixte à tendance grasse')}</option>
             <option value="Mixte à tendance sèche">{t('volunteers.skinTypeOptions.Mixte à tendance sèche')}</option>
-            <option value="Sensible">{t('volunteers.skinTypeOptions.Sensible')}</option>
           </select>
           {errors.typePeauVisage && (
             <p className="mt-1 text-sm text-red-500">{errors.typePeauVisage}</p>

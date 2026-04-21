@@ -27,6 +27,7 @@ const transformVolontaireData = (data: VolontaireData | null): VolontaireTransfo
     ville: data.villeVol || (data as any).ville,
     dateNaissance: data.dateNaissance,
     dateI: data.dateI, // Date d'inclusion
+    dateModif: data.dateModif, // Date de dernière mise à jour
     archive: data.archive,
     standby: data.standby || (data as any).standby || false,
     dateFinStandby: data.dateFinStandby || (data as any).dateFinStandby || undefined,
@@ -281,6 +282,16 @@ const volontaireService = {
       return Promise.reject(new Error('ID de volontaire invalide'));
     }
     return api.delete(`/volontaires/${id}`);
+  },
+
+  /**
+   * Met à jour la date de dernière modification à la date du jour
+   */
+  touchDateModif: (id: number | string) => {
+    if (!isValidId(id)) {
+      return Promise.reject(new Error('ID de volontaire invalide'));
+    }
+    return api.put(`/volontaires/${id}/touch-modif`);
   },
 
   /**

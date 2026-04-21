@@ -3,7 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent } from '@/components/ui/card';
-import { Loader2, ChevronRight, Sparkles } from 'lucide-react';
+import { Loader2, ChevronRight, Sparkles, CalendarCheck } from 'lucide-react';
+import { formatDate } from '../../utils/dateUtils';
 import FormTabs from '../../components/Volontaires/FormTabs';
 import { renderVolontaireFormSection } from '../../components/Volontaires/formSections';
 import { useVolontaireForm } from './hooks/useVolontaireForm';
@@ -24,9 +25,11 @@ const VolontaireForm = () => {
     isSaving,
     formError,
     formSuccess,
+    dateModif,
     handleChange,
     handleSubmit,
     saveForm,
+    touchDateModif,
   } = useVolontaireForm({ id, isEditMode, navigate });
 
   const handleGoToHc = async () => {
@@ -70,9 +73,30 @@ const VolontaireForm = () => {
 
       <Card>
         <CardContent className="p-6">
-          <h1 className="text-2xl font-bold text-gray-800 mb-6">
-            {isEditMode ? t('volunteers.editVolunteer') : t('volunteers.addVolunteer')}
-          </h1>
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+            <h1 className="text-2xl font-bold text-gray-800">
+              {isEditMode ? t('volunteers.editVolunteer') : t('volunteers.addVolunteer')}
+            </h1>
+            {isEditMode && (
+              <div className="flex items-center gap-3">
+                {dateModif && (
+                  <span className="text-sm text-gray-600">
+                    Dernière mise à jour : <span className="font-medium">{formatDate(dateModif)}</span>
+                  </span>
+                )}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={touchDateModif}
+                  disabled={isSaving}
+                >
+                  <CalendarCheck className="h-4 w-4 mr-2" />
+                  Date mise à jour
+                </Button>
+              </div>
+            )}
+          </div>
 
           {formError && (
             <Alert variant="destructive" className="mb-6">

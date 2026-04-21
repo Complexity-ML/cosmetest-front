@@ -210,7 +210,7 @@ const InfoSection = ({
               <p className="text-sm font-medium text-brand-cyan">{t('volunteers.gender')}</p>
               <p className="text-sm text-gray-900">{formatGender(volontaireDisplayData.sexe)}</p>
             </div>
-            <div className="md:col-span-2 space-y-1">
+            <div className="space-y-1">
               <p className="text-sm font-medium text-brand-cyan">{t('volunteers.address')}</p>
               <p className="text-sm text-gray-900">
                 {volontaireDisplayData.adresseVol ? (
@@ -224,6 +224,12 @@ const InfoSection = ({
                 ) : (
                   '-'
                 )}
+              </p>
+            </div>
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-brand-cyan">Date de mise à jour</p>
+              <p className="text-sm text-gray-900">
+                {volontaireDisplayData.dateModif ? formatDate(volontaireDisplayData.dateModif) : '-'}
               </p>
             </div>
           </div>
