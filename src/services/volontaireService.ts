@@ -95,6 +95,7 @@ const transformVolontaireData = (data: VolontaireData | null): VolontaireTransfo
 
     // Notes
     notes: data.notes != null ? String(data.notes) : undefined,
+    observations: data.observations,
 
     // Caractéristiques supplémentaires
     cicatrices: data.cicatrices,

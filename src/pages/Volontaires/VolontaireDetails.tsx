@@ -133,12 +133,12 @@ const VolontaireDetails = () => {
             </BreadcrumbList>
           </Breadcrumb>
           
-          {/* Badge d'alerte pour les annulations (année en cours + N-1 uniquement) */}
+          {/* Badge d'alerte pour les annulations (année en cours uniquement, COSMETEST déjà filtrées dans le hook) */}
           {(() => {
             const currentYear = new Date().getFullYear();
             const recentAnnulations = (annulationsEtudes || []).filter((a: any) => {
               const year = new Date(a.dateAnnulation).getFullYear();
-              return year >= currentYear - 1;
+              return year === currentYear;
             });
             return recentAnnulations.length > 0 ? (
               <Badge variant="destructive" className="flex items-center gap-1 text-sm px-3 py-1.5">

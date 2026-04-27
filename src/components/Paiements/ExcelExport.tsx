@@ -131,32 +131,36 @@ const ExcelExport = ({
    * MODIFIÉ : Formate les données pour l'export Excel (seulement les actifs)
    */
   const formatDataForExcel = (paiementsActifs: Paiement[], bankingData: BankingData) => {
+    // Norme SEPA : pas d'accents, pas de & dans les libellés
+    const stripSepa = (s: string) =>
+      s.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/&/g, 'et');
+
+    const dateVirement = new Date().toLocaleDateString('fr-FR');
+
     return paiementsActifs.map((paiement: Paiement, index: number) => {
       const volontaire = volontairesInfo[paiement.idVolontaire];
       const bankInfo = bankingData[paiement.idVolontaire];
 
-      // Extraction des noms/prénoms avec plusieurs possibilités
       const prenom = volontaire?.prenom || volontaire?.prenomVol || '';
       const nom = volontaire?.nom || volontaire?.nomVol || '';
 
       const nomComplet = `${nom} ${prenom}`.trim() || '';
-      const rum = `${etude?.ref || 'ETU'}-${paiement.idVolontaire}`;
-      const dateMandat = new Date().toLocaleDateString('fr-FR');
+      const ref = `${etude?.ref || 'ETU'}-${paiement.idVolontaire}`;
       const libelle = `Indemnite ${etude?.ref || ''} - ${nomComplet}`;
 
-      // Nettoyer les retours à la ligne et espaces parasites des données bancaires
       const cleanStr = (s: string) => s.replace(/[\r\n\t]+/g, '').trim();
       const iban = bankInfo?.iban ? cleanStr(infoBancaireService.validation.formatIban(bankInfo.iban)) : '';
       const bic = bankInfo?.bic ? cleanStr(bankInfo.bic) : '';
 
       return {
-        'RUM': rum,
-        'Date mandat': dateMandat,
-        'Nom': nomComplet,
-        'IBAN': iban,
-        'BIC': bic,
+        'Entete': 'Cosmetest',
+        'Date virement': dateVirement,
+        'Nom': stripSepa(nomComplet),
+        'Iban': iban,
+        'Bic': bic,
         'Montant': paiement.iv || 0,
-        'Libelle': libelle
+        'Ref': stripSepa(ref),
+        'Libelle': stripSepa(libelle)
       };
     });
   };
@@ -197,7 +201,7 @@ const ExcelExport = ({
           return String(val ?? '').replace(/[\r\n\t"]+/g, '').replace(/;/g, ',').trim();
         }).join(';'))
       ];
-      const csvContent = '\uFEFF' + csvRows.join('\r\n'); // BOM UTF-8 pour Excel
+      const csvContent = csvRows.join('\r\n'); // Pas de BOM : SepaWin lit la 1re colonne brute
 
       // 5. Télécharger le fichier CSV
       const fileName = `Fiches_Paiement_${etude.ref || 'Etude'}_${new Date().toISOString().split('T')[0]}.csv`;
@@ -316,9 +320,9 @@ const ExcelExport = ({
         )}
 
         <div className="text-xs text-gray-500 space-y-1">
-          <p><strong>Le fichier contiendra :</strong> Nom, Prénom, IBAN, BIC, Montant</p>
+          <p><strong>Format :</strong> CSV virement SepaWin (Entete;Date virement;Nom;Iban;Bic;Montant;Ref;Libelle)</p>
+          <p><strong>Libellé envoyé au volontaire :</strong> "Indemnite [ref étude] - [nom prénom]"</p>
           <p><strong>Exclusions automatiques :</strong> Volontaires annulés (non comptabilisés)</p>
-          <p><strong>Note :</strong> Les volontaires sans RIB seront signalés dans la colonne "Remarques"</p>
         </div>
       </div>
     </div>

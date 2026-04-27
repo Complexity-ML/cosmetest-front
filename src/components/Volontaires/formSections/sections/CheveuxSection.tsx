@@ -6,6 +6,56 @@ const createSyntheticEvent = (name: string, value: string) => ({
   target: { name, value, type: 'text' }
 } as any);
 
+const NoneCheckbox = ({
+  noneId,
+  checked,
+  onToggle,
+}: {
+  noneId: string;
+  checked: boolean;
+  onToggle: () => void;
+}) => (
+  <div className="flex items-center col-span-full">
+    <input
+      type="checkbox"
+      id={noneId}
+      name={noneId}
+      checked={checked}
+      onChange={onToggle}
+      className="form-checkbox h-5 w-5 text-primary-600"
+    />
+    <label htmlFor={noneId} className="ml-2 block text-sm font-medium text-gray-700">
+      Aucun
+    </label>
+  </div>
+);
+
+const GroupCheckbox = ({
+  id,
+  label,
+  checked,
+  onToggle,
+}: {
+  id: string;
+  label: string;
+  checked: boolean;
+  onToggle: () => void;
+}) => (
+  <div className="flex items-center">
+    <input
+      type="checkbox"
+      id={id}
+      name={id}
+      checked={checked}
+      onChange={onToggle}
+      className="form-checkbox h-5 w-5 text-primary-600"
+    />
+    <label htmlFor={id} className="ml-2 block text-sm font-medium text-gray-700">
+      {label}
+    </label>
+  </div>
+);
+
 const CheveuxSection = ({ formData, onChange }: any) => {
   const { t } = useTranslation();
 
@@ -56,38 +106,6 @@ const CheveuxSection = ({ formData, onChange }: any) => {
 
   const onglesIds = ['onglesCassants', 'onglesDedoubles', 'onglesProblemeAucun'];
 
-  const NoneCheckbox = ({ groupIds, noneId }: { groupIds: string[], noneId: string }) => (
-    <div className="flex items-center col-span-full">
-      <input
-        type="checkbox"
-        id={noneId}
-        name={noneId}
-        checked={formData[noneId] === "Oui"}
-        onChange={() => handleNoneToggle(groupIds, noneId, noneId, formData[noneId] === "Oui")}
-        className="form-checkbox h-5 w-5 text-primary-600"
-      />
-      <label htmlFor={noneId} className="ml-2 block text-sm font-medium text-gray-700">
-        Aucun
-      </label>
-    </div>
-  );
-
-  const GroupCheckbox = ({ id, label, groupIds, noneId }: { id: string, label: string, groupIds: string[], noneId: string }) => (
-    <div className="flex items-center">
-      <input
-        type="checkbox"
-        id={id}
-        name={id}
-        checked={formData[id] === "Oui"}
-        onChange={() => handleNoneToggle(groupIds, noneId, id, formData[id] === "Oui")}
-        className="form-checkbox h-5 w-5 text-primary-600"
-      />
-      <label htmlFor={id} className="ml-2 block text-sm font-medium text-gray-700">
-        {label}
-      </label>
-    </div>
-  );
-
   return (
     <Card>
       <CardHeader>
@@ -115,17 +133,26 @@ const CheveuxSection = ({ formData, onChange }: any) => {
           <label htmlFor="natureCheveux" className="block text-sm font-medium text-gray-700 mb-1">
             {t('volunteers.hairNature')}
           </label>
-          <select id="natureCheveux" name="natureCheveux" value={formData.natureCheveux} onChange={onChange} className="form-select block w-full">
-            <option value="">{t('common.select')}</option>
-            <option value="Lisses">{t('volunteers.hairNatureOptions.Lisses')}</option>
-            <option value="Ondulés">{t('volunteers.hairNatureOptions.Ondulés')}</option>
-            <option value="Bouclés">{t('volunteers.hairNatureOptions.Bouclés')}</option>
-            <option value="Crépus">{t('volunteers.hairNatureOptions.Crépus')}</option>
-            <option value="Frisés">{t('volunteers.hairNatureOptions.Frisés')}</option>
-            <option value="Normaux">{t('volunteers.hairNatureOptions.Normaux')}</option>
-            <option value="Secs">{t('volunteers.hairNatureOptions.Secs')}</option>
-            <option value="Gras">{t('volunteers.hairNatureOptions.Gras')}</option>
-          </select>
+          <div className="flex flex-wrap gap-3 mt-1">
+            {['Lisse', 'Ondulé', 'Bouclé', 'Crêpu', 'Frisé'].map((opt) => {
+              const selected = getSelectedArray('natureCheveux');
+              const isSelected = selected.includes(opt);
+              return (
+                <button
+                  key={opt}
+                  type="button"
+                  onClick={() => toggleMulti('natureCheveux', opt)}
+                  className={`px-3 py-1.5 rounded text-sm border transition-colors ${
+                    isSelected
+                      ? 'bg-blue-100 border-blue-400 text-blue-800 font-medium'
+                      : 'bg-white border-gray-300 text-gray-500 hover:border-gray-400'
+                  }`}
+                >
+                  {opt}
+                </button>
+              );
+            })}
+          </div>
         </div>
         <div>
           <label htmlFor="epaisseurCheveux" className="block text-sm font-medium text-gray-700 mb-1">
@@ -222,9 +249,23 @@ const CheveuxSection = ({ formData, onChange }: any) => {
         {t('volunteers.nails')}
       </h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <NoneCheckbox groupIds={onglesIds} noneId="onglesProblemeAucun" />
-        <GroupCheckbox id="onglesCassants" label={t('volunteers.brittleNails')} groupIds={onglesIds} noneId="onglesProblemeAucun" />
-        <GroupCheckbox id="onglesDedoubles" label={t('volunteers.splitNails')} groupIds={onglesIds} noneId="onglesProblemeAucun" />
+        <NoneCheckbox
+          noneId="onglesProblemeAucun"
+          checked={formData.onglesProblemeAucun === 'Oui'}
+          onToggle={() => handleNoneToggle(onglesIds, 'onglesProblemeAucun', 'onglesProblemeAucun', formData.onglesProblemeAucun === 'Oui')}
+        />
+        <GroupCheckbox
+          id="onglesCassants"
+          label={t('volunteers.brittleNails')}
+          checked={formData.onglesCassants === 'Oui'}
+          onToggle={() => handleNoneToggle(onglesIds, 'onglesProblemeAucun', 'onglesCassants', formData.onglesCassants === 'Oui')}
+        />
+        <GroupCheckbox
+          id="onglesDedoubles"
+          label={t('volunteers.splitNails')}
+          checked={formData.onglesDedoubles === 'Oui'}
+          onToggle={() => handleNoneToggle(onglesIds, 'onglesProblemeAucun', 'onglesDedoubles', formData.onglesDedoubles === 'Oui')}
+        />
       </div>
       </CardContent>
     </Card>

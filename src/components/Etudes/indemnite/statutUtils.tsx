@@ -26,8 +26,8 @@ export const STATUT_CONFIG: Record<string, StatutConfigItem> = {
     icon: "AlertTriangle",
     style: "bg-red-100 text-red-800 border-red-300",
   },
-  etude_et_parrainage: {
-    label: "Étude et Parrainage",
+  parrainage: {
+    label: "Parrainage",
     icon: "FileText",
     style: "bg-purple-100 text-purple-800 border-purple-300",
   },
@@ -52,7 +52,7 @@ export const normalizeStatut = (statut: string | null | undefined): string => {
   if (!statut || statut === "" || statut === "-" || statut === null || statut === undefined) {
     return "inscrit";
   }
-  return statut
+  const normalized = statut
     .toString()
     .trim()
     .toLowerCase()
@@ -60,6 +60,9 @@ export const normalizeStatut = (statut: string | null | undefined): string => {
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-z0-9_\s]/g, "")
     .replace(/\s+/g, "_");
+  // Anciennes valeurs en BDD : "\u00c9tude et parrainage" mapp\u00e9 vers "parrainage"
+  if (normalized === "etude_et_parrainage") return "parrainage";
+  return normalized;
 };
 
 export const getStatutConfig = (statut: string | null | undefined): StatutConfigItem => {

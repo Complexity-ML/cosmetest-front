@@ -114,7 +114,7 @@ const SELECT_OPTIONS = {
   coupsDeSoleil: ['Jamais', 'Rarement', 'Parfois', 'Souvent', 'Toujours'],
   couleurCheveux: ['Blond', 'Châtain', 'Brun', 'Noir', 'Roux', 'Gris', 'Blanc', 'Colorés'],
   longueurCheveux: ['Courts', 'Mi-longs', 'Longs', 'Très longs'],
-  natureCheveux: ['Raides', 'Ondulés', 'Bouclés', 'Crépus'],
+  natureCheveux: ['Lisse', 'Ondulé', 'Bouclé', 'Crêpu', 'Frisé'],
   epaisseurCheveux: ['Fins', 'Moyens', 'Épais'],
   natureCuirChevelu: ['Normal', 'Gras', 'Sec', 'Mixte'],
   epaisseurCils: ['Fins', 'Moyens', 'Épais'],
@@ -538,27 +538,19 @@ export const useVolontaireForm = ({ id, isEditMode, navigate }: UseVolontaireFor
     }
   }, []);
 
-  // Effet pour mettre le focus sur le premier champ en erreur
-  useEffect(() => {
-    if (Object.keys(errors).length > 0) {
-      // Attendre que le DOM soit mis à jour avec le nouvel onglet actif
-      setTimeout(() => {
-        // Trouver le premier champ en erreur
-        const firstErrorField = Object.keys(errors)[0];
-
-        // Essayer de trouver l'élément dans le DOM par son nom
-        const element = document.querySelector(`[name="${firstErrorField}"]`) as HTMLElement;
-
-        if (element) {
-          // Scroller vers l'élément
-          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-          // Mettre le focus sur l'élément
-          element.focus();
-        }
-      }, 300); // Délai pour laisser le temps au changement d'onglet
-    }
-  }, [errors, activeTab]);
+  // Helper : focus sur le premier champ en erreur. Appelé uniquement après
+  // une tentative de soumission, pour ne pas voler le focus pendant la saisie.
+  const focusFirstErrorField = (errs: FormErrors) => {
+    const firstErrorField = Object.keys(errs)[0];
+    if (!firstErrorField) return;
+    setTimeout(() => {
+      const element = document.querySelector(`[name="${firstErrorField}"]`) as HTMLElement | null;
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        element.focus();
+      }
+    }, 300);
+  };
 
   // Chargement des données du volontaire si en mode édition
   useEffect(() => {
@@ -685,6 +677,7 @@ export const useVolontaireForm = ({ id, isEditMode, navigate }: UseVolontaireFor
 
           // Notes
           notes: detailsData.commentairesVol || "",
+          observations: detailsData.observations || "",
           evaluation: detailsData.notes || 0,
           evaluationYeux: detailsData.notesYeux || 0,
           evaluationLevres: detailsData.notesLevres || 0,
@@ -921,6 +914,7 @@ export const useVolontaireForm = ({ id, isEditMode, navigate }: UseVolontaireFor
       if (firstTabWithError) {
         setActiveTab(firstTabWithError);
       }
+      focusFirstErrorField(newErrors);
     }
 
     return Object.keys(newErrors).length === 0;
@@ -1074,6 +1068,7 @@ export const useVolontaireForm = ({ id, isEditMode, navigate }: UseVolontaireFor
 
         // Notes
         commentairesVol: defaultIfNull(formData.notes, ""),
+        observations: defaultIfNull(formData.observations, ""),
 
         //Evaluations (integers 0-5) - camelCase pour le JSON Java
         notes: Number(formData.evaluation) || 0,
@@ -1193,14 +1188,9 @@ export const useVolontaireForm = ({ id, isEditMode, navigate }: UseVolontaireFor
 
       // Création ou mise à jour du volontaire
       if (isEditMode) {
-        const today = new Date().toISOString().split('T')[0];
-        const updateResponse = await volontaireService.updateDetails(id!, {
-          ...volontaireCompleteData,
-          dateModif: today,
-        });
+        const updateResponse = await volontaireService.updateDetails(id!, volontaireCompleteData);
         console.log("✅ Réponse backend après update:", updateResponse);
         volontaireId = id!; //  Assigner l'ID existant
-        setDateModif(today);
         setFormSuccess("Volontaire mis à jour avec succès");
       } else {
         // Création d'un nouveau volontaire

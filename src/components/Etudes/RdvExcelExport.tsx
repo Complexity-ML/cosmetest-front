@@ -169,6 +169,7 @@ const RdvExcelExport: React.FC<RdvExcelExportProps> = ({
         'Téléphone',
         'Phototype',
         'Email',
+        'Observations',
         'Date/T0',
         'Heure/T0'
       ];
@@ -237,10 +238,13 @@ const RdvExcelExport: React.FC<RdvExcelExportProps> = ({
         // I: Email
         row.push(getVolunteerInfo(Number(volunteerId), 'email'));
 
-        // J: Date du premier RDV (T0)
+        // J: Observations
+        row.push(getVolunteerInfo(Number(volunteerId), 'observations'));
+
+        // K: Date du premier RDV (T0)
         row.push(volunteerRdvs[0] ? formatDate(volunteerRdvs[0].date) : '');
 
-        // K: Heure du premier RDV (T0)
+        // L: Heure du premier RDV (T0)
         row.push(volunteerRdvs[0] ? volunteerRdvs[0].heure || '' : '');
 
         // Ajouter les données des passages supplémentaires T1, T2, T3...
@@ -294,10 +298,13 @@ const RdvExcelExport: React.FC<RdvExcelExportProps> = ({
         // I: Email
         row.push('');
 
-        // J: Date
+        // J: Observations
+        row.push('');
+
+        // K: Date
         row.push(formatDate(rdv.date));
 
-        // K: Heure
+        // L: Heure
         row.push(rdv.heure || '');
 
         // Remplir les autres passages avec des cellules vides
@@ -435,8 +442,9 @@ const RdvExcelExport: React.FC<RdvExcelExportProps> = ({
         { width: 15 }, // G: Téléphone
         { width: 12 }, // H: Phototype
         { width: 30 }, // I: Email
-        { width: 12 }, // J: Date
-        { width: 8 }   // K: Heure
+        { width: 30 }, // J: Observations
+        { width: 12 }, // K: Date
+        { width: 8 }   // L: Heure
       ];
 
       // Ajouter les largeurs pour T1, T2, T3...

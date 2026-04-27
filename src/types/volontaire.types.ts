@@ -101,6 +101,7 @@ export interface VolontaireData {
   // Notes et commentaires
   notes?: number; // Note globale (évaluation en étoiles 0-5)
   commentairesVol?: string; // Commentaires textuels
+  observations?: string; // Observations sur le dossier (pièces manquantes, etc.)
 
   // Évaluations détaillées (étoiles 0-5) - camelCase pour le JSON Java
   notesYeux?: number;

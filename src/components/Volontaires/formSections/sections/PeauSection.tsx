@@ -6,6 +6,91 @@ const createSyntheticEvent = (name: string, value: string) => ({
   target: { name, value, type: 'text' }
 } as any);
 
+const NoneCheckbox = ({
+  noneId,
+  checked,
+  onToggle,
+}: {
+  noneId: string;
+  checked: boolean;
+  onToggle: () => void;
+}) => (
+  <div className="flex items-center col-span-full">
+    <input
+      type="checkbox"
+      id={noneId}
+      name={noneId}
+      checked={checked}
+      onChange={onToggle}
+      className="form-checkbox h-5 w-5 text-primary-600"
+    />
+    <label htmlFor={noneId} className="ml-2 block text-sm font-medium text-gray-700">
+      Aucun
+    </label>
+  </div>
+);
+
+const GroupCheckbox = ({
+  id,
+  label,
+  checked,
+  onToggle,
+}: {
+  id: string;
+  label: string;
+  checked: boolean;
+  onToggle: () => void;
+}) => (
+  <div className="flex items-center">
+    <input
+      type="checkbox"
+      id={id}
+      name={id}
+      checked={checked}
+      onChange={onToggle}
+      className="form-checkbox h-5 w-5 text-primary-600"
+    />
+    <label htmlFor={id} className="ml-2 block text-sm font-medium text-gray-700">
+      {label}
+    </label>
+  </div>
+);
+
+const MultiSelectGroup = ({
+  options,
+  title,
+  selected,
+  onToggle,
+}: {
+  options: string[];
+  title: string;
+  selected: string[];
+  onToggle: (option: string) => void;
+}) => (
+  <>
+    <h3 className="text-md font-medium text-gray-800 mt-6 mb-3">{title}</h3>
+    <div className="flex flex-wrap gap-2">
+      {options.map((option) => {
+        const isSelected = selected.includes(option);
+        return (
+          <button
+            key={option}
+            type="button"
+            onClick={() => onToggle(option)}
+            className={`px-3 py-1.5 rounded text-sm border transition-colors ${
+              isSelected
+                ? "bg-blue-100 border-blue-400 text-blue-800 font-medium"
+                : "bg-white border-gray-300 text-gray-500 hover:border-gray-400"
+            }`}
+          >
+            {option}
+          </button>
+        );
+      })}
+    </div>
+  </>
+);
+
 const PeauSection = ({ formData, errors, onChange }: any) => {
   const { t } = useTranslation();
 
@@ -57,66 +142,6 @@ const PeauSection = ({ formData, errors, onChange }: any) => {
   const secheresseOptions = ["Aucune", "Lèvres", "Cou", "Poitrine / Décolleté", "Ventre / Taille", "Fesses / Hanches", "Bras", "Mains", "Avant-bras"];
   const yeuxOptions = ["Aucun", "Cernes pigmentaires", "Cernes vasculaires", "Poches"];
   const fermeteOptions = ["Aucune", "Visage", "Cou", "Décolleté / Poitrine", "Avant-bras"];
-
-  const MultiSelectGroup = ({ fieldName, options, title }: { fieldName: string, options: string[], title: string }) => {
-    const selected = getSelectedArray(fieldName);
-    return (
-      <>
-        <h3 className="text-md font-medium text-gray-800 mt-6 mb-3">{title}</h3>
-        <div className="flex flex-wrap gap-2">
-          {options.map((option) => {
-            const isSelected = selected.includes(option);
-            return (
-              <button
-                key={option}
-                type="button"
-                onClick={() => toggleMulti(fieldName, option)}
-                className={`px-3 py-1.5 rounded text-sm border transition-colors ${
-                  isSelected
-                    ? "bg-blue-100 border-blue-400 text-blue-800 font-medium"
-                    : "bg-white border-gray-300 text-gray-500 hover:border-gray-400"
-                }`}
-              >
-                {option}
-              </button>
-            );
-          })}
-        </div>
-      </>
-    );
-  };
-
-  const NoneCheckbox = ({ groupIds, noneId }: { groupIds: string[], noneId: string }) => (
-    <div className="flex items-center col-span-full">
-      <input
-        type="checkbox"
-        id={noneId}
-        name={noneId}
-        checked={formData[noneId] === "Oui"}
-        onChange={() => handleNoneToggle(groupIds, noneId, noneId, formData[noneId] === "Oui")}
-        className="form-checkbox h-5 w-5 text-primary-600"
-      />
-      <label htmlFor={noneId} className="ml-2 block text-sm font-medium text-gray-700">
-        Aucun
-      </label>
-    </div>
-  );
-
-  const GroupCheckbox = ({ id, label, groupIds, noneId }: { id: string, label: string, groupIds: string[], noneId: string }) => (
-    <div className="flex items-center">
-      <input
-        type="checkbox"
-        id={id}
-        name={id}
-        checked={formData[id] === "Oui"}
-        onChange={() => handleNoneToggle(groupIds, noneId, id, formData[id] === "Oui")}
-        className="form-checkbox h-5 w-5 text-primary-600"
-      />
-      <label htmlFor={id} className="ml-2 block text-sm font-medium text-gray-700">
-        {label}
-      </label>
-    </div>
-  );
 
   return (
     <Card>
@@ -323,29 +348,56 @@ const PeauSection = ({ formData, errors, onChange }: any) => {
         {t('volunteers.cellulite')}
       </h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <NoneCheckbox groupIds={celluliteIds} noneId="celluliteAucun" />
-        <GroupCheckbox id="celluliteBras" label={t('volunteers.celluliteArms')} groupIds={celluliteIds} noneId="celluliteAucun" />
-        <GroupCheckbox id="celluliteFessesHanches" label={t('volunteers.celluliteButtocksHips')} groupIds={celluliteIds} noneId="celluliteAucun" />
-        <GroupCheckbox id="celluliteJambes" label={t('volunteers.celluliteLegs')} groupIds={celluliteIds} noneId="celluliteAucun" />
-        <GroupCheckbox id="celluliteVentreTaille" label={t('volunteers.celluliteBellyWaist')} groupIds={celluliteIds} noneId="celluliteAucun" />
+        <NoneCheckbox
+          noneId="celluliteAucun"
+          checked={formData.celluliteAucun === 'Oui'}
+          onToggle={() => handleNoneToggle(celluliteIds, 'celluliteAucun', 'celluliteAucun', formData.celluliteAucun === 'Oui')}
+        />
+        <GroupCheckbox
+          id="celluliteBras"
+          label={t('volunteers.celluliteArms')}
+          checked={formData.celluliteBras === 'Oui'}
+          onToggle={() => handleNoneToggle(celluliteIds, 'celluliteAucun', 'celluliteBras', formData.celluliteBras === 'Oui')}
+        />
+        <GroupCheckbox
+          id="celluliteFessesHanches"
+          label={t('volunteers.celluliteButtocksHips')}
+          checked={formData.celluliteFessesHanches === 'Oui'}
+          onToggle={() => handleNoneToggle(celluliteIds, 'celluliteAucun', 'celluliteFessesHanches', formData.celluliteFessesHanches === 'Oui')}
+        />
+        <GroupCheckbox
+          id="celluliteJambes"
+          label={t('volunteers.celluliteLegs')}
+          checked={formData.celluliteJambes === 'Oui'}
+          onToggle={() => handleNoneToggle(celluliteIds, 'celluliteAucun', 'celluliteJambes', formData.celluliteJambes === 'Oui')}
+        />
+        <GroupCheckbox
+          id="celluliteVentreTaille"
+          label={t('volunteers.celluliteBellyWaist')}
+          checked={formData.celluliteVentreTaille === 'Oui'}
+          onToggle={() => handleNoneToggle(celluliteIds, 'celluliteAucun', 'celluliteVentreTaille', formData.celluliteVentreTaille === 'Oui')}
+        />
       </div>
 
       <MultiSelectGroup
-        fieldName="secheressePeau"
         options={secheresseOptions}
         title={t('volunteers.skinDryness')}
+        selected={getSelectedArray('secheressePeau')}
+        onToggle={(opt) => toggleMulti('secheressePeau', opt)}
       />
 
       <MultiSelectGroup
-        fieldName="perteDeFermete"
         options={fermeteOptions}
         title={t('volunteers.lossOfFirmness')}
+        selected={getSelectedArray('perteDeFermete')}
+        onToggle={(opt) => toggleMulti('perteDeFermete', opt)}
       />
 
       <MultiSelectGroup
-        fieldName="problemesYeux"
         options={yeuxOptions}
         title={t('volunteers.eyeProblems')}
+        selected={getSelectedArray('problemesYeux')}
+        onToggle={(opt) => toggleMulti('problemesYeux', opt)}
       />
 
       </CardContent>

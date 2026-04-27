@@ -187,18 +187,23 @@ const VolontaireDetailRdv = ({ rdvs = [], volontaireId }: VolontaireDetailRdvPro
 
   return (
     <div>
-      {/* Alerte si des RDVs annulés */}
-      {Array.from(annulationsMap.values()).length > 0 && (
-        <Alert variant="destructive" className="mb-4">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>
-            <span className="font-semibold">
-              {Array.from(annulationsMap.values()).length} {Array.from(annulationsMap.values()).length > 1 ? t('appointments.appointmentsCancelledPlural') : t('appointments.appointmentsCancelled')}
-            </span>
-            {' '}{t('appointments.inVolunteerHistory')}
-          </AlertDescription>
-        </Alert>
-      )}
+      {/* Alerte si des RDVs annulés (compteur exclut les annulations COSMETEST ; les badges par RDV restent visibles plus bas) */}
+      {(() => {
+        const annulationsHorsCosmetest = Array.from(annulationsMap.values()).filter(
+          (a: any) => (a.annulePar || '').toString().toUpperCase() !== 'COSMETEST'
+        );
+        return annulationsHorsCosmetest.length > 0 ? (
+          <Alert variant="destructive" className="mb-4">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>
+              <span className="font-semibold">
+                {annulationsHorsCosmetest.length} {annulationsHorsCosmetest.length > 1 ? t('appointments.appointmentsCancelledPlural') : t('appointments.appointmentsCancelled')}
+              </span>
+              {' '}{t('appointments.inVolunteerHistory')}
+            </AlertDescription>
+          </Alert>
+        ) : null;
+      })()}
 
       {/* Bouton d'export global */}
       <div className="flex justify-end mb-4">

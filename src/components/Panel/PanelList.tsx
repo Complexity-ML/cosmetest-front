@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import api from '../../services/api';
+import { formatPhoneNumber } from '../../utils/formatters';
 
 // Import des icônes
 import clipboardSvg from '../../assets/icons/clipboard.svg';
@@ -467,7 +468,7 @@ const PanelList = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">{panel.email}</div>
-                      <div className="text-sm text-gray-500">{panel.telephone}</div>
+                      <div className="text-sm text-gray-500">{formatPhoneNumber(panel.telephone)}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex space-x-2">

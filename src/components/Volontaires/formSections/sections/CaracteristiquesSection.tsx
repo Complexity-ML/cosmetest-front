@@ -52,6 +52,20 @@ const SOUS_ETHNIES_PAR_ETHNIE: Record<string, string[]> = {
 const CaracteristiquesSection = ({ formData, onChange }: any) => {
   const { t } = useTranslation();
 
+  // Helpers pour origine père/mère (multi-select stocké en CSV)
+  const parseCsv = (val: any): string[] => {
+    if (!val) return [];
+    if (Array.isArray(val)) return val;
+    return String(val).split(',').map((s) => s.trim()).filter(Boolean);
+  };
+  const toggleParent = (field: 'originePere' | 'origineMere', option: string) => {
+    const current = parseCsv(formData[field]);
+    const next = current.includes(option)
+      ? current.filter((v) => v !== option)
+      : [...current, option];
+    onChange({ target: { name: field, value: next.join(','), type: 'text' } } as any);
+  };
+
   // Parser les ethnies (peut être un string séparé par des virgules ou un tableau)
   const getEthniesArray = (): string[] => {
     if (!formData.ethnie) return [];
@@ -294,38 +308,56 @@ const CaracteristiquesSection = ({ formData, onChange }: any) => {
           </select>
         </div>
 
-        <div>
-          <label
-            htmlFor="originePere"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
+        <div className="md:col-span-2">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
             {t('volunteers.fatherOrigin')}
           </label>
-          <input
-            type="text"
-            id="originePere"
-            name="originePere"
-            value={formData.originePere}
-            onChange={onChange}
-            className="form-input block w-full"
-          />
+          <div className="flex flex-wrap gap-4">
+            {ETHNIES_PRINCIPALES.map((ethnie) => {
+              const isSelected = parseCsv(formData.originePere).includes(ethnie);
+              return (
+                <div key={`pere-${ethnie}`} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`originePere-${ethnie}`}
+                    checked={isSelected}
+                    onCheckedChange={() => toggleParent('originePere', ethnie)}
+                  />
+                  <Label
+                    htmlFor={`originePere-${ethnie}`}
+                    className="text-sm font-normal cursor-pointer"
+                  >
+                    {t(`volunteers.ethnicityOptions.${ethnie}`)}
+                  </Label>
+                </div>
+              );
+            })}
+          </div>
         </div>
 
-        <div>
-          <label
-            htmlFor="origineMere"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
+        <div className="md:col-span-2">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
             {t('volunteers.motherOrigin')}
           </label>
-          <input
-            type="text"
-            id="origineMere"
-            name="origineMere"
-            value={formData.origineMere}
-            onChange={onChange}
-            className="form-input block w-full"
-          />
+          <div className="flex flex-wrap gap-4">
+            {ETHNIES_PRINCIPALES.map((ethnie) => {
+              const isSelected = parseCsv(formData.origineMere).includes(ethnie);
+              return (
+                <div key={`mere-${ethnie}`} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`origineMere-${ethnie}`}
+                    checked={isSelected}
+                    onCheckedChange={() => toggleParent('origineMere', ethnie)}
+                  />
+                  <Label
+                    htmlFor={`origineMere-${ethnie}`}
+                    className="text-sm font-normal cursor-pointer"
+                  >
+                    {t(`volunteers.ethnicityOptions.${ethnie}`)}
+                  </Label>
+                </div>
+              );
+            })}
+          </div>
         </div>
 
         <div className="md:col-span-2">

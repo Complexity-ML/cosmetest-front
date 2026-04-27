@@ -6,6 +6,32 @@ const createSyntheticEvent = (name: string, value: string) => ({
   target: { name, value, type: 'text' }
 } as any);
 
+const GroupCheckbox = ({
+  id,
+  label,
+  checked,
+  onToggle,
+}: {
+  id: string;
+  label: string;
+  checked: boolean;
+  onToggle: () => void;
+}) => (
+  <div className="flex items-center">
+    <input
+      type="checkbox"
+      id={id}
+      name={id}
+      checked={checked}
+      onChange={onToggle}
+      className="form-checkbox h-5 w-5 text-primary-600"
+    />
+    <label htmlFor={id} className="ml-2 block text-sm font-medium text-gray-700">
+      {label}
+    </label>
+  </div>
+);
+
 const ProblemesSection = ({ formData, onChange }: any) => {
   const { t } = useTranslation();
 
@@ -36,22 +62,6 @@ const ProblemesSection = ({ formData, onChange }: any) => {
     }
   }, [formData, onChange]);
 
-  const GroupCheckbox = ({ id, label }: { id: string, label: string }) => (
-    <div className="flex items-center">
-      <input
-        type="checkbox"
-        id={id}
-        name={id}
-        checked={formData[id] === "Oui"}
-        onChange={() => handleNoneToggle(id, formData[id] === "Oui")}
-        className="form-checkbox h-5 w-5 text-primary-600"
-      />
-      <label htmlFor={id} className="ml-2 block text-sm font-medium text-gray-700">
-        {label}
-      </label>
-    </div>
-  );
-
   return (
     <Card>
       <CardHeader>
@@ -72,11 +82,36 @@ const ProblemesSection = ({ formData, onChange }: any) => {
             Aucun
           </label>
         </div>
-        <GroupCheckbox id="acne" label={t('volunteers.acne')} />
-        <GroupCheckbox id="couperoseRosacee" label={t('volunteers.couperoseRosacea')} />
-        <GroupCheckbox id="dermiteSeborrheique" label={t('volunteers.seborrheicDermatitis')} />
-        <GroupCheckbox id="eczema" label={t('volunteers.eczema')} />
-        <GroupCheckbox id="psoriasis" label={t('volunteers.psoriasis')} />
+        <GroupCheckbox
+          id="acne"
+          label={t('volunteers.acne')}
+          checked={formData.acne === 'Oui'}
+          onToggle={() => handleNoneToggle('acne', formData.acne === 'Oui')}
+        />
+        <GroupCheckbox
+          id="couperoseRosacee"
+          label={t('volunteers.couperoseRosacea')}
+          checked={formData.couperoseRosacee === 'Oui'}
+          onToggle={() => handleNoneToggle('couperoseRosacee', formData.couperoseRosacee === 'Oui')}
+        />
+        <GroupCheckbox
+          id="dermiteSeborrheique"
+          label={t('volunteers.seborrheicDermatitis')}
+          checked={formData.dermiteSeborrheique === 'Oui'}
+          onToggle={() => handleNoneToggle('dermiteSeborrheique', formData.dermiteSeborrheique === 'Oui')}
+        />
+        <GroupCheckbox
+          id="eczema"
+          label={t('volunteers.eczema')}
+          checked={formData.eczema === 'Oui'}
+          onToggle={() => handleNoneToggle('eczema', formData.eczema === 'Oui')}
+        />
+        <GroupCheckbox
+          id="psoriasis"
+          label={t('volunteers.psoriasis')}
+          checked={formData.psoriasis === 'Oui'}
+          onToggle={() => handleNoneToggle('psoriasis', formData.psoriasis === 'Oui')}
+        />
       </div>
       </CardContent>
     </Card>

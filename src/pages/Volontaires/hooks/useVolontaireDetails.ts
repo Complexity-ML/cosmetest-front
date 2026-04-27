@@ -139,7 +139,11 @@ export const useVolontaireDetails = ({ id, navigate }: UseVolontaireDetailsParam
       );
 
       enrichedAnnulations.sort((a, b) => new Date(b.dateAnnulation).getTime() - new Date(a.dateAnnulation).getTime());
-      setAnnulationsEtudes(enrichedAnnulations);
+      // Exclure les annulations faites par Cosmetest : ne doivent jamais apparaître sur la fiche
+      const visibles = enrichedAnnulations.filter(
+        (a: any) => (a.annulePar || '').toString().toUpperCase() !== 'COSMETEST'
+      );
+      setAnnulationsEtudes(visibles);
     } catch (fetchError) {
       console.warn("Erreur lors du chargement des annulations d'études:", fetchError);
       setAnnulationsEtudes([]);

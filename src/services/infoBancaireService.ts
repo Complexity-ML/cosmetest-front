@@ -229,18 +229,9 @@ const infoBancaireService = {
       const cleanIban = iban.replace(/\s/g, '').toUpperCase();
 
       // IBAN européen : 2 lettres (pays) + 2 chiffres de contrôle + 10 à 30 caractères alphanumériques
+      // Pas de check modulo 97 ici : la banque valide réellement lors du virement
       const ibanRegex = /^[A-Z]{2}[0-9]{2}[A-Z0-9]{10,30}$/;
-
-      if (!ibanRegex.test(cleanIban)) return false;
-
-      // Vérification modulo 97 (norme ISO 13616)
-      const rearranged = cleanIban.slice(4) + cleanIban.slice(0, 4);
-      const numericString = rearranged.replace(/[A-Z]/g, (ch) => String(ch.charCodeAt(0) - 55));
-      let remainder = numericString.slice(0, 9);
-      for (let i = 9; i < numericString.length; i += 7) {
-        remainder = String(parseInt(remainder, 10) % 97) + numericString.slice(i, i + 7);
-      }
-      return parseInt(remainder, 10) % 97 === 1;
+      return ibanRegex.test(cleanIban);
     },
 
     /**

@@ -58,16 +58,16 @@ const InfoSection = ({
   const [isLoadingEtudes, setIsLoadingEtudes] = useState(false);
   const [showAllEtudes, setShowAllEtudes] = useState(false);
 
-  // Filtrer les annulations pour exclure celles faites par Cosmetest
+  // Filtrer les annulations pour exclure celles faites par Cosmetest (sécurité : déjà filtré au niveau du hook)
   const annulationsParVolontaire = annulationsEtudes.filter(
-    (annulation) => annulation.annulePar !== 'COSMETEST'
+    (annulation) => (annulation.annulePar || '').toString().toUpperCase() !== 'COSMETEST'
   );
 
-  // Pour l'alerte/compteur : ne compter que année en cours + N-1
+  // Pour l'alerte/compteur sur la fiche principale : année en cours uniquement
   const currentYear = new Date().getFullYear();
   const annulationsRecentes = annulationsParVolontaire.filter((a) => {
     const year = new Date(a.dateAnnulation || '').getFullYear();
-    return year >= currentYear - 1;
+    return year === currentYear;
   });
 
   useEffect(() => {
@@ -241,11 +241,19 @@ const InfoSection = ({
           <CardTitle>{t('volunteers.comments')}</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-1">
-            <p className="text-sm font-medium text-brand-cyan">{t('volunteers.comments')}</p>
-            <p className="text-sm text-gray-900 whitespace-pre-line">
-              {displayValue(volontaireDisplayData.commentairesVol)}
-            </p>
+          <div className="space-y-4">
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-brand-cyan">{t('volunteers.comments')}</p>
+              <p className="text-sm text-gray-900 whitespace-pre-line">
+                {displayValue(volontaireDisplayData.commentairesVol)}
+              </p>
+            </div>
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-brand-cyan">Observations</p>
+              <p className="text-sm text-gray-900 whitespace-pre-line">
+                {displayValue(volontaireDisplayData.observations)}
+              </p>
+            </div>
           </div>
         </CardContent>
       </Card>

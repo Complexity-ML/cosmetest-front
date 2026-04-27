@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api from '../../services/api';
 import { calculateAgeFromDate } from '../../utils/dateUtils';
+import { formatPhoneNumber } from '../../utils/formatters';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Alert, AlertDescription } from '../../components/ui/alert';
@@ -350,7 +351,7 @@ const VolontaireHcDetail = () => {
                   <p><span className="font-medium">{t('volunteers.email')}:</span> {volontaireInfo.email}</p>
                 )}
                 {volontaireInfo.telephone && (
-                  <p><span className="font-medium">{t('volunteers.phone')}:</span> {volontaireInfo.telephone}</p>
+                  <p><span className="font-medium">{t('volunteers.phone')}:</span> {formatPhoneNumber(volontaireInfo.telephone)}</p>
                 )}
               </div>
             </div>
@@ -461,7 +462,7 @@ const VolontaireHcDetail = () => {
                   <p><span className="font-medium">{t('volunteers.email')}:</span> {volontaireInfo.email}</p>
                 )}
                 {volontaireInfo.telephone && (
-                  <p><span className="font-medium">{t('volunteers.phone')}:</span> {volontaireInfo.telephone}</p>
+                  <p><span className="font-medium">{t('volunteers.phone')}:</span> {formatPhoneNumber(volontaireInfo.telephone)}</p>
                 )}
               </div>
             </div>

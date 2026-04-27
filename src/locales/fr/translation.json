@@ -239,7 +239,7 @@
         "specificProblems": "Problèmes spécifiques",
         "medicalInformation": "Informations médicales",
         "measurements": "Mesures",
-        "notes": "Notes",
+        "notes": "Commentaires",
         "bankDetails": "RIB",
         "evaluation": "Évaluation",
         "medecineEsthetique": "Médecine esthétique"
@@ -368,7 +368,8 @@
         "scorePtose": "Score Ptose",
         "ita": "ITA",
         "levres": "Lèvres",
-        "notes": "Notes",
+        "notes": "Commentaires",
+        "observations": "Observations",
         "iban": "IBAN",
         "bic": "BIC",
         "evaluation": "Évaluation globale",
