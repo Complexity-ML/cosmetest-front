@@ -12,6 +12,7 @@ import { Button } from '../../ui/button';
 import { Alert, AlertDescription } from '../../ui/alert';
 import { AlertTriangle, XCircle, Calendar, FileText, BookOpen, CheckCircle } from 'lucide-react';
 import etudeVolontaireService from '../../../services/etudeVolontaireService';
+import volontaireService from '../../../services/volontaireService';
 import api from '../../../services/api';
 
 interface AnnulationEtude {
@@ -57,6 +58,36 @@ const InfoSection = ({
   const [etudesEnCours, setEtudesEnCours] = useState<EtudeEnCours[]>([]);
   const [isLoadingEtudes, setIsLoadingEtudes] = useState(false);
   const [showAllEtudes, setShowAllEtudes] = useState(false);
+
+  // Date de mise à jour gérée localement pour que l'alerte disparaisse dès clic
+  const [localDateModif, setLocalDateModif] = useState<string | undefined>(volontaireDisplayData.dateModif);
+  const [isTouchingDateModif, setIsTouchingDateModif] = useState(false);
+  useEffect(() => {
+    setLocalDateModif(volontaireDisplayData.dateModif);
+  }, [volontaireDisplayData.dateModif]);
+
+  const needsUpdate = (() => {
+    if (!localDateModif) return true;
+    const d = new Date(localDateModif);
+    if (isNaN(d.getTime())) return true;
+    const twoYearsAgo = new Date();
+    twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2);
+    return d.getTime() < twoYearsAgo.getTime();
+  })();
+
+  const handleTouchDateModif = async () => {
+    if (!volontaireId) return;
+    setIsTouchingDateModif(true);
+    try {
+      await volontaireService.touchDateModif(volontaireId);
+      setLocalDateModif(new Date().toISOString());
+    } catch (err) {
+      console.error('Erreur lors de la mise à jour de la date:', err);
+      alert('Impossible de mettre à jour la date. Réessaye.');
+    } finally {
+      setIsTouchingDateModif(false);
+    }
+  };
 
   // Filtrer les annulations pour exclure celles faites par Cosmetest (sécurité : déjà filtré au niveau du hook)
   const annulationsParVolontaire = annulationsEtudes.filter(
@@ -162,6 +193,29 @@ const InfoSection = ({
     </div>
 
     <div className="lg:col-span-2 space-y-6">
+      {needsUpdate && (
+        <Alert className="border-amber-300 bg-amber-50">
+          <AlertTriangle className="h-4 w-4 text-amber-600" />
+          <AlertDescription className="flex items-center justify-between gap-3">
+            <span className="text-sm text-amber-800">
+              <strong>Fiche à mettre à jour :</strong>{' '}
+              {localDateModif
+                ? `dernière maj le ${formatDate(localDateModif)} (plus de 2 ans)`
+                : 'aucune date de mise à jour enregistrée'}
+            </span>
+            <Button
+              size="sm"
+              variant="outline"
+              className="border-amber-400 bg-white text-amber-800 hover:bg-amber-100 shrink-0"
+              onClick={handleTouchDateModif}
+              disabled={isTouchingDateModif}
+            >
+              {isTouchingDateModif ? 'Mise à jour…' : 'J\'ai mis à jour la fiche'}
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+
       <Card>
         <CardHeader>
           <CardTitle>{t('volunteers.contact')}</CardTitle>
@@ -229,7 +283,7 @@ const InfoSection = ({
             <div className="space-y-1">
               <p className="text-sm font-medium text-brand-cyan">Date de mise à jour</p>
               <p className="text-sm text-gray-900">
-                {volontaireDisplayData.dateModif ? formatDate(volontaireDisplayData.dateModif) : '-'}
+                {localDateModif ? formatDate(localDateModif) : '-'}
               </p>
             </div>
           </div>

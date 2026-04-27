@@ -411,6 +411,26 @@ const volontaireService = {
     return response;
   },
 
+  /**
+   * Recherche "Suivi volontaires" (onglet Rapports) :
+   * filtres date de mise à jour + volontaires sans étude / sans étude cette année.
+   */
+  searchSuivi: async (params: {
+    dateModifFrom?: string;
+    dateModifTo?: string;
+    sansEtude?: boolean;
+    sansEtudeAnneeEnCours?: boolean;
+    includeArchived?: boolean;
+    page?: number;
+    size?: number;
+  }) => {
+    const response = await api.get('/volontaires/suivi', { params });
+    if (response.data?.content) {
+      response.data.content = response.data.content.map(transformVolontaireData);
+    }
+    return response;
+  },
+
   // ==================== MÉTHODES DE FILTRAGE ====================
 
   /**

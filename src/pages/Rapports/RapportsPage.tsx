@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import MatchingSystem from '../../components/Rapports/MatchingSystem';
+import SuiviVolontaires from '../../components/Rapports/SuiviVolontaires';
 
 // Icônes simples
 const ChartIcon = () => (
@@ -41,6 +42,13 @@ const RapportsPage = () => {
       available: true
     },
     {
+      id: 'suivi',
+      title: 'Suivi volontaires',
+      icon: <ClipboardIcon />,
+      description: 'Trouve les volontaires à mettre à jour, sans étude récente, ou jamais utilisés.',
+      available: true
+    },
+    {
       id: 'stats',
       title: t('reports.statistics'),
       icon: <ChartIcon />,
@@ -67,7 +75,10 @@ const RapportsPage = () => {
     switch (activeTab) {
       case 'matching':
         return <MatchingSystem />;
-      
+
+      case 'suivi':
+        return <SuiviVolontaires />;
+
       case 'stats':
       case 'activity':
       case 'planning':
