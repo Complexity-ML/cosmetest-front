@@ -27,8 +27,6 @@ interface VolontaireRow {
 const SuiviVolontaires = () => {
   const [dateModifFrom, setDateModifFrom] = useState('');
   const [dateModifTo, setDateModifTo] = useState('');
-  const [sansEtude, setSansEtude] = useState(false);
-  const [sansEtudeAnneeEnCours, setSansEtudeAnneeEnCours] = useState(false);
   const [includeArchived, setIncludeArchived] = useState(false);
 
   const [volontaires, setVolontaires] = useState<VolontaireRow[]>([]);
@@ -47,8 +45,6 @@ const SuiviVolontaires = () => {
       const response = await volontaireService.searchSuivi({
         dateModifFrom: dateModifFrom || undefined,
         dateModifTo: dateModifTo || undefined,
-        sansEtude,
-        sansEtudeAnneeEnCours,
         includeArchived,
         page: targetPage,
         size,
@@ -64,11 +60,11 @@ const SuiviVolontaires = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [dateModifFrom, dateModifTo, sansEtude, sansEtudeAnneeEnCours, includeArchived, size]);
+  }, [dateModifFrom, dateModifTo, includeArchived, size]);
 
   useEffect(() => {
     if (hasSearched) fetchResults(0);
-  }, [sansEtude, sansEtudeAnneeEnCours, includeArchived]);
+  }, [includeArchived]);
 
   const formatDate = (s?: string) => {
     if (!s) return '-';
@@ -94,7 +90,7 @@ const SuiviVolontaires = () => {
             Suivi des volontaires
           </CardTitle>
           <p className="text-sm text-muted-foreground">
-            Trouve les volontaires à mettre à jour, sans étude récente, ou jamais utilisés.
+            Trouve les volontaires à mettre à jour selon la date de dernière modification de leur fiche.
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -122,24 +118,6 @@ const SuiviVolontaires = () => {
           </div>
 
           <div className="flex flex-wrap items-center gap-6">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="sansEtude"
-                checked={sansEtude}
-                onCheckedChange={(c) => setSansEtude(c as boolean)}
-              />
-              <Label htmlFor="sansEtude" className="font-normal text-sm">Aucune étude</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="sansEtudeAnnee"
-                checked={sansEtudeAnneeEnCours}
-                onCheckedChange={(c) => setSansEtudeAnneeEnCours(c as boolean)}
-              />
-              <Label htmlFor="sansEtudeAnnee" className="font-normal text-sm">
-                Aucune étude cette année ({new Date().getFullYear()})
-              </Label>
-            </div>
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="suiviIncludeArchived"

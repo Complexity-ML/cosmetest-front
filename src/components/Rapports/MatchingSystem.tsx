@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import api from '../../services/api';
 import etudeService from '../../services/etudeService';
 import etudeVolontaireService from '../../services/etudeVolontaireService';
+import volontaireService from '../../services/volontaireService';
 import { SearchIcon, UserIcon } from './icons';
 import { EVALUATION_FIELDS } from './constants';
 import {
@@ -55,6 +56,19 @@ const MatchingSystem = () => {
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [selectedVolontaires, setSelectedVolontaires] = useState<any[]>([]);
   const [customCriteria, setCustomCriteria] = useState<CustomCriterion[]>([]);
+
+  // Filtres déplacés depuis l'ancien onglet Suivi
+  const [adminFilters, setAdminFilters] = useState({
+    dateModifFrom: '',
+    dateModifTo: '',
+    sansEtude: false,
+    sansEtudeAnneeEnCours: false,
+  });
+  const adminFiltersActive =
+    !!adminFilters.dateModifFrom ||
+    !!adminFilters.dateModifTo ||
+    adminFilters.sansEtude ||
+    adminFilters.sansEtudeAnneeEnCours;
 
   const makeupSelectionCount =
     filters.makeup.visage.length +
@@ -260,16 +274,35 @@ const MatchingSystem = () => {
 
     try {
       // Get all volunteers IDs first (excluding archived ones)
-      let allVolontairesIds = [];
+      let allVolontairesIds: any[] = [];
       let page = 0;
       let hasMore = true;
 
-      while (hasMore) {
-        const responseIds = await api.get(`/volontaires?page=${page}&size=1000&includeArchived=false`);
-        const idsData = responseIds.data?.content || [];
-        allVolontairesIds.push(...idsData);
-        hasMore = !responseIds.data?.last;
-        page++;
+      // Si des filtres admin sont actifs, on pré-filtre via l'endpoint suivi
+      if (adminFiltersActive) {
+        while (hasMore) {
+          const responseIds = await volontaireService.searchSuivi({
+            dateModifFrom: adminFilters.dateModifFrom || undefined,
+            dateModifTo: adminFilters.dateModifTo || undefined,
+            sansEtude: adminFilters.sansEtude,
+            sansEtudeAnneeEnCours: adminFilters.sansEtudeAnneeEnCours,
+            includeArchived: false,
+            page,
+            size: 1000,
+          });
+          const idsData = responseIds.data?.content || [];
+          allVolontairesIds.push(...idsData);
+          hasMore = !responseIds.data?.last;
+          page++;
+        }
+      } else {
+        while (hasMore) {
+          const responseIds = await api.get(`/volontaires?page=${page}&size=1000&includeArchived=false`);
+          const idsData = responseIds.data?.content || [];
+          allVolontairesIds.push(...idsData);
+          hasMore = !responseIds.data?.last;
+          page++;
+        }
       }
 
       // Get detailed data for each volunteer using the correct route with limited concurrency
@@ -554,7 +587,62 @@ const MatchingSystem = () => {
             </div>
           ) : (
             activeTab === 'criteres' ? (
-              <CriteriaPanel
+              <>
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                    <div>
+                      <label htmlFor="admDateFrom" className="block text-xs font-medium text-gray-600 mb-1">Mise à jour du</label>
+                      <input
+                        id="admDateFrom"
+                        type="date"
+                        value={adminFilters.dateModifFrom}
+                        onChange={(e) => setAdminFilters((p) => ({ ...p, dateModifFrom: e.target.value }))}
+                        className="w-full text-sm border border-gray-300 rounded px-2 py-1.5"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="admDateTo" className="block text-xs font-medium text-gray-600 mb-1">au</label>
+                      <input
+                        id="admDateTo"
+                        type="date"
+                        value={adminFilters.dateModifTo}
+                        onChange={(e) => setAdminFilters((p) => ({ ...p, dateModifTo: e.target.value }))}
+                        className="w-full text-sm border border-gray-300 rounded px-2 py-1.5"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-4">
+                    <label className="inline-flex items-center text-sm">
+                      <input
+                        type="checkbox"
+                        checked={adminFilters.sansEtude}
+                        onChange={(e) => setAdminFilters((p) => ({ ...p, sansEtude: e.target.checked }))}
+                        className="mr-2"
+                      />
+                      Aucune étude
+                    </label>
+                    <label className="inline-flex items-center text-sm">
+                      <input
+                        type="checkbox"
+                        checked={adminFilters.sansEtudeAnneeEnCours}
+                        onChange={(e) => setAdminFilters((p) => ({ ...p, sansEtudeAnneeEnCours: e.target.checked }))}
+                        className="mr-2"
+                      />
+                      Aucune étude cette année ({new Date().getFullYear()})
+                    </label>
+                    {adminFiltersActive && (
+                      <button
+                        type="button"
+                        onClick={() => setAdminFilters({ dateModifFrom: '', dateModifTo: '', sansEtude: false, sansEtudeAnneeEnCours: false })}
+                        className="ml-auto text-xs text-gray-500 hover:text-gray-700 underline"
+                      >
+                        Effacer
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <CriteriaPanel
                 filters={{
                   demographics: {
                     ageMin: String(filters.demographics.ageMin),
@@ -594,9 +682,10 @@ const MatchingSystem = () => {
                 makeupCount={makeupSelectionCount}
                 loading={loading}
               />
+              </>
             ) : (
               <div className="space-y-6">
-                <StatsGrid 
+                <StatsGrid
                   stats={{
                     high: stats.high,
                     mid: stats.mid,
