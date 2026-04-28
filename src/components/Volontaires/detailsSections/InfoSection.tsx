@@ -423,6 +423,7 @@ const InfoSection = ({
             </div>
           </CardHeader>
           <CardContent className="space-y-4 pt-4">
+            {annulationsRecentes.length >= 2 && (
             <Alert variant="destructive" className="bg-red-100 border-red-400">
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription className="flex items-center justify-between text-sm">
@@ -432,6 +433,7 @@ const InfoSection = ({
                 </span>
               </AlertDescription>
             </Alert>
+            )}
 
             <div className="space-y-3">
               {(showAllAnnulations ? annulationsRecentes : annulationsRecentes.slice(0, 3)).map((annulation: AnnulationEtude, index: number) => (

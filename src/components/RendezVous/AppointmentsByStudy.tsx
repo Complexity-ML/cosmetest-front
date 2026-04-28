@@ -6,6 +6,7 @@ import etudeService from '../../services/etudeService';
 import volontaireService from '../../services/volontaireService';
 import etudeVolontaireService from '../../services/etudeVolontaireService';
 import groupeService from '../../services/groupeService';
+import infoBancaireService from '../../services/infoBancaireService';
 import AppointmentSwitcher from './AppointmentSwitcher';
 import { Etude, RendezVous, Volontaire } from '../../types/types';
 import { VolontaireTransformed } from '../../types/volontaire.types';
@@ -16,7 +17,7 @@ import { Badge } from '../ui/badge';
 import { Checkbox } from '../ui/checkbox';
 import { Label } from '../ui/label';
 import { Alert, AlertDescription } from '../ui/alert';
-import { Search, Folder, Calendar, User, Filter, RefreshCw, ChevronDown, Check, X, Loader2, ArrowLeftRight } from 'lucide-react';
+import { Search, Folder, Calendar, User, Filter, RefreshCw, ChevronDown, Check, X, Loader2, ArrowLeftRight, AlertTriangle } from 'lucide-react';
 
 interface AppointmentsByStudyProps {
   onAppointmentClick: (rdv: RendezVous) => void;
@@ -31,6 +32,40 @@ const AppointmentsByStudy = ({ onAppointmentClick, onBack }: AppointmentsByStudy
   const [etudes, setEtudes] = useState<Etude[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Set des id volontaires SANS RIB (pour afficher l'alerte sur la fiche RDV)
+  const [volontairesSansRib, setVolontairesSansRib] = useState<Set<number>>(new Set());
+
+  // Recharge le statut RIB pour tous les volontaires assignés aux RDV courants
+  useEffect(() => {
+    const ids = Array.from(new Set(
+      appointments
+        .map((a: any) => a?.volontaire?.id || a?.volontaire?.idVol || a?.idVolontaire)
+        .filter((id: any) => typeof id === 'number' && id > 0)
+    ));
+    if (ids.length === 0) {
+      setVolontairesSansRib(new Set());
+      return;
+    }
+    let cancelled = false;
+    Promise.all(
+      ids.map(async (id) => {
+        try {
+          const r = await infoBancaireService.getByVolontaireId(id);
+          const hasRib = Array.isArray(r?.data) && r.data.length > 0;
+          return { id, hasRib };
+        } catch {
+          return { id, hasRib: true }; // En cas d'erreur, on n'affiche pas l'alerte (évite faux positifs)
+        }
+      })
+    ).then((results) => {
+      if (cancelled) return;
+      const sansRib = new Set<number>();
+      results.forEach(({ id, hasRib }) => { if (!hasRib) sansRib.add(id); });
+      setVolontairesSansRib(sansRib);
+    });
+    return () => { cancelled = true; };
+  }, [appointments]);
 
   // États pour la recherche d'études
   const [searchEtudeTerm, setSearchEtudeTerm] = useState<string>('');
@@ -1007,6 +1042,15 @@ const AppointmentsByStudy = ({ onAppointmentClick, onBack }: AppointmentsByStudy
                                 ) : (
                                   <span className="text-muted-foreground italic">{t('appointments.noVolunteerAssignedSimple')}</span>
                                 )}
+                                {(() => {
+                                  const idVol = appointment.volontaire?.id || appointment.volontaire?.idVol || appointment.idVolontaire;
+                                  return idVol && volontairesSansRib.has(Number(idVol)) ? (
+                                    <Badge variant="outline" className="ml-2 border-amber-400 bg-amber-50 text-amber-800 text-xs">
+                                      <AlertTriangle className="h-3 w-3 mr-1" />
+                                      Pas de RIB
+                                    </Badge>
+                                  ) : null;
+                                })()}
                               </span>
                             </div>
                           </div>
@@ -1381,7 +1425,7 @@ const AppointmentsByStudy = ({ onAppointmentClick, onBack }: AppointmentsByStudy
         {/* Appointment Switcher Modal */}
         {showSwitcher && (
           <AppointmentSwitcher
-            preSelectedRdv={switcherRdv as any}
+            preSelectedRdvs={switcherRdv ? [switcherRdv as any] : []}
             etudeId={selectedStudyId as any}
             onClose={handleCloseSwitcher}
             onSwitchComplete={handleSwitchComplete}

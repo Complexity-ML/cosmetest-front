@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom'
-import { useMemo, useState, Suspense, lazy } from 'react'
+import { useMemo, useState, useEffect, Suspense, lazy } from 'react'
 import { useTranslation } from 'react-i18next'
+import { AlertTriangle } from 'lucide-react'
+import infoBancaireService from '../../../services/infoBancaireService'
 import { formatDate } from '../../../utils/dateUtils'
 import AppointmentViewer from '../../../pages/RendezVous/AppointmentViewer'
 import { RendezVousProvider } from '../../../pages/RendezVous/context/RendezVousContext'
@@ -78,6 +80,38 @@ const RendezVousSection = ({
   const [isEditing, setIsEditing] = useState(false)
   const [volunteers, setVolunteers] = useState<any[]>([])
   const [editedRdv, setEditedRdv] = useState<RendezVousData | null>(null)
+
+  // Set des id volontaires SANS RIB (pour afficher l'alerte sur la fiche RDV)
+  const [volontairesSansRib, setVolontairesSansRib] = useState<Set<number>>(new Set())
+  useEffect(() => {
+    const ids = Array.from(new Set(
+      (rdvs || [])
+        .map((r: any) => r?.idVolontaire || r?.volontaire?.idVol || r?.volontaire?.id)
+        .filter((id: any) => typeof id === 'number' && id > 0)
+    ))
+    if (ids.length === 0) {
+      setVolontairesSansRib(new Set())
+      return
+    }
+    let cancelled = false
+    Promise.all(
+      ids.map(async (id) => {
+        try {
+          const r = await infoBancaireService.getByVolontaireId(id)
+          const hasRib = Array.isArray(r?.data) && r.data.length > 0
+          return { id, hasRib }
+        } catch {
+          return { id, hasRib: true }
+        }
+      })
+    ).then((results) => {
+      if (cancelled) return
+      const sansRib = new Set<number>()
+      results.forEach(({ id, hasRib }) => { if (!hasRib) sansRib.add(id) })
+      setVolontairesSansRib(sansRib)
+    })
+    return () => { cancelled = true }
+  }, [rdvs])
 
   // Multi-sélection
   const [selectedRdvIds, setSelectedRdvIds] = useState<Set<string>>(new Set())
@@ -754,6 +788,15 @@ const RendezVousSection = ({
                           ) : (
                             getNomVolontaire(rdv)
                           )}
+                          {(() => {
+                            const idVol = rdv.idVolontaire || rdv.volontaire?.idVol || rdv.volontaire?.id
+                            return idVol && volontairesSansRib.has(Number(idVol)) ? (
+                              <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-50 text-amber-800 border border-amber-300">
+                                <AlertTriangle className="h-3 w-3 mr-1" />
+                                Pas de RIB
+                              </span>
+                            ) : null
+                          })()}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${rdv.etat === 'CONFIRME' ? 'bg-green-100 text-green-800' : rdv.etat === 'EN_ATTENTE' ? 'bg-yellow-100 text-yellow-800' : rdv.etat === 'ANNULE' ? 'bg-red-100 text-red-800' : rdv.etat === 'COMPLETE' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}`}>
