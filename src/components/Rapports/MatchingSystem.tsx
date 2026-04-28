@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next';
 import api from '../../services/api';
 import etudeService from '../../services/etudeService';
 import etudeVolontaireService from '../../services/etudeVolontaireService';
-import volontaireService from '../../services/volontaireService';
 import { SearchIcon, UserIcon } from './icons';
 import { EVALUATION_FIELDS } from './constants';
 import {
@@ -57,18 +56,12 @@ const MatchingSystem = () => {
   const [selectedVolontaires, setSelectedVolontaires] = useState<any[]>([]);
   const [customCriteria, setCustomCriteria] = useState<CustomCriterion[]>([]);
 
-  // Filtres déplacés depuis l'ancien onglet Suivi
+  // Filtres participation (déplacés depuis l'ancien onglet Suivi)
   const [adminFilters, setAdminFilters] = useState({
-    dateModifFrom: '',
-    dateModifTo: '',
     sansEtude: false,
     sansEtudeAnneeEnCours: false,
   });
-  const adminFiltersActive =
-    !!adminFilters.dateModifFrom ||
-    !!adminFilters.dateModifTo ||
-    adminFilters.sansEtude ||
-    adminFilters.sansEtudeAnneeEnCours;
+  const adminFiltersActive = adminFilters.sansEtude || adminFilters.sansEtudeAnneeEnCours;
 
   const makeupSelectionCount =
     filters.makeup.visage.length +
@@ -278,17 +271,17 @@ const MatchingSystem = () => {
       let page = 0;
       let hasMore = true;
 
-      // Si des filtres admin sont actifs, on pré-filtre via l'endpoint suivi
+      // Si des filtres admin sont actifs, on pré-filtre via l'endpoint suivi (appel direct pour garder idVol brut)
       if (adminFiltersActive) {
         while (hasMore) {
-          const responseIds = await volontaireService.searchSuivi({
-            dateModifFrom: adminFilters.dateModifFrom || undefined,
-            dateModifTo: adminFilters.dateModifTo || undefined,
-            sansEtude: adminFilters.sansEtude,
-            sansEtudeAnneeEnCours: adminFilters.sansEtudeAnneeEnCours,
-            includeArchived: false,
-            page,
-            size: 1000,
+          const responseIds = await api.get(`/volontaires/suivi`, {
+            params: {
+              sansEtude: adminFilters.sansEtude,
+              sansEtudeAnneeEnCours: adminFilters.sansEtudeAnneeEnCours,
+              includeArchived: false,
+              page,
+              size: 1000,
+            },
           });
           const idsData = responseIds.data?.content || [];
           allVolontairesIds.push(...idsData);
@@ -589,28 +582,6 @@ const MatchingSystem = () => {
             activeTab === 'criteres' ? (
               <>
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
-                    <div>
-                      <label htmlFor="admDateFrom" className="block text-xs font-medium text-gray-600 mb-1">Mise à jour du</label>
-                      <input
-                        id="admDateFrom"
-                        type="date"
-                        value={adminFilters.dateModifFrom}
-                        onChange={(e) => setAdminFilters((p) => ({ ...p, dateModifFrom: e.target.value }))}
-                        className="w-full text-sm border border-gray-300 rounded px-2 py-1.5"
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="admDateTo" className="block text-xs font-medium text-gray-600 mb-1">au</label>
-                      <input
-                        id="admDateTo"
-                        type="date"
-                        value={adminFilters.dateModifTo}
-                        onChange={(e) => setAdminFilters((p) => ({ ...p, dateModifTo: e.target.value }))}
-                        className="w-full text-sm border border-gray-300 rounded px-2 py-1.5"
-                      />
-                    </div>
-                  </div>
                   <div className="flex flex-wrap gap-4">
                     <label className="inline-flex items-center text-sm">
                       <input
@@ -633,7 +604,7 @@ const MatchingSystem = () => {
                     {adminFiltersActive && (
                       <button
                         type="button"
-                        onClick={() => setAdminFilters({ dateModifFrom: '', dateModifTo: '', sansEtude: false, sansEtudeAnneeEnCours: false })}
+                        onClick={() => setAdminFilters({ sansEtude: false, sansEtudeAnneeEnCours: false })}
                         className="ml-auto text-xs text-gray-500 hover:text-gray-700 underline"
                       >
                         Effacer

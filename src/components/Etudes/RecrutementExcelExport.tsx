@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import * as XLSX from 'xlsx';
 import api from '../../services/api';
 import { formatDate } from '../../utils/dateUtils';
+import { formatPhoneNumber } from '../../utils/formatters';
 import { Button } from '@/components/ui/button';
 import { Loader2, FileSpreadsheet } from 'lucide-react';
 
@@ -256,21 +257,12 @@ const RecrutementExcelExport: React.FC<RecrutementExcelExportProps> = ({
         row.push((getVolunteerInfo(volunteerIdNum, 'nom') || '').toUpperCase()); // nom
         row.push(getVolunteerInfo(volunteerIdNum, 'prenom')); // prenom
         
-        // Téléphone formaté
+        // Téléphone (formaté via formatPhoneNumber pour cohérence avec le reste de l'app)
         const telPortable = getVolunteerInfo(volunteerIdNum, 'telPortable');
         const telDomicile = getVolunteerInfo(volunteerIdNum, 'telDomicile');
         const phone = telPortable || telDomicile;
-        let formattedPhone = '';
-        if (phone) {
-          const phoneStr = String(phone);
-          const cleaned = phoneStr.replace(/\D/g, '');
-          if (cleaned.length === 10) {
-            formattedPhone = cleaned.replace(/(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/, '$1 $2 $3 $4 $5');
-          } else {
-            formattedPhone = phoneStr;
-          }
-        }
-        row.push(formattedPhone);
+        const formattedPhone = phone ? formatPhoneNumber(String(phone)) : '';
+        row.push(formattedPhone === '-' ? '' : formattedPhone);
 
         // Ajouter les données de chaque passage T0, T1, T2...
         for (let i = 0; i < maxPassages; i++) {

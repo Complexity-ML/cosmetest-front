@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import * as XLSX from 'xlsx';
 import api from '../../services/api';
+import { formatPhoneNumber } from '../../utils/formatters';
 import { Button } from '@/components/ui/button';
 import { Loader2, Users } from 'lucide-react';
 
@@ -179,18 +180,10 @@ const VolontairesCommunsExport: React.FC<VolontairesCommunsExportProps> = ({
         row.push((volunteer?.nom || '').toUpperCase());
         row.push(volunteer?.prenom || '');
 
-        // Téléphone formaté
+        // Téléphone (formaté via formatPhoneNumber pour cohérence avec le reste de l'app)
         const phone = volunteer?.telPortable || volunteer?.telDomicile || '';
-        let formattedPhone = '';
-        if (phone) {
-          const cleaned = String(phone).replace(/\D/g, '');
-          if (cleaned.length === 10) {
-            formattedPhone = cleaned.replace(/(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/, '$1 $2 $3 $4 $5');
-          } else {
-            formattedPhone = String(phone);
-          }
-        }
-        row.push(formattedPhone);
+        const formattedPhone = phone ? formatPhoneNumber(String(phone)) : '';
+        row.push(formattedPhone === '-' ? '' : formattedPhone);
         row.push(volunteer?.email || '');
 
         // Pour chaque étude, indiquer le numsujet ou "X" si présent, vide sinon

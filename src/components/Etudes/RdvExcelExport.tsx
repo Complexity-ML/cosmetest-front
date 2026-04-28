@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import * as XLSX from 'xlsx';
 import api from '../../services/api';
 import { formatDate } from '../../utils/dateUtils';
+import { formatPhoneNumber } from '../../utils/formatters';
 import { Button } from '@/components/ui/button';
 import { Loader2, Download } from 'lucide-react';
 
@@ -216,21 +217,12 @@ const RdvExcelExport: React.FC<RdvExcelExportProps> = ({
         // F: Prénom du volontaire
         row.push(getVolunteerInfo(Number(volunteerId), 'prenom'));
 
-        // G: Téléphone (formaté)
+        // G: Téléphone (formaté via formatPhoneNumber pour cohérence avec le reste de l'app)
         const telPortable = getVolunteerInfo(Number(volunteerId), 'telPortable');
         const telDomicile = getVolunteerInfo(Number(volunteerId), 'telDomicile');
         const phone = telPortable || telDomicile;
-        let formattedPhone = '';
-        if (phone) {
-          const phoneStr = String(phone);
-          const cleaned = phoneStr.replace(/\D/g, '');
-          if (cleaned.length === 10) {
-            formattedPhone = cleaned.replace(/(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/, '$1 $2 $3 $4 $5');
-          } else {
-            formattedPhone = phoneStr;
-          }
-        }
-        row.push(formattedPhone);
+        const formattedPhone = phone ? formatPhoneNumber(String(phone)) : '';
+        row.push(formattedPhone === '-' ? '' : formattedPhone);
 
         // H: Phototype
         row.push(normalizePhototype(getVolunteerInfo(Number(volunteerId), 'phototype')));

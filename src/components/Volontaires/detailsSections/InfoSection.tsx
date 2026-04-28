@@ -67,12 +67,20 @@ const InfoSection = ({
   }, [volontaireDisplayData.dateModif]);
 
   const needsUpdate = (() => {
-    if (!localDateModif) return true;
-    const d = new Date(localDateModif);
-    if (isNaN(d.getTime())) return true;
+    // L'alerte n'apparaît qu'à partir de 2 ans après la date d'inscription (dateI)
+    const dateI = volontaireDisplayData.dateI;
+    if (!dateI) return false;
+    const inscrit = new Date(dateI);
+    if (isNaN(inscrit.getTime())) return false;
     const twoYearsAgo = new Date();
     twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2);
-    return d.getTime() < twoYearsAgo.getTime();
+    if (inscrit.getTime() > twoYearsAgo.getTime()) return false;
+
+    // Volontaire inscrit depuis plus de 2 ans : alerte si pas de dateModif ou dateModif > 2 ans
+    if (!localDateModif) return true;
+    const modif = new Date(localDateModif);
+    if (isNaN(modif.getTime())) return true;
+    return modif.getTime() < twoYearsAgo.getTime();
   })();
 
   const handleTouchDateModif = async () => {

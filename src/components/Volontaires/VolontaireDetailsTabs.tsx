@@ -19,6 +19,10 @@ const VolontaireDetailsTabs: React.FC<VolontaireDetailsTabsProps> = ({
 
   const DETAILS_TABS = [
     { id: "info", label: t('volunteers.personalInformation') },
+    { id: "etudes", label: t('studies.studies') },
+    { id: "rdvs", label: t('appointments.title') },
+    { id: "assignation", label: t('volunteers.rdvAssignment') },
+    { id: "annulations", label: t('volunteers.cancellations', 'Annulations') },
     { id: "caracteristiques", label: t('volunteers.characteristics') },
     { id: "peau", label: t('volunteers.skin') },
     { id: "cheveux", label: t('volunteers.hair') },
@@ -31,10 +35,6 @@ const VolontaireDetailsTabs: React.FC<VolontaireDetailsTabsProps> = ({
     { id: "photos", label: t('volunteers.photos') },
     { id: "evaluation", label: t('volunteers.evaluation') },
     { id: "notes", label: t('volunteers.comments') },
-    { id: "etudes", label: t('studies.studies') },
-    { id: "rdvs", label: t('appointments.title') },
-    { id: "assignation", label: t('volunteers.rdvAssignment') },
-    { id: "annulations", label: t('volunteers.cancellations', 'Annulations') },
   ];
   const getLabel = (id: string, baseLabel: string) => {
     if (id === "rdvs" && rdvCount > 0) {
