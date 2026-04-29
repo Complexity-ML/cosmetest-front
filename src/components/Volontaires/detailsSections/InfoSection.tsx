@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { Badge } from '../../ui/badge';
 import { Button } from '../../ui/button';
 import { Alert, AlertDescription } from '../../ui/alert';
-import { AlertTriangle, XCircle, Calendar, FileText, BookOpen, CheckCircle } from 'lucide-react';
+import { AlertTriangle, XCircle, Calendar, FileText, BookOpen, CheckCircle, Copy, Check } from 'lucide-react';
 import etudeVolontaireService from '../../../services/etudeVolontaireService';
 import volontaireService from '../../../services/volontaireService';
 import api from '../../../services/api';
@@ -62,6 +62,47 @@ const InfoSection = ({
   // Date de mise à jour gérée localement pour que l'alerte disparaisse dès clic
   const [localDateModif, setLocalDateModif] = useState<string | undefined>(volontaireDisplayData.dateModif);
   const [isTouchingDateModif, setIsTouchingDateModif] = useState(false);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  // Identifiant normalisé type "_dupont150395"
+  // nom en minuscules, sans accents, parts de noms composés jointes par "_"
+  // Date de naissance au format JJMMAA
+  const fileId = (() => {
+    const nom = volontaireDisplayData.nomVol;
+    const dob = volontaireDisplayData.dateNaissance;
+    if (!nom || !dob) return null;
+    const normalizedNom = nom
+      .normalize('NFD')
+      .replace(/[̀-ͯ]/g, '')
+      .toLowerCase()
+      .trim()
+      .split(/[\s\-']+/)
+      .filter(Boolean)
+      .join('_');
+    const d = new Date(dob);
+    if (isNaN(d.getTime())) return null;
+    const dd = String(d.getDate()).padStart(2, '0');
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const yy = String(d.getFullYear()).slice(-2);
+    return `_${normalizedNom}${dd}${mm}${yy}`;
+  })();
+
+  const handleCopyId = (value: string) => {
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(value);
+    } else {
+      const ta = document.createElement('textarea');
+      ta.value = value;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    }
+    setCopiedId(value);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
   useEffect(() => {
     setLocalDateModif(volontaireDisplayData.dateModif);
   }, [volontaireDisplayData.dateModif]);
@@ -198,6 +239,30 @@ const InfoSection = ({
         <p className="text-sm font-medium text-gray-600">{t('volunteers.volunteerId')}</p>
         <p className="text-2xl font-bold text-gray-900 mt-1">{volontaire.id}</p>
       </div>
+
+      {fileId && (
+        <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+          <div className="flex items-center justify-between gap-2 px-2 py-1 bg-white rounded border border-gray-200">
+            <code className="text-xs font-mono text-gray-800 truncate" title={fileId}>
+              {fileId}
+            </code>
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              className="h-6 w-6 p-0 shrink-0"
+              onClick={() => handleCopyId(fileId)}
+              title="Copier"
+            >
+              {copiedId === fileId ? (
+                <Check className="h-3 w-3 text-green-600" />
+              ) : (
+                <Copy className="h-3 w-3 text-muted-foreground" />
+              )}
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
 
     <div className="lg:col-span-2 space-y-6">

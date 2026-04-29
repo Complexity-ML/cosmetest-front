@@ -1172,7 +1172,9 @@ export const useVolontaireForm = ({ id, isEditMode, navigate }: UseVolontaireFor
         // Champs supplémentaires identifiés dans la requête SQL
         archive: false, // Valeur par défaut pour un nouveau volontaire
         hauteurSiege: defaultIfNull(formData.hauteurSiege, ""),
-        dateI: new Date().toISOString().split('T')[0], // Date d'inscription/création, aujourd'hui par défaut
+        // dateI uniquement à la création — sinon l'update écrase la date d'inscription
+        // et casse l'alerte "Fiche à mettre à jour" (basée sur dateI + 2 ans)
+        ...(isEditMode ? {} : { dateI: new Date().toISOString().split('T')[0] }),
       };
 
       console.log("Données complètes préparées pour l'API:", volontaireCompleteData);
