@@ -45,7 +45,7 @@ export interface Filters {
 export const createInitialFilters = (): Filters => ({
   demographics: {
     ageMin: 18,
-    ageMax: 65,
+    ageMax: 60,
     phototypes: [],
     ethnies: [],
     typesPeau: [],

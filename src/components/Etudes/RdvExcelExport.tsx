@@ -164,13 +164,13 @@ const RdvExcelExport: React.FC<RdvExcelExportProps> = ({
         'Ligne',
         'Num Sujet',
         'Statut',
+        'Observations',
         'ID Volontaire',
         'Nom',
         'Prénom',
         'Téléphone',
         'Phototype',
         'Email',
-        'Observations',
         'Date/T0',
         'Heure/T0'
       ];
@@ -208,30 +208,30 @@ const RdvExcelExport: React.FC<RdvExcelExportProps> = ({
         const statut = getAssociationInfo(Number(volunteerId), 'statut');
         row.push(statut && statut.toUpperCase() === 'INSCRIT' ? '' : statut);
 
-        // D: ID Volontaire
+        // D: Observations
+        row.push(getVolunteerInfo(Number(volunteerId), 'observations'));
+
+        // E: ID Volontaire
         row.push(volunteerId);
 
-        // E: Nom du volontaire
+        // F: Nom du volontaire
         row.push(getVolunteerInfo(Number(volunteerId), 'nom'));
 
-        // F: Prénom du volontaire
+        // G: Prénom du volontaire
         row.push(getVolunteerInfo(Number(volunteerId), 'prenom'));
 
-        // G: Téléphone (formaté via formatPhoneNumber pour cohérence avec le reste de l'app)
+        // H: Téléphone (formaté via formatPhoneNumber pour cohérence avec le reste de l'app)
         const telPortable = getVolunteerInfo(Number(volunteerId), 'telPortable');
         const telDomicile = getVolunteerInfo(Number(volunteerId), 'telDomicile');
         const phone = telPortable || telDomicile;
         const formattedPhone = phone ? formatPhoneNumber(String(phone)) : '';
         row.push(formattedPhone === '-' ? '' : formattedPhone);
 
-        // H: Phototype
+        // I: Phototype
         row.push(normalizePhototype(getVolunteerInfo(Number(volunteerId), 'phototype')));
 
-        // I: Email
+        // J: Email
         row.push(getVolunteerInfo(Number(volunteerId), 'email'));
-
-        // J: Observations
-        row.push(getVolunteerInfo(Number(volunteerId), 'observations'));
 
         // K: Date du premier RDV (T0)
         row.push(volunteerRdvs[0] ? formatDate(volunteerRdvs[0].date) : '');
@@ -272,25 +272,25 @@ const RdvExcelExport: React.FC<RdvExcelExportProps> = ({
         // C: Statut
         row.push('');
 
-        // D: ID Volontaire
+        // D: Observations
         row.push('');
 
-        // E: Nom
+        // E: ID Volontaire
+        row.push('');
+
+        // F: Nom
         row.push('Non assigné');
 
-        // F: Prénom
+        // G: Prénom
         row.push('');
 
-        // G: Téléphone
+        // H: Téléphone
         row.push('');
 
-        // H: Phototype
+        // I: Phototype
         row.push('');
 
-        // I: Email
-        row.push('');
-
-        // J: Observations
+        // J: Email
         row.push('');
 
         // K: Date
@@ -428,13 +428,13 @@ const RdvExcelExport: React.FC<RdvExcelExportProps> = ({
         { width: 8 },  // A: Ligne
         { width: 12 }, // B: Num Sujet
         { width: 12 }, // C: Statut
-        { width: 14 }, // D: ID Volontaire
-        { width: 20 }, // E: Nom
-        { width: 20 }, // F: Prénom
-        { width: 15 }, // G: Téléphone
-        { width: 12 }, // H: Phototype
-        { width: 30 }, // I: Email
-        { width: 30 }, // J: Observations
+        { width: 30 }, // D: Observations
+        { width: 14 }, // E: ID Volontaire
+        { width: 20 }, // F: Nom
+        { width: 20 }, // G: Prénom
+        { width: 15 }, // H: Téléphone
+        { width: 12 }, // I: Phototype
+        { width: 30 }, // J: Email
         { width: 12 }, // K: Date
         { width: 8 }   // L: Heure
       ];

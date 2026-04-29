@@ -107,6 +107,22 @@ const OPT = {
 } as const;
 
 const GROUPS: GroupDef[] = [
+    {
+    titleKey: "evaluation",
+    fields: [
+      { key: "evaluation", type: "number" },
+      { key: "tenueLevres", type: "boolean" },
+      { key: "tenueTeint", type: "boolean" },
+      { key: "tenueBlush", type: "boolean" },
+      { key: "tenueSourcil", type: "boolean" },
+      { key: "tenueLiner", type: "boolean" },
+      { key: "demaquillant", type: "boolean" },
+      { key: "etudeCils", type: "boolean" },
+      { key: "corneoLevre", type: "boolean" },
+      { key: "corneoBras", type: "boolean" },
+      { key: "dtm", type: "boolean" },
+    ],
+  },
   {
     titleKey: "personalInformation",
     fields: [
@@ -268,22 +284,6 @@ const GROUPS: GroupDef[] = [
     fields: [
       { key: "iban", type: "text" },
       { key: "bic", type: "text" },
-    ],
-  },
-  {
-    titleKey: "evaluation",
-    fields: [
-      { key: "evaluation", type: "number" },
-      { key: "tenueLevres", type: "boolean" },
-      { key: "tenueTeint", type: "boolean" },
-      { key: "tenueBlush", type: "boolean" },
-      { key: "tenueSourcil", type: "boolean" },
-      { key: "tenueLiner", type: "boolean" },
-      { key: "demaquillant", type: "boolean" },
-      { key: "etudeCils", type: "boolean" },
-      { key: "corneoLevre", type: "boolean" },
-      { key: "corneoBras", type: "boolean" },
-      { key: "dtm", type: "boolean" },
     ],
   },
 ];
