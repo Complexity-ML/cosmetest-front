@@ -492,7 +492,7 @@
     "optionalInformation": "Optional information",
     "bankingInfoDescription": "This information is only required if the volunteer needs to be compensated",
     "ibanFormat": "Format: FR76 followed by 23 digits",
-    "bicFormat": "Format: 8 or 11 alphanumeric characters",
+    "bicFormat": "Format: 7 to 11 alphanumeric characters",
     "commonFrenchBicCodes": "Common French bank BIC codes",
     "aboutIban": "About IBAN",
     "ibanHelpText": "IBAN replaces the old bank statement and enables European transfers",

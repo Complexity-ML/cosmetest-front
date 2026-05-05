@@ -845,7 +845,7 @@ export const useVolontaireForm = ({ id, isEditMode, navigate }: UseVolontaireFor
     // Validation BIC si fourni
     if (formData.bic && formData.bic.trim()) {
       if (!infoBancaireService.validation.validateBic(formData.bic)) {
-        bankErrors.bic = 'Format BIC invalide (8 ou 11 caractères alphanumériques)';
+        bankErrors.bic = 'Format BIC invalide (7 à 11 caractères alphanumériques)';
       }
     }
 

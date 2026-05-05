@@ -493,7 +493,7 @@
     "optionalInformation": "Information facultative",
     "bankingInfoDescription": "Ces informations sont nécessaires uniquement si le volontaire doit être indemnisé",
     "ibanFormat": "Format: FR76 suivi de 23 chiffres",
-    "bicFormat": "Format: 8 ou 11 caractères alphanumériques",
+    "bicFormat": "Format: 7 à 11 caractères alphanumériques",
     "commonFrenchBicCodes": "Codes BIC des principales banques françaises",
     "aboutIban": "À propos de l'IBAN",
     "ibanHelpText": "L'IBAN remplace l'ancien RIB et permet les virements européens",

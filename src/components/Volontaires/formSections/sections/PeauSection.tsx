@@ -139,7 +139,7 @@ const PeauSection = ({ formData, errors, onChange }: any) => {
     onChange(createSyntheticEvent(fieldName, next.join(', ')));
   };
 
-  const secheresseOptions = ["Aucune", "Lèvres", "Cou", "Poitrine / Décolleté", "Ventre / Taille", "Fesses / Hanches", "Bras", "Mains", "Avant-bras"];
+  const secheresseOptions = ["Aucune", "Lèvres", "Cou", "Poitrine / Décolleté", "Ventre / Taille", "Fesses / Hanches", "Bras", "Mains", "Avant-bras", "Jambes", "Pieds"];
   const yeuxOptions = ["Aucun", "Cernes pigmentaires", "Cernes vasculaires", "Poches"];
   const fermeteOptions = ["Aucune", "Visage", "Cou", "Décolleté / Poitrine", "Avant-bras"];
 

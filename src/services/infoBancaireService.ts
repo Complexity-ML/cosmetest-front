@@ -245,9 +245,9 @@ const infoBancaireService = {
       // Supprime les espaces et convertit en majuscules
       const cleanBic = bic.replace(/\s/g, '').toUpperCase();
       
-      // BIC : 8, 10 ou 11 caractères alphanumériques
-      // Format: 4 lettres (banque) + 2 lettres (pays) + 2 caractères (ville) + optionnel 2-3 caractères (succursale)
-      const bicRegex = /^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{2,3})?$/;
+      // BIC : 7 à 11 caractères alphanumériques (7 = legacy toléré)
+      // Format: 4 lettres (banque) + 2 lettres (pays) + 1-2 caractères (ville) + optionnel 2-3 caractères (succursale)
+      const bicRegex = /^[A-Z]{4}[A-Z]{2}[A-Z0-9]{1,2}([A-Z0-9]{2,3})?$/;
       
       return bicRegex.test(cleanBic);
     },
@@ -275,7 +275,7 @@ const infoBancaireService = {
       if (!infoBancaire.bic) {
         errors.bic = 'BIC requis';
       } else if (!infoBancaireService.validation.validateBic(infoBancaire.bic)) {
-        errors.bic = 'Format BIC invalide (8 ou 11 caractères alphanumériques)';
+        errors.bic = 'Format BIC invalide (7 à 11 caractères alphanumériques)';
       }
 
       // Validation ID volontaire
@@ -360,7 +360,7 @@ const infoBancaireService = {
         where: 'Vous le trouverez sur votre RIB ou relevé bancaire'
       },
       bic: {
-        format: '8 ou 11 caractères : BREDFRPPXXX',
+        format: '7 à 11 caractères : BREDFRPPXXX',
         help: 'Le BIC (Bank Identifier Code) identifie votre banque au niveau international',
         where: 'Il figure également sur votre RIB, parfois appelé code SWIFT'
       }
