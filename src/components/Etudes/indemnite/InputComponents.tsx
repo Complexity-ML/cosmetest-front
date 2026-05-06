@@ -95,6 +95,7 @@ export const NumSujetInput: React.FC<NumSujetInputProps> = ({
           className={`w-20 ${localError ? "border-red-500 bg-red-50" : ""}`}
           min="1"
           title={localError || ""}
+          onWheel={(e) => (e.target as HTMLInputElement).blur()}
           onFocus={(e) => { hasFocusRef.current = true; e.target.select(); }}
           onKeyDown={(e) => { if (e.key === "Enter") handleUpdate(value); }}
           onBlur={() => {
