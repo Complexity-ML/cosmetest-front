@@ -159,9 +159,10 @@ export const useVolontaireDetails = ({ id, navigate }: UseVolontaireDetailsParam
     try {
       const result = await photoService.checkVolontairePhoto(vol.nomVol);
       if (result.exists && result.url) {
+        const cacheBust = `${result.url.includes('?') ? '&' : '?'}v=${Date.now()}`;
         setPhotos([
           {
-            url: result.url,
+            url: `${result.url}${cacheBust}`,
             nom: `f_${vol.nomVol.toLowerCase().replace(/\s+/g, '_')}.jpg`,
           },
         ]);

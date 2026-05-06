@@ -50,6 +50,12 @@ const GroupesSection = ({
     return [];
   };
 
+  const serializeGroupeForApi = (g: any) => ({
+    ...g,
+    ethnie: Array.isArray(g.ethnie) ? g.ethnie.join(';') : (g.ethnie || ''),
+    phototype: Array.isArray(g.phototype) ? g.phototype.join(';') : (g.phototype || ''),
+  });
+
   const handleOpenEdit = (groupe: GroupeData) => {
     setEditingGroupe({
       ...groupe,
@@ -76,7 +82,7 @@ const GroupesSection = ({
     if (!editingGroupe || !editingGroupe.idGroupe) return;
     setIsSavingGroupe(true);
     try {
-      await groupeService.update(editingGroupe.idGroupe, editingGroupe as any);
+      await groupeService.update(editingGroupe.idGroupe, serializeGroupeForApi(editingGroupe));
       setEditingGroupe(null);
       if (typeof fetchGroupes === 'function') {
         await fetchGroupes();
@@ -99,7 +105,7 @@ const GroupesSection = ({
     setIsSavingIv(true);
     try {
       // 1. Mettre à jour l'IV du groupe
-      await groupeService.update(groupe.idGroupe, { ...groupe, iv: editIvValue } as any);
+      await groupeService.update(groupe.idGroupe, serializeGroupeForApi({ ...groupe, iv: editIvValue }));
 
       // 2. Propager l'IV à tous les volontaires du groupe
       try {
