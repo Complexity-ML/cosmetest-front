@@ -166,7 +166,6 @@ const PeauSection = ({ formData, errors, onChange }: any) => {
           >
             <option value="">{t('common.select')}</option>
             <option value="Peau sensible">{t('volunteers.skinSensitivityOptions.Peau sensible')}</option>
-            <option value="Peau peu sensible">{t('volunteers.skinSensitivityOptions.Peau peu sensible')}</option>
             <option value="Peau non sensible">{t('volunteers.skinSensitivityOptions.Peau non sensible')}</option>
           </select>
         </div>

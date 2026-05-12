@@ -17,7 +17,7 @@ const SOUS_ETHNIES_PAR_ETHNIE: Record<string, string[]> = {
   'Caucasienne': [
     'EUROP_OUEST',
     'EUROP_EST',
-    'MEDITERRANEEN',
+    'MEDITERRANEEN/MAGHREBIN',
     'NORD_AMERICAIN_CAUCASIEN',
     'SUD_AMERICAIN_CAUCASIEN'
   ],

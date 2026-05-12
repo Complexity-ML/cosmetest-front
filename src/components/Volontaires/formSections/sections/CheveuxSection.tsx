@@ -102,7 +102,21 @@ const CheveuxSection = ({ formData, onChange }: any) => {
     onChange(createSyntheticEvent(fieldName, next.join(', ')));
   };
 
-  const problemesCapillairesOptions = ["Aucun", "Cuir chevelu sensible", "Chute de cheveux", "Cheveux cassants"];
+  const handleMultiKeyDown = useCallback((
+    e: React.KeyboardEvent,
+    fieldName: string,
+    options: string[]
+  ) => {
+    if (e.key.length !== 1 || !/[a-zA-ZÀ-ÿ]/.test(e.key)) return;
+    const letter = e.key.toUpperCase();
+    const match = options.find(opt => opt.toUpperCase().startsWith(letter));
+    if (match) {
+      e.preventDefault();
+      toggleMulti(fieldName, match);
+    }
+  }, [toggleMulti]);
+
+  const problemesCapillairesOptions = ["Cuir chevelu sensible", "Chute de cheveux", "Cheveux cassants"];
 
   const onglesIds = ['onglesCassants', 'onglesDedoubles', 'onglesProblemeAucun'];
 
@@ -133,7 +147,10 @@ const CheveuxSection = ({ formData, onChange }: any) => {
           <label htmlFor="natureCheveux" className="block text-sm font-medium text-gray-700 mb-1">
             {t('volunteers.hairNature')}
           </label>
-          <div className="flex flex-wrap gap-3 mt-1">
+          <div
+            className="flex flex-wrap gap-3 mt-1"
+            onKeyDown={(e) => handleMultiKeyDown(e, 'natureCheveux', ['Lisse', 'Ondulé', 'Bouclé', 'Crêpu', 'Frisé'])}
+          >
             {['Lisse', 'Ondulé', 'Bouclé', 'Crêpu', 'Frisé'].map((opt) => {
               const selected = getSelectedArray('natureCheveux');
               const isSelected = selected.includes(opt);
@@ -182,7 +199,10 @@ const CheveuxSection = ({ formData, onChange }: any) => {
       <h3 className="text-md font-medium text-gray-800 mt-6 mb-3">
         {t('volunteers.resume.fields.problemesCapillaires', 'Problèmes capillaires')}
       </h3>
-      <div className="flex flex-wrap gap-2">
+      <div
+        className="flex flex-wrap gap-2"
+        onKeyDown={(e) => handleMultiKeyDown(e, 'problemesCapillaires', problemesCapillairesOptions)}
+      >
         {problemesCapillairesOptions.map((option) => {
           const selected = getSelectedArray('problemesCapillaires');
           const isSelected = selected.includes(option);
