@@ -147,29 +147,14 @@ const CheveuxSection = ({ formData, onChange }: any) => {
           <label htmlFor="natureCheveux" className="block text-sm font-medium text-gray-700 mb-1">
             {t('volunteers.hairNature')}
           </label>
-          <div
-            className="flex flex-wrap gap-3 mt-1"
-            onKeyDown={(e) => handleMultiKeyDown(e, 'natureCheveux', ['Lisse', 'Ondulé', 'Bouclé', 'Crêpu', 'Frisé'])}
-          >
-            {['Lisse', 'Ondulé', 'Bouclé', 'Crêpu', 'Frisé'].map((opt) => {
-              const selected = getSelectedArray('natureCheveux');
-              const isSelected = selected.includes(opt);
-              return (
-                <button
-                  key={opt}
-                  type="button"
-                  onClick={() => toggleMulti('natureCheveux', opt)}
-                  className={`px-3 py-1.5 rounded text-sm border transition-colors ${
-                    isSelected
-                      ? 'bg-blue-100 border-blue-400 text-blue-800 font-medium'
-                      : 'bg-white border-gray-300 text-gray-500 hover:border-gray-400'
-                  }`}
-                >
-                  {opt}
-                </button>
-              );
-            })}
-          </div>
+          <select id="natureCheveux" name="natureCheveux" value={formData.natureCheveux} onChange={onChange} className="form-select block w-full">
+            <option value="">{t('common.select')}</option>
+            <option value="Lisse">{t('volunteers.hairNatureOptions.Lisse', 'Lisse')}</option>
+            <option value="Ondulé">{t('volunteers.hairNatureOptions.Ondulé', 'Ondulé')}</option>
+            <option value="Bouclé">{t('volunteers.hairNatureOptions.Bouclé', 'Bouclé')}</option>
+            <option value="Crêpu">{t('volunteers.hairNatureOptions.Crêpu', 'Crêpu')}</option>
+            <option value="Frisé">{t('volunteers.hairNatureOptions.Frisé', 'Frisé')}</option>
+          </select>
         </div>
         <div>
           <label htmlFor="epaisseurCheveux" className="block text-sm font-medium text-gray-700 mb-1">
