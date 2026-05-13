@@ -116,6 +116,22 @@ const CheveuxSection = ({ formData, onChange }: any) => {
     }
   }, [toggleMulti]);
 
+  const handleSelectKeyDown = useCallback((
+    e: React.KeyboardEvent<HTMLSelectElement>,
+    options: string[]
+  ) => {
+    if (e.key.length !== 1 || !/[a-zA-ZÀ-ÿ]/.test(e.key)) return;
+    const letter = e.key.normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase();
+    const matches = options.filter(o => o.normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().startsWith(letter));
+    if (matches.length === 0) return;
+    e.preventDefault();
+    const current = (e.target as HTMLSelectElement).name;
+    const curVal = formData[current] ?? '';
+    const curIdx = matches.indexOf(curVal);
+    const next = curIdx === -1 ? matches[0] : matches[(curIdx + 1) % matches.length];
+    onChange(createSyntheticEvent(current, next));
+  }, [formData, onChange]);
+
   const problemesCapillairesOptions = ["Cuir chevelu sensible", "Chute de cheveux", "Cheveux cassants"];
 
   const onglesIds = ['onglesCassants', 'onglesDedoubles', 'onglesProblemeAucun'];
@@ -131,7 +147,7 @@ const CheveuxSection = ({ formData, onChange }: any) => {
           <label htmlFor="couleurCheveux" className="block text-sm font-medium text-gray-700 mb-1">
             {t('volunteers.hairColor')}
           </label>
-          <select id="couleurCheveux" name="couleurCheveux" value={formData.couleurCheveux} onChange={onChange} className="form-select block w-full">
+          <select id="couleurCheveux" name="couleurCheveux" value={formData.couleurCheveux} onChange={onChange} onKeyDown={(e) => handleSelectKeyDown(e, ['Blonds','Bruns','Chatains','Noirs','Roux','Gris','Blancs','Colorés'])} className="form-select block w-full">
             <option value="">{t('common.select')}</option>
             <option value="Blonds">{t('volunteers.hairColorOptions.Blonds')}</option>
             <option value="Bruns">{t('volunteers.hairColorOptions.Bruns')}</option>
@@ -147,7 +163,7 @@ const CheveuxSection = ({ formData, onChange }: any) => {
           <label htmlFor="natureCheveux" className="block text-sm font-medium text-gray-700 mb-1">
             {t('volunteers.hairNature')}
           </label>
-          <select id="natureCheveux" name="natureCheveux" value={formData.natureCheveux} onChange={onChange} className="form-select block w-full">
+          <select id="natureCheveux" name="natureCheveux" value={formData.natureCheveux} onChange={onChange} onKeyDown={(e) => handleSelectKeyDown(e, ['Lisse','Ondulé','Bouclé','Crêpu','Frisé'])} className="form-select block w-full">
             <option value="">{t('common.select')}</option>
             <option value="Lisse">{t('volunteers.hairNatureOptions.Lisse', 'Lisse')}</option>
             <option value="Ondulé">{t('volunteers.hairNatureOptions.Ondulé', 'Ondulé')}</option>
@@ -160,7 +176,7 @@ const CheveuxSection = ({ formData, onChange }: any) => {
           <label htmlFor="epaisseurCheveux" className="block text-sm font-medium text-gray-700 mb-1">
             {t('volunteers.hairThickness')}
           </label>
-          <select id="epaisseurCheveux" name="epaisseurCheveux" value={formData.epaisseurCheveux} onChange={onChange} className="form-select block w-full">
+          <select id="epaisseurCheveux" name="epaisseurCheveux" value={formData.epaisseurCheveux} onChange={onChange} onKeyDown={(e) => handleSelectKeyDown(e, ['Fins','Moyens','Épais'])} className="form-select block w-full">
             <option value="">{t('common.select')}</option>
             <option value="Fins">{t('volunteers.hairThicknessOptions.Fins')}</option>
             <option value="Moyens">{t('volunteers.hairThicknessOptions.Moyens')}</option>
@@ -171,7 +187,7 @@ const CheveuxSection = ({ formData, onChange }: any) => {
           <label htmlFor="natureCuirChevelu" className="block text-sm font-medium text-gray-700 mb-1">
             {t('volunteers.scalpNature')}
           </label>
-          <select id="natureCuirChevelu" name="natureCuirChevelu" value={formData.natureCuirChevelu} onChange={onChange} className="form-select block w-full">
+          <select id="natureCuirChevelu" name="natureCuirChevelu" value={formData.natureCuirChevelu} onChange={onChange} onKeyDown={(e) => handleSelectKeyDown(e, ['Normal','Sec','Gras','Mixte'])} className="form-select block w-full">
             <option value="">{t('common.select')}</option>
             <option value="Normal">{t('volunteers.scalpNatureOptions.Normal')}</option>
             <option value="Sec">{t('volunteers.scalpNatureOptions.Sec')}</option>
