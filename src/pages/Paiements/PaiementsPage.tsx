@@ -9,6 +9,7 @@ import annulationService from '../../services/annulationService';
 import api from '../../services/api';
 import { PAIEMENT_STATUS } from '../../hooks/usePaiements';
 import ExcelExport from '../../components/Paiements/ExcelExport';
+import ChecklistExport from '../../components/Paiements/ChecklistExport';
 import StatsSummary from '../../components/Paiements/StatsSummary';
 import MassActionsPanel from '../../components/Paiements/MassActionsPanel';
 import FiltersPanel from '../../components/Paiements/FiltersPanel';
@@ -779,10 +780,13 @@ const PaiementsPage = () => {
       {/* Titre */}
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-800">{t('payments.title')}</h1>
-        <span className="text-sm text-gray-500">
-          {etudesFiltrees.length} étude{etudesFiltrees.length > 1 ? 's' : ''}
-          {isSummaryLoading && <span className="ml-2 animate-pulse">Chargement...</span>}
-        </span>
+        <div className="flex items-center gap-4">
+          <span className="text-sm text-gray-500">
+            {etudesFiltrees.length} étude{etudesFiltrees.length > 1 ? 's' : ''}
+            {isSummaryLoading && <span className="ml-2 animate-pulse">Chargement...</span>}
+          </span>
+          <ChecklistExport etudes={etudes} />
+        </div>
       </div>
 
       {/* Messages d'erreur */}

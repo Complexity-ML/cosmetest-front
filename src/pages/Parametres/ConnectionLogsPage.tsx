@@ -9,7 +9,7 @@ import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { Alert, AlertDescription } from "../../components/ui/alert";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../../components/ui/dialog";
-import { ShieldAlert, ArrowLeft, RefreshCw, CheckCircle, XCircle, Clock, Activity, ChevronLeft, ChevronRight, Trash2, Radio, Eye, User } from "lucide-react";
+import { ShieldAlert, ArrowLeft, RefreshCw, CheckCircle, XCircle, Clock, Activity, ChevronLeft, ChevronRight, Trash2, Radio, Eye, User, Search, X } from "lucide-react";
 
 interface ConnectionLog {
     id: number;
@@ -90,12 +90,18 @@ const ConnectionLogsPage = () => {
     const [logsCurrentPage, setLogsCurrentPage] = useState(0);
     const [logsLoading, setLogsLoading] = useState(true);
     const [logsError, setLogsError] = useState<string | null>(null);
+    const [logsDateDebut, setLogsDateDebut] = useState('');
+    const [logsDateFin, setLogsDateFin] = useState('');
 
     // Audit
     const [audit, setAudit] = useState<AuditPage | null>(null);
     const [auditPage, setAuditPage] = useState(0);
     const [auditLoading, setAuditLoading] = useState(false);
     const [auditError, setAuditError] = useState<string | null>(null);
+    const [auditDateDebut, setAuditDateDebut] = useState('');
+    const [auditDateFin, setAuditDateFin] = useState('');
+    const [auditAction, setAuditAction] = useState('');
+    const [auditUtilisateur, setAuditUtilisateur] = useState('');
     const [purgeDate, setPurgeDate] = useState(() => {
         const d = new Date();
         d.setMonth(d.getMonth() - 6);
@@ -123,31 +129,31 @@ const ConnectionLogsPage = () => {
     const [detailVol, setDetailVol] = useState<{ nom: string; prenom: string } | null>(null);
     const [detailVolLoading, setDetailVolLoading] = useState(false);
 
-    const fetchLogs = useCallback(async () => {
+    const fetchLogs = useCallback(async (page = logsCurrentPage, dateDebut = logsDateDebut, dateFin = logsDateFin) => {
         try {
             setLogsLoading(true);
             setLogsError(null);
-            const data = await parametreService.getConnectionLogs(logsCurrentPage, 50);
+            const data = await parametreService.getConnectionLogs(page, 50, dateDebut || undefined, dateFin || undefined);
             setLogsPage(data);
         } catch (err) {
             setLogsError(err instanceof Error ? err.message : t("logs.unknownError"));
         } finally {
             setLogsLoading(false);
         }
-    }, [t, logsCurrentPage]);
+    }, [t, logsCurrentPage, logsDateDebut, logsDateFin]);
 
-    const fetchAudit = useCallback(async (page: number) => {
+    const fetchAudit = useCallback(async (page = auditPage, dateDebut = auditDateDebut, dateFin = auditDateFin, action = auditAction, utilisateur = auditUtilisateur) => {
         try {
             setAuditLoading(true);
             setAuditError(null);
-            const data = await parametreService.getAuditLogs(page, 50);
+            const data = await parametreService.getAuditLogs(page, 50, undefined, utilisateur || undefined, dateDebut || undefined, dateFin || undefined, action || undefined);
             setAudit(data);
         } catch (err) {
             setAuditError(err instanceof Error ? err.message : t("logs.unknownError"));
         } finally {
             setAuditLoading(false);
         }
-    }, [t]);
+    }, [t, auditPage, auditDateDebut, auditDateFin, auditAction, auditUtilisateur]);
 
     useEffect(() => {
         if (!auth?.hasPermission(2)) {
@@ -163,7 +169,7 @@ const ConnectionLogsPage = () => {
     }, [auditPage]);
 
     useEffect(() => {
-        if (tab === "connexions") fetchLogs();
+        if (tab === "connexions") fetchLogs(logsCurrentPage);
     }, [logsCurrentPage]);
 
     const fetchLive = useCallback(async () => {
@@ -258,6 +264,32 @@ const ConnectionLogsPage = () => {
         }
     };
 
+    const handleLogsSearch = () => {
+        setLogsCurrentPage(0);
+        fetchLogs(0, logsDateDebut, logsDateFin);
+    };
+
+    const handleLogsReset = () => {
+        setLogsDateDebut('');
+        setLogsDateFin('');
+        setLogsCurrentPage(0);
+        fetchLogs(0, '', '');
+    };
+
+    const handleAuditSearch = () => {
+        setAuditPage(0);
+        fetchAudit(0, auditDateDebut, auditDateFin, auditAction, auditUtilisateur);
+    };
+
+    const handleAuditReset = () => {
+        setAuditDateDebut('');
+        setAuditDateFin('');
+        setAuditAction('');
+        setAuditUtilisateur('');
+        setAuditPage(0);
+        fetchAudit(0, '', '', '', '');
+    };
+
     const handleRefresh = () => {
         if (tab === "connexions") fetchLogs();
         else if (tab === "audit") fetchAudit(auditPage);
@@ -325,6 +357,45 @@ const ConnectionLogsPage = () => {
                             <AlertDescription>{logsError}</AlertDescription>
                         </Alert>
                     )}
+
+                    {/* Filtres date connexions */}
+                    <Card>
+                        <CardContent className="pt-4 pb-4">
+                            <div className="flex flex-wrap items-end gap-3">
+                                <div className="flex flex-col gap-1">
+                                    <label className="text-xs text-muted-foreground font-medium">Date début</label>
+                                    <input
+                                        type="date"
+                                        className="text-sm border rounded px-2 py-1.5 h-9"
+                                        value={logsDateDebut}
+                                        max={logsDateFin || new Date().toISOString().slice(0, 10)}
+                                        onChange={e => setLogsDateDebut(e.target.value)}
+                                    />
+                                </div>
+                                <div className="flex flex-col gap-1">
+                                    <label className="text-xs text-muted-foreground font-medium">Date fin</label>
+                                    <input
+                                        type="date"
+                                        className="text-sm border rounded px-2 py-1.5 h-9"
+                                        value={logsDateFin}
+                                        min={logsDateDebut}
+                                        max={new Date().toISOString().slice(0, 10)}
+                                        onChange={e => setLogsDateFin(e.target.value)}
+                                    />
+                                </div>
+                                <Button size="sm" onClick={handleLogsSearch} disabled={logsLoading}>
+                                    <Search className="h-4 w-4 mr-2" />
+                                    Rechercher
+                                </Button>
+                                {(logsDateDebut || logsDateFin) && (
+                                    <Button size="sm" variant="ghost" onClick={handleLogsReset}>
+                                        <X className="h-4 w-4 mr-1" />
+                                        Réinitialiser
+                                    </Button>
+                                )}
+                            </div>
+                        </CardContent>
+                    </Card>
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <Card><CardContent className="pt-6">
@@ -444,6 +515,65 @@ const ConnectionLogsPage = () => {
                                         </>
                                     )}
                                 </div>
+                            </div>
+
+                            {/* Filtres de recherche audit */}
+                            <div className="flex flex-wrap items-end gap-3 pt-3 border-t mt-3">
+                                <div className="flex flex-col gap-1">
+                                    <label className="text-xs text-muted-foreground font-medium">Date début</label>
+                                    <input
+                                        type="date"
+                                        className="text-sm border rounded px-2 py-1.5 h-9"
+                                        value={auditDateDebut}
+                                        max={auditDateFin || new Date().toISOString().slice(0, 10)}
+                                        onChange={e => setAuditDateDebut(e.target.value)}
+                                    />
+                                </div>
+                                <div className="flex flex-col gap-1">
+                                    <label className="text-xs text-muted-foreground font-medium">Date fin</label>
+                                    <input
+                                        type="date"
+                                        className="text-sm border rounded px-2 py-1.5 h-9"
+                                        value={auditDateFin}
+                                        min={auditDateDebut}
+                                        max={new Date().toISOString().slice(0, 10)}
+                                        onChange={e => setAuditDateFin(e.target.value)}
+                                    />
+                                </div>
+                                <div className="flex flex-col gap-1">
+                                    <label className="text-xs text-muted-foreground font-medium">Action</label>
+                                    <select
+                                        className="text-sm border rounded px-2 py-1.5 h-9 bg-background"
+                                        value={auditAction}
+                                        onChange={e => setAuditAction(e.target.value)}
+                                    >
+                                        <option value="">Toutes</option>
+                                        {Object.keys(ACTION_COLORS).map(a => (
+                                            <option key={a} value={a}>{a}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="flex flex-col gap-1">
+                                    <label className="text-xs text-muted-foreground font-medium">Utilisateur</label>
+                                    <input
+                                        type="text"
+                                        placeholder="Login..."
+                                        className="text-sm border rounded px-2 py-1.5 h-9 w-32"
+                                        value={auditUtilisateur}
+                                        onChange={e => setAuditUtilisateur(e.target.value)}
+                                        onKeyDown={e => e.key === 'Enter' && handleAuditSearch()}
+                                    />
+                                </div>
+                                <Button size="sm" onClick={handleAuditSearch} disabled={auditLoading}>
+                                    <Search className="h-4 w-4 mr-2" />
+                                    Rechercher
+                                </Button>
+                                {(auditDateDebut || auditDateFin || auditAction || auditUtilisateur) && (
+                                    <Button size="sm" variant="ghost" onClick={handleAuditReset}>
+                                        <X className="h-4 w-4 mr-1" />
+                                        Réinitialiser
+                                    </Button>
+                                )}
                             </div>
                         </CardHeader>
                         <CardContent>

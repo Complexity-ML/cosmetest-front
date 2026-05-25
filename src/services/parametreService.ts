@@ -185,9 +185,12 @@ const parametreService = {
      * Get connection logs (admin only)
      * @returns {Promise<Array>} Array of connection logs
      */
-    getConnectionLogs: async (page = 0, size = 50) => {
+    getConnectionLogs: async (page = 0, size = 50, dateDebut?: string, dateFin?: string) => {
         try {
-            const response = await api.get(`/connexions?page=${page}&size=${size}`);
+            const params = new URLSearchParams({ page: page.toString(), size: size.toString() });
+            if (dateDebut) params.append('dateDebut', dateDebut);
+            if (dateFin) params.append('dateFin', dateFin);
+            const response = await api.get(`/connexions?${params}`);
             return response.data;
         } catch (error: any) {
             console.error('Error fetching connection logs:', error);
@@ -210,11 +213,14 @@ const parametreService = {
     /**
      * Get audit logs (admin only)
      */
-    getAuditLogs: async (page = 0, size = 50, entite?: string, utilisateur?: string) => {
+    getAuditLogs: async (page = 0, size = 50, entite?: string, utilisateur?: string, dateDebut?: string, dateFin?: string, action?: string) => {
         try {
             const params = new URLSearchParams({ page: page.toString(), size: size.toString() });
             if (entite) params.append('entite', entite);
             if (utilisateur) params.append('utilisateur', utilisateur);
+            if (dateDebut) params.append('dateDebut', dateDebut);
+            if (dateFin) params.append('dateFin', dateFin);
+            if (action) params.append('action', action);
             const response = await api.get(`/audit?${params}`);
             return response.data;
         } catch (error: any) {
