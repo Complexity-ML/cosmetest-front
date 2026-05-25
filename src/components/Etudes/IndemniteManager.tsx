@@ -5,6 +5,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import etudeVolontaireService from "../../services/etudeVolontaireService";
+import groupeService from "../../services/groupeService";
 import annulationService from "../../services/annulationService";
 import api from "../../services/api";
 import { Button } from "@/components/ui/button";
@@ -55,10 +56,10 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
   // Hooks personnalisés
   const { volontairesInfo, loadGroupesInfo, loadVolontairesInfo } = useEntitiesInfo();
 
-  // IDs des volontaires qui ont au moins un RDV
+  // IDs des volontaires qui ont au moins un RDV (fallback sur volontaire imbriqué si idVolontaire null)
   const volunteerIdsWithRdv = useMemo(() => {
     if (!rdvs || rdvs.length === 0) return new Set<number>();
-    return new Set(rdvs.map((rdv: any) => rdv.idVolontaire).filter(Boolean));
+    return new Set(rdvs.map((rdv: any) => rdv.idVolontaire || rdv.volontaire?.idVol || rdv.volontaire?.id).filter(Boolean));
   }, [rdvs]);
 
   // Fonctions de gestion des annulations
@@ -152,7 +153,7 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
         iv: volontaire.iv || 0,
         numsujet: volontaire.numsujet || 0,
         paye: volontaire.paye || 0,
-        statut: volontaire.statut || "-",
+        statut: volontaire.statut || "INSCRIT",
       };
       let params: UpdateParams = { ...baseParams };
       if (field === "statut") params.nouveauStatut = newValue as string;
@@ -341,11 +342,42 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
             return acc;
           }, {} as Record<number, VolontaireAssigne>)
         );
-        setVolontairesAssignes(deduplicatedAssignes);
-        setDebugInfo(`${deduplicatedAssignes.length} volontaires trouvés`);
-        if (deduplicatedAssignes.length > 0) {
-          const uniqueGroupeIds = [...new Set(deduplicatedAssignes.map((v) => v.idGroupe).filter((id) => id && id !== 0))] as number[];
-          const uniqueVolontaireIds = [...new Set(deduplicatedAssignes.map((v) => v.idVolontaire).filter((id) => id && id !== 0))] as number[];
+        // Réparer les volontaires présents dans les RDV mais absents de etude_volontaire
+        const assignedIds = new Set(deduplicatedAssignes.map((v) => v.idVolontaire));
+        const rdvVolontaireIds = rdvs
+          ? [...new Set(rdvs.map((rdv: any) => rdv.idVolontaire || rdv.volontaire?.idVol || rdv.volontaire?.id).filter(Boolean) as number[])]
+          : [];
+        const missingIds = rdvVolontaireIds.filter((id: number) => !assignedIds.has(id));
+
+        // Pour chaque volontaire manquant, créer l'entrée etude_volontaire avec les vraies données de sa RDV
+        const repairedAssignes: VolontaireAssigne[] = await Promise.all(
+          missingIds.map(async (id: number) => {
+            const volRdv = rdvs?.find((r: any) =>
+              (r.idVolontaire || r.volontaire?.idVol || r.volontaire?.id) === id
+            );
+            const idGroupe = volRdv?.idGroupe || volRdv?.groupe?.idGroupe || volRdv?.groupe?.id || 0;
+            let iv = 0;
+            if (idGroupe) {
+              try {
+                const groupeData = await groupeService.getById(idGroupe);
+                iv = groupeData?.iv ?? 0;
+              } catch { /* iv reste 0 */ }
+            }
+            const entry: VolontaireAssigne = { idVolontaire: id, idGroupe, idEtude: Number(etudeId), iv, numsujet: 0, paye: 0, statut: 'INSCRIT' };
+            try {
+              await etudeVolontaireService.create(entry);
+            } catch { /* entrée peut-être déjà créée en parallèle, on continue */ }
+            return entry;
+          })
+        );
+
+        const allAssignes = [...deduplicatedAssignes, ...repairedAssignes];
+
+        setVolontairesAssignes(allAssignes);
+        setDebugInfo(`${allAssignes.length} volontaires trouvés`);
+        if (allAssignes.length > 0) {
+          const uniqueGroupeIds = [...new Set(allAssignes.map((v) => v.idGroupe).filter((id) => id && id !== 0))] as number[];
+          const uniqueVolontaireIds = [...new Set(allAssignes.map((v) => v.idVolontaire).filter((id) => id && id !== 0))] as number[];
           await Promise.all([loadGroupesInfo(uniqueGroupeIds), loadVolontairesInfo(uniqueVolontaireIds)]);
         }
       } catch (error) {
@@ -357,7 +389,7 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
       }
     };
     fetchVolontaires();
-  }, [etudeId, loadGroupesInfo, loadVolontairesInfo]);
+  }, [etudeId, rdvs, loadGroupesInfo, loadVolontairesInfo]);
 
   useEffect(() => { if (error) onError(error); }, [error, onError]);
 

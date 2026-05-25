@@ -119,10 +119,11 @@ const RecrutementExcelExport: React.FC<RecrutementExcelExportProps> = ({
       const rdvsByVolunteer: Record<string, any[]> = {};
       let maxPassages = 0;
 
-      // Grouper TOUS les RDV par volontaire (sans filtrer d'abord)
+      // Grouper TOUS les RDV par volontaire (fallback sur volontaire imbriqué si idVolontaire null)
       rdvs.forEach((rdv: any) => {
-        if (rdv.idVolontaire) {
-          const volKey = String(rdv.idVolontaire);
+        const volId = rdv.idVolontaire || rdv.volontaire?.idVol || rdv.volontaire?.id;
+        if (volId) {
+          const volKey = String(volId);
           if (!rdvsByVolunteer[volKey]) {
             rdvsByVolunteer[volKey] = [];
           }

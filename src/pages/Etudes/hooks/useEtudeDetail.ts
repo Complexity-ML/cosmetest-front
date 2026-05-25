@@ -236,7 +236,7 @@ export const useEtudeDetail = ({ id, navigate }: UseEtudeDetailParams): UseEtude
     return [
       ...new Set(
         (rdvs || [])
-          .map((rdv) => rdv.idVolontaire)
+          .map((rdv) => rdv.idVolontaire || rdv.volontaire?.idVol || rdv.volontaire?.id)
           .filter((volontaireId): volontaireId is number => Boolean(volontaireId))
       ),
     ];

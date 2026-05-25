@@ -157,6 +157,16 @@ const BatchActions: React.FC<BatchActionsProps> = ({
           autoFocus
         />
       )}
+      {!isSortieStatut(currentStatut) && (
+        <Input
+          type="text"
+          value={currentStatut && !Object.keys(STATUT_CONFIG).includes(currentStatut) ? currentStatut : ""}
+          onChange={(e) => onSelect(e.target.value)}
+          placeholder="Ou saisir un statut libre..."
+          className="text-xs"
+          onKeyDown={(e) => e.key === "Escape" && onSelect("")}
+        />
+      )}
     </div>
   );
 
@@ -249,16 +259,6 @@ const BatchActions: React.FC<BatchActionsProps> = ({
           </span>
           {renderStatutButtons(batchStatut, setBatchStatut, batchNote, setBatchNote)}
           <div className="flex items-center gap-2">
-            {!isSortieStatut(batchStatut) && (
-              <Input
-                type="text"
-                value={batchStatut}
-                onChange={(e) => setBatchStatut(e.target.value)}
-                placeholder="Ou saisir un statut libre..."
-                className="text-xs flex-1"
-                onKeyDown={(e) => { if (e.key === "Enter") handleBatchStatut(); if (e.key === "Escape") closeAll(); }}
-              />
-            )}
             <Button size="sm" onClick={handleBatchStatut} disabled={isUpdating || !batchStatut.trim()}>
               {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4 mr-1" />}
               {t('common.apply') || 'Appliquer'}
@@ -297,6 +297,20 @@ const BatchActions: React.FC<BatchActionsProps> = ({
             <span className="text-sm text-gray-700">Statut :</span>
             {renderStatutButtons(comboStatut, setComboStatut, comboNote, setComboNote)}
           </div>
+
+          {/* Statut libre pour le combo (si aucun bouton sélectionné ou statut personnalisé) */}
+          {!isSortieStatut(comboStatut) && (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-500 whitespace-nowrap">Statut libre :</span>
+              <Input
+                type="text"
+                value={comboStatut && !Object.keys(STATUT_CONFIG).includes(comboStatut) ? comboStatut : ""}
+                onChange={(e) => setComboStatut(e.target.value)}
+                placeholder="Saisir un statut libre..."
+                className="text-xs flex-1"
+              />
+            </div>
+          )}
 
           <div className="flex items-center gap-2">
             <Button

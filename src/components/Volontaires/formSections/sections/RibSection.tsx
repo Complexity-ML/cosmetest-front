@@ -81,7 +81,7 @@ const RibSection = ({ formData, errors, onChange }: any) => {
             }}
             className={`form-input block w-full ${errors.bic ? "border-red-500" : ""}`}
             placeholder="BREDFRPPXXX"
-            maxLength={11}
+            maxLength={12}
           />
           {errors.bic && (
             <p className="mt-1 text-sm text-red-500">{errors.bic}</p>
