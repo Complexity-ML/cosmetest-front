@@ -68,7 +68,6 @@ const OPT = {
     "Mixte",
     "Mixte à tendance grasse",
     "Mixte à tendance sèche",
-    "Sensible",
   ],
   carnation: [
     "Très claire",
@@ -80,7 +79,6 @@ const OPT = {
   ],
   sensibiliteCutanee: [
     "Peau sensible",
-    "Peau peu sensible",
     "Peau non sensible",
   ],
   expositionSolaire: ["Faiblement", "Moyennement", "Fortement"],
