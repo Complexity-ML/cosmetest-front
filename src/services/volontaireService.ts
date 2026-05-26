@@ -335,6 +335,15 @@ const volontaireService = {
     return api.put(`/volontaires/${id}/remove-standby`);
   },
 
+  updateObservations: (id: number | string, observations: string) => {
+    if (!isValidId(id)) {
+      return Promise.reject(new Error('ID de volontaire invalide'));
+    }
+    return api.put(`/volontaires/${id}/observations`, observations, {
+      headers: { 'Content-Type': 'text/plain' },
+    });
+  },
+
   // ==================== MÉTHODES DE RECHERCHE ====================
 
   /**

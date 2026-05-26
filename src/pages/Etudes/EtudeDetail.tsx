@@ -5,6 +5,7 @@ import DetailsSection from '../../components/Etudes/detailsSections/DetailsSecti
 import RendezVousSection from '../../components/Etudes/detailsSections/RendezVousSection'
 import GroupesSection from '../../components/Etudes/detailsSections/GroupesSection'
 import IndemnitesSection from '../../components/Etudes/detailsSections/IndemnitesSection'
+import ObservationSection from '../../components/Etudes/detailsSections/ObservationSection'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Loader2 } from 'lucide-react'
@@ -153,6 +154,15 @@ const EtudeDetail = () => {
             >
               {t('studies.compensations')}
             </button>
+            <button
+              className={`py-4 px-6 border-b-2 font-medium text-sm ${activeTab === 'observations'
+                ? 'border-primary-500 text-primary-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              onClick={() => setActiveTab('observations')}
+            >
+              Observations
+            </button>
           </nav>
         </div>
 
@@ -187,6 +197,10 @@ const EtudeDetail = () => {
               groupes={groupes}
               fetchGroupes={fetchGroupes}
             />
+          )}
+
+          {activeTab === 'observations' && (
+            <ObservationSection etudeId={Number(id)} />
           )}
 
           {activeTab === 'rdvs' && (
