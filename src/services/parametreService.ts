@@ -230,6 +230,18 @@ const parametreService = {
     },
 
     /**
+     * Purge connection logs older than given date (admin only)
+     */
+    purgeConnectionLogs: async (before: string) => {
+        try {
+            const response = await api.delete(`/connexions/purge?before=${before}`);
+            return response.data;
+        } catch (error: any) {
+            throw new Error(error.response?.data?.message || "Erreur lors de la purge des logs de connexion");
+        }
+    },
+
+    /**
      * Purge audit logs older than N months (admin only)
      */
     purgeAuditLogs: async (before: string) => {

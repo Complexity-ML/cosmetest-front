@@ -6,6 +6,7 @@ import etudeService from '../../services/etudeService';
 import volontaireService from '../../services/volontaireService';
 import etudeVolontaireService from '../../services/etudeVolontaireService';
 import groupeService from '../../services/groupeService';
+import annulationService from '../../services/annulationService';
 import infoBancaireService from '../../services/infoBancaireService';
 import AppointmentSwitcher from './AppointmentSwitcher';
 import { Etude, RendezVous, Volontaire } from '../../types/types';
@@ -475,6 +476,31 @@ const AppointmentsByStudy = ({ onAppointmentClick, onBack }: AppointmentsByStudy
 
       } else {
         // C'est une assignation
+
+        // Vérifier si ce volontaire a été annulé sur cette étude
+        try {
+          const annulations = await annulationService.getByVolontaireAndEtude(volontaireId, idEtude);
+          if (annulations && annulations.length > 0) {
+            const ann = annulations[0] as any;
+            const dateAnn = new Date(ann.dateAnnulation).toLocaleDateString('fr-FR');
+            const msg = [
+              `⚠️ Ce volontaire a été annulé sur cette étude le ${dateAnn}.`,
+              ann.commentaire ? `Motif : ${ann.commentaire}` : null,
+              ann.annulePar ? `Annulé par : ${ann.annulePar}` : null,
+              '',
+              'Voulez-vous le remettre sur l\'étude ?\nSon entrée d\'annulation sera supprimée.',
+            ].filter(l => l !== null).join('\n');
+            if (!window.confirm(msg)) {
+              setAssignmentStatus(prev => { const n = { ...prev }; delete n[rdvId]; return n; });
+              return;
+            }
+            for (const a of annulations) {
+              if ((a as any).id) await annulationService.delete((a as any).id).catch(() => {});
+            }
+          }
+        } catch {
+          // Si la vérification échoue, on continue sans bloquer l'assignation
+        }
 
         // 1.  Créer/Mettre à jour l'association EtudeVolontaire
         try {

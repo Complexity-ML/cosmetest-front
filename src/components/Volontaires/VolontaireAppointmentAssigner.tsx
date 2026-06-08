@@ -6,6 +6,7 @@ import etudeService from '../../services/etudeService';
 import groupeService from '../../services/groupeService';
 import etudeVolontaireService from '../../services/etudeVolontaireService';
 import volontaireService from '../../services/volontaireService';
+import annulationService from '../../services/annulationService';
 import StudyGroupSelector from './VolontaireAppointmentAssigner/StudyGroupSelector';
 import AvailableAppointmentsList from './VolontaireAppointmentAssigner/AvailableAppointmentsList';
 import AssignedAppointmentsList from './VolontaireAppointmentAssigner/AssignedAppointmentsList';
@@ -449,12 +450,32 @@ const VolontaireAppointmentAssigner = ({ volontaireId, volontaire, onAssignmentC
         }
       }
 
+      // Vérifier si ce volontaire a été annulé sur cette étude
+      let annulationsExistantes: any[] = [];
+      try {
+        annulationsExistantes = await annulationService.getByVolontaireAndEtude(parseInt(volontaireId), selectedEtudeId);
+        if (annulationsExistantes && annulationsExistantes.length > 0) {
+          const ann = annulationsExistantes[0] as any;
+          const dateAnn = new Date(ann.dateAnnulation).toLocaleDateString('fr-FR');
+          const nomPrenom = [volontaire?.prenom, volontaire?.nom].filter(Boolean).join(' ') || 'Ce volontaire';
+          const msg = [
+            `⚠️ ${nomPrenom} a été annulé(e) sur cette étude le ${dateAnn}.`,
+            ann.commentaire ? `Motif : ${ann.commentaire}` : null,
+            ann.annulePar ? `Annulé par : ${ann.annulePar}` : null,
+            '',
+            'Voulez-vous le/la remettre sur l\'étude ?\nSon entrée d\'annulation sera supprimée.',
+          ].filter(l => l !== null).join('\n');
+          if (!window.confirm(msg)) return;
+        }
+      } catch {
+        annulationsExistantes = [];
+      }
+
       // Vérifier si l'association existe déjà
       try {
         const associationExiste = await etudeVolontaireService.existsByEtudeAndVolontaire(selectedEtudeId, parseInt(volontaireId));
 
         if (!associationExiste) {
-          // Créer l'association seulement si elle n'existe pas
           await etudeVolontaireService.assignerVolontaireAEtude(
             selectedEtudeId,
             parseInt(volontaireId),
@@ -465,6 +486,11 @@ const VolontaireAppointmentAssigner = ({ volontaireId, volontaire, onAssignmentC
           console.log('Association étude-volontaire créée avec IV:', ivGroupe);
         } else {
           console.log('Association étude-volontaire existe déjà, pas de duplication');
+        }
+
+        // Supprimer les annulations précédentes si confirmé
+        for (const a of annulationsExistantes) {
+          if (a.id) await annulationService.delete(a.id).catch(() => {});
         }
       } catch (assocErr) {
         console.warn("Erreur lors de la gestion de l'association étude-volontaire:", (assocErr as any)?.message || assocErr);

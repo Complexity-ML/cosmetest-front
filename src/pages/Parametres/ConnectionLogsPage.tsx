@@ -110,6 +110,15 @@ const ConnectionLogsPage = () => {
     const [purgeLoading, setPurgeLoading] = useState(false);
     const [purgeConfirm, setPurgeConfirm] = useState(false);
 
+    // Purge connexions
+    const [logsPurgeDate, setLogsPurgeDate] = useState(() => {
+        const d = new Date();
+        d.setMonth(d.getMonth() - 6);
+        return d.toISOString().slice(0, 10);
+    });
+    const [logsPurgeLoading, setLogsPurgeLoading] = useState(false);
+    const [logsPurgeConfirm, setLogsPurgeConfirm] = useState(false);
+
     // Live sessions
     const [liveSessions, setLiveSessions] = useState<ActiveSession[]>([]);
     const [liveLoading, setLiveLoading] = useState(false);
@@ -248,6 +257,21 @@ const ConnectionLogsPage = () => {
             }
         }
     }, []);
+
+    const handleLogsPurge = async () => {
+        try {
+            setLogsPurgeLoading(true);
+            const result = await parametreService.purgeConnectionLogs(logsPurgeDate);
+            setLogsPurgeConfirm(false);
+            fetchLogs(0);
+            setLogsCurrentPage(0);
+            alert(`${result.deleted} entrée(s) supprimée(s).`);
+        } catch (err) {
+            setLogsError(err instanceof Error ? err.message : t("logs.unknownError"));
+        } finally {
+            setLogsPurgeLoading(false);
+        }
+    };
 
     const handlePurge = async () => {
         try {
@@ -419,7 +443,37 @@ const ConnectionLogsPage = () => {
                     </div>
 
                     <Card>
-                        <CardHeader><CardTitle>{t("logs.history")}</CardTitle><CardDescription>{t("logs.historyDesc")}</CardDescription></CardHeader>
+                        <CardHeader>
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                <div>
+                                    <CardTitle>{t("logs.history")}</CardTitle>
+                                    <CardDescription>{t("logs.historyDesc")}</CardDescription>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    {!logsPurgeConfirm ? (
+                                        <Button variant="outline" size="sm" className="text-destructive border-destructive hover:bg-destructive hover:text-white" onClick={() => setLogsPurgeConfirm(true)}>
+                                            <Trash2 className="mr-2 h-4 w-4" />
+                                            {t("logs.purge")}
+                                        </Button>
+                                    ) : (
+                                        <>
+                                            <input
+                                                type="date"
+                                                className="text-sm border rounded px-2 py-1"
+                                                value={logsPurgeDate}
+                                                max={new Date().toISOString().slice(0, 10)}
+                                                onChange={e => setLogsPurgeDate(e.target.value)}
+                                            />
+                                            <Button variant="destructive" size="sm" disabled={logsPurgeLoading} onClick={handleLogsPurge}>
+                                                {logsPurgeLoading ? <RefreshCw className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
+                                                {t("logs.purgeConfirm")}
+                                            </Button>
+                                            <Button variant="ghost" size="sm" onClick={() => setLogsPurgeConfirm(false)}>{t("logs.cancel")}</Button>
+                                        </>
+                                    )}
+                                </div>
+                            </div>
+                        </CardHeader>
                         <CardContent>
                             {logsLoading ? (
                                 <div className="text-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-t-2 border-primary mx-auto" /></div>
