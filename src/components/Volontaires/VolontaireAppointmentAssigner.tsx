@@ -9,6 +9,7 @@ import volontaireService from '../../services/volontaireService';
 import StudyGroupSelector from './VolontaireAppointmentAssigner/StudyGroupSelector';
 import AvailableAppointmentsList from './VolontaireAppointmentAssigner/AvailableAppointmentsList';
 import AssignedAppointmentsList from './VolontaireAppointmentAssigner/AssignedAppointmentsList';
+import AgeWarningDialog from './VolontaireAppointmentAssigner/AgeWarningDialog';
 import AppointmentSwitcher from '../RendezVous/AppointmentSwitcher';
 import { StudyOverlapAlert } from '../RendezVous/AssignmentComponents';
 
@@ -50,6 +51,13 @@ const VolontaireAppointmentAssigner = ({ volontaireId, volontaire, onAssignmentC
   // État pour le switcher
   const [showSwitcher, setShowSwitcher] = useState(false);
   const [switcherRdv, setSwitcherRdv] = useState(null);
+
+  // État pour la pop-up d'avertissement d'âge
+  const [ageWarning, setAgeWarning] = useState<{
+    open: boolean;
+    message: string;
+    resolve?: (confirmed: boolean) => void;
+  }>({ open: false, message: '' });
 
   // Chargement initial des études
   useEffect(() => {
@@ -105,6 +113,7 @@ const VolontaireAppointmentAssigner = ({ volontaireId, volontaire, onAssignmentC
         groupeService.getGroupesByIdEtude(etudeId)
       ]);
 
+      setEtudeDetails(etude || {});
       setAppointments(Array.isArray(rdvs) ? rdvs : []);
       setGroupes(Array.isArray(groupesData) ? groupesData : []);
 
@@ -336,6 +345,65 @@ const VolontaireAppointmentAssigner = ({ volontaireId, volontaire, onAssignmentC
     return { compatible: true, message: '' };
   };
 
+  // Ouvre la pop-up d'avertissement d'âge et renvoie une promesse résolue au clic
+  const askAgeWarning = (message: string): Promise<boolean> =>
+    new Promise((resolve) => setAgeWarning({ open: true, message, resolve }));
+
+  const closeAgeWarning = (confirmed: boolean) => {
+    setAgeWarning((prev) => {
+      prev.resolve?.(confirmed);
+      return { open: false, message: '' };
+    });
+  };
+
+  // Calcule l'âge révolu à une date de référence
+  const calculateAgeAt = (dateNaissance: string, reference: Date): number => {
+    const naissance = new Date(dateNaissance);
+    let age = reference.getFullYear() - naissance.getFullYear();
+    const mois = reference.getMonth() - naissance.getMonth();
+    if (mois < 0 || (mois === 0 && reference.getDate() < naissance.getDate())) age--;
+    return age;
+  };
+
+  // Vérifie la compatibilité d'âge du volontaire sur toute la durée de l'étude
+  const checkAgeCompatibility = (): { compatible: boolean; message: string } => {
+    const dateNaissance = volontaire?.dateNaissance;
+    const ageMin = selectedGroupeDetails?.ageMinimum;
+    const ageMax = selectedGroupeDetails?.ageMaximum;
+    const dateDebut = etudeDetails?.dateDebut;
+    const dateFin = etudeDetails?.dateFin;
+
+    if (!dateNaissance || (ageMin == null && ageMax == null) || !dateDebut) {
+      return { compatible: true, message: '' };
+    }
+
+    const debut = new Date(dateDebut);
+    const fin = dateFin ? new Date(dateFin) : debut;
+    const issues: string[] = [];
+
+    if (ageMin != null) {
+      const ageAtDebut = calculateAgeAt(dateNaissance, debut);
+      if (ageAtDebut < ageMin) {
+        issues.push(`trop jeune au début de l'étude (${ageAtDebut} an${ageAtDebut > 1 ? 's' : ''}, minimum requis : ${ageMin} ans)`);
+      }
+    }
+
+    if (ageMax != null) {
+      const ageAtFin = calculateAgeAt(dateNaissance, fin);
+      if (ageAtFin > ageMax) {
+        issues.push(`trop âgé à la fin de l'étude (${ageAtFin} ans, maximum autorisé : ${ageMax} ans)`);
+      }
+    }
+
+    if (issues.length === 0) return { compatible: true, message: '' };
+
+    const nomPrenom = [volontaire?.nom, volontaire?.prenom].filter(Boolean).join(' ') || 'Le volontaire';
+    return {
+      compatible: false,
+      message: `${nomPrenom} sera ${issues.join(' et ')} pour ce groupe (${selectedGroupeDetails?.intitule || selectedGroupeDetails?.nom || 'groupe sélectionné'}).`,
+    };
+  };
+
   // Assignation intelligente avec gestion d'association unique
   const handleAssignAppointments = async () => {
     if (!selectedEtudeId || selectedAppointments.length === 0 || !selectedGroupeId) {
@@ -352,6 +420,13 @@ const VolontaireAppointmentAssigner = ({ volontaireId, volontaire, onAssignmentC
       if (!continueAnyway) {
         return;
       }
+    }
+
+    // Vérification de la compatibilité d'âge sur la durée de l'étude
+    const ageCheck = checkAgeCompatibility();
+    if (!ageCheck.compatible) {
+      const continueAnyway = await askAgeWarning(ageCheck.message);
+      if (!continueAnyway) return;
     }
 
     if (!window.confirm(t('volunteerAppointments.confirmAssign', { firstName: volontaire?.prenom, lastName: volontaire?.nom, count: selectedAppointments.length }))) {
@@ -679,6 +754,14 @@ const VolontaireAppointmentAssigner = ({ volontaireId, volontaire, onAssignmentC
           </div>
         </div>
       )}
+
+      {/* Pop-up d'avertissement d'âge */}
+      <AgeWarningDialog
+        open={ageWarning.open}
+        message={ageWarning.message}
+        onConfirm={() => closeAgeWarning(true)}
+        onCancel={() => closeAgeWarning(false)}
+      />
 
       {/* Modal de changement de rendez-vous */}
       {showSwitcher && (
