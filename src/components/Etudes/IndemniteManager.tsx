@@ -48,7 +48,7 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
   const [debugInfo, setDebugInfo] = useState("");
   const [updateStatus, setUpdateStatus] = useState<UpdateStatusMap>({});
   const [sortConfig, setSortConfig] = useState<{
-    column: 'nom' | 'numsujet' | 'iv' | 'none';
+    column: 'nom' | 'numsujet' | 'iv' | 'id' | 'none';
     order: 'asc' | 'desc';
   }>({ column: 'none', order: 'asc' });
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
@@ -279,13 +279,15 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
         comparison = (a.numsujet || 0) - (b.numsujet || 0);
       } else if (sortConfig.column === 'iv') {
         comparison = (a.iv || 0) - (b.iv || 0);
+      } else if (sortConfig.column === 'id') {
+        comparison = a.idVolontaire - b.idVolontaire;
       }
       return sortConfig.order === 'asc' ? comparison : -comparison;
     });
     return sorted;
   }, [volontairesAssignes, sortConfig, getVolontaireNomPrenom]);
 
-  const handleSort = useCallback((column: 'nom' | 'numsujet' | 'iv') => {
+  const handleSort = useCallback((column: 'nom' | 'numsujet' | 'iv' | 'id') => {
     setSortConfig((prev) => {
       if (prev.column === column) return { column, order: prev.order === 'asc' ? 'desc' : 'asc' };
       return { column, order: 'asc' };
@@ -566,6 +568,14 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
                   />
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <button onClick={() => handleSort('id')} className="flex items-center gap-2 hover:text-gray-700 transition-colors" title="Trier par ID">
+                    ID
+                    {sortConfig.column !== 'id' && <ArrowUpDown className="w-4 h-4" />}
+                    {sortConfig.column === 'id' && sortConfig.order === 'asc' && <ArrowUp className="w-4 h-4" />}
+                    {sortConfig.column === 'id' && sortConfig.order === 'desc' && <ArrowDown className="w-4 h-4" />}
+                  </button>
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   <button onClick={() => handleSort('nom')} className="flex items-center gap-2 hover:text-gray-700 transition-colors" title={t('indemnity.sortByName')}>
                     {t('indemnity.volunteer')}
                     {sortConfig.column !== 'nom' && <ArrowUpDown className="w-4 h-4" />}
@@ -616,34 +626,32 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
                         className="h-4 w-4 text-blue-600 border-gray-300 rounded cursor-pointer"
                       />
                     </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-700">
+                      {volontaire.idVolontaire}
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      <div>
-                        <div className="font-medium">
-                          {volontaire.idVolontaire !== 0 ? (
-                            <a
-                              href={`/volontaires/${volontaire.idVolontaire}`}
-                              className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left"
-                            >
-                              {getVolontaireName(volontaire.idVolontaire)}
-                            </a>
-                          ) : (
-                            <>
-                              {getVolontaireName(volontaire.idVolontaire)}
-                              <span className="ml-2 text-xs bg-yellow-200 text-yellow-800 px-2 py-1 rounded">
-                                {t('indemnity.temporary')}
-                              </span>
-                            </>
-                          )}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          ID: {volontaire.idVolontaire}
-                          {hasNoRdv && (
-                            <span className="ml-2 text-orange-600 font-medium">
-                              ⚠ Sans RDV
+                      <div className="font-medium">
+                        {volontaire.idVolontaire !== 0 ? (
+                          <a
+                            href={`/volontaires/${volontaire.idVolontaire}`}
+                            className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left"
+                          >
+                            {getVolontaireName(volontaire.idVolontaire)}
+                          </a>
+                        ) : (
+                          <>
+                            {getVolontaireName(volontaire.idVolontaire)}
+                            <span className="ml-2 text-xs bg-yellow-200 text-yellow-800 px-2 py-1 rounded">
+                              {t('indemnity.temporary')}
                             </span>
-                          )}
-                        </div>
+                          </>
+                        )}
                       </div>
+                      {hasNoRdv && (
+                        <div className="text-xs text-orange-600 font-medium mt-1">
+                          ⚠ Sans RDV
+                        </div>
+                      )}
                     </td>
 
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
