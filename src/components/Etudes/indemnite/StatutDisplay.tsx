@@ -10,12 +10,13 @@ import type { VolontaireAssigne, UpdateStatusMap } from "./types";
 interface StatutDisplayProps {
   volontaire: VolontaireAssigne;
   updateStatus: UpdateStatusMap;
+  getVolontaireKey: (volontaire: VolontaireAssigne) => string;
   onUpdateStatut: (volontaire: VolontaireAssigne, nouveauStatut: string) => Promise<void>;
 }
 
 const SORTIE_STATUTS = ["sortie_etude", "ni", "penalite"];
 
-const StatutDisplay: React.FC<StatutDisplayProps> = ({ volontaire, updateStatus, onUpdateStatut }) => {
+const StatutDisplay: React.FC<StatutDisplayProps> = ({ volontaire, updateStatus, getVolontaireKey, onUpdateStatut }) => {
   const { t } = useTranslation();
   const [isEditing, setIsEditing] = useState(false);
   const [tempStatut, setTempStatut] = useState(volontaire.statut || "inscrit");
@@ -108,7 +109,7 @@ const StatutDisplay: React.FC<StatutDisplayProps> = ({ volontaire, updateStatus,
         </div>
 
         <div className="flex items-center justify-end">
-          <UpdateStatusIcon status={updateStatus[`${volontaire.idVolontaire}_statut`]} />
+          <UpdateStatusIcon status={updateStatus[`${getVolontaireKey(volontaire)}_statut`]} />
         </div>
       </div>
     );
@@ -138,7 +139,7 @@ const StatutDisplay: React.FC<StatutDisplayProps> = ({ volontaire, updateStatus,
       </div>
 
       <div className="flex items-center justify-end">
-        <UpdateStatusIcon status={updateStatus[`${volontaire.idVolontaire}_statut`]} />
+        <UpdateStatusIcon status={updateStatus[`${getVolontaireKey(volontaire)}_statut`]} />
       </div>
     </div>
   );

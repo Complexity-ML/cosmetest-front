@@ -10,14 +10,16 @@ import type { VolontaireAssigne, UpdateStatusMap } from "./types";
 interface AnnulationButtonProps {
   volontaire: VolontaireAssigne;
   updateStatus: UpdateStatusMap;
+  getVolontaireKey: (volontaire: VolontaireAssigne) => string;
   onAnnuler: (volontaire: VolontaireAssigne, commentaire: string, annulePar: 'COSMETEST' | 'VOLONTAIRE') => Promise<void>;
 }
 
-export const AnnulationButton: React.FC<AnnulationButtonProps> = ({ volontaire, updateStatus, onAnnuler }) => {
+export const AnnulationButton: React.FC<AnnulationButtonProps> = ({ volontaire, updateStatus, getVolontaireKey, onAnnuler }) => {
   const { t } = useTranslation();
   const [showForm, setShowForm] = useState(false);
   const [commentaire, setCommentaire] = useState("");
   const [annulePar, setAnnulePar] = useState<'COSMETEST' | 'VOLONTAIRE'>('COSMETEST');
+  const volontaireKey = getVolontaireKey(volontaire);
 
   const handleAnnuler = async () => {
     if (!commentaire.trim()) return;
@@ -41,11 +43,11 @@ export const AnnulationButton: React.FC<AnnulationButtonProps> = ({ volontaire, 
           <p className="text-xs font-medium text-gray-700">{t('indemnity.cancelledBy')}</p>
           <div className="flex gap-4">
             <label className="flex items-center gap-2 cursor-pointer">
-              <input type="radio" name={`annulePar-${volontaire.idVolontaire}`} value="COSMETEST" checked={annulePar === 'COSMETEST'} onChange={(e) => setAnnulePar(e.target.value as 'COSMETEST' | 'VOLONTAIRE')} className="w-4 h-4 text-red-600" />
+              <input type="radio" name={`annulePar-${volontaireKey}`} value="COSMETEST" checked={annulePar === 'COSMETEST'} onChange={(e) => setAnnulePar(e.target.value as 'COSMETEST' | 'VOLONTAIRE')} className="w-4 h-4 text-red-600" />
               <span className="text-sm text-gray-700">{t('indemnity.cosmetest')}</span>
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
-              <input type="radio" name={`annulePar-${volontaire.idVolontaire}`} value="VOLONTAIRE" checked={annulePar === 'VOLONTAIRE'} onChange={(e) => setAnnulePar(e.target.value as 'COSMETEST' | 'VOLONTAIRE')} className="w-4 h-4 text-red-600" />
+              <input type="radio" name={`annulePar-${volontaireKey}`} value="VOLONTAIRE" checked={annulePar === 'VOLONTAIRE'} onChange={(e) => setAnnulePar(e.target.value as 'COSMETEST' | 'VOLONTAIRE')} className="w-4 h-4 text-red-600" />
               <span className="text-sm text-gray-700">{t('indemnity.volunteer')}</span>
             </label>
           </div>
@@ -61,7 +63,7 @@ export const AnnulationButton: React.FC<AnnulationButtonProps> = ({ volontaire, 
           </Button>
         </div>
         <div className="flex items-center justify-center">
-          <UpdateStatusIcon status={updateStatus[`${volontaire.idVolontaire}_annulation`]} />
+          <UpdateStatusIcon status={updateStatus[`${volontaireKey}_annulation`]} />
         </div>
       </div>
     );
@@ -80,10 +82,11 @@ export const AnnulationButton: React.FC<AnnulationButtonProps> = ({ volontaire, 
 interface DeleteButtonProps {
   volontaire: VolontaireAssigne;
   updateStatus: UpdateStatusMap;
+  getVolontaireKey: (volontaire: VolontaireAssigne) => string;
   onDelete: (volontaire: VolontaireAssigne) => Promise<void>;
 }
 
-export const DeleteButton: React.FC<DeleteButtonProps> = ({ volontaire, updateStatus, onDelete }) => {
+export const DeleteButton: React.FC<DeleteButtonProps> = ({ volontaire, updateStatus, getVolontaireKey, onDelete }) => {
   const { t } = useTranslation();
   const [showConfirm, setShowConfirm] = useState(false);
 
@@ -107,7 +110,7 @@ export const DeleteButton: React.FC<DeleteButtonProps> = ({ volontaire, updateSt
           </Button>
         </div>
         <div className="flex items-center justify-center">
-          <UpdateStatusIcon status={updateStatus[`${volontaire.idVolontaire}_delete`]} />
+          <UpdateStatusIcon status={updateStatus[`${getVolontaireKey(volontaire)}_delete`]} />
         </div>
       </div>
     );

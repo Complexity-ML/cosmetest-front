@@ -8,10 +8,11 @@ import { STATUT_CONFIG, StatutIcon } from "./statutUtils";
 import type { VolontaireAssigne } from "./types";
 
 interface BatchActionsProps {
-  selectedIds: Set<number>;
+  selectedKeys: Set<string>;
   volontaires: VolontaireAssigne[];
-  onBatchUpdateIV: (ids: number[], newIV: number) => Promise<void>;
-  onBatchUpdateStatut: (ids: number[], newStatut: string) => Promise<void>;
+  getVolontaireKey: (volontaire: VolontaireAssigne) => string;
+  onBatchUpdateIV: (volontaires: VolontaireAssigne[], newIV: number) => Promise<void>;
+  onBatchUpdateStatut: (volontaires: VolontaireAssigne[], newStatut: string) => Promise<void>;
   onBatchAnnuler: (volontaires: VolontaireAssigne[], commentaire: string, annulePar: 'COSMETEST' | 'VOLONTAIRE') => Promise<void>;
   onClearSelection: () => void;
 }
@@ -20,8 +21,9 @@ interface BatchActionsProps {
 const SORTIE_STATUTS = ["sortie_etude", "ni", "penalite"];
 
 const BatchActions: React.FC<BatchActionsProps> = ({
-  selectedIds,
+  selectedKeys,
   volontaires,
+  getVolontaireKey,
   onBatchUpdateIV,
   onBatchUpdateStatut,
   onBatchAnnuler,
@@ -41,7 +43,10 @@ const BatchActions: React.FC<BatchActionsProps> = ({
   const [annulerCommentaire, setAnnulerCommentaire] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
 
-  if (selectedIds.size === 0) return null;
+  if (selectedKeys.size === 0) return null;
+
+  const selectedVolontaires = volontaires.filter(v => selectedKeys.has(getVolontaireKey(v)));
+  const selectedCount = selectedVolontaires.length;
 
   const closeAll = () => {
     setShowIVForm(false);
@@ -67,7 +72,7 @@ const BatchActions: React.FC<BatchActionsProps> = ({
     if (isNaN(ivValue) || ivValue < 0) return;
     setIsUpdating(true);
     try {
-      await onBatchUpdateIV(Array.from(selectedIds), ivValue);
+      await onBatchUpdateIV(selectedVolontaires, ivValue);
       closeAll();
       onClearSelection();
     } finally {
@@ -80,7 +85,7 @@ const BatchActions: React.FC<BatchActionsProps> = ({
     if (!finalStatut.trim()) return;
     setIsUpdating(true);
     try {
-      await onBatchUpdateStatut(Array.from(selectedIds), finalStatut);
+      await onBatchUpdateStatut(selectedVolontaires, finalStatut);
       closeAll();
       onClearSelection();
     } finally {
@@ -94,12 +99,11 @@ const BatchActions: React.FC<BatchActionsProps> = ({
     if ((isNaN(ivValue) || ivValue < 0) && !finalStatut.trim()) return;
     setIsUpdating(true);
     try {
-      const ids = Array.from(selectedIds);
       if (!isNaN(ivValue) && ivValue >= 0) {
-        await onBatchUpdateIV(ids, ivValue);
+        await onBatchUpdateIV(selectedVolontaires, ivValue);
       }
       if (finalStatut.trim()) {
-        await onBatchUpdateStatut(ids, finalStatut);
+        await onBatchUpdateStatut(selectedVolontaires, finalStatut);
       }
       closeAll();
       onClearSelection();
@@ -112,8 +116,7 @@ const BatchActions: React.FC<BatchActionsProps> = ({
     if (!annulerCommentaire.trim()) return;
     setIsUpdating(true);
     try {
-      const selectedVolontaires = volontaires.filter(v => selectedIds.has(v.idVolontaire) && v.idVolontaire !== 0);
-      await onBatchAnnuler(selectedVolontaires, annulerCommentaire.trim(), 'COSMETEST');
+      await onBatchAnnuler(selectedVolontaires.filter(v => v.idVolontaire !== 0), annulerCommentaire.trim(), 'COSMETEST');
       closeAll();
       onClearSelection();
     } finally {
@@ -174,7 +177,7 @@ const BatchActions: React.FC<BatchActionsProps> = ({
     <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg space-y-3">
       <div className="flex items-center justify-between">
         <span className="text-sm font-medium text-blue-800">
-          <strong>{selectedIds.size}</strong> volontaire{selectedIds.size > 1 ? 's' : ''} sélectionné{selectedIds.size > 1 ? 's' : ''}
+          <strong>{selectedCount}</strong> volontaire{selectedCount > 1 ? 's' : ''} sélectionné{selectedCount > 1 ? 's' : ''}
         </span>
         <div className="flex gap-2">
           {!showIVForm && !showStatutForm && !showComboForm && !showAnnulerForm && (
@@ -228,7 +231,7 @@ const BatchActions: React.FC<BatchActionsProps> = ({
       {showIVForm && (
         <div className="flex items-center gap-2 bg-white p-3 rounded border">
           <span className="text-sm text-gray-700 whitespace-nowrap">
-            {t('indemnity.newIVFor') || 'Nouvelle IV pour'} {selectedIds.size} volontaire{selectedIds.size > 1 ? 's' : ''} :
+            {t('indemnity.newIVFor') || 'Nouvelle IV pour'} {selectedCount} volontaire{selectedCount > 1 ? 's' : ''} :
           </span>
           <Input
             type="number"
@@ -255,7 +258,7 @@ const BatchActions: React.FC<BatchActionsProps> = ({
       {showStatutForm && (
         <div className="bg-white p-3 rounded border space-y-2">
           <span className="text-sm text-gray-700">
-            {t('indemnity.newStatusFor') || 'Nouveau statut pour'} {selectedIds.size} volontaire{selectedIds.size > 1 ? 's' : ''} :
+            {t('indemnity.newStatusFor') || 'Nouveau statut pour'} {selectedCount} volontaire{selectedCount > 1 ? 's' : ''} :
           </span>
           {renderStatutButtons(batchStatut, setBatchStatut, batchNote, setBatchNote)}
           <div className="flex items-center gap-2">
@@ -274,7 +277,7 @@ const BatchActions: React.FC<BatchActionsProps> = ({
       {showComboForm && (
         <div className="bg-white p-3 rounded border space-y-3">
           <span className="text-sm font-medium text-purple-700">
-            Modifier IV et statut pour {selectedIds.size} volontaire{selectedIds.size > 1 ? 's' : ''}
+            Modifier IV et statut pour {selectedCount} volontaire{selectedCount > 1 ? 's' : ''}
           </span>
 
           {/* IV */}
@@ -334,7 +337,7 @@ const BatchActions: React.FC<BatchActionsProps> = ({
           <div className="flex items-center gap-2 text-red-800">
             <AlertTriangle className="w-4 h-4" />
             <span className="text-sm font-medium">
-              Annuler {selectedIds.size} volontaire{selectedIds.size > 1 ? 's' : ''} (par Cosmetest)
+              Annuler {selectedCount} volontaire{selectedCount > 1 ? 's' : ''} (par Cosmetest)
             </span>
           </div>
           <p className="text-xs text-red-600">

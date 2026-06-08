@@ -51,7 +51,7 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
     column: 'nom' | 'numsujet' | 'iv' | 'id' | 'none';
     order: 'asc' | 'desc';
   }>({ column: 'none', order: 'asc' });
-  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set());
 
   // Hooks personnalisés
   const { volontairesInfo, loadGroupesInfo, loadVolontairesInfo } = useEntitiesInfo();
@@ -61,6 +61,16 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
     if (!rdvs || rdvs.length === 0) return new Set<number>();
     return new Set(rdvs.map((rdv: any) => rdv.idVolontaire || rdv.volontaire?.idVol || rdv.volontaire?.id).filter(Boolean));
   }, [rdvs]);
+
+  const getVolontaireKey = useCallback((volontaire: VolontaireAssigne) => [
+    volontaire.idEtude ?? etudeId,
+    volontaire.idGroupe ?? 0,
+    volontaire.idVolontaire ?? 0,
+    volontaire.numsujet ?? 0,
+    volontaire.iv ?? 0,
+    volontaire.paye ?? 0,
+    volontaire.statut ?? "INSCRIT",
+  ].join(":"), [etudeId]);
 
   // Fonctions de gestion des annulations
   const enregistrerAnnulation = useCallback(async (
@@ -92,22 +102,32 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
     commentaire: string,
     annulePar: 'COSMETEST' | 'VOLONTAIRE'
   ) => {
-    const volontaireId = volontaire.idVolontaire;
-    const statusKey = `${volontaireId}_annulation`;
+    const rowKey = getVolontaireKey(volontaire);
+    const statusKey = `${rowKey}_annulation`;
     try {
       setUpdateStatus((prev) => ({ ...prev, [statusKey]: "loading" }));
       await enregistrerAnnulation(volontaire, commentaire, annulePar);
-      await api.delete("/etude-volontaires/delete-by-etude-volontaire", {
+      await api.delete("/etude-volontaires/delete", {
         params: {
           idEtude: parseInt(etudeId.toString()),
+          idGroupe: volontaire.idGroupe || 0,
           idVolontaire: volontaire.idVolontaire,
+          iv: volontaire.iv || 0,
+          numsujet: volontaire.numsujet || 0,
+          paye: volontaire.paye || 0,
+          statut: volontaire.statut || "INSCRIT",
         },
       });
       setVolontairesAssignes((prev) =>
-        prev.filter((v) => !(v.idVolontaire === volontaireId && v.idGroupe === (volontaire.idGroupe || 0)))
+        prev.filter((v) => getVolontaireKey(v) !== rowKey)
       );
+      setSelectedKeys((prev) => {
+        const next = new Set(prev);
+        next.delete(rowKey);
+        return next;
+      });
       setUpdateStatus((prev) => ({ ...prev, [statusKey]: "success" }));
-      setDebugInfo(`Volontaire annulé par ${annulePar} : association supprimée, RDV supprimés, annulation enregistrée. Commentaire: ${commentaire}`);
+      setDebugInfo(`Volontaire annulé par ${annulePar} : association supprimée, annulation enregistrée. Commentaire: ${commentaire}`);
       setTimeout(() => { setUpdateStatus((prev) => { const n = { ...prev }; delete n[statusKey]; return n; }); }, 2000);
     } catch (error: unknown) {
       setUpdateStatus((prev) => ({ ...prev, [statusKey]: "error" }));
@@ -117,7 +137,7 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
       setError(`Erreur annulation: ${errorMessage}`);
       setTimeout(() => { setUpdateStatus((prev) => { const n = { ...prev }; delete n[statusKey]; return n; }); }, 3000);
     }
-  }, [etudeId, enregistrerAnnulation]);
+  }, [etudeId, enregistrerAnnulation, getVolontaireKey]);
 
   const batchAnnuler = useCallback(async (
     volontairesAannuler: VolontaireAssigne[],
@@ -136,8 +156,8 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
     newValue: string | number,
     endpoint: string
   ) => {
-    const volontaireId = volontaire.idVolontaire;
-    const statusKey = `${volontaireId}_${field}`;
+    const rowKey = getVolontaireKey(volontaire);
+    const statusKey = `${rowKey}_${field}`;
     try {
       setUpdateStatus((prev) => ({ ...prev, [statusKey]: "loading" }));
       const currentValue = field === "numsujet" ? volontaire.numsujet || 0 : field === "iv" ? volontaire.iv || 0 : volontaire.statut || "inscrit";
@@ -163,11 +183,16 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
       await api.patch(endpoint, null, { params });
       setVolontairesAssignes((prev) =>
         prev.map((v) =>
-          v.idVolontaire === volontaireId && v.idGroupe === volontaire.idGroupe
+          getVolontaireKey(v) === rowKey
             ? { ...v, [field]: field === "statut" ? newValue : parseInt(newValue.toString()) || 0 }
             : v
         )
       );
+      setSelectedKeys((prev) => {
+        const next = new Set(prev);
+        next.delete(rowKey);
+        return next;
+      });
       setUpdateStatus((prev) => ({ ...prev, [statusKey]: "success" }));
       setDebugInfo(`${field} mis à jour: ${currentValue} vers ${newValue}`);
       setTimeout(() => { setUpdateStatus((prev) => { const n = { ...prev }; delete n[statusKey]; return n; }); }, 2000);
@@ -179,12 +204,13 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
       setError(`Erreur ${field}: ${errorMessage}`);
       setTimeout(() => { setUpdateStatus((prev) => { const n = { ...prev }; delete n[statusKey]; return n; }); }, 3000);
     }
-  }, [etudeId]);
+  }, [etudeId, getVolontaireKey]);
 
   // Suppression volontaire ID=0
   const deleteVolontaire = useCallback(async (volontaire: VolontaireAssigne) => {
     const volontaireId = volontaire.idVolontaire;
-    const statusKey = `${volontaireId}_delete`;
+    const rowKey = getVolontaireKey(volontaire);
+    const statusKey = `${rowKey}_delete`;
     if (volontaireId !== 0) { setError("Seuls les volontaires avec ID = 0 peuvent être supprimés"); return; }
     try {
       setUpdateStatus((prev) => ({ ...prev, [statusKey]: "loading" }));
@@ -198,7 +224,12 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
         statut: volontaire.statut || "-",
       };
       await api.delete("/etude-volontaires/delete", { params });
-      setVolontairesAssignes((prev) => prev.filter((v) => !(v.idVolontaire === volontaireId && v.idGroupe === volontaire.idGroupe)));
+      setVolontairesAssignes((prev) => prev.filter((v) => getVolontaireKey(v) !== rowKey));
+      setSelectedKeys((prev) => {
+        const next = new Set(prev);
+        next.delete(rowKey);
+        return next;
+      });
       setUpdateStatus((prev) => ({ ...prev, [statusKey]: "success" }));
       setTimeout(() => { setUpdateStatus((prev) => { const n = { ...prev }; delete n[statusKey]; return n; }); }, 2000);
     } catch (error: unknown) {
@@ -209,7 +240,7 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
       setError(`Erreur suppression: ${errorMessage}`);
       setTimeout(() => { setUpdateStatus((prev) => { const n = { ...prev }; delete n[statusKey]; return n; }); }, 3000);
     }
-  }, [etudeId]);
+  }, [etudeId, getVolontaireKey]);
 
   // Fonctions spécialisées
   const updateStatut = useCallback((volontaire: VolontaireAssigne, nouveauStatut: string) => {
@@ -221,19 +252,17 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
   }, [updateVolontaire]);
 
   // Batch updates
-  const batchUpdateIV = useCallback(async (ids: number[], newIV: number) => {
-    for (const id of ids) {
-      const vol = volontairesAssignes.find(v => v.idVolontaire === id);
-      if (vol) await updateVolontaire(vol, "iv", newIV, "/etude-volontaires/update-iv");
+  const batchUpdateIV = useCallback(async (volontaires: VolontaireAssigne[], newIV: number) => {
+    for (const volontaire of volontaires) {
+      await updateVolontaire(volontaire, "iv", newIV, "/etude-volontaires/update-iv");
     }
-  }, [volontairesAssignes, updateVolontaire]);
+  }, [updateVolontaire]);
 
-  const batchUpdateStatut = useCallback(async (ids: number[], newStatut: string) => {
-    for (const id of ids) {
-      const vol = volontairesAssignes.find(v => v.idVolontaire === id);
-      if (vol) await updateVolontaire(vol, "statut", newStatut, "/etude-volontaires/update-statut");
+  const batchUpdateStatut = useCallback(async (volontaires: VolontaireAssigne[], newStatut: string) => {
+    for (const volontaire of volontaires) {
+      await updateVolontaire(volontaire, "statut", newStatut, "/etude-volontaires/update-statut");
     }
-  }, [volontairesAssignes, updateVolontaire]);
+  }, [updateVolontaire]);
 
   // Noms des volontaires
   const getVolontaireName = useMemo(
@@ -304,21 +333,21 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
   }), [volontairesAssignes, rdvs, volunteerIdsWithRdv]);
 
   // Sélection
-  const handleToggleSelect = useCallback((id: number) => {
-    setSelectedIds(prev => {
+  const handleToggleSelect = useCallback((key: string) => {
+    setSelectedKeys((prev: Set<string>) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
+      if (next.has(key)) next.delete(key); else next.add(key);
       return next;
     });
   }, []);
 
   const handleSelectAll = useCallback(() => {
-    if (selectedIds.size === volontairesTries.length) {
-      setSelectedIds(new Set());
+    if (selectedKeys.size === volontairesTries.length) {
+      setSelectedKeys(new Set());
     } else {
-      setSelectedIds(new Set(volontairesTries.map(v => v.idVolontaire)));
+      setSelectedKeys(new Set(volontairesTries.map(getVolontaireKey)));
     }
-  }, [selectedIds.size, volontairesTries]);
+  }, [getVolontaireKey, selectedKeys.size, volontairesTries]);
 
   // Helper pour parser la réponse etude-volontaire
   const parseEtudeVolontaireResponse = (response: any): VolontaireAssigne[] => {
@@ -541,12 +570,13 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
 
       {/* Batch actions */}
       <BatchActions
-        selectedIds={selectedIds}
+        selectedKeys={selectedKeys}
         volontaires={volontairesAssignes}
+        getVolontaireKey={getVolontaireKey}
         onBatchUpdateIV={batchUpdateIV}
         onBatchUpdateStatut={batchUpdateStatut}
         onBatchAnnuler={batchAnnuler}
-        onClearSelection={() => setSelectedIds(new Set())}
+        onClearSelection={() => setSelectedKeys(new Set())}
       />
 
       {/* Tableau */}
@@ -562,7 +592,7 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
                 <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase">
                   <input
                     type="checkbox"
-                    checked={volontairesTries.length > 0 && selectedIds.size === volontairesTries.length}
+                    checked={volontairesTries.length > 0 && selectedKeys.size === volontairesTries.length}
                     onChange={handleSelectAll}
                     className="h-4 w-4 text-blue-600 border-gray-300 rounded cursor-pointer"
                   />
@@ -610,9 +640,10 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
             <tbody className="bg-white divide-y divide-gray-200">
               {volontairesTries.map((volontaire) => {
                 const hasNoRdv = rdvs && volontaire.idVolontaire !== 0 && !volunteerIdsWithRdv.has(volontaire.idVolontaire);
+                const volontaireKey = getVolontaireKey(volontaire);
                 return (
                   <tr
-                    key={`${volontaire.idVolontaire}-${volontaire.idGroupe}`}
+                    key={volontaireKey}
                     className={`
                       ${volontaire.idVolontaire === 0 ? "bg-yellow-50" : ""}
                       ${hasNoRdv ? "bg-orange-50 border-l-4 border-l-orange-400" : ""}
@@ -621,8 +652,8 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
                     <td className="px-3 py-4 text-center">
                       <input
                         type="checkbox"
-                        checked={selectedIds.has(volontaire.idVolontaire)}
-                        onChange={() => handleToggleSelect(volontaire.idVolontaire)}
+                        checked={selectedKeys.has(volontaireKey)}
+                        onChange={() => handleToggleSelect(volontaireKey)}
                         className="h-4 w-4 text-blue-600 border-gray-300 rounded cursor-pointer"
                       />
                     </td>
@@ -660,6 +691,7 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
                         volontairesAssignes={volontairesAssignes}
                         volontairesInfo={volontairesInfo}
                         updateStatus={updateStatus}
+                        getVolontaireKey={getVolontaireKey}
                         onUpdate={updateVolontaire}
                       />
                     </td>
@@ -668,6 +700,7 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
                       <IVInput
                         volontaire={volontaire}
                         updateStatus={updateStatus}
+                        getVolontaireKey={getVolontaireKey}
                         onUpdate={updateIV}
                       />
                     </td>
@@ -676,6 +709,7 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
                       <StatutDisplay
                         volontaire={volontaire}
                         updateStatus={updateStatus}
+                        getVolontaireKey={getVolontaireKey}
                         onUpdateStatut={updateStatut}
                       />
                     </td>
@@ -685,11 +719,13 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
                         <AnnulationButton
                           volontaire={volontaire}
                           updateStatus={updateStatus}
+                          getVolontaireKey={getVolontaireKey}
                           onAnnuler={changerStatutVersAnnule}
                         />
                         <DeleteButton
                           volontaire={volontaire}
                           updateStatus={updateStatus}
+                          getVolontaireKey={getVolontaireKey}
                           onDelete={deleteVolontaire}
                         />
                       </div>

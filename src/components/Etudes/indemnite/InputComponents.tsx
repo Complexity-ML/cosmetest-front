@@ -8,6 +8,7 @@ interface NumSujetInputProps {
   volontairesAssignes: VolontaireAssigne[];
   volontairesInfo: Record<number, VolontaireInfo>;
   updateStatus: UpdateStatusMap;
+  getVolontaireKey: (volontaire: VolontaireAssigne) => string;
   onUpdate: (volontaire: VolontaireAssigne, field: 'numsujet', value: string, endpoint: string) => Promise<void>;
 }
 
@@ -16,6 +17,7 @@ export const NumSujetInput: React.FC<NumSujetInputProps> = ({
   volontairesAssignes,
   volontairesInfo,
   updateStatus,
+  getVolontaireKey,
   onUpdate
 }) => {
   const [value, setValue] = useState(volontaire.numsujet?.toString() || "");
@@ -105,7 +107,7 @@ export const NumSujetInput: React.FC<NumSujetInputProps> = ({
             handleUpdate(valueToSave);
           }}
         />
-        <UpdateStatusIcon status={updateStatus[`${volontaire.idVolontaire}_numsujet`]} />
+        <UpdateStatusIcon status={updateStatus[`${getVolontaireKey(volontaire)}_numsujet`]} />
       </div>
       {localError && (
         <div className="absolute z-10 left-0 top-full mt-1 p-2 bg-red-100 border border-red-300 rounded shadow-lg max-w-[250px]">
@@ -119,10 +121,11 @@ export const NumSujetInput: React.FC<NumSujetInputProps> = ({
 interface IVInputProps {
   volontaire: VolontaireAssigne;
   updateStatus: UpdateStatusMap;
+  getVolontaireKey: (volontaire: VolontaireAssigne) => string;
   onUpdate: (volontaire: VolontaireAssigne, value: string) => Promise<void>;
 }
 
-export const IVInput: React.FC<IVInputProps> = ({ volontaire, updateStatus, onUpdate }) => {
+export const IVInput: React.FC<IVInputProps> = ({ volontaire, updateStatus, getVolontaireKey, onUpdate }) => {
   const [value, setValue] = useState(volontaire.iv?.toString() || "0");
   const isSavingRef = useRef(false);
   const lastSavedValueRef = useRef(volontaire.iv?.toString() || "0");
@@ -180,7 +183,7 @@ export const IVInput: React.FC<IVInputProps> = ({ volontaire, updateStatus, onUp
           handleUpdate(valueToSave);
         }}
       />
-      <UpdateStatusIcon status={updateStatus[`${volontaire.idVolontaire}_iv`]} />
+      <UpdateStatusIcon status={updateStatus[`${getVolontaireKey(volontaire)}_iv`]} />
     </div>
   );
 };
