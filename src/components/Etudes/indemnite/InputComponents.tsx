@@ -87,7 +87,9 @@ export const NumSujetInput: React.FC<NumSujetInputProps> = ({
       <div className="flex items-center space-x-2">
         <Input
           ref={inputRef}
-          type="number"
+          type="text"
+          inputMode="numeric"
+          pattern="[0-9]*"
           value={value}
           onChange={(e) => {
             const rawValue = e.target.value;
@@ -97,7 +99,10 @@ export const NumSujetInput: React.FC<NumSujetInputProps> = ({
           className={`w-20 ${localError ? "border-red-500 bg-red-50" : ""}`}
           min="1"
           title={localError || ""}
-          onWheel={(e) => (e.target as HTMLInputElement).blur()}
+          onWheel={(e) => {
+            e.preventDefault();
+            e.currentTarget.blur();
+          }}
           onFocus={(e) => { hasFocusRef.current = true; e.target.select(); }}
           onKeyDown={(e) => { if (e.key === "Enter") handleUpdate(value); }}
           onBlur={() => {
@@ -165,7 +170,9 @@ export const IVInput: React.FC<IVInputProps> = ({ volontaire, updateStatus, getV
   return (
     <div className="flex items-center space-x-2">
       <Input
-        type="number"
+        type="text"
+        inputMode="numeric"
+        pattern="[0-9]*"
         value={value}
         onChange={(e) => {
           const rawValue = e.target.value;
@@ -174,6 +181,10 @@ export const IVInput: React.FC<IVInputProps> = ({ volontaire, updateStatus, getV
         }}
         className="w-24"
         min="0"
+        onWheel={(e) => {
+          e.preventDefault();
+          e.currentTarget.blur();
+        }}
         onFocus={(e) => { hasFocusRef.current = true; e.target.select(); }}
         onKeyDown={(e) => { if (e.key === "Enter") handleUpdate(value); }}
         onBlur={() => {

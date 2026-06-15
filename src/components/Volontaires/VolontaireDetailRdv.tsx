@@ -37,6 +37,9 @@ interface AnnulationRdv {
   [key: string]: any;
 }
 
+const sameId = (left: unknown, right: unknown): boolean =>
+  left != null && right != null && Number(left) === Number(right);
+
 const VolontaireDetailRdv = ({ rdvs = [], volontaireId }: VolontaireDetailRdvProps) => {
   const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -56,6 +59,9 @@ const VolontaireDetailRdv = ({ rdvs = [], volontaireId }: VolontaireDetailRdvPro
         const map = new Map<string, AnnulationRdv>();
         if (Array.isArray(annulations)) {
           annulations.forEach((annulation: any) => {
+            if (!sameId(annulation.idVol ?? annulation.idVolontaire ?? annulation.volontaireId, volontaireId)) {
+              return;
+            }
             if (annulation.idRdv) {
               const key = `${annulation.idEtude}-${annulation.idRdv}`;
               map.set(key, annulation as AnnulationRdv);
@@ -77,7 +83,12 @@ const VolontaireDetailRdv = ({ rdvs = [], volontaireId }: VolontaireDetailRdvPro
   const isRdvAnnule = (rdv: Rdv): AnnulationRdv | undefined => {
     if (!rdv.idEtude || !rdv.idRdv) return undefined;
     const key = `${rdv.idEtude}-${rdv.idRdv}`;
-    return annulationsMap.get(key);
+    const annulation = annulationsMap.get(key);
+    if (!annulation) return undefined;
+    if (!sameId(annulation.idVol ?? annulation.idVolontaire ?? annulation.volontaireId, volontaireId)) {
+      return undefined;
+    }
+    return annulation;
   };
 
   // Fonction pour formater le statut du RDV

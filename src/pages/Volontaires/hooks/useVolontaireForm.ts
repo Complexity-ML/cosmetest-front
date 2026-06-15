@@ -893,10 +893,6 @@ export const useVolontaireForm = ({ id, isEditMode, navigate }: UseVolontaireFor
       newErrors.sexe = "Le sexe est obligatoire";
     }
 
-    if (!formData.typePeauVisage) {
-      newErrors.typePeauVisage = "Le type de peau est obligatoire";
-    }
-
     // Code postal français (5 chiffres)
     if (formData.codePostal && !/^\d{5}$/.test(formData.codePostal)) {
       newErrors.codePostal = "Le code postal doit contenir 5 chiffres";

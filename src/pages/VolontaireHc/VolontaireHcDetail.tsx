@@ -78,6 +78,7 @@ const DetailSection = ({ title, icon, children }: any) => {
     <Card className="mb-6">
       <button
         type="button"
+        tabIndex={-1}
         className="w-full flex justify-between items-center text-left px-6 py-4 focus:outline-none hover:bg-gray-50"
         onClick={() => setIsOpen(!isOpen)}
       >

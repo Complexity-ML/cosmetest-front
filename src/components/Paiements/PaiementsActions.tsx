@@ -10,6 +10,9 @@ import paiementService from '../../services/PaiementService';
 import annulationService from '../../services/annulationService';
 import { PAIEMENT_STATUS } from '../../hooks/usePaiements';
 
+const sameId = (left: unknown, right: unknown): boolean =>
+  left != null && right != null && Number(left) === Number(right);
+
 // Type definitions
 interface PaiementActionsProps {
   idEtude: string | number;
@@ -49,7 +52,13 @@ const PaiementActions = ({
         const numericVolontaireId = typeof idVolontaire === 'string' ? parseInt(idVolontaire, 10) : idVolontaire;
         const numericEtudeId = typeof idEtude === 'string' ? parseInt(idEtude, 10) : idEtude;
         const annulations = await annulationService.getByVolontaireAndEtude(numericVolontaireId, numericEtudeId);
-        setIsAnnule(annulations && annulations.length > 0);
+        setIsAnnule(
+          Array.isArray(annulations) &&
+            annulations.some((annulation: any) =>
+              sameId(annulation.idVol ?? annulation.idVolontaire ?? annulation.volontaireId, numericVolontaireId) &&
+              sameId(annulation.idEtude, numericEtudeId),
+            ),
+        );
       } catch (error) {
         console.error('Erreur lors de la vérification d\'annulation:', error);
         // En cas d'erreur, on considère que le volontaire n'est pas annulé

@@ -61,6 +61,9 @@ const formatDate = (t: any, value?: string): string => {
 
 const formatTime = (t: any, value?: string): string => value ?? t('dates.notSpecified');
 
+const sameId = (left: unknown, right: unknown): boolean =>
+  left != null && right != null && Number(left) === Number(right);
+
 const AppointmentDetailsCard = ({ appointment, group }: AppointmentDetailsCardProps) => {
   const { t } = useTranslation();
   const [annulation, setAnnulation] = useState<AnnulationData | null>(null);
@@ -97,7 +100,9 @@ const AppointmentDetailsCard = ({ appointment, group }: AppointmentDetailsCardPr
         if (Array.isArray(annulations) && annulations.length > 0) {
           // Trouver l'annulation correspondant à ce RDV spécifique
           const rdvAnnulation = annulations.find(
-            (a: any) => a.idRdv === rdvId
+            (a: any) =>
+              sameId(a.idRdv, rdvId) &&
+              sameId(a.idVol ?? a.idVolontaire ?? a.volontaireId, appointment.idVolontaire)
           );
           console.log('🎯 Annulation trouvée pour ce RDV:', rdvAnnulation);
           if (rdvAnnulation) {

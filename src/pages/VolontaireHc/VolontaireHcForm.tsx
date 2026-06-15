@@ -282,6 +282,7 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({ title, children
     <div className="mb-6">
       <button
         type="button"
+        tabIndex={-1}
         className="w-full flex justify-between items-center text-left text-lg font-medium text-gray-800 border-b border-gray-200 pb-2 mb-3 focus:outline-none"
         onClick={() => setOpen(!open)}
       >

@@ -121,6 +121,7 @@ const VolontairesHcTable = ({ volontaires, onArchive }: VolontairesHcTableProps)
               <TableHead
                 className="cursor-pointer hover:bg-accent w-20"
                 onClick={() => requestSort('volontaireId')}
+                tabIndex={-1}
               >
                 <div className="flex items-center">
                   <span>{t('settings.id')}</span>
@@ -130,6 +131,7 @@ const VolontairesHcTable = ({ volontaires, onArchive }: VolontairesHcTableProps)
               <TableHead
                 className="cursor-pointer hover:bg-accent"
                 onClick={() => requestSort('nomVol')}
+                tabIndex={-1}
               >
                 <div className="flex items-center">
                   <span>{t('volunteers.lastName')}</span>
@@ -139,6 +141,7 @@ const VolontairesHcTable = ({ volontaires, onArchive }: VolontairesHcTableProps)
               <TableHead
                 className="cursor-pointer hover:bg-accent"
                 onClick={() => requestSort('prenomVol')}
+                tabIndex={-1}
               >
                 <div className="flex items-center">
                   <span>{t('volunteers.firstName')}</span>
@@ -148,6 +151,7 @@ const VolontairesHcTable = ({ volontaires, onArchive }: VolontairesHcTableProps)
               <TableHead
                 className="cursor-pointer hover:bg-accent"
                 onClick={() => requestSort('sexe')}
+                tabIndex={-1}
               >
                 <div className="flex items-center">
                   <span>{t('volunteers.gender')}</span>
@@ -157,6 +161,7 @@ const VolontairesHcTable = ({ volontaires, onArchive }: VolontairesHcTableProps)
               <TableHead
                 className="cursor-pointer hover:bg-accent"
                 onClick={() => requestSort('emailVol')}
+                tabIndex={-1}
               >
                 <div className="flex items-center">
                   <span>{t('volunteers.email')}</span>
@@ -166,6 +171,7 @@ const VolontairesHcTable = ({ volontaires, onArchive }: VolontairesHcTableProps)
               <TableHead
                 className="cursor-pointer hover:bg-accent"
                 onClick={() => requestSort('typePeauVisage')}
+                tabIndex={-1}
               >
                 <div className="flex items-center">
                   <span>{t('volunteers.skinType')}</span>

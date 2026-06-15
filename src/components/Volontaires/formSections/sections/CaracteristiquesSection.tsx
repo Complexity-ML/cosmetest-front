@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import type { CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
 
 // Définition des ethnies principales
@@ -49,8 +50,36 @@ const SOUS_ETHNIES_PAR_ETHNIE: Record<string, string[]> = {
   ]
 };
 
+const EYE_COLOR_OPTIONS = [
+  'Bleus',
+  'Verts',
+  'Marrons',
+  'Noisette',
+  'Gris',
+  'Noirs'
+] as const;
+
+const EYE_COLOR_CLASSES: Record<string, string> = {
+  Bleus: 'bg-blue-100 text-blue-900 border-blue-300',
+  Verts: 'bg-emerald-100 text-emerald-900 border-emerald-300',
+  Marrons: 'bg-amber-100 text-amber-950 border-amber-300',
+  Noisette: 'bg-yellow-100 text-yellow-950 border-yellow-300',
+  Gris: 'bg-gray-100 text-gray-900 border-gray-300',
+  Noirs: 'bg-neutral-800 text-white border-neutral-700',
+};
+
+const EYE_OPTION_STYLES: Record<string, CSSProperties> = {
+  Bleus: { backgroundColor: '#dbeafe', color: '#1e3a8a' },
+  Verts: { backgroundColor: '#d1fae5', color: '#064e3b' },
+  Marrons: { backgroundColor: '#fef3c7', color: '#451a03' },
+  Noisette: { backgroundColor: '#fef9c3', color: '#422006' },
+  Gris: { backgroundColor: '#f3f4f6', color: '#111827' },
+  Noirs: { backgroundColor: '#262626', color: '#ffffff' },
+};
+
 const CaracteristiquesSection = ({ formData, onChange }: any) => {
   const { t } = useTranslation();
+  const selectedEyeColorClass = EYE_COLOR_CLASSES[formData.yeux] || '';
 
   // Helpers pour origine père/mère (multi-select stocké en CSV)
   const parseCsv = (val: any): string[] => {
@@ -275,15 +304,18 @@ const CaracteristiquesSection = ({ formData, onChange }: any) => {
             name="yeux"
             value={formData.yeux}
             onChange={onChange}
-            className="form-select block w-full"
+            className={`form-select block w-full border ${selectedEyeColorClass}`}
           >
             <option value="">{t('common.select')}</option>
-            <option value="Bleus">{t('volunteers.eyeColorOptions.Bleus')}</option>
-            <option value="Verts">{t('volunteers.eyeColorOptions.Verts')}</option>
-            <option value="Marrons">{t('volunteers.eyeColorOptions.Marrons')}</option>
-            <option value="Noisette">{t('volunteers.eyeColorOptions.Noisette')}</option>
-            <option value="Gris">{t('volunteers.eyeColorOptions.Gris')}</option>
-            <option value="Noirs">{t('volunteers.eyeColorOptions.Noirs')}</option>
+            {EYE_COLOR_OPTIONS.map((color) => (
+              <option
+                key={color}
+                value={color}
+                style={EYE_OPTION_STYLES[color]}
+              >
+                {t(`volunteers.eyeColorOptions.${color}`)}
+              </option>
+            ))}
           </select>
         </div>
 

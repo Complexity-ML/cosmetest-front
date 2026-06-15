@@ -365,11 +365,15 @@ const useAppointmentDetails = (initialAppointment: Appointment | null): UseAppoi
         await ensureVolunteerAssociation(identifiers.idEtude, targetGroupId, normalizedVolunteerId);
 
         const payload: any = {
-          ...appointment,
           idEtude: identifiers.idEtude,
           idRdv: identifiers.idRdv,
           idVolontaire: normalizedVolunteerId,
           idGroupe: targetGroupId,
+          date: appointment?.date,
+          heure: appointment?.heure,
+          duree: appointment?.duree,
+          etat: appointment?.etat ?? 'PLANIFIE',
+          commentaires: appointment?.commentaires,
         };
 
         const result = await rdvService.update(identifiers.idEtude, identifiers.idRdv, payload);
@@ -407,10 +411,19 @@ const useAppointmentDetails = (initialAppointment: Appointment | null): UseAppoi
       );
 
       const payload: any = {
-        ...appointment,
         idEtude: identifiers.idEtude,
         idRdv: identifiers.idRdv,
         idVolontaire: null,
+        idGroupe:
+          normalizeId(appointment?.idGroupe) ??
+          normalizeId(appointment?.groupe?.id) ??
+          normalizeId(appointment?.groupe?.idGroupe) ??
+          null,
+        date: appointment?.date,
+        heure: appointment?.heure,
+        duree: appointment?.duree,
+        etat: appointment?.etat ?? 'PLANIFIE',
+        commentaires: appointment?.commentaires,
       };
 
       await rdvService.update(identifiers.idEtude, identifiers.idRdv, payload);

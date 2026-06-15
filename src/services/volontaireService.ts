@@ -872,10 +872,6 @@ const volontaireService = {
       errors.sexe = 'Le sexe est obligatoire';
     }
 
-    if (!data.typePeauVisage) {
-      errors.typePeau = 'Le type de peau est obligatoire';
-    }
-
     // Validation du code postal français
     if (data.cpVol && !/^\d{5}$/.test(data.cpVol)) {
       errors.codePostal = 'Le code postal doit contenir 5 chiffres';

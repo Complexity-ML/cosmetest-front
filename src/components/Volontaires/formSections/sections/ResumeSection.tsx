@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useTranslation } from "react-i18next";
-import { useCallback, KeyboardEvent } from "react";
+import { useCallback, KeyboardEvent, MutableRefObject, useRef } from "react";
 
 type FieldType = "text" | "boolean" | "number" | "date" | "textarea" | "preset" | "multipreset" | "subtitle";
 
@@ -8,6 +8,7 @@ interface FieldDef {
   key: string;
   type: FieldType;
   options?: readonly string[];
+  maxSelections?: number;
 }
 
 interface GroupDef {
@@ -30,9 +31,9 @@ const OPT = {
   ethnie: [
     "Caucasienne",
     "Africaine",
-    "Asiatique",
-    "Indienne",
     "Antillaise",
+    "Indienne",
+    "Asiatique",
   ],
   sousEthnie: [
     "EUROP_OUEST",
@@ -169,8 +170,8 @@ const GROUPS: GroupDef[] = [
       { key: "taille", type: "number" },
       { key: "poids", type: "number" },
       { key: "phototype", type: "preset", options: OPT.phototype },
-      { key: "ethnie", type: "preset", options: OPT.ethnie },
-      { key: "sousEthnie", type: "preset", options: OPT.sousEthnie },
+      { key: "ethnie", type: "multipreset", options: OPT.ethnie, maxSelections: 2 },
+      { key: "sousEthnie", type: "multipreset", options: OPT.sousEthnie, maxSelections: 2 },
       { key: "yeux", type: "preset", options: OPT.yeux },
       { key: "pilosite", type: "preset", options: OPT.pilosite },
       { key: "originePere", type: "preset", options: OPT.ethnie },
@@ -317,6 +318,28 @@ const createSyntheticEvent = (name: string, value: any, type: string = "text") =
 const stripAccents = (s: string) =>
   s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
+const parseCsv = (value: string) =>
+  value
+    ? value.split(",").map((item) => item.trim()).filter(Boolean)
+    : [];
+
+const TYPEAHEAD_TIMEOUT_MS = 900;
+
+const getTypeaheadQuery = (
+  ref: MutableRefObject<{ query: string; lastAt: number }>,
+  key: string,
+) => {
+  const now = Date.now();
+  const letter = stripAccents(key).toLowerCase();
+  const shouldReset =
+    now - ref.current.lastAt > TYPEAHEAD_TIMEOUT_MS ||
+    ref.current.query.length >= 2;
+  const query = shouldReset ? letter : `${ref.current.query}${letter}`;
+
+  ref.current = { query, lastAt: now };
+  return query;
+};
+
 // ---------- Boolean Yes/No input ----------
 interface BooleanYesNoInputProps {
   name: string;
@@ -401,6 +424,8 @@ interface PresetInputProps {
 }
 
 const PresetInput = ({ name, value, options, onChange, title }: PresetInputProps) => {
+  const typeaheadRef = useRef({ query: "", lastAt: 0 });
+
   const handleKeyDown = useCallback(
     (e: KeyboardEvent<HTMLInputElement>) => {
       const k = e.key;
@@ -432,11 +457,23 @@ const PresetInput = ({ name, value, options, onChange, title }: PresetInputProps
       // Matching par première lettre (insensible aux accents/casse)
       if (k.length === 1 && /[a-zA-ZÀ-ÿ]/.test(k)) {
         e.preventDefault();
-        const letter = stripAccents(k).toLowerCase();
+        const query = getTypeaheadQuery(typeaheadRef, k);
         const matches = options.filter(
-          (o) => stripAccents(o).toLowerCase().charAt(0) === letter,
+          (o) => stripAccents(o).toLowerCase().startsWith(query),
         );
-        if (matches.length === 0) return;
+        if (matches.length === 0) {
+          const letter = query.charAt(query.length - 1);
+          const letterMatches = options.filter(
+            (o) => stripAccents(o).toLowerCase().startsWith(letter),
+          );
+          if (letterMatches.length === 0) return;
+          onChange(createSyntheticEvent(name, letterMatches[0]));
+          return;
+        }
+        if (query.length > 1) {
+          onChange(createSyntheticEvent(name, matches[0]));
+          return;
+        }
         // Si la valeur actuelle est dans les matches, passe à la suivante (cycle)
         const curIdx = matches.indexOf(value);
         const next =
@@ -468,6 +505,156 @@ const PresetInput = ({ name, value, options, onChange, title }: PresetInputProps
   );
 };
 
+interface SlotPresetButtonProps {
+  name: string;
+  value: string;
+  options: readonly string[];
+  onSelect: (value: string) => void;
+  placeholder: string;
+  title: string;
+}
+
+const SlotPresetButton = ({
+  name,
+  value,
+  options,
+  onSelect,
+  placeholder,
+  title,
+}: SlotPresetButtonProps) => {
+  const typeaheadRef = useRef({ query: "", lastAt: 0 });
+
+  const chooseNext = (candidates: readonly string[], direction: 1 | -1 = 1) => {
+    if (candidates.length === 0) return;
+
+    const currentIndex = value ? candidates.indexOf(value) : -1;
+    const nextIndex =
+      direction === 1
+        ? currentIndex === -1
+          ? 0
+          : (currentIndex + 1) % candidates.length
+        : currentIndex <= 0
+          ? candidates.length - 1
+          : currentIndex - 1;
+
+    onSelect(candidates[nextIndex]);
+  };
+
+  const handleKeyDown = (e: KeyboardEvent<HTMLButtonElement>) => {
+    const k = e.key;
+
+    if (k === "Backspace" || k === "Delete") {
+      e.preventDefault();
+      onSelect("");
+      return;
+    }
+
+    if (k === "ArrowDown" || k === "ArrowRight") {
+      e.preventDefault();
+      chooseNext(options, 1);
+      return;
+    }
+
+    if (k === "ArrowUp" || k === "ArrowLeft") {
+      e.preventDefault();
+      chooseNext(options, -1);
+      return;
+    }
+
+    if (k === "Tab" || k === "Enter" || k === "Shift") return;
+
+    if (k.length === 1 && /[a-zA-ZÀ-ÿ]/.test(k)) {
+      e.preventDefault();
+      const query = getTypeaheadQuery(typeaheadRef, k);
+      const matches = options.filter((option) =>
+        stripAccents(option).toLowerCase().startsWith(query),
+      );
+
+      if (matches.length > 0) {
+        onSelect(matches[0]);
+        return;
+      }
+
+      const fallbackLetter = query.charAt(query.length - 1);
+      const fallback = options.find((option) =>
+        stripAccents(option).toLowerCase().startsWith(fallbackLetter),
+      );
+      if (fallback) onSelect(fallback);
+      return;
+    }
+
+    e.preventDefault();
+  };
+
+  return (
+    <button
+      type="button"
+      name={name}
+      onClick={() => chooseNext(options, 1)}
+      onKeyDown={handleKeyDown}
+      title={title}
+      className={`w-full min-w-0 rounded border px-2 py-1 text-center text-xs focus:outline-none focus:ring-2 focus:ring-primary-500 ${
+        value
+          ? "bg-blue-50 border-blue-300 text-blue-800 font-medium"
+          : "bg-white border-gray-300 text-gray-500"
+      }`}
+    >
+      <span className="block truncate">{value || placeholder}</span>
+    </button>
+  );
+};
+
+interface MultiSlotPresetInputProps {
+  name: string;
+  value: string;
+  options: readonly string[];
+  onChange: (e: any) => void;
+  title: string;
+  slotCount?: number;
+}
+
+const MultiSlotPresetInput = ({
+  name,
+  value,
+  options,
+  onChange,
+  title,
+  slotCount = 2,
+}: MultiSlotPresetInputProps) => {
+  const selected = parseCsv(value);
+  const slots = Array.from({ length: slotCount }, (_, index) => selected[index] || "");
+  const labelBase = name === "sousEthnie" ? "Sous-ethnie" : "Ethnie";
+
+  const updateSlot = (slotIndex: number, option: string) => {
+    const next = [...slots];
+    next[slotIndex] = option;
+
+    if (option) {
+      next.forEach((current, index) => {
+        if (index !== slotIndex && current === option) next[index] = "";
+      });
+    }
+
+    onChange(createSyntheticEvent(name, next.filter(Boolean).join(",")));
+  };
+
+  return (
+    <div className="grid grid-cols-2 gap-1" title={title}>
+      {slots.map((slotValue, index) => (
+        <SlotPresetButton
+          key={`${name}-${index}`}
+          name={`${name}-${index + 1}`}
+          value={slotValue}
+          options={options}
+          onSelect={(option) => updateSlot(index, option)}
+          placeholder={`${labelBase} ${index + 1}`}
+          title={`${labelBase} ${index + 1} · Tapez 1-2 lettres ou utilisez ↑↓ · Backspace pour effacer`}
+        />
+      ))}
+    </div>
+  );
+};
+
 // ---------- Multi-preset (choix multiples) input ----------
 interface MultiPresetInputProps {
   name: string;
@@ -475,41 +662,128 @@ interface MultiPresetInputProps {
   options: readonly string[];
   onChange: (e: any) => void;
   title: string;
+  maxSelections?: number;
 }
 
-const MultiPresetInput = ({ name, value, options, onChange, title }: MultiPresetInputProps) => {
-  const selected: string[] = value ? value.split(", ").filter(Boolean) : [];
+const MultiPresetInput = ({ name, value, options, onChange, title, maxSelections }: MultiPresetInputProps) => {
+  const typeaheadRef = useRef({ query: "", lastAt: 0 });
+  const selected: string[] = parseCsv(value);
 
   const toggle = (option: string) => {
     let next: string[];
     if (selected.includes(option)) {
       next = selected.filter((s) => s !== option);
     } else {
-      next = [...selected, option];
+      next =
+        maxSelections && selected.length >= maxSelections
+          ? [...selected.slice(0, maxSelections - 1), option]
+          : [...selected, option];
     }
-    onChange(createSyntheticEvent(name, next.join(", ")));
+    onChange(createSyntheticEvent(name, next.join(",")));
   };
 
-  return (
-    <div className="flex flex-wrap gap-1" title={title}>
-      {options.map((option) => {
-        const isSelected = selected.includes(option);
-        return (
-          <button
-            key={option}
-            type="button"
-            onClick={() => toggle(option)}
-            className={`px-2 py-0.5 rounded text-xs border transition-colors ${
-              isSelected
-                ? "bg-blue-100 border-blue-400 text-blue-800 font-medium"
-                : "bg-white border-gray-300 text-gray-500 hover:border-gray-400"
-            }`}
-          >
-            {option}
-          </button>
+  const selectOption = (option: string) => {
+    if (selected.includes(option)) return;
+
+    const next =
+      maxSelections && selected.length >= maxSelections
+        ? [...selected.slice(0, maxSelections - 1), option]
+        : [...selected, option];
+
+    onChange(createSyntheticEvent(name, next.join(",")));
+  };
+
+  const replaceWithOption = (option: string) => {
+    onChange(createSyntheticEvent(name, option));
+  };
+
+  const chooseNext = (candidates: readonly string[], direction: 1 | -1 = 1) => {
+    if (candidates.length === 0) return;
+
+    const current = selected[selected.length - 1];
+    const currentIndex = current ? candidates.indexOf(current) : -1;
+    const nextIndex =
+      direction === 1
+        ? currentIndex === -1
+          ? 0
+          : (currentIndex + 1) % candidates.length
+        : currentIndex <= 0
+          ? candidates.length - 1
+          : currentIndex - 1;
+
+    toggle(candidates[nextIndex]);
+  };
+
+  const handleKeyDown = (e: KeyboardEvent<HTMLButtonElement>) => {
+    const k = e.key;
+
+    if (k === "Backspace" || k === "Delete") {
+      e.preventDefault();
+      onChange(createSyntheticEvent(name, ""));
+      return;
+    }
+
+    if (k === "ArrowDown" || k === "ArrowRight") {
+      e.preventDefault();
+      chooseNext(options, 1);
+      return;
+    }
+
+    if (k === "ArrowUp" || k === "ArrowLeft") {
+      e.preventDefault();
+      chooseNext(options, -1);
+      return;
+    }
+
+    if (k === "Tab" || k === "Enter" || k === "Shift") return;
+
+    if (k.length === 1 && /[a-zA-ZÀ-ÿ]/.test(k)) {
+      e.preventDefault();
+      const query = getTypeaheadQuery(typeaheadRef, k);
+      const matches = options.filter(
+        (o) => stripAccents(o).toLowerCase().startsWith(query),
+      );
+      if (matches.length === 0) {
+        const letter = query.charAt(query.length - 1);
+        const letterMatches = options.filter(
+          (o) => stripAccents(o).toLowerCase().startsWith(letter),
         );
-      })}
-    </div>
+        if (letterMatches.length > 0) selectOption(letterMatches[0]);
+        return;
+      }
+
+      if (query.length > 1) {
+        replaceWithOption(matches[0]);
+        return;
+      }
+
+      chooseNext(matches, 1);
+      return;
+    }
+
+    e.preventDefault();
+  };
+
+  const display = selected.length > 0 ? selected.join(", ") : "—";
+  const isFull = Boolean(maxSelections && selected.length >= maxSelections);
+
+  return (
+    <button
+      type="button"
+      name={name}
+      onClick={() => chooseNext(options, 1)}
+      onKeyDown={handleKeyDown}
+      title={`${title} · Tapez la 1ère lettre ou utilisez ↑↓ · Backspace pour effacer`}
+      className={`w-full min-w-0 rounded border px-2 py-1 text-center text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 ${
+        selected.length > 0
+          ? isFull
+            ? "bg-blue-100 border-blue-400 text-blue-900 font-medium"
+            : "bg-blue-50 border-blue-300 text-blue-800 font-medium"
+          : "bg-white border-gray-300 text-gray-500"
+      }`}
+    >
+      <span className="block truncate">{display}</span>
+    </button>
   );
 };
 
@@ -560,12 +834,13 @@ const ResumeSection = ({ formData, onChange }: any) => {
 
     if (field.type === "multipreset" && field.options) {
       return (
-        <MultiPresetInput
+        <MultiSlotPresetInput
           name={field.key}
           value={String(value)}
           options={field.options}
           onChange={onChange}
           title={field.options.join(", ")}
+          slotCount={field.maxSelections}
         />
       );
     }

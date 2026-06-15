@@ -2,7 +2,7 @@
 // IndemniteManager.tsx - Composant principal (refactorisé)
 // ============================================================
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import etudeVolontaireService from "../../services/etudeVolontaireService";
 import groupeService from "../../services/groupeService";
@@ -43,6 +43,7 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
 
   // États
   const [volontairesAssignes, setVolontairesAssignes] = useState<VolontaireAssigne[]>([]);
+  const volontairesAssignesRef = useRef<VolontaireAssigne[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [debugInfo, setDebugInfo] = useState("");
@@ -118,9 +119,9 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
           statut: volontaire.statut || "INSCRIT",
         },
       });
-      setVolontairesAssignes((prev) =>
-        prev.filter((v) => getVolontaireKey(v) !== rowKey)
-      );
+      const nextAssignes = volontairesAssignesRef.current.filter((v) => getVolontaireKey(v) !== rowKey);
+      volontairesAssignesRef.current = nextAssignes;
+      setVolontairesAssignes(nextAssignes);
       setSelectedKeys((prev) => {
         const next = new Set(prev);
         next.delete(rowKey);
@@ -156,11 +157,16 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
     newValue: string | number,
     endpoint: string
   ) => {
-    const rowKey = getVolontaireKey(volontaire);
+    const volontaireActuel = volontairesAssignesRef.current.find((v) =>
+      v.idEtude === volontaire.idEtude &&
+      v.idGroupe === volontaire.idGroupe &&
+      v.idVolontaire === volontaire.idVolontaire
+    ) || volontaire;
+    const rowKey = getVolontaireKey(volontaireActuel);
     const statusKey = `${rowKey}_${field}`;
     try {
       setUpdateStatus((prev) => ({ ...prev, [statusKey]: "loading" }));
-      const currentValue = field === "numsujet" ? volontaire.numsujet || 0 : field === "iv" ? volontaire.iv || 0 : volontaire.statut || "inscrit";
+      const currentValue = field === "numsujet" ? volontaireActuel.numsujet || 0 : field === "iv" ? volontaireActuel.iv || 0 : volontaireActuel.statut || "inscrit";
       if (String(newValue) === String(currentValue)) {
         setUpdateStatus((prev) => ({ ...prev, [statusKey]: "success" }));
         setTimeout(() => { setUpdateStatus((prev) => { const n = { ...prev }; delete n[statusKey]; return n; }); }, 1000);
@@ -168,12 +174,12 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
       }
       const baseParams = {
         idEtude: parseInt(etudeId.toString()),
-        idGroupe: volontaire.idGroupe || 0,
-        idVolontaire: volontaire.idVolontaire,
-        iv: volontaire.iv || 0,
-        numsujet: volontaire.numsujet || 0,
-        paye: volontaire.paye || 0,
-        statut: volontaire.statut || "INSCRIT",
+        idGroupe: volontaireActuel.idGroupe || 0,
+        idVolontaire: volontaireActuel.idVolontaire,
+        iv: volontaireActuel.iv || 0,
+        numsujet: volontaireActuel.numsujet || 0,
+        paye: volontaireActuel.paye || 0,
+        statut: volontaireActuel.statut || "INSCRIT",
       };
       let params: UpdateParams = { ...baseParams };
       if (field === "statut") params.nouveauStatut = newValue as string;
@@ -181,13 +187,12 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
       else if (field === "iv") params.nouvelIV = parseInt(newValue.toString()) || 0;
 
       await api.patch(endpoint, null, { params });
-      setVolontairesAssignes((prev) =>
-        prev.map((v) =>
-          getVolontaireKey(v) === rowKey
-            ? { ...v, [field]: field === "statut" ? newValue : parseInt(newValue.toString()) || 0 }
-            : v
-        )
+      const updatedValue = field === "statut" ? newValue : parseInt(newValue.toString()) || 0;
+      const nextAssignes = volontairesAssignesRef.current.map((v) =>
+        getVolontaireKey(v) === rowKey ? { ...v, [field]: updatedValue } : v
       );
+      volontairesAssignesRef.current = nextAssignes;
+      setVolontairesAssignes(nextAssignes);
       setSelectedKeys((prev) => {
         const next = new Set(prev);
         next.delete(rowKey);
@@ -224,7 +229,9 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
         statut: volontaire.statut || "-",
       };
       await api.delete("/etude-volontaires/delete", { params });
-      setVolontairesAssignes((prev) => prev.filter((v) => getVolontaireKey(v) !== rowKey));
+      const nextAssignes = volontairesAssignesRef.current.filter((v) => getVolontaireKey(v) !== rowKey);
+      volontairesAssignesRef.current = nextAssignes;
+      setVolontairesAssignes(nextAssignes);
       setSelectedKeys((prev) => {
         const next = new Set(prev);
         next.delete(rowKey);
@@ -404,6 +411,7 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
 
         const allAssignes = [...deduplicatedAssignes, ...repairedAssignes];
 
+        volontairesAssignesRef.current = allAssignes;
         setVolontairesAssignes(allAssignes);
         setDebugInfo(`${allAssignes.length} volontaires trouvés`);
         if (allAssignes.length > 0) {
@@ -413,6 +421,7 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
         }
       } catch (error) {
         console.error("Erreur lors du chargement des volontaires:", error);
+        volontairesAssignesRef.current = [];
         setVolontairesAssignes([]);
         setError("Erreur lors du chargement des volontaires");
       } finally {

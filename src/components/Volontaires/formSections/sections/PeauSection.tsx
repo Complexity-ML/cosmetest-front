@@ -199,7 +199,7 @@ const PeauSection = ({ formData, errors, onChange }: any) => {
             htmlFor="typePeau"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
-            {t('volunteers.skinType')} <span className="text-red-500">*</span>
+            {t('volunteers.skinType')}
           </label>
           <select
             id="typePeau"
@@ -207,7 +207,6 @@ const PeauSection = ({ formData, errors, onChange }: any) => {
             value={formData.typePeauVisage || ""}
             onChange={onChange}
             className={`form-select block w-full ${errors.typePeauVisage ? "border-red-500" : ""}`}
-            required
           >
             <option value="">{t('common.select')}</option>
             <option value="Normale">{t('volunteers.skinTypeOptions.Normale')}</option>
