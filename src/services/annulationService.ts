@@ -6,10 +6,13 @@ import api from './api';
 
 interface Annulation {
   id?: number;
+  idAnnuler?: number;
   idVol: number;
   idEtude: number;
+  idRdv?: number;
   dateAnnulation: string;
   commentaire: string;
+  annulePar?: string;
 }
 
 interface PaginatedAnnulations {
