@@ -53,8 +53,8 @@ const cleanTextForDatabase = (text: string | null | undefined): string => {
     .replace(/📈/g, ' SURBOOK ')
     .replace(/🤝/g, ' PARRAINAGE ')
     .replace(/❓/g, ' INCONNU ')
-    // Nettoyer les emojis et caractères non-ASCII problématiques
-    .replace(/[^\x20-\x7E]/g, '')
+    // Nettoyer les emojis et symboles tout en conservant les accents saisis
+    .replace(/[^\p{L}\p{N}\p{P}\p{Zs}\r\n\t]/gu, '')
     // Nettoyer les espaces multiples
     .replace(/\s+/g, ' ')
     .trim();

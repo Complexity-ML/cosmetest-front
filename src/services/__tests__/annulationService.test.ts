@@ -42,14 +42,12 @@ describe('AnnulationService', () => {
     });
 
     it('devrait remplacer les symboles par du texte', () => {
-      // Note: les caractères accentués sont supprimés par cleanTextForDatabase
       expect(cleanTextForDatabase('✓ Valide')).toBe('OK Valide');
       expect(cleanTextForDatabase('✗ Erreur')).toBe('ERREUR Erreur');
       expect(cleanTextForDatabase('⚠ Attention')).toBe('ATTENTION Attention');
     });
 
     it('devrait remplacer les emojis par du texte', () => {
-      // Note: les caractères accentués sont supprimés par cleanTextForDatabase
       expect(cleanTextForDatabase('🚫 Interdit')).toBe('INTERDIT Interdit');
       expect(cleanTextForDatabase('📝 Note')).toBe('NOTE Note');
       expect(cleanTextForDatabase('💾 Sauvegarde')).toBe('SAUVEGARDE Sauvegarde');
@@ -64,8 +62,10 @@ describe('AnnulationService', () => {
       expect(cleanTextForDatabase('texte    avec   espaces')).toBe('texte avec espaces');
     });
 
-    it('devrait retirer les caractères non-ASCII', () => {
+    it('devrait conserver les caractères accentués', () => {
       expect(cleanTextForDatabase('Texte normal')).toBe('Texte normal');
+      expect(cleanTextForDatabase('étude annulée')).toBe('étude annulée');
+      expect(cleanTextForDatabase('Problème de santé')).toBe('Problème de santé');
     });
 
     it('devrait combiner plusieurs opérations de nettoyage', () => {
@@ -377,7 +377,6 @@ describe('AnnulationService', () => {
 
       mockAxios.onPut('/annulations/1').reply((config) => {
         const data = JSON.parse(config.data);
-        // Le 'à' devient vide car c'est un caractère accentué non-ASCII
         expect(data.commentaire).toBe('Mise a jour vers OK OK');
         return [200, { id: 1, ...data }];
       });
