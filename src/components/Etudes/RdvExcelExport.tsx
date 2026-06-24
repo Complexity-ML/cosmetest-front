@@ -161,11 +161,12 @@ const RdvExcelExport: React.FC<RdvExcelExportProps> = ({
 
       // 7. Créer les en-têtes dynamiques
       const headers = [
-        'Ligne',
-        'Num Sujet',
+        'NB',
+        'N° Sélec',
+        'N° Inclus',
         'Statut',
         'Observations',
-        'ID Volontaire',
+        'ID Vol',
         'Nom',
         'Prénom',
         'Téléphone',
@@ -201,42 +202,45 @@ const RdvExcelExport: React.FC<RdvExcelExportProps> = ({
         // A: Nombre de ligne
         row.push(lineNumber++);
 
-        // B: Num Sujet
+        // B: N° Sélec
         row.push(getAssociationInfo(Number(volunteerId), 'numsujet'));
 
-        // C: Statut (vide - retrait du mot "inscrit")
+        // C: N° Inclus
+        row.push('');
+
+        // D: Statut (vide - retrait du mot "inscrit")
         const statut = getAssociationInfo(Number(volunteerId), 'statut');
         row.push(statut && statut.toUpperCase() === 'INSCRIT' ? '' : statut);
 
-        // D: Observations
+        // E: Observations
         row.push(getVolunteerInfo(Number(volunteerId), 'observations'));
 
-        // E: ID Volontaire
+        // F: ID Volontaire
         row.push(volunteerId);
 
-        // F: Nom du volontaire
+        // G: Nom du volontaire
         row.push(getVolunteerInfo(Number(volunteerId), 'nom'));
 
-        // G: Prénom du volontaire
+        // H: Prénom du volontaire
         row.push(getVolunteerInfo(Number(volunteerId), 'prenom'));
 
-        // H: Téléphone (formaté via formatPhoneNumber pour cohérence avec le reste de l'app)
+        // I: Téléphone (formaté via formatPhoneNumber pour cohérence avec le reste de l'app)
         const telPortable = getVolunteerInfo(Number(volunteerId), 'telPortable');
         const telDomicile = getVolunteerInfo(Number(volunteerId), 'telDomicile');
         const phone = telPortable || telDomicile;
         const formattedPhone = phone ? formatPhoneNumber(String(phone)) : '';
         row.push(formattedPhone === '-' ? '' : formattedPhone);
 
-        // I: Phototype
+        // J: Phototype
         row.push(normalizePhototype(getVolunteerInfo(Number(volunteerId), 'phototype')));
 
-        // J: Email
+        // K: Email
         row.push(getVolunteerInfo(Number(volunteerId), 'email'));
 
-        // K: Date du premier RDV (T0)
+        // L: Date du premier RDV (T0)
         row.push(volunteerRdvs[0] ? formatDate(volunteerRdvs[0].date) : '');
 
-        // L: Heure du premier RDV (T0)
+        // M: Heure du premier RDV (T0)
         row.push(volunteerRdvs[0] ? volunteerRdvs[0].heure || '' : '');
 
         // Ajouter les données des passages supplémentaires T1, T2, T3...
@@ -269,34 +273,37 @@ const RdvExcelExport: React.FC<RdvExcelExportProps> = ({
         // B: Num Sujet
         row.push('');
 
-        // C: Statut
+        // C: N° Inclus
         row.push('');
 
-        // D: Observations
+        // D: Statut
         row.push('');
 
-        // E: ID Volontaire
+        // E: Observations
         row.push('');
 
-        // F: Nom
+        // F: ID Volontaire
+        row.push('');
+
+        // G: Nom
         row.push('Non assigné');
 
-        // G: Prénom
+        // H: Prénom
         row.push('');
 
-        // H: Téléphone
+        // I: Téléphone
         row.push('');
 
-        // I: Phototype
+        // J: Phototype
         row.push('');
 
-        // J: Email
+        // K: Email
         row.push('');
 
-        // K: Date
+        // L: Date
         row.push(formatDate(rdv.date));
 
-        // L: Heure
+        // M: Heure
         row.push(rdv.heure || '');
 
         // Remplir les autres passages avec des cellules vides
@@ -427,16 +434,17 @@ const RdvExcelExport: React.FC<RdvExcelExportProps> = ({
       const colWidths = [
         { width: 8 },  // A: Ligne
         { width: 12 }, // B: Num Sujet
-        { width: 12 }, // C: Statut
-        { width: 30 }, // D: Observations
-        { width: 14 }, // E: ID Volontaire
-        { width: 20 }, // F: Nom
-        { width: 20 }, // G: Prénom
-        { width: 15 }, // H: Téléphone
-        { width: 12 }, // I: Phototype
-        { width: 30 }, // J: Email
-        { width: 12 }, // K: Date
-        { width: 8 }   // L: Heure
+        { width: 12 }, // C: N° Inclus
+        { width: 12 }, // D: Statut
+        { width: 30 }, // E: Observations
+        { width: 14 }, // F: ID Volontaire
+        { width: 20 }, // G: Nom
+        { width: 20 }, // H: Prénom
+        { width: 15 }, // I: Téléphone
+        { width: 12 }, // J: Phototype
+        { width: 30 }, // K: Email
+        { width: 12 }, // L: Date
+        { width: 8 }   // M: Heure
       ];
 
       // Ajouter les largeurs pour T1, T2, T3...
