@@ -40,6 +40,18 @@ interface AnnulationRdv {
 const sameId = (left: unknown, right: unknown): boolean =>
   left != null && right != null && Number(left) === Number(right);
 
+const getAnnulationVolunteerId = (annulation: any): number | null =>
+  annulation?.idVol ?? annulation?.idVolontaire ?? annulation?.volontaireId ?? null;
+
+const getAnnulationRdvKey = (
+  idEtude: number | string | undefined,
+  idRdv: number | string | undefined,
+  idVol: number | string | null | undefined
+): string | null => {
+  if (!idEtude || !idRdv || !idVol) return null;
+  return `${idEtude}-${idRdv}-${idVol}`;
+};
+
 const VolontaireDetailRdv = ({ rdvs = [], volontaireId }: VolontaireDetailRdvProps) => {
   const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -59,11 +71,12 @@ const VolontaireDetailRdv = ({ rdvs = [], volontaireId }: VolontaireDetailRdvPro
         const map = new Map<string, AnnulationRdv>();
         if (Array.isArray(annulations)) {
           annulations.forEach((annulation: any) => {
-            if (!sameId(annulation.idVol ?? annulation.idVolontaire ?? annulation.volontaireId, volontaireId)) {
+            const annulationVolId = getAnnulationVolunteerId(annulation);
+            if (!sameId(annulationVolId, volontaireId)) {
               return;
             }
-            if (annulation.idRdv) {
-              const key = `${annulation.idEtude}-${annulation.idRdv}`;
+            const key = getAnnulationRdvKey(annulation.idEtude, annulation.idRdv, annulationVolId);
+            if (key) {
               map.set(key, annulation as AnnulationRdv);
             }
           });
@@ -82,10 +95,11 @@ const VolontaireDetailRdv = ({ rdvs = [], volontaireId }: VolontaireDetailRdvPro
   // Fonction pour vérifier si un RDV est annulé
   const isRdvAnnule = (rdv: Rdv): AnnulationRdv | undefined => {
     if (!rdv.idEtude || !rdv.idRdv) return undefined;
-    const key = `${rdv.idEtude}-${rdv.idRdv}`;
+    const key = getAnnulationRdvKey(rdv.idEtude, rdv.idRdv, volontaireId);
+    if (!key) return undefined;
     const annulation = annulationsMap.get(key);
     if (!annulation) return undefined;
-    if (!sameId(annulation.idVol ?? annulation.idVolontaire ?? annulation.volontaireId, volontaireId)) {
+    if (!sameId(getAnnulationVolunteerId(annulation), volontaireId)) {
       return undefined;
     }
     return annulation;

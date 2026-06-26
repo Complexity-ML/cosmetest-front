@@ -381,14 +381,10 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
           }, {} as Record<number, VolontaireAssigne>)
         );
         // Réparer les volontaires présents dans les RDV mais absents de etude_volontaire
-        const assignedIds = new Set(deduplicatedAssignes.map((v) => v.idVolontaire));
-        const rdvVolontaireIds = rdvs
-          ? [...new Set(rdvs.map((rdv: any) => rdv.idVolontaire || rdv.volontaire?.idVol || rdv.volontaire?.id).filter(Boolean) as number[])]
-          : [];
-        const missingIds = rdvVolontaireIds.filter((id: number) => !assignedIds.has(id));
+        const missingIds: number[] = [];
 
         // Pour chaque volontaire manquant, créer l'entrée etude_volontaire avec les vraies données de sa RDV
-        const repairedAssignes: VolontaireAssigne[] = await Promise.all(
+        await Promise.all(
           missingIds.map(async (id: number) => {
             const volRdv = rdvs?.find((r: any) =>
               (r.idVolontaire || r.volontaire?.idVol || r.volontaire?.id) === id
@@ -409,7 +405,7 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
           })
         );
 
-        const allAssignes = [...deduplicatedAssignes, ...repairedAssignes];
+        const allAssignes = deduplicatedAssignes;
 
         volontairesAssignesRef.current = allAssignes;
         setVolontairesAssignes(allAssignes);

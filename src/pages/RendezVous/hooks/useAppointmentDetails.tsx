@@ -3,6 +3,7 @@ import rdvService from '../../../services/rdvService';
 import groupeService from '../../../services/groupeService';
 import volontaireService from '../../../services/volontaireService';
 import etudeVolontaireService from '../../../services/etudeVolontaireService';
+import { buildPassageAverageWarning } from '../../../utils/appointmentPassageGuard';
 import { useRendezVousContext } from '../context/RendezVousContext';
 
 // Type definitions
@@ -349,6 +350,29 @@ const useAppointmentDetails = (initialAppointment: Appointment | null): UseAppoi
         setAssigning(true);
         setError(null);
 
+        try {
+          const studyAppointments = await rdvService.getByEtudeId(identifiers.idEtude);
+          const selectedVolunteer = volunteerOptions.find((item) =>
+            normalizeId(item.id ?? item.volontaireId) === normalizedVolunteerId
+          );
+          const passageWarning = buildPassageAverageWarning(
+            Array.isArray(studyAppointments) ? studyAppointments : [],
+            [{
+              appointment: appointment ?? { idEtude: identifiers.idEtude, idRdv: identifiers.idRdv },
+              volunteerId: normalizedVolunteerId,
+              volunteerName: [
+                selectedVolunteer?.prenom ?? selectedVolunteer?.prenomVol,
+                selectedVolunteer?.nom ?? selectedVolunteer?.nomVol,
+              ].filter(Boolean).join(' '),
+            }],
+          );
+          if (passageWarning && !window.confirm(passageWarning)) {
+            return;
+          }
+        } catch (warningError) {
+          console.warn('Impossible de verifier la moyenne de passages', warningError);
+        }
+
         // Supprimer l'association de l'ancien volontaire s'il y en a un
         const oldVolunteerId = appointment?.idVolontaire ?? appointment?.volontaire?.id;
         if (oldVolunteerId && normalizeId(oldVolunteerId) !== normalizedVolunteerId) {
@@ -393,7 +417,7 @@ const useAppointmentDetails = (initialAppointment: Appointment | null): UseAppoi
         setAssigning(false);
       }
     },
-    [appointment, ensureVolunteerAssociation, fetchAppointment, identifiers, refreshContext, removeVolunteerAssociation],
+    [appointment, ensureVolunteerAssociation, fetchAppointment, identifiers, refreshContext, removeVolunteerAssociation, volunteerOptions],
   );
 
   const unassignVolunteer = useCallback(async (): Promise<void> => {

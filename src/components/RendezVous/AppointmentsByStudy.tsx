@@ -19,6 +19,7 @@ import { Checkbox } from '../ui/checkbox';
 import { Label } from '../ui/label';
 import { Alert, AlertDescription } from '../ui/alert';
 import { Search, Folder, Calendar, User, Filter, RefreshCw, ChevronDown, Check, X, Loader2, ArrowLeftRight, AlertTriangle } from 'lucide-react';
+import { buildPassageAverageWarning } from '../../utils/appointmentPassageGuard';
 
 interface AppointmentsByStudyProps {
   onAppointmentClick: (rdv: RendezVous) => void;
@@ -478,6 +479,22 @@ const AppointmentsByStudy = ({ onAppointmentClick, onBack }: AppointmentsByStudy
         // C'est une assignation
 
         // Vérifier si ce volontaire a été annulé sur cette étude
+        const selectedVolunteer = Array.isArray(volunteers)
+            ? volunteers.find(v =>
+                v?.id?.toString() === volontaireId.toString() ||
+                v?.volontaireId?.toString() === volontaireId.toString()
+              )
+            : null;
+        const passageWarning = buildPassageAverageWarning(appointments, [{
+          appointment: rdv,
+          volunteerId: volontaireId,
+          volunteerName: [selectedVolunteer?.prenom, selectedVolunteer?.nom].filter(Boolean).join(' '),
+        }]);
+        if (passageWarning && !window.confirm(passageWarning)) {
+          setAssignmentStatus(prev => { const n = { ...prev }; delete n[rdvId]; return n; });
+          return;
+        }
+
         try {
           const annulations = await annulationService.getByVolontaireAndEtude(volontaireId, idEtude);
           if (annulations && annulations.length > 0) {
@@ -536,6 +553,14 @@ const AppointmentsByStudy = ({ onAppointmentClick, onBack }: AppointmentsByStudy
               const volontaire = Array.isArray(volunteers)
                 ? volunteers.find(v => v?.id?.toString() === volontaireId.toString())
                 : null;
+              if (result?.rdv) {
+                return {
+                  ...a,
+                  ...result.rdv,
+                  volontaire: volontaire as Volontaire | null,
+                  idVolontaire: volontaireId
+                };
+              }
               return {
                 ...a,
                 volontaire: volontaire as Volontaire | null,

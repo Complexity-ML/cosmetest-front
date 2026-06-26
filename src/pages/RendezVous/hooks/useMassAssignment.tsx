@@ -6,6 +6,7 @@ import groupeService from '../../../services/groupeService';
 import etudeVolontaireService from '../../../services/etudeVolontaireService';
 import volontaireService from '../../../services/volontaireService';
 import { timeToMinutes } from '../../../utils/timeUtils';
+import { buildPassageAverageWarning } from '../../../utils/appointmentPassageGuard';
 import { useRendezVousContext } from '../context/RendezVousContext';
 
 // Type definitions
@@ -881,6 +882,19 @@ const useMassAssignment = (etudeIdFromUrl: string | number | null | undefined): 
 
         if (assignments.length === 0) {
           window.alert("Aucune assignation possible sans conflit d'horaire.");
+          setLoading(false);
+          return;
+        }
+
+        const passageWarning = buildPassageAverageWarning(
+          appointments,
+          assignments.map(({ appointment, volunteer }) => ({
+            appointment,
+            volunteerId: getVolunteerId(volunteer),
+            volunteerName: [volunteer.prenom, volunteer.nom].filter(Boolean).join(' '),
+          })),
+        );
+        if (passageWarning && !window.confirm(passageWarning)) {
           setLoading(false);
           return;
         }

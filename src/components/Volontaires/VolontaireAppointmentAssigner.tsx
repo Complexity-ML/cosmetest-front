@@ -13,6 +13,7 @@ import AssignedAppointmentsList from './VolontaireAppointmentAssigner/AssignedAp
 import AgeWarningDialog from './VolontaireAppointmentAssigner/AgeWarningDialog';
 import AppointmentSwitcher from '../RendezVous/AppointmentSwitcher';
 import { StudyOverlapAlert } from '../RendezVous/AssignmentComponents';
+import { buildPassageAverageWarning } from '../../utils/appointmentPassageGuard';
 
 /**
  * Composant pour assigner un volontaire spécifique à des rendez-vous
@@ -428,6 +429,18 @@ const VolontaireAppointmentAssigner = ({ volontaireId, volontaire, onAssignmentC
     if (!ageCheck.compatible) {
       const continueAnyway = await askAgeWarning(ageCheck.message);
       if (!continueAnyway) return;
+    }
+
+    const passageWarning = buildPassageAverageWarning(
+      appointments,
+      selectedAppointments.map((appointment) => ({
+        appointment,
+        volunteerId: volontaireId,
+        volunteerName: [volontaire?.prenom, volontaire?.nom].filter(Boolean).join(' '),
+      })),
+    );
+    if (passageWarning && !window.confirm(passageWarning)) {
+      return;
     }
 
     if (!window.confirm(t('volunteerAppointments.confirmAssign', { firstName: volontaire?.prenom, lastName: volontaire?.nom, count: selectedAppointments.length }))) {
