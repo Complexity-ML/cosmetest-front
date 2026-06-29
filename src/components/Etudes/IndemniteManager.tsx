@@ -84,7 +84,7 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
         idVol: volontaire.idVolontaire,
         idEtude: parseInt(etudeId.toString()),
         dateAnnulation: new Date().toISOString().split('T')[0],
-        commentaire: commentaire || `Annulation manuelle`,
+        commentaire: commentaire ?? "",
         annulePar: annulePar
       };
       await annulationService.createWithValidation(annulationData);

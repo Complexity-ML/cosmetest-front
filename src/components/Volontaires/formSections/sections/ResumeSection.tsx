@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useTranslation } from "react-i18next";
 import { useCallback, KeyboardEvent, MutableRefObject, useRef } from "react";
+import infoBancaireService from "../../../../services/infoBancaireService";
 
 type FieldType = "text" | "boolean" | "number" | "date" | "textarea" | "preset" | "multipreset" | "subtitle";
 
@@ -128,6 +129,7 @@ const OPT = {
     "Mains",
     "Avant-bras",
   ],
+  contraception: ["PrÃ©servatif", "Pilule", "Implant", "Patch", "Anneau vaginal", "Abstinence", "Aucun", "Autre"],
 } as const;
 
 const GROUPS: GroupDef[] = [
@@ -278,7 +280,7 @@ const GROUPS: GroupDef[] = [
     fields: [
       { key: "traitement", type: "textarea" },
       { key: "anamnese", type: "textarea" },
-      { key: "contraception", type: "text" },
+      { key: "contraception", type: "preset", options: OPT.contraception },
       { key: "menopause", type: "boolean" },
       { key: "bouffeeChaleurMenaupose", type: "boolean" },
       { key: "allergiesCommentaires", type: "textarea" },
@@ -877,6 +879,22 @@ const ResumeSection = ({ formData, onChange }: any) => {
           value={value}
           onChange={onChange}
           className="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+        />
+      );
+    }
+
+    if (field.key === "iban") {
+      return (
+        <input
+          type="text"
+          name={field.key}
+          value={infoBancaireService.validation.formatIban(String(value))}
+          onChange={(e) =>
+            onChange(createSyntheticEvent(field.key, infoBancaireService.validation.formatIban(e.target.value)))
+          }
+          placeholder="FR76 1234 5678 9012 3456 7890 123"
+          maxLength={34}
+          className="w-full border border-gray-300 rounded px-2 py-1 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary-500"
         />
       );
     }

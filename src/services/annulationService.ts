@@ -286,7 +286,7 @@ const annulationService = {
 
     // Validation et nettoyage du commentaire
     if (!data.commentaire) {
-      data.commentaire = 'Annulation sans commentaire';
+      data.commentaire = '';
     } else {
       // Nettoyer le commentaire pour éviter les problèmes d'encodage
       data.commentaire = cleanTextForDatabase(data.commentaire);
@@ -294,7 +294,7 @@ const annulationService = {
 
     // S'assurer que le commentaire n'est pas vide après nettoyage
     if (!data.commentaire || data.commentaire.trim() === '') {
-      data.commentaire = 'Annulation automatique';
+      data.commentaire = '';
     }
 
     return await annulationService.create(data as Annulation);

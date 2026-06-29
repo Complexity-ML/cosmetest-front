@@ -488,7 +488,7 @@ const InfoSection = ({
             </div>
           </CardHeader>
           <CardContent className="space-y-4 pt-4">
-            {annulationsRecentes.length >= 2 && (
+            {annulationsRecentes.length >= 4 && (
             <Alert variant="destructive" className="bg-red-100 border-red-400">
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription className="flex items-center justify-between text-sm">

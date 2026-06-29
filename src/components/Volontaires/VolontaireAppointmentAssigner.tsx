@@ -1,6 +1,7 @@
 // @ts-nocheck
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import rdvService from '../../services/rdvService';
 import etudeService from '../../services/etudeService';
 import groupeService from '../../services/groupeService';
@@ -176,6 +177,8 @@ const VolontaireAppointmentAssigner = ({ volontaireId, volontaire, onAssignmentC
   // Helpers (fonctions utilitaires)
   const getAppointmentId = (rdv) => rdv.idRdv || rdv.id;
   const getGroupeId = (groupe) => groupe.id || groupe.idGroupe;
+  const selectedEtude = etudes.find((etude) => (etude.idEtude || etude.id) === selectedEtudeId) || etudeDetails;
+  const selectedEtudeLabel = selectedEtude?.ref || selectedEtude?.titre || selectedEtude?.nom || `#${selectedEtudeId}`;
 
   // Extraire les dates uniques disponibles
   const getAvailableDates = () => {
@@ -654,11 +657,22 @@ const VolontaireAppointmentAssigner = ({ volontaireId, volontaire, onAssignmentC
   return (
     <div className="space-y-6">
       {/* En-tête */}
-      <div>
-        <h2 className="text-lg font-semibold text-gray-800">{t('volunteerAppointments.assignToAppointments')}</h2>
-        <p className="text-gray-600">
-          {t('volunteerAppointments.assignDescription', { firstName: volontaire?.prenom, lastName: volontaire?.nom })}
-        </p>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h2 className="text-lg font-semibold text-gray-800">{t('volunteerAppointments.assignToAppointments')}</h2>
+          <p className="text-gray-600">
+            {t('volunteerAppointments.assignDescription', { firstName: volontaire?.prenom, lastName: volontaire?.nom })}
+          </p>
+        </div>
+
+        {selectedEtudeId && (
+          <Link
+            to={`/etudes/${selectedEtudeId}`}
+            className="inline-flex items-center justify-center rounded-md border border-blue-300 bg-white px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-50"
+          >
+            Voir l'étude {selectedEtudeLabel}
+          </Link>
+        )}
       </div>
 
       {/* Sélection de l'étude et du groupe */}

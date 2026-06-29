@@ -113,7 +113,6 @@ const BatchActions: React.FC<BatchActionsProps> = ({
   };
 
   const handleBatchAnnuler = async () => {
-    if (!annulerCommentaire.trim()) return;
     setIsUpdating(true);
     try {
       await onBatchAnnuler(selectedVolontaires.filter(v => v.idVolontaire !== 0), annulerCommentaire.trim(), 'COSMETEST');
@@ -358,7 +357,7 @@ const BatchActions: React.FC<BatchActionsProps> = ({
               size="sm"
               variant="destructive"
               onClick={handleBatchAnnuler}
-              disabled={isUpdating || !annulerCommentaire.trim()}
+              disabled={isUpdating}
             >
               {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4 mr-1" />}
               {t('indemnity.confirmCancellation') || 'Confirmer l\'annulation'}

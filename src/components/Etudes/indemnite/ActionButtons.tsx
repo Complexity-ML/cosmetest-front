@@ -22,7 +22,6 @@ export const AnnulationButton: React.FC<AnnulationButtonProps> = ({ volontaire, 
   const volontaireKey = getVolontaireKey(volontaire);
 
   const handleAnnuler = async () => {
-    if (!commentaire.trim()) return;
     await onAnnuler(volontaire, commentaire.trim(), annulePar);
     setShowForm(false);
     setCommentaire("");
@@ -55,7 +54,7 @@ export const AnnulationButton: React.FC<AnnulationButtonProps> = ({ volontaire, 
         <Textarea value={commentaire} onChange={(e) => setCommentaire(e.target.value)} placeholder={t('indemnity.cancelReasonPlaceholder')} className="w-full text-xs" rows={3} maxLength={200} autoFocus />
         <div className="text-xs text-gray-500">{commentaire.length}/200 {t('indemnity.characters')}</div>
         <div className="flex space-x-1">
-          <Button onClick={handleAnnuler} disabled={!commentaire.trim()} variant="destructive" size="sm">
+          <Button onClick={handleAnnuler} variant="destructive" size="sm">
             <Check className="w-4 h-4 mr-1" />{t('indemnity.confirmCancellation')}
           </Button>
           <Button onClick={() => { setShowForm(false); setCommentaire(""); setAnnulePar('COSMETEST'); }} variant="secondary" size="sm">
