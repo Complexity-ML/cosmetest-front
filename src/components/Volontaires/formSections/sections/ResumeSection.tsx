@@ -129,7 +129,7 @@ const OPT = {
     "Mains",
     "Avant-bras",
   ],
-  contraception: ["PrÃ©servatif", "Pilule", "Implant", "Patch", "Anneau vaginal", "Abstinence", "Aucun", "Autre"],
+  contraception: ["Préservatif", "Pilule", "Implant", "Patch", "Anneau vaginal", "Abstinence", "Aucun", "Autre"],
 } as const;
 
 const GROUPS: GroupDef[] = [
