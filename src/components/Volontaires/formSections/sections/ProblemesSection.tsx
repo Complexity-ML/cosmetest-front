@@ -35,32 +35,12 @@ const GroupCheckbox = ({
 const ProblemesSection = ({ formData, onChange }: any) => {
   const { t } = useTranslation();
 
-  const problemesIds = [
-    'acne', 'couperoseRosacee', 'dermiteSeborrheique', 'eczema', 'psoriasis', 'problemesAucun',
-  ];
-
-  const handleNoneToggle = useCallback((
+  const toggleCheckbox = useCallback((
     clickedId: string,
     isCurrentlyChecked: boolean,
   ) => {
-    if (clickedId === 'problemesAucun') {
-      if (!isCurrentlyChecked) {
-        problemesIds.forEach(id => {
-          if (id !== 'problemesAucun' && formData[id] === 'Oui') {
-            onChange(createSyntheticEvent(id, ''));
-          }
-        });
-        onChange(createSyntheticEvent('problemesAucun', 'Oui'));
-      } else {
-        onChange(createSyntheticEvent('problemesAucun', ''));
-      }
-    } else {
-      if (!isCurrentlyChecked && formData.problemesAucun === 'Oui') {
-        onChange(createSyntheticEvent('problemesAucun', ''));
-      }
-      onChange(createSyntheticEvent(clickedId, isCurrentlyChecked ? '' : 'Oui'));
-    }
-  }, [formData, onChange]);
+    onChange(createSyntheticEvent(clickedId, isCurrentlyChecked ? '' : 'Oui'));
+  }, [onChange]);
 
   return (
     <Card>
@@ -69,48 +49,35 @@ const ProblemesSection = ({ formData, onChange }: any) => {
       </CardHeader>
       <CardContent>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="flex items-center col-span-full">
-          <input
-            type="checkbox"
-            id="problemesAucun"
-            name="problemesAucun"
-            checked={formData.problemesAucun === "Oui"}
-            onChange={() => handleNoneToggle('problemesAucun', formData.problemesAucun === "Oui")}
-            className="form-checkbox h-5 w-5 text-primary-600"
-          />
-          <label htmlFor="problemesAucun" className="ml-2 block text-sm font-medium text-gray-700">
-            Aucun
-          </label>
-        </div>
         <GroupCheckbox
           id="acne"
           label={t('volunteers.acne')}
           checked={formData.acne === 'Oui'}
-          onToggle={() => handleNoneToggle('acne', formData.acne === 'Oui')}
+          onToggle={() => toggleCheckbox('acne', formData.acne === 'Oui')}
         />
         <GroupCheckbox
           id="couperoseRosacee"
           label={t('volunteers.couperoseRosacea')}
           checked={formData.couperoseRosacee === 'Oui'}
-          onToggle={() => handleNoneToggle('couperoseRosacee', formData.couperoseRosacee === 'Oui')}
+          onToggle={() => toggleCheckbox('couperoseRosacee', formData.couperoseRosacee === 'Oui')}
         />
         <GroupCheckbox
           id="dermiteSeborrheique"
           label={t('volunteers.seborrheicDermatitis')}
           checked={formData.dermiteSeborrheique === 'Oui'}
-          onToggle={() => handleNoneToggle('dermiteSeborrheique', formData.dermiteSeborrheique === 'Oui')}
+          onToggle={() => toggleCheckbox('dermiteSeborrheique', formData.dermiteSeborrheique === 'Oui')}
         />
         <GroupCheckbox
           id="eczema"
           label={t('volunteers.eczema')}
           checked={formData.eczema === 'Oui'}
-          onToggle={() => handleNoneToggle('eczema', formData.eczema === 'Oui')}
+          onToggle={() => toggleCheckbox('eczema', formData.eczema === 'Oui')}
         />
         <GroupCheckbox
           id="psoriasis"
           label={t('volunteers.psoriasis')}
           checked={formData.psoriasis === 'Oui'}
-          onToggle={() => handleNoneToggle('psoriasis', formData.psoriasis === 'Oui')}
+          onToggle={() => toggleCheckbox('psoriasis', formData.psoriasis === 'Oui')}
         />
       </div>
       </CardContent>

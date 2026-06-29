@@ -479,15 +479,13 @@ export const EvaluationFilters: React.FC<EvaluationFiltersProps> = ({ values, on
               </div>
             ) : (
               <div className="flex gap-2">
-                {['Oui', 'Non', ''].map((opt) => {
+                {['Oui', 'Non'].map((opt) => {
                   const isActive = (values[key] || '') === opt;
-                  const label = opt === '' ? 'Aucun' : opt;
+                  const label = opt;
                   const activeClass =
                     opt === 'Oui'
                       ? 'bg-green-600 text-white border-green-600 hover:bg-green-700'
-                      : opt === 'Non'
-                      ? 'bg-red-600 text-white border-red-600 hover:bg-red-700'
-                      : 'bg-gray-700 text-white border-gray-700 hover:bg-gray-800';
+                      : 'bg-red-600 text-white border-red-600 hover:bg-red-700';
                   return (
                     <Button
                       key={label}

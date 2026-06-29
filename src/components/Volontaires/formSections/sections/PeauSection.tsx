@@ -119,7 +119,7 @@ const PeauSection = ({ formData, errors, onChange }: any) => {
     }
   }, [formData, onChange]);
 
-  const celluliteIds = ['celluliteBras', 'celluliteFessesHanches', 'celluliteJambes', 'celluliteVentreTaille', 'celluliteAucun'];
+  const celluliteIds = ['celluliteBras', 'celluliteFessesHanches', 'celluliteJambes', 'celluliteVentreTaille'];
 
   // Multi-select helpers
   const getSelectedArray = (fieldName: string): string[] => {
@@ -139,9 +139,9 @@ const PeauSection = ({ formData, errors, onChange }: any) => {
     onChange(createSyntheticEvent(fieldName, next.join(', ')));
   };
 
-  const secheresseOptions = ["Aucune", "Lèvres", "Cou", "Poitrine / Décolleté", "Ventre / Taille", "Fesses / Hanches", "Bras", "Mains", "Avant-bras", "Jambes", "Pieds"];
-  const yeuxOptions = ["Aucun", "Cernes pigmentaires", "Cernes vasculaires", "Poches"];
-  const fermeteOptions = ["Aucune", "Visage", "Cou", "Décolleté / Poitrine", "Avant-bras"];
+  const secheresseOptions = ["Lèvres", "Cou", "Poitrine / Décolleté", "Ventre / Taille", "Fesses / Hanches", "Bras", "Mains", "Avant-bras", "Jambes", "Pieds"];
+  const yeuxOptions = ["Cernes pigmentaires", "Cernes vasculaires", "Poches"];
+  const fermeteOptions = ["Visage", "Cou", "Décolleté / Poitrine", "Avant-bras"];
 
   return (
     <Card>
@@ -346,11 +346,6 @@ const PeauSection = ({ formData, errors, onChange }: any) => {
         {t('volunteers.cellulite')}
       </h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <NoneCheckbox
-          noneId="celluliteAucun"
-          checked={formData.celluliteAucun === 'Oui'}
-          onToggle={() => handleNoneToggle(celluliteIds, 'celluliteAucun', 'celluliteAucun', formData.celluliteAucun === 'Oui')}
-        />
         <GroupCheckbox
           id="celluliteBras"
           label={t('volunteers.celluliteArms')}
