@@ -129,7 +129,7 @@ const OPT = {
     "Mains",
     "Avant-bras",
   ],
-  contraception: ["Préservatif", "Pilule", "Implant", "Patch", "Anneau vaginal", "Abstinence", "Aucun", "Autre"],
+  contraception: ["Préservatif", "Pilule", "Implant", "Patch", "Anneau vaginal", "Stérilet", "Abstinence", "Aucun", "Autre"],
 } as const;
 
 const GROUPS: GroupDef[] = [
@@ -336,7 +336,10 @@ const getTypeaheadQuery = (
   const shouldReset =
     now - ref.current.lastAt > TYPEAHEAD_TIMEOUT_MS ||
     ref.current.query.length >= 2;
-  const query = shouldReset ? letter : `${ref.current.query}${letter}`;
+  const query =
+    shouldReset || ref.current.query === letter
+      ? letter
+      : `${ref.current.query}${letter}`;
 
   ref.current = { query, lastAt: now };
   return query;

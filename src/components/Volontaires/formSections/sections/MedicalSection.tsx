@@ -7,6 +7,7 @@ const CONTRACEPTION_OPTIONS = [
   "Implant",
   "Patch",
   "Anneau vaginal",
+  "Stérilet",
   "Abstinence",
   "Aucun",
   "Autre",
