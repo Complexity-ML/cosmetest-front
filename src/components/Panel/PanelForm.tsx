@@ -30,7 +30,7 @@ const natureCheveuxOptions = ['Lisses', 'Ondulés', 'Bouclés', 'Crépus'];
 const longueurCheveuxOptions = ['Courts', 'Mi-longs', 'Longs', 'Très longs'];
 const epaisseurCheveuxOptions = ['Fins', 'Moyens', 'Épais'];
 const natureCuirCheveluOptions = ['Normal', 'Sec', 'Gras', 'Mixte', 'Sensible'];
-const scoreOptions = ['0', '1', '2', '3', '4'];
+
 
 interface FormFieldProps {
   label: string;
@@ -57,7 +57,7 @@ const FormField: React.FC<FormFieldProps> = ({
   error = null,
   options = [],
   placeholder = '',
-  infoTooltip = null,
+
   className = '',
   rows = 3
 }) => {
@@ -295,7 +295,7 @@ const PanelForm = () => {
   const [errors, setErrors] = useState<any>({});
   const [loading, setLoading] = useState(false);
   const [submitError, setSubmitError] = useState('');
-  const [isLoading, setIsLoading] = useState(isEditMode);
+  const [, setIsLoading] = useState(isEditMode);
   const [etudes, setEtudes] = useState<any[]>([]);
   const [groupes, setGroupes] = useState<any[]>([]);
 

@@ -8,6 +8,7 @@ import photoService from '../../../services/photoService';
 import infoBancaireService from '../../../services/infoBancaireService';
 import annulationService from '../../../services/annulationService';
 import etudeService from '../../../services/etudeService';
+import type { SectionKey } from '../../../components/Volontaires/detailsSections';
 
 interface UseVolontaireDetailsParams {
   id: string;
@@ -46,8 +47,7 @@ interface AnnulationEtude {
   [key: string]: any;
 }
 
-// Type pour les onglets disponibles
-type TabKey = 'info' | 'caracteristiques' | 'peau' | 'cheveux' | 'cils' | 'marques' | 'problemes' | 'medical' | 'mesures' | 'rib' | 'evaluation' | 'notes' | 'rdvs' | 'etudes' | 'assignation' | 'photos';
+// Le type des onglets est dérivé des sections réellement rendues.
 
 interface UseVolontaireDetailsReturn {
   volontaire: VolontaireData | null;
@@ -58,8 +58,8 @@ interface UseVolontaireDetailsReturn {
   etudesCount: number;
   isLoading: boolean;
   error: string | null;
-  activeTab: TabKey;
-  setActiveTab: (tab: TabKey) => void;
+  activeTab: SectionKey;
+  setActiveTab: (tab: SectionKey) => void;
   annulationsEtudes: AnnulationEtude[];
   showAllAnnulations: boolean;
   setShowAllAnnulations: (show: boolean) => void;
@@ -84,7 +84,7 @@ export const useVolontaireDetails = ({ id, navigate }: UseVolontaireDetailsParam
   const [etudesCount, setEtudesCount] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<TabKey>('info');
+  const [activeTab, setActiveTab] = useState<SectionKey>('info');
   const [annulationsEtudes, setAnnulationsEtudes] = useState<AnnulationEtude[]>([]);
   const [showAllAnnulations, setShowAllAnnulations] = useState<boolean>(false);
   const [photos, setPhotos] = useState<Photo[]>([]);

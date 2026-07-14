@@ -1,6 +1,6 @@
 // calendarService.ts
 import api from './api';
-import { AxiosRequestConfig } from 'axios';
+
 
 const CALENDAR_ENDPOINT = '/calendrier';
 

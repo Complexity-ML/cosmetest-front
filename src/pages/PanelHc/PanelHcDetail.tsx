@@ -119,12 +119,6 @@ interface IconProps {
   [key: string]: any;
 }
 
-interface DetailItemProps {
-  icon: React.ReactNode;
-  label: string;
-  value: any;
-  className?: string;
-}
 
 interface CheckboxValueProps {
   value: string;
@@ -179,21 +173,6 @@ const IconDroplet: React.FC<IconProps> = ({ className = "", width = 24, height =
 const IconScissors: React.FC<IconProps> = ({ className = "", width = 24, height = 24, ...props }) => (
   <img src={scissorsSvg} width={width} height={height} className={className} alt="Scissors" {...props} />
 );
-
-// Composant DetailItem qui affiche une paire clé-valeur avec une icône
-const DetailItem: React.FC<DetailItemProps> = ({ icon, label, value, className = "" }) => {
-  return (
-    <div className={`flex items-start mb-4 ${className}`}>
-      <div className="w-10 h-10 flex-shrink-0 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 mr-3">
-        {icon}
-      </div>
-      <div>
-        <h4 className="text-sm font-medium text-gray-500">{label}</h4>
-        <div className="text-gray-800 mt-1">{value || "-"}</div>
-      </div>
-    </div>
-  );
-};
 
 // Composant pour afficher les valeurs checkbox (Oui/Non)
 const CheckboxValue: React.FC<CheckboxValueProps> = ({ value }) => {

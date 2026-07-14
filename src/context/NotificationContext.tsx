@@ -1,276 +1,218 @@
-import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
-import volontaireService from '../services/volontaireService';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
+import { useAuth } from '../hooks/useAuth';
+import notificationService, { type VolunteerNotification } from '../services/notificationService';
 
-interface Notification {
+interface LocalNotification {
   id: string;
   isRead: boolean;
   timestamp: string;
-  isLocal?: boolean;
-  [key: string]: any;
+  isLocal: true;
+  [key: string]: unknown;
 }
 
-interface NotificationState {
+interface PersistedNotificationState {
+  readIds: number[];
+  dismissedIds: number[];
+}
+
+interface NotificationContextValue {
   totalVolunteersToday: number;
   unreadVolunteersCount: number;
   lastConsultedCount: number;
-  notifications: Notification[];
-  volunteersToday: any[]; // Liste des volontaires ajoutés aujourd'hui
-}
-
-interface NotificationContextValue extends NotificationState {
-  markVolunteersAsConsulted: () => void;
-  addNotification: (notification: Partial<Notification>) => void;
+  notifications: LocalNotification[];
+  volunteersToday: VolunteerNotification[];
   unreadCount: number;
+  isLoading: boolean;
+  error: string | null;
+  loadVolunteersToday: () => Promise<void>;
+  markVolunteersAsConsulted: () => void;
+  markNotificationAsRead: (id: number) => void;
+  dismissNotification: (id: number) => void;
+  addNotification: (notification: Partial<LocalNotification>) => void;
   markAsRead: () => void;
   markAllAsRead: () => void;
-  loadVolunteersToday: () => Promise<void>; // Charger la liste des volontaires
 }
 
 export const NotificationContext = createContext<NotificationContextValue | null>(null);
 
-// Configuration de l'URL de base de l'API (comme dans Dashboard)
-const API_URL = 
-  import.meta.env?.VITE_API_URL || 
-  import.meta.env?.VITE_REACT_APP_API_URL || 
-  '';
+const emptyPersistedState = (): PersistedNotificationState => ({ readIds: [], dismissedIds: [] });
 
-type NotificationAction =
-  | { type: 'LOAD_STATS_FROM_API'; payload: any }
-  | { type: 'MARK_VOLUNTEERS_AS_CONSULTED' }
-  | { type: 'ADD_LOCAL_NOTIFICATION'; payload: Partial<Notification> }
-  | { type: 'LOAD_VOLUNTEERS_TODAY'; payload: { volunteers: any[], totalToday: number } };
+const storageKey = (login: string, date: string): string =>
+  `cosmetest.notifications.v1.${encodeURIComponent(login)}.${date}`;
 
-const notificationReducer = (state: NotificationState, action: NotificationAction): NotificationState => {
-  switch (action.type) {
-    case 'LOAD_STATS_FROM_API': {
-      const statsJour = action.payload;
-      const volontairesAjoutes = statsJour.volontairesAjoutes || 0;
-      
-      // Vérifier si ces volontaires ont déjà été consultés
-      const lastConsulted = localStorage.getItem('volunteers_last_consulted');
-      const lastConsultedCount = lastConsulted ? parseInt(lastConsulted) : 0;
-            
-      // Calculer le nombre de nouveaux volontaires non consultés
-      const unreadVolunteersCount = Math.max(0, volontairesAjoutes - lastConsultedCount);
-            
-      return {
-        ...state,
-        totalVolunteersToday: volontairesAjoutes,
-        unreadVolunteersCount,
-        lastConsultedCount
-      };
-    }
-
-    case 'LOAD_VOLUNTEERS_TODAY': {
-      const { volunteers, totalToday } = action.payload;
-      
-      // Vérifier si ces volontaires ont déjà été consultés
-      const lastConsulted = localStorage.getItem('volunteers_last_consulted');
-      const lastConsultedCount = lastConsulted ? parseInt(lastConsulted) : 0;
-      
-      // Calculer le nombre de nouveaux volontaires non consultés
-      const unreadVolunteersCount = Math.max(0, totalToday - lastConsultedCount);
-      
-      return {
-        ...state,
-        volunteersToday: volunteers,
-        totalVolunteersToday: totalToday,
-        unreadVolunteersCount,
-        lastConsultedCount
-      };
-    }
-
-    case 'MARK_VOLUNTEERS_AS_CONSULTED': {
-      const newConsultedCount = state.totalVolunteersToday;
-      localStorage.setItem('volunteers_last_consulted', newConsultedCount.toString());
-      
-      return {
-        ...state,
-        unreadVolunteersCount: 0,
-        lastConsultedCount: newConsultedCount
-      };
-    }
-
-    case 'ADD_LOCAL_NOTIFICATION': {
-      // Pour les notifications de test locales
-      const newNotification = {
-        id: 'local_' + Date.now() + Math.random(),
-        ...action.payload,
-        isRead: false,
-        timestamp: new Date().toISOString(),
-        isLocal: true
-      };
-      
-      const localNotifications = JSON.parse(localStorage.getItem('local_notifications') || '[]');
-      const updatedLocalNotifications = [newNotification, ...localNotifications];
-      localStorage.setItem('local_notifications', JSON.stringify(updatedLocalNotifications));
-      
-      return {
-        ...state,
-        notifications: [newNotification, ...state.notifications]
-      };
-    }
-
-    default:
-      return state;
+const readPersistedState = (login: string, date: string): PersistedNotificationState => {
+  try {
+    const raw = localStorage.getItem(storageKey(login, date));
+    if (!raw) return emptyPersistedState();
+    const parsed = JSON.parse(raw) as Partial<PersistedNotificationState>;
+    return {
+      readIds: Array.isArray(parsed.readIds) ? parsed.readIds.filter(Number.isInteger) : [],
+      dismissedIds: Array.isArray(parsed.dismissedIds) ? parsed.dismissedIds.filter(Number.isInteger) : [],
+    };
+  } catch {
+    return emptyPersistedState();
   }
 };
 
-interface NotificationProviderProps {
-  children: ReactNode;
-}
+const savePersistedState = (
+  login: string,
+  date: string,
+  state: PersistedNotificationState,
+): void => {
+  localStorage.setItem(storageKey(login, date), JSON.stringify(state));
+};
 
-export const NotificationProvider: React.FC<NotificationProviderProps> = ({ children }) => {
-  const [state, dispatch] = useReducer(notificationReducer, {
-    totalVolunteersToday: 0,
-    unreadVolunteersCount: 0,
-    lastConsultedCount: 0,
-    notifications: [],
-    volunteersToday: []
-  });
+export const NotificationProvider = ({ children }: { children: ReactNode }) => {
+  const { user } = useAuth();
+  const login = user?.login ?? null;
+  const inFlightRef = useRef<Promise<void> | null>(null);
+  const [volunteers, setVolunteers] = useState<VolunteerNotification[]>([]);
+  const [total, setTotal] = useState(0);
+  const [serverDate, setServerDate] = useState('');
+  const [readIds, setReadIds] = useState<number[]>([]);
+  const [dismissedIds, setDismissedIds] = useState<number[]>([]);
+  const [localNotifications, setLocalNotifications] = useState<LocalNotification[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const [isLoading, setIsLoading] = React.useState(false);
+  const loadVolunteersToday = useCallback(async (): Promise<void> => {
+    if (!login) return;
+    if (inFlightRef.current) return inFlightRef.current;
 
-  // Charger les volontaires du jour au démarrage (filtrage par dateI)
-  useEffect(() => {
-    const initializeStats = async () => {
-      // Vérifier si l'utilisateur est authentifié avant de charger
-      const hasAuthCookie = document.cookie.split(';').some(cookie => 
-        cookie.trim().startsWith('token=') || cookie.trim().startsWith('auth_token=')
-      );
-      
-      if (!hasAuthCookie) {
-        console.log('⚠️ Pas de cookie d\'authentification, skip chargement des stats');
-        return;
+    const request = (async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const response = await notificationService.getToday(50);
+        const persisted = readPersistedState(login, response.date);
+        setVolunteers(Array.isArray(response.data) ? response.data : []);
+        setTotal(Number.isFinite(response.total) ? response.total : 0);
+        setServerDate(response.date);
+        setReadIds(persisted.readIds);
+        setDismissedIds(persisted.dismissedIds);
+      } catch {
+        setError('Impossible de charger les notifications.');
+      } finally {
+        setIsLoading(false);
+        inFlightRef.current = null;
       }
+    })();
 
-      // Charger directement les volontaires avec filtrage par dateI
-      await loadVolunteersToday();
-    };
-    
-    initializeStats();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    inFlightRef.current = request;
+    return request;
+  }, [login]);
 
-  const markVolunteersAsConsulted = () => {
-    dispatch({
-      type: 'MARK_VOLUNTEERS_AS_CONSULTED'
-    });
-  };
-
-  const addNotification = (notification: Partial<Notification>) => {
-    dispatch({
-      type: 'ADD_LOCAL_NOTIFICATION',
-      payload: notification
-    });
-  };
-
-  const loadVolunteersToday = async () => {
-    // Éviter les appels multiples simultanés
-    if (isLoading) {
+  useEffect(() => {
+    if (login) {
+      void loadVolunteersToday();
       return;
     }
 
-    try {
-      setIsLoading(true);
-      
-      // Utiliser le service volontaire pour récupérer TOUS les volontaires
-      const allVolunteers = await volontaireService.getAllWithoutPagination();
-      
-      // Date d'aujourd'hui
-      const today = new Date().toISOString().split('T')[0];
-      
-      // DEBUG: Vérifier si dateI existe dans les données
-      const volunteersWithDateI = allVolunteers.filter((v: any) => v && v.dateI);
-      console.log(`📊 ${volunteersWithDateI.length} volontaires ont un champ dateI`);
-      
-      if (volunteersWithDateI.length > 0) {
-        const sample = volunteersWithDateI[0];
-        if (sample) {
-          console.log('📋 Exemple avec dateI:', {
-            id: sample.id,
-            nom: sample.nom,
-            prenom: sample.prenom,
-            dateI: sample.dateI,
-            dateIType: typeof sample.dateI
-          });
-        }
-        
-        // Afficher les 5 dernières dates d'inclusion
-        const recentDates = volunteersWithDateI
-          .slice(-5)
-          .map((v: any) => new Date(v.dateI).toISOString().split('T')[0]);
-        console.log('📅 5 dernières dates d\'inclusion:', recentDates);
-      } else {
-        console.log('⚠️ Aucun volontaire n\'a de dateI !');
-      }
-      
-      // Récupérer les IDs des notifications dismissées
-      const dismissedIds = JSON.parse(localStorage.getItem('dismissed_volunteer_notifications') || '[]');
-      
-      // DEBUG: Chercher spécifiquement les volontaires avec dateI = aujourd'hui
-      const todayVolunteers = allVolunteers.filter((v: any) => {
-        if (!v || !v.dateI) return false;
-        const volDate = new Date(v.dateI).toISOString().split('T')[0];
-        return volDate === today;
-      });
-      
-      console.log(`🔎 ${todayVolunteers.length} volontaires bruts avec dateI = ${today}`);
-      if (todayVolunteers.length > 0) {
-        console.log('🔎 IDs trouvés:', todayVolunteers.map((v: any) => v.id));
-        console.log('🔎 IDs dismissed:', dismissedIds);
-        
-        const notDismissed = todayVolunteers.filter((v: any) => v.id && !dismissedIds.includes(v.id));
-        if (notDismissed.length === 0 && todayVolunteers.length > 0) {
-          console.log('⚠️ Tous les volontaires d\'aujourd\'hui ont été dismissés !');
-          console.log('💡 Ouvrez la console et tapez: localStorage.removeItem("dismissed_volunteer_notifications")');
-        }
-      }
-      
-      // Filtrer les volontaires avec dateI = aujourd'hui (et non dismissés)
-      const volunteersToday = todayVolunteers.filter((v: any) => 
-        v.id && !dismissedIds.includes(v.id)
-      );
+    setVolunteers([]);
+    setTotal(0);
+    setServerDate('');
+    setReadIds([]);
+    setDismissedIds([]);
+    setError(null);
+  }, [loadVolunteersToday, login]);
 
-      console.log(`✅ ${volunteersToday.length} volontaires avec dateI = ${today}`);
-      
-      if (volunteersToday.length > 0) {
-        console.log('👥 Liste:', volunteersToday.map((v: any) => 
-          `${v.nom || 'Sans nom'} ${v.prenom || 'Sans prénom'} (ID: ${v.id})`
-        ).slice(0, 5).join(', '));
-      }
-      
-      // Calculer le nombre total de volontaires du jour (avec dateI = aujourd'hui)
-      const totalToday = todayVolunteers.length;
-      
-      // Dispatcher avec les volontaires et le total
-      dispatch({
-        type: 'LOAD_VOLUNTEERS_TODAY',
-        payload: {
-          volunteers: volunteersToday,
-          totalToday: totalToday
-        }
+  const persist = useCallback((nextReadIds: number[], nextDismissedIds: number[]) => {
+    if (login && serverDate) {
+      savePersistedState(login, serverDate, {
+        readIds: nextReadIds,
+        dismissedIds: nextDismissedIds,
       });
-    } catch (error) {
-      console.error('❌ Erreur:', error);
-    } finally {
-      setIsLoading(false);
     }
-  };
+  }, [login, serverDate]);
 
-  const value = {
-    totalVolunteersToday: state.totalVolunteersToday,
-    unreadVolunteersCount: state.unreadVolunteersCount,
-    lastConsultedCount: state.lastConsultedCount,
-    notifications: state.notifications,
-    volunteersToday: state.volunteersToday,
-    markVolunteersAsConsulted,
-    addNotification,
+  const markNotificationAsRead = useCallback((id: number) => {
+    setReadIds((current) => {
+      if (current.includes(id)) return current;
+      const next = [...current, id];
+      persist(next, dismissedIds);
+      return next;
+    });
+  }, [dismissedIds, persist]);
+
+  const dismissNotification = useCallback((id: number) => {
+    setDismissedIds((currentDismissed) => {
+      if (currentDismissed.includes(id)) return currentDismissed;
+      const nextDismissed = [...currentDismissed, id];
+      const nextRead = readIds.includes(id) ? readIds : [...readIds, id];
+      setReadIds(nextRead);
+      persist(nextRead, nextDismissed);
+      return nextDismissed;
+    });
+  }, [persist, readIds]);
+
+  const markVolunteersAsConsulted = useCallback(() => {
+    const visibleIds = volunteers
+      .map((volunteer) => volunteer.id)
+      .filter((id) => !dismissedIds.includes(id));
+    const nextRead = [...new Set([...readIds, ...visibleIds])];
+    setReadIds(nextRead);
+    persist(nextRead, dismissedIds);
+  }, [dismissedIds, persist, readIds, volunteers]);
+
+  const addNotification = useCallback((notification: Partial<LocalNotification>) => {
+    const next: LocalNotification = {
+      ...notification,
+      id: notification.id ?? `local_${Date.now()}`,
+      isRead: false,
+      timestamp: new Date().toISOString(),
+      isLocal: true,
+    };
+    setLocalNotifications((current) => [next, ...current]);
+  }, []);
+
+  const visibleVolunteers = useMemo(
+    () => volunteers.filter((volunteer) => !dismissedIds.includes(volunteer.id)),
+    [dismissedIds, volunteers],
+  );
+
+  const unreadVolunteersCount = useMemo(
+    () => visibleVolunteers.filter((volunteer) => !readIds.includes(volunteer.id)).length,
+    [readIds, visibleVolunteers],
+  );
+
+  const value = useMemo<NotificationContextValue>(() => ({
+    totalVolunteersToday: total,
+    unreadVolunteersCount,
+    lastConsultedCount: Math.max(0, total - unreadVolunteersCount),
+    notifications: localNotifications,
+    volunteersToday: visibleVolunteers,
+    unreadCount: unreadVolunteersCount,
+    isLoading,
+    error,
     loadVolunteersToday,
-    // Compatibilité avec l'ancien système
-    unreadCount: state.unreadVolunteersCount,
-    markAsRead: () => {},
-    markAllAsRead: markVolunteersAsConsulted
-  };
+    markVolunteersAsConsulted,
+    markNotificationAsRead,
+    dismissNotification,
+    addNotification,
+    markAsRead: markVolunteersAsConsulted,
+    markAllAsRead: markVolunteersAsConsulted,
+  }), [
+    addNotification,
+    dismissNotification,
+    error,
+    isLoading,
+    loadVolunteersToday,
+    localNotifications,
+    markNotificationAsRead,
+    markVolunteersAsConsulted,
+    total,
+    unreadVolunteersCount,
+    visibleVolunteers,
+  ]);
 
   return (
     <NotificationContext.Provider value={value}>

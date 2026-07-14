@@ -21,12 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import api from "../../services/api";
-
-// Configuration de l'URL de base de l'API
-const API_URL =
-  import.meta.env?.VITE_API_URL ||
-  import.meta.env?.VITE_REACT_APP_API_URL ||
-  "";
+import { dashboardEndpoints } from "../../services/apiEndpoints";
 
 // Types
 interface Stats {
@@ -69,6 +64,7 @@ interface ApiErrors {
   stats?: string;
   rdvs?: string;
   etudes?: string;
+  etudesEnCours?: string;
   activite?: string;
   statsJour?: string;
 }
@@ -309,79 +305,34 @@ const Dashboard: React.FC = () => {
           timeout: 10000, // 10 secondes
         };
 
-        // Stats générales
-        try {
-          const statsResponse = await api.get(
-            `${API_URL}/api/dashboard/stats`,
-            axiosConfig
-          );
-          setStats(statsResponse.data);
-        } catch (err) {
-          console.error("Erreur lors du chargement des stats:", err);
-          errors.stats = (err as Error).message;
-        }
+        const requests = [
+          { key: "stats" as const, label: "stats", endpoint: dashboardEndpoints.stats, apply: (data: Stats) => setStats(data) },
+          { key: "rdvs" as const, label: "rendez-vous", endpoint: dashboardEndpoints.prochainsRendezVous, apply: (data: RendezVous[]) => setProchainRdvs(data) },
+          { key: "etudes" as const, label: "études", endpoint: dashboardEndpoints.etudesRecentes, apply: (data: Etude[]) => setEtudesRecentes(data) },
+          { key: "etudesEnCours" as const, label: "études en cours", endpoint: dashboardEndpoints.etudesEnCours, apply: (data: Etude[]) => setEtudesEnCours(data.slice(0, 5)) },
+          { key: "activite" as const, label: "activité", endpoint: dashboardEndpoints.activiteRecente, apply: (data: Activite[]) => setActiviteRecente(data) },
+          { key: "statsJour" as const, label: "stats du jour", endpoint: dashboardEndpoints.statsJour, apply: (data: StatsJour) => setStatsJour(data) },
+        ];
 
-        // Rendez-vous
-        try {
-          const rdvsResponse = await api.get(
-            `${API_URL}/api/dashboard/rdv/prochains`,
-            axiosConfig
-          );
-          setProchainRdvs(rdvsResponse.data);
-        } catch (err) {
-          console.error("Erreur lors du chargement des rendez-vous:", err);
-          errors.rdvs = (err as Error).message;
-        }
+        const results = await Promise.allSettled(
+          requests.map(({ endpoint }) => api.get(endpoint, axiosConfig))
+        );
 
-        // Études récentes
-        try {
-          const etudesResponse = await api.get(
-            `${API_URL}/api/dashboard/etude/recentes`,
-            axiosConfig
-          );
-          setEtudesRecentes(etudesResponse.data);
-        } catch (err) {
-          console.error("Erreur lors du chargement des études:", err);
-          errors.etudes = (err as Error).message;
-        }
+        results.forEach((result, index) => {
+          const request = requests[index];
+          if (result.status === "fulfilled") {
+            request.apply(result.value.data);
+            return;
+          }
 
-        // Études en cours
-        try {
-          const etudesEnCoursResponse = await api.get(
-            `${API_URL}/api/dashboard/etude/en-cours`,
-            axiosConfig
-          );
-          setEtudesEnCours(etudesEnCoursResponse.data.slice(0, 5));
-        } catch (err) {
-          console.error("Erreur lors du chargement des études en cours:", err);
-        }
-
-        // Activité
-        try {
-          const activiteResponse = await api.get(
-            `${API_URL}/api/dashboard/activite/recente`,
-            axiosConfig
-          );
-          setActiviteRecente(activiteResponse.data);
-        } catch (err) {
-          console.error("Erreur lors du chargement de l'activité:", err);
-          errors.activite = (err as Error).message;
-        }
-
-        // Stats du jour
-        try {
-          const statsJourResponse = await api.get(
-            `${API_URL}/api/dashboard/stats-jour`,
-            axiosConfig
-          );
-          setStatsJour(statsJourResponse.data);
-        } catch (err) {
-          console.error("Erreur lors du chargement des stats du jour:", err);
-          errors.statsJour = (err as Error).message;
-        }
+          console.error(`Erreur lors du chargement des ${request.label}:`, result.reason);
+          errors[request.key] = result.reason instanceof Error
+            ? result.reason.message
+            : String(result.reason);
+        });
 
         // Si toutes les requêtes ont échoué, afficher une erreur générale
-        if (Object.keys(errors).length === 5) {
+        if (Object.keys(errors).length === requests.length) {
           setError(
             t('dashboard.loadError')
           );
@@ -498,6 +449,7 @@ const Dashboard: React.FC = () => {
               {apiErrors.stats && <li>• {t('dashboard.generalStats')}</li>}
               {apiErrors.rdvs && <li>• {t('dashboard.upcomingAppointments')}</li>}
               {apiErrors.etudes && <li>• {t('dashboard.recentStudies')}</li>}
+              {apiErrors.etudesEnCours && <li>• {t('dashboard.ongoingStudies')}</li>}
               {apiErrors.activite && <li>• {t('dashboard.recentActivity')}</li>}
               {apiErrors.statsJour && <li>• {t('dashboard.todayStats')}</li>}
             </ul>

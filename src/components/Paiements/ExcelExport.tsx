@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import * as XLSX from 'xlsx';
+
 import infoBancaireService from '../../services/infoBancaireService';
 import annulationService from '../../services/annulationService'; // NOUVEAU
 import { Paiement } from '../../hooks/usePaiements';
@@ -137,7 +137,7 @@ const ExcelExport = ({
 
     const dateVirement = new Date().toLocaleDateString('fr-FR');
 
-    return paiementsActifs.map((paiement: Paiement, index: number) => {
+    return paiementsActifs.map((paiement: Paiement) => {
       const volontaire = volontairesInfo[paiement.idVolontaire];
       const bankInfo = bankingData[paiement.idVolontaire];
 

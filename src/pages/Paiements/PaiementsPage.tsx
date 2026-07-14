@@ -15,56 +15,18 @@ import MassActionsPanel from '../../components/Paiements/MassActionsPanel';
 import FiltersPanel from '../../components/Paiements/FiltersPanel';
 import PaiementService from '../../services/PaiementService';
 import PaymentsTable from '../../components/Paiements/PaymentsTable';
+import PaymentsStudyTable from '../../components/Paiements/PaymentsStudyTable';
 import { Etude } from '../../types/types';
-import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { ArrowLeft } from 'lucide-react';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-
-// Type definitions
-interface Paiement {
-  idEtude: number;
-  idGroupe?: number | string;
-  idVolontaire: number;
-  iv: number;
-  numsujet?: string;
-  paye: number;
-  statut?: number;
-}
-
-interface VolontaireInfo {
-  idVolontaire: number | string;
-  nom: string;
-  prenom: string;
-  [key: string]: any;
-}
-
-interface GroupeInfo {
-  idGroupe: number | string;
-  nom: string;
-  [key: string]: any;
-}
-
-interface PaiementSummary {
-  total: number;
-  payes: number;
-  nonPayes: number;
-  enAttente: number;
-  annules: number;
-  montantTotal: number;
-  montantPaye: number;
-  [key: string]: number;
-}
+import type {
+  GroupeInfo,
+  Paiement,
+  PaiementSummary,
+  VolontaireInfo,
+} from './paymentPageTypes';
 
 const PaiementsPage = () => {
   const { t } = useTranslation();
@@ -820,94 +782,13 @@ const PaiementsPage = () => {
           </p>
         </div>
       ) : (
-        <Card>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Référence</TableHead>
-                <TableHead>Date début</TableHead>
-                <TableHead>Date fin</TableHead>
-                <TableHead className="text-center">Volontaires</TableHead>
-                <TableHead className="text-center">Payés</TableHead>
-                <TableHead className="text-center">Non payés</TableHead>
-                <TableHead className="text-center">Annulés</TableHead>
-                <TableHead className="text-right">Montant total</TableHead>
-                <TableHead className="text-center">Statut</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {etudesFiltrees.map((etude) => {
-                const summary = paiementsSummaryByEtude[etude.idEtude as string | number];
-                const payes = summary?.payes ?? 0;
-                const nonPayes = summary?.nonPayes ?? 0;
-                const annules = summary?.annules ?? 0;
-                const totalVol = payes + nonPayes + (summary?.enAttente ?? 0);
-                const montantTotal = summary?.montantTotal ?? summary?.montantPaye ?? 0;
-                const overdue = isEtudeOverdue(etude);
-                const allPaid = Number(etude.paye) === 2;
-
-                return (
-                  <TableRow
-                    key={etude.idEtude}
-                    className={`cursor-pointer hover:bg-gray-50 transition-colors ${overdue ? 'bg-red-50 hover:bg-red-100' : ''}`}
-                    onClick={() => setSelectedEtudeId(etude.idEtude as number)}
-                  >
-                    <TableCell className={`font-medium ${overdue ? 'text-red-700' : ''}`}>
-                      {etude.ref || `#${etude.idEtude}`}
-                    </TableCell>
-                    <TableCell className={overdue ? 'text-red-600' : ''}>
-                      {formatDate(etude.dateDebut)}
-                    </TableCell>
-                    <TableCell className={overdue ? 'text-red-600' : ''}>
-                      {formatDate(etude.dateFin)}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {totalVol}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {payes > 0 && (
-                        <Badge variant="secondary" className="bg-green-100 text-green-700 border-green-200">
-                          {payes}
-                        </Badge>
-                      )}
-                      {payes === 0 && '-'}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {nonPayes > 0 && (
-                        <Badge variant="secondary" className="bg-red-100 text-red-700 border-red-200">
-                          {nonPayes}
-                        </Badge>
-                      )}
-                      {nonPayes === 0 && '-'}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {annules > 0 && (
-                        <Badge variant="secondary" className="bg-orange-100 text-orange-700 border-orange-200">
-                          {annules}
-                        </Badge>
-                      )}
-                      {annules === 0 && '-'}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {montantTotal > 0 ? `${montantTotal} EUR` : '-'}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {allPaid ? (
-                        <Badge variant="secondary" className="bg-green-100 text-green-700 border-green-200">
-                          Payé
-                        </Badge>
-                      ) : (
-                        <Badge variant="secondary" className={`${overdue ? 'bg-red-200 text-red-800 border-red-300' : 'bg-red-100 text-red-700 border-red-200'}`}>
-                          Non payé
-                        </Badge>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </Card>
+        <PaymentsStudyTable
+          etudes={etudesFiltrees}
+          summaries={paiementsSummaryByEtude}
+          isEtudeOverdue={isEtudeOverdue}
+          formatDate={formatDate}
+          onSelect={setSelectedEtudeId}
+        />
       )}
     </div>
   );

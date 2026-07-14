@@ -27,6 +27,7 @@ describe('API Service', () => {
     // Reset mock location
     mockLocation.href = '';
     mockLocation.pathname = '/';
+    vi.stubEnv('VITE_API_URL', '');
 
     // Clear console mocks
     vi.spyOn(console, 'error').mockImplementation(() => {});
@@ -42,6 +43,7 @@ describe('API Service', () => {
 
   afterEach(() => {
     mock.restore();
+    vi.unstubAllEnvs();
     vi.restoreAllMocks();
   });
 
@@ -51,8 +53,29 @@ describe('API Service', () => {
       expect(api.defaults).toBeDefined();
     });
 
-    it('devrait avoir la bonne baseURL configurée', () => {
-      expect(api.defaults.baseURL).toBe('http://192.168.127.36:8888/api');
+    it('devrait utiliser /api par défaut afin de conserver le proxy Vite same-origin', () => {
+      expect(api.defaults.baseURL).toBe('/api');
+      expect(api.getUri({ url: '/dashboard/stats' })).toBe('/api/dashboard/stats');
+    });
+
+    it('devrait ajouter /api à VITE_API_URL quand elle contient seulement l’hôte', async () => {
+      vi.stubEnv('VITE_API_URL', 'https://api.example.test');
+      vi.resetModules();
+
+      const configuredApi = (await import('../api')).default;
+
+      expect(configuredApi.defaults.baseURL).toBe('https://api.example.test/api');
+      expect(configuredApi.getUri({ url: '/panels/42' })).toBe('https://api.example.test/api/panels/42');
+    });
+
+    it('ne devrait pas doubler un suffixe /api déjà configuré', async () => {
+      vi.stubEnv('VITE_API_URL', 'https://api.example.test/api/');
+      vi.resetModules();
+
+      const configuredApi = (await import('../api')).default;
+
+      expect(configuredApi.defaults.baseURL).toBe('https://api.example.test/api');
+      expect(configuredApi.defaults.baseURL).not.toContain('/api/api');
     });
 
     it('devrait avoir withCredentials activé', () => {
@@ -162,7 +185,7 @@ describe('API Service', () => {
   });
 
   describe('Intercepteur de réponse - Gestion des erreurs 403', () => {
-    it('devrait rediriger vers /login pour une erreur 403', async () => {
+    it('ne devrait pas déconnecter un utilisateur authentifié sans permission', async () => {
       mock.onGet('/admin').reply(403, { error: 'Forbidden' });
 
       try {
@@ -171,7 +194,7 @@ describe('API Service', () => {
         // Expected to fail
       }
 
-      expect(window.location.href).toBe('/login');
+      expect(window.location.href).toBe('');
     });
 
     it('ne devrait PAS rediriger si déjà sur la page de connexion (403)', async () => {
@@ -189,6 +212,18 @@ describe('API Service', () => {
   });
 
   describe('Intercepteur de réponse - Autres erreurs', () => {
+    it('ne devrait pas journaliser le corps potentiellement sensible des erreurs', async () => {
+      const secret = 'detail-jdbc-ultra-secret';
+      const consoleErrorSpy = vi.spyOn(console, 'error');
+      mock.onPost('/paiements').reply(500, { details: secret });
+
+      await expect(api.post('/paiements', { motDePasse: 'secret-client' })).rejects.toBeDefined();
+
+      const logs = JSON.stringify(consoleErrorSpy.mock.calls);
+      expect(logs).not.toContain(secret);
+      expect(logs).not.toContain('secret-client');
+    });
+
     it('devrait logger les erreurs 404', async () => {
       const consoleErrorSpy = vi.spyOn(console, 'error');
       mock.onGet('/notfound').reply(404, { error: 'Not Found' });
@@ -329,7 +364,7 @@ describe('API Service', () => {
   });
 
   describe('Logging des erreurs', () => {
-    it('devrait logger l\'URL, le status et les données d\'erreur', async () => {
+    it('devrait logger uniquement des métadonnées allowlistées', async () => {
       const consoleErrorSpy = vi.spyOn(console, 'error');
       mock.onGet('/test').reply(400, { message: 'Bad Request' });
 
@@ -343,10 +378,10 @@ describe('API Service', () => {
         'Erreur de réponse API:',
         expect.objectContaining({
           url: '/test',
-          status: 400,
-          data: { message: 'Bad Request' }
+          status: 400
         })
       );
+      expect(JSON.stringify(consoleErrorSpy.mock.calls)).not.toContain('Bad Request');
     });
   });
 });

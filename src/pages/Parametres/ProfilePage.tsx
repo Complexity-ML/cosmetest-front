@@ -64,7 +64,8 @@ const ProfilePage = () => {
                 // Extraire le rôle depuis authorities ou role
                 let userRole: string | undefined;
                 if (userData.authorities && userData.authorities.length > 0) {
-                    userRole = userData.authorities[0]?.authority || userData.authorities[0]?.role;
+                    const authority = userData.authorities[0]?.authority ?? userData.authorities[0]?.role;
+                    userRole = authority === undefined ? undefined : String(authority);
                 } else {
                     userRole = `ROLE_${userData.role}`;
                 }

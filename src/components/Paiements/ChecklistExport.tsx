@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import * as XLSX from 'xlsx';
 import annulationService from '../../services/annulationService';
 import etudeVolontaireService from '../../services/etudeVolontaireService';
 import volontaireService from '../../services/volontaireService';
@@ -24,6 +23,7 @@ const ChecklistExport = ({ etudes }: ChecklistExportProps) => {
     setExportError('');
 
     try {
+      const XLSX = await import('xlsx');
       // 1. Charger toutes les annulations
       const toutesLesAnnulations = await annulationService.getAll();
 

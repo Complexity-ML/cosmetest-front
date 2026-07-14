@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
+
 
 interface Statistics {
   total?: number;

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import * as XLSX from 'xlsx';
+
 import volontaireService from '../../services/volontaireService';
 import etudeService from '../../services/etudeService';
 import api from '../../services/api';
@@ -129,6 +129,7 @@ const VolunteerExcelExport: React.FC<VolunteerExcelExportProps> = ({
     try {
       setIsExporting(true);
       setExportProgress(0);
+      const XLSX = await import('xlsx');
       // 0. Récupérer les informations de l'étude si studyId est fourni
       let studyInfo = null;
       if (studyId) {

@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { useState, useEffect, useRef } from 'react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../hooks/useAuth'
 import { useNotifications } from '../../context/NotificationContext'
@@ -25,53 +25,32 @@ import LanguageSwitcher from './LanguageSwitcher'
 
 const Navbar = () => {
   const { user, logout } = useAuth()
-  const { unreadVolunteersCount, totalVolunteersToday, volunteersToday, loadVolunteersToday, markVolunteersAsConsulted } = useNotifications()
+  const {
+    unreadVolunteersCount,
+    volunteersToday,
+    loadVolunteersToday,
+    markNotificationAsRead,
+    dismissNotification,
+    isLoading: notificationsLoading,
+    error: notificationsError,
+  } = useNotifications()
   const navigate = useNavigate()
   const { t } = useTranslation()
   const [notificationsOpen, setNotificationsOpen] = useState(false)
-  const hasLoadedRef = useRef(false)
 
-  // Charger les volontaires quand on ouvre le panneau (une seule fois)
-  useEffect(() => {
-    if (notificationsOpen && !hasLoadedRef.current) {
-      hasLoadedRef.current = true
-      loadVolunteersToday()
-    }
-    
-    // Réinitialiser quand on ferme
-    if (!notificationsOpen) {
-      hasLoadedRef.current = false
-    }
-  }, [notificationsOpen, loadVolunteersToday])
-
-  // DEBUG: Afficher ce que le Navbar reçoit
-  useEffect(() => {
-    console.log('🔔 Navbar - État des notifications:', {
-      totalVolunteersToday,
-      unreadVolunteersCount,
-      volunteersToday: volunteersToday.length,
-      volunteers: volunteersToday
-    })
-  }, [totalVolunteersToday, unreadVolunteersCount, volunteersToday])
 
   const handleLogout = async () => {
     await logout()
     navigate('/login')
   }
 
-  const handleNotificationClick = () => {
-    setNotificationsOpen(!notificationsOpen)
-  }
-
   const handleDismissNotification = (volunteerId: number, e: React.MouseEvent) => {
     e.stopPropagation()
-    markVolunteersAsConsulted()
-    setTimeout(() => {
-      loadVolunteersToday()
-    }, 100)
+    dismissNotification(volunteerId)
   }
 
   const handleVolunteerClick = (volunteerId: number) => {
+    markNotificationAsRead(volunteerId)
     navigate(`/volontaires/${volunteerId}`)
     setNotificationsOpen(false)
   }
@@ -116,12 +95,17 @@ const Navbar = () => {
       <div className="flex items-center gap-4">
         <LanguageSwitcher />
         
-        <Popover open={notificationsOpen} onOpenChange={setNotificationsOpen}>
+        <Popover
+          open={notificationsOpen}
+          onOpenChange={(open) => {
+            setNotificationsOpen(open)
+            if (open) void loadVolunteersToday()
+          }}
+        >
           <PopoverTrigger asChild>
             <Button
               variant="ghost"
               size="icon"
-              onClick={handleNotificationClick}
               className="relative"
             >
               <Bell className="h-5 w-5" />
@@ -151,14 +135,25 @@ const Navbar = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-0">
-                {volunteersToday.length > 0 ? (
+                {notificationsLoading ? (
+                  <div className="p-8 text-center text-sm text-muted-foreground">
+                    {t('common.loading')}
+                  </div>
+                ) : notificationsError ? (
+                  <div className="p-6 text-center space-y-3">
+                    <p className="text-sm text-destructive">{notificationsError}</p>
+                    <Button variant="outline" size="sm" onClick={() => void loadVolunteersToday()}>
+                      Réessayer
+                    </Button>
+                  </div>
+                ) : volunteersToday.length > 0 ? (
                   <ScrollArea className="max-h-96">
                     <div className="divide-y">
-                      {volunteersToday.map((volunteer: any, index: number) => (
+                      {volunteersToday.map((volunteer) => (
                         <div 
-                          key={volunteer.id || volunteer.idVol || volunteer.idVolontaire || index}
+                          key={volunteer.id}
                           className="p-4 hover:bg-muted/50 transition-colors cursor-pointer group relative"
-                          onClick={() => handleVolunteerClick(volunteer.id || volunteer.idVol || volunteer.idVolontaire)}
+                          onClick={() => handleVolunteerClick(volunteer.id)}
                         >
                           <div className="flex items-start gap-3">
                             <div className="bg-primary/10 rounded-full p-2">
@@ -166,7 +161,7 @@ const Navbar = () => {
                             </div>
                             <div className="flex-1 space-y-1">
                               <p className="text-sm font-medium leading-none">
-                                {volunteer.nom || volunteer.nomVol || 'Nom inconnu'} {volunteer.prenom || volunteer.prenomVol || 'Prénom inconnu'}
+                                {volunteer.nom || 'Nom inconnu'} {volunteer.prenom || 'Prénom inconnu'}
                               </p>
                               <p className="text-xs text-muted-foreground">
                                 {t('notifications.updated')} {t('dates.today').toLowerCase()}
@@ -179,7 +174,7 @@ const Navbar = () => {
                               variant="ghost"
                               size="icon"
                               className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                              onClick={(e) => handleDismissNotification(volunteer.id || volunteer.idVol || volunteer.idVolontaire, e)}
+                              onClick={(e) => handleDismissNotification(volunteer.id, e)}
                             >
                               <X className="h-4 w-4" />
                             </Button>

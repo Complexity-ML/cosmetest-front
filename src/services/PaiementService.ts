@@ -1,4 +1,5 @@
 import api from './api';
+import { paiementEndpoints } from './apiEndpoints';
 
 interface PaiementFilters {
   idEtude?: number;
@@ -69,8 +70,8 @@ class PaiementService {
    */
   async getPaiementsByEtude(idEtude: number) {
     try {
-      const response = await api.get(`/etude-volontaires/etude/${idEtude}/paiements`);
-      return response.data;
+      const response = await api.get(paiementEndpoints.byStudy(idEtude));
+      return response.data?.data ?? [];
     } catch (error) {
       console.error(`Erreur lors de la recuperation des paiements pour l'etude ${idEtude}:`, error);
       throw error;
@@ -114,7 +115,7 @@ class PaiementService {
    */
   async marquerTousPayesParEtude(idEtude: number) {
     try {
-      const response = await api.patch(`/etude-volontaires/etude/${idEtude}/marquer-tous-payes`);
+      const response = await api.post(paiementEndpoints.markAllPaid(idEtude));
       return response.data;
     } catch (error) {
       console.error(`Erreur lors du marquage de tous les paiements comme payes pour l'etude ${idEtude}:`, error);

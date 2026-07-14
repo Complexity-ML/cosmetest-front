@@ -5,7 +5,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import etudeVolontaireService from "../../services/etudeVolontaireService";
-import groupeService from "../../services/groupeService";
 import annulationService from "../../services/annulationService";
 import api from "../../services/api";
 import { Button } from "@/components/ui/button";
@@ -60,10 +59,16 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
   // IDs des volontaires qui ont au moins un RDV (fallback sur volontaire imbriqué si idVolontaire null)
   const volunteerIdsWithRdv = useMemo(() => {
     if (!rdvs || rdvs.length === 0) return new Set<number>();
-    return new Set(rdvs.map((rdv: any) => rdv.idVolontaire || rdv.volontaire?.idVol || rdv.volontaire?.id).filter(Boolean));
+    return new Set<number>(
+      rdvs
+        .map((rdv: any) => Number(rdv.idVolontaire || rdv.volontaire?.idVol || rdv.volontaire?.id))
+        .filter((id: number) => Number.isInteger(id) && id > 0)
+    );
   }, [rdvs]);
 
-  const getVolontaireKey = useCallback((volontaire: VolontaireAssigne) => [
+  const getVolontaireKey = useCallback((volontaire: VolontaireAssigne) => volontaire.id
+    ? `ev:${volontaire.id}`
+    : [
     volontaire.idEtude ?? etudeId,
     volontaire.idGroupe ?? 0,
     volontaire.idVolontaire ?? 0,
@@ -108,8 +113,8 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
     try {
       setUpdateStatus((prev) => ({ ...prev, [statusKey]: "loading" }));
       await enregistrerAnnulation(volontaire, commentaire, annulePar);
-      await api.delete("/etude-volontaires/delete", {
-        params: {
+      await api.delete(volontaire.id ? `/etude-volontaires/${volontaire.id}` : "/etude-volontaires/delete", {
+        params: volontaire.id ? undefined : {
           idEtude: parseInt(etudeId.toString()),
           idGroupe: volontaire.idGroupe || 0,
           idVolontaire: volontaire.idVolontaire,
@@ -372,40 +377,7 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
       try {
         setIsLoading(true);
         const response = await etudeVolontaireService.getVolontairesByEtude(etudeId);
-        let assignes: VolontaireAssigne[] = parseEtudeVolontaireResponse(response);
-        const deduplicatedAssignes = Object.values(
-          assignes.reduce((acc: Record<number, VolontaireAssigne>, vol: VolontaireAssigne) => {
-            const existing = acc[vol.idVolontaire];
-            if (!existing || (vol.numsujet || 0) > (existing.numsujet || 0)) acc[vol.idVolontaire] = vol;
-            return acc;
-          }, {} as Record<number, VolontaireAssigne>)
-        );
-        // Réparer les volontaires présents dans les RDV mais absents de etude_volontaire
-        const missingIds: number[] = [];
-
-        // Pour chaque volontaire manquant, créer l'entrée etude_volontaire avec les vraies données de sa RDV
-        await Promise.all(
-          missingIds.map(async (id: number) => {
-            const volRdv = rdvs?.find((r: any) =>
-              (r.idVolontaire || r.volontaire?.idVol || r.volontaire?.id) === id
-            );
-            const idGroupe = volRdv?.idGroupe || volRdv?.groupe?.idGroupe || volRdv?.groupe?.id || 0;
-            let iv = 0;
-            if (idGroupe) {
-              try {
-                const groupeData = await groupeService.getById(idGroupe);
-                iv = groupeData?.iv ?? 0;
-              } catch { /* iv reste 0 */ }
-            }
-            const entry: VolontaireAssigne = { idVolontaire: id, idGroupe, idEtude: Number(etudeId), iv, numsujet: 0, paye: 0, statut: 'INSCRIT' };
-            try {
-              await etudeVolontaireService.create(entry);
-            } catch { /* entrée peut-être déjà créée en parallèle, on continue */ }
-            return entry;
-          })
-        );
-
-        const allAssignes = deduplicatedAssignes;
+        const allAssignes: VolontaireAssigne[] = parseEtudeVolontaireResponse(response);
 
         volontairesAssignesRef.current = allAssignes;
         setVolontairesAssignes(allAssignes);

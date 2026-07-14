@@ -27,13 +27,21 @@ describe('RdvService', () => {
       const result = await rdvService.getPaginated();
       expect(result.content).toHaveLength(1);
     });
+
+    it('devrait borner les paramètres envoyés', async () => {
+      mockAxios.onGet('/rdvs/paginated', {
+        params: { page: 0, size: 100, sort: 'date,desc' }
+      }).reply(200, { content: [] });
+
+      await expect(rdvService.getPaginated(-1, 10_000)).resolves.toBeDefined();
+    });
   });
 
   describe('getById', () => {
-    it('devrait récupérer un RDV par ID', async () => {
-      mockAxios.onGet('/rdvs/1/10').reply(200, { idRdv: 10 });
-      const result = await rdvService.getById(1, 10);
-      expect(result.idRdv).toBe(10);
+    it('devrait récupérer un RDV par son ID technique sans fallback composite', async () => {
+      mockAxios.onGet('/rdvs/9001').reply(200, { rdvPk: 9001, idEtude: 1, idRdv: 10 });
+      const result = await rdvService.getById(9001);
+      expect(result.rdvPk).toBe(9001);
     });
   });
 
@@ -46,17 +54,17 @@ describe('RdvService', () => {
   });
 
   describe('update', () => {
-    it('devrait mettre à jour un RDV', async () => {
-      mockAxios.onPut('/rdvs/1/10').reply(200, { idRdv: 10, updated: true });
-      const result = await rdvService.update(1, 10, { date: '2024-01-02' });
+    it('devrait mettre à jour un RDV par son ID technique', async () => {
+      mockAxios.onPut('/rdvs/9001').reply(200, { rdvPk: 9001, idRdv: 10, updated: true });
+      const result = await rdvService.update(9001, { date: '2024-01-02' });
       expect(result.updated).toBe(true);
     });
   });
 
   describe('delete', () => {
-    it('devrait supprimer un RDV', async () => {
-      mockAxios.onDelete('/rdvs/1/10').reply(200, {});
-      const result = await rdvService.delete(1, 10);
+    it('devrait supprimer un RDV par son ID technique', async () => {
+      mockAxios.onDelete('/rdvs/9001').reply(200, {});
+      const result = await rdvService.delete(9001);
       expect(result).toBeDefined();
     });
   });

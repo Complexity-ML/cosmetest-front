@@ -19,8 +19,8 @@ const rdvService = {
   getPaginated: async (page = 0, size = 10, sort = 'date,desc') => {
     const response = await api.get(`${API_URL}/paginated`, {
       params: {
-        page,
-        size: Math.min(size, 100), // Limit max page size
+        page: Math.max(0, page),
+        size: Math.min(100, Math.max(1, size)),
         sort
       }
     });
@@ -28,8 +28,8 @@ const rdvService = {
   },
 
   // Récupérer un rendez-vous spécifique
-  getById: async (idEtude: number, idRdv: number) => {
-    const response = await api.get(`${API_URL}/${idEtude}/${idRdv}`);
+  getById: async (rdvPk: number) => {
+    const response = await api.get(`${API_URL}/${rdvPk}`);
     return response.data;
   },
 
@@ -40,20 +40,16 @@ const rdvService = {
   },
 
   // Mettre à jour un rendez-vous
-  update: async (idEtude: number, idRdv: number, rdvData: any) => {
-    // Ensure IDs in the path match those in the DTO as expected by the backend
-    rdvData.idEtude = idEtude;
-    rdvData.idRdv = idRdv;
-
-    const response = await api.put(`${API_URL}/${idEtude}/${idRdv}`, rdvData);
+  update: async (rdvPk: number, rdvData: any) => {
+    const response = await api.put(`${API_URL}/${rdvPk}`, { ...rdvData, rdvPk });
     return response.data;
   },
 
   // Mettre à jour uniquement le statut d'un rendez-vous
-  updateStatus: async (idEtude: number, idRdv: number, nouvelEtat: string) => {
+  updateStatus: async (rdvPk: number, nouvelEtat: string) => {
     try {
       // Modified to match the Spring controller endpoint
-      const response = await api.patch(`${API_URL}/${idEtude}/${idRdv}/etat`, null, {
+      const response = await api.patch(`${API_URL}/${rdvPk}/etat`, null, {
         params: { nouvelEtat }
       });
       return response.data;
@@ -69,8 +65,8 @@ const rdvService = {
   },
 
   // Supprimer un rendez-vous
-  delete: async (idEtude: number, idRdv: number) => {
-    const response = await api.delete(`${API_URL}/${idEtude}/${idRdv}`);
+  delete: async (rdvPk: number) => {
+    const response = await api.delete(`${API_URL}/${rdvPk}`);
     return response.data;
   },
 

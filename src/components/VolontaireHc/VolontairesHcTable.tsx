@@ -27,6 +27,7 @@ interface VolontaireHc {
   typePeauVisage?: string
   typePeau?: string
   archive?: boolean
+  standby?: boolean | number
 }
 
 interface VolontairesHcTableProps {

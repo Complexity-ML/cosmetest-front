@@ -64,6 +64,7 @@ const etudeVolontaireService = {
     if (!data) return null;
 
     return {
+      ...(data.id !== undefined ? { id: parseNum(data.id) } : {}),
       idEtude: parseInt(String(data.idEtude || 0)),
       idVolontaire: parseInt(String(data.idVolontaire || 0)),
       idGroupe: parseInt(String(data.idGroupe || 0)) || 0,
@@ -75,9 +76,14 @@ const etudeVolontaireService = {
   },
 
   // Récupérer toutes les associations
-  async getAll() {
+  async getAll(page = 0, size = 50) {
     try {
-      const response = await api.get("/etude-volontaires");
+      const response = await api.get("/etude-volontaires", {
+        params: {
+          page: Math.max(0, page),
+          size: Math.min(100, Math.max(1, size)),
+        },
+      });
       return response.data;
     } catch (error) {
       console.error("Erreur lors de la récupération des associations:", error);
@@ -89,7 +95,10 @@ const etudeVolontaireService = {
   async getPaginated(page = 0, size = 10) {
     try {
       const response = await api.get("/etude-volontaires/paginated", {
-        params: { page, size },
+        params: {
+          page: Math.max(0, page),
+          size: Math.min(100, Math.max(1, size)),
+        },
       });
       return response.data;
     } catch (error) {
@@ -263,7 +272,7 @@ const etudeVolontaireService = {
       };
 
       const response = await api.patch(
-        "/etude-volontaires/update-statut",
+        associationId.id ? `/etude-volontaires/${associationId.id}/statut` : "/etude-volontaires/update-statut",
         null,
         { params }
       );
@@ -292,8 +301,10 @@ const etudeVolontaireService = {
         nouveauPaye: parseInt(String(nouveauPaye)),
       };
 
-      const response = await api.patch("/etude-volontaires/update-paye", null, {
+      const response = await api.patch(associationId.id ? `/etude-volontaires/${associationId.id}/paye` : "/etude-volontaires/update-paye", null, {
+        ...(associationId.id ? { params: { nouveauPaye } } : {
         params,
+        }),
       });
       return response.data;
     } catch (error) {
@@ -321,8 +332,8 @@ const etudeVolontaireService = {
         nouvelIV: parseNum(nouvelIV), // Nouvelle IV
       };
 
-      const response = await api.patch("/etude-volontaires/update-iv", null, {
-        params,
+      const response = await api.patch(associationId.id ? `/etude-volontaires/${associationId.id}/iv` : "/etude-volontaires/update-iv", null, {
+        params: associationId.id ? { nouvelIV } : params,
       });
       return response.data;
     } catch (error) {
@@ -389,6 +400,10 @@ const etudeVolontaireService = {
   // Supprimer une association (corrigé)
   async delete(associationId: EtudeVolontaire): Promise<void> {
     try {
+      if (associationId.id) {
+        await api.delete(`/etude-volontaires/${associationId.id}`);
+        return;
+      }
       const params = {
         idEtude: parseNum(associationId.idEtude),
         idGroupe: parseNum(associationId.idGroupe),
@@ -570,8 +585,8 @@ const etudeVolontaireService = {
         nouveauNumSujet: parseNum(nouveauNumSujet)
       };
 
-      const response = await api.patch("/etude-volontaires/update-numsujet", null, {
-        params
+      const response = await api.patch(associationId.id ? `/etude-volontaires/${associationId.id}/numsujet` : "/etude-volontaires/update-numsujet", null, {
+        params: associationId.id ? { nouveauNumSujet: parseNum(nouveauNumSujet) } : params
       });
 
       return response.data;

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import api from '../../services/api';
 import AppointmentConfirmationModal from './AppointmentComponents/AppointmentConfirmationModal';
-import { Etude, Groupe } from '../../types/types';
+import { Etude } from '../../types/types';
 import { GroupeData } from '../../types/etude.types';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -247,7 +247,7 @@ const AppointmentBatchCreator = ({
 
   //  Composant pour afficher la pastille d'état
   const SlotStatusBadge = () => {
-    const { status, color, message } = getSlotStatus();
+    const { color, message } = getSlotStatus();
 
     const getIcon = () => {
       switch (color) {

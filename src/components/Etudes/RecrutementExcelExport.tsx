@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import * as XLSX from 'xlsx';
+
 import api from '../../services/api';
+import rdvService from '../../services/rdvService';
 import { formatDate } from '../../utils/dateUtils';
 import { formatPhoneNumber } from '../../utils/formatters';
 import { Button } from '@/components/ui/button';
@@ -30,6 +31,7 @@ const RecrutementExcelExport: React.FC<RecrutementExcelExportProps> = ({
     try {
       setIsExporting(true);
       setExportProgress(0);
+      const XLSX = await import('xlsx');
 
       if (volunteerIds.length === 0) {
         throw new Error('Aucun volontaire à exporter');
@@ -44,8 +46,7 @@ const RecrutementExcelExport: React.FC<RecrutementExcelExportProps> = ({
       } else if (studyId) {
         // Fallback: récupérer via API
         try {
-          const rdvsResponse = await api.get(`/rdvs/search?idEtude=${studyId}&size=10000`);
-          rdvs = rdvsResponse.data?.content || rdvsResponse.data?.data || rdvsResponse.data || [];
+          rdvs = await rdvService.getByEtudeId(studyId);
           console.log(`RecrutementExcelExport: ${rdvs.length} RDV récupérés via API`);
         } catch (error) {
           console.error('Erreur lors de la récupération des RDV:', error);

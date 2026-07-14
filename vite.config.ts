@@ -9,7 +9,7 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 export default defineConfig({
-  plugins: [react(),svgr()],
+  plugins: [react(), svgr()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -21,11 +21,12 @@ export default defineConfig({
     }
   },
   server: {
+    host: '127.0.0.1',
     port: 3000,
-    open: true,
+    open: false,
     proxy: {
       '/api': {
-        target: 'http://192.168.127.36:8888',
+        target: 'http://127.0.0.1:8888',
         changeOrigin: true,
         secure: false
       }

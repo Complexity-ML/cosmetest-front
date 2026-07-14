@@ -34,7 +34,7 @@ interface SidebarProps {
   onToggle?: (collapsed: boolean) => void;
 }
 
-const CosmeTestLogo: React.FC<{ isCollapsed: boolean }> = ({ isCollapsed }) => {
+const CosmeTestLogo: React.FC<{ isCollapsed: boolean }> = ({ isCollapsed: _isCollapsed }) => {
   return (
     <img src={logo} alt="CosmeTest Logo" className="w-10 h-10" />
   );

@@ -17,11 +17,31 @@ import {
   computeStats,
   type Filters,
   type MakeupFilters,
-  type EvaluationFilters
+  type EvaluationFilters,
+  type EvaluationRange
 } from './utils';
-import { CriteriaPanel, CustomCriterion } from './CriteriaComponents';
+import {
+  CriteriaPanel,
+  type CustomCriterion,
+  type EvaluationFilterValues
+} from './CriteriaComponents';
 import { ResultsTable, StatsGrid } from './ResultsComponents';
 import BulkEmailModal from './BulkEmailModal';
+
+interface MatchingEvaluationValues {
+  [key: string]: number | string | null;
+  globale: number | null;
+  tenueLevres: string;
+  tenueTeint: string;
+  tenueBlush: string;
+  tenueSourcil: string;
+  tenueLiner: string;
+  demaquillant: string;
+  etudeCils: string;
+  corneoLevre: string;
+  corneoBras: string;
+  dtm: string;
+}
 
 interface VolontaireResult {
   id: any;
@@ -35,13 +55,7 @@ interface VolontaireResult {
   scoreDemographique: number;
   scoreTotal: number;
   makeupCriteriaSelected: boolean;
-  evaluations: {
-    globale: number | null;
-    yeux: number | null;
-    levres: number | null;
-    teint: number | null;
-    cinetique: number | null;
-  };
+  evaluations: MatchingEvaluationValues;
   details: any;
 }
 
@@ -68,7 +82,31 @@ const MatchingSystem = () => {
     filters.makeup.yeux.length +
     filters.makeup.levres.length;
 
-  const stats = computeStats(results);
+  const stats = computeStats(results.map(({ scoreTotal, evaluations }) => ({
+    scoreTotal,
+    evaluations: { globale: evaluations.globale }
+  })));
+
+  const evaluationFilterValues: EvaluationFilterValues = {
+    globale: {
+      min: filters.evaluations.globale.min !== null
+        ? String(filters.evaluations.globale.min)
+        : undefined,
+      max: filters.evaluations.globale.max !== null
+        ? String(filters.evaluations.globale.max)
+        : undefined
+    },
+    tenueLevres: filters.evaluations.tenueLevres,
+    tenueTeint: filters.evaluations.tenueTeint,
+    tenueBlush: filters.evaluations.tenueBlush,
+    tenueSourcil: filters.evaluations.tenueSourcil,
+    tenueLiner: filters.evaluations.tenueLiner,
+    demaquillant: filters.evaluations.demaquillant,
+    etudeCils: filters.evaluations.etudeCils,
+    corneoLevre: filters.evaluations.corneoLevre,
+    corneoBras: filters.evaluations.corneoBras,
+    dtm: filters.evaluations.dtm
+  };
 
   const formatNote = (note: any, fallback = t('reports.matching.notProvided')): string => (
     Number.isFinite(note) ? `${Number(note).toFixed(1)}/5` : fallback
@@ -456,7 +494,7 @@ const MatchingSystem = () => {
             ? scoreMaquillage * 0.8 + scoreDemo * 0.2
             : scoreDemo;
 
-          const evaluationValues: Record<string, any> = {
+          const evaluationValues: MatchingEvaluationValues = {
             globale: parseEvaluation(volontaire.notes),
             tenueLevres: volontaire.tenueLevres || 'Oui',
             tenueTeint: volontaire.tenueTeint || 'Oui',
@@ -625,15 +663,7 @@ const MatchingSystem = () => {
                     excludeEtudeRefs: filters.demographics.excludeEtudeRefs
                   },
                   makeup: filters.makeup,
-                  evaluations: Object.entries(filters.evaluations).reduce((acc, [key, val]) => ({
-                    ...acc,
-                    [key]: typeof val === 'string'
-                      ? val
-                      : {
-                          min: val.min !== null ? String(val.min) : undefined,
-                          max: val.max !== null ? String(val.max) : undefined
-                        }
-                  }), {}),
+                  evaluations: evaluationFilterValues,
                   customCriteria: customCriteria
                 }}
                 onAgeChange={handleAgeChange}

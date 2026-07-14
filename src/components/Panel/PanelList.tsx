@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import api from '../../services/api';
+import { panelEndpoint } from '../../services/apiEndpoints';
 import { formatPhoneNumber } from '../../utils/formatters';
 
 // Import des icônes
@@ -245,7 +246,7 @@ const PanelList = () => {
     }
     
     try {
-      await api.delete(`/api/panels/${idPanel}`);
+      await api.delete(panelEndpoint(idPanel));
       
       // Rafraîchir la liste
       fetchPanels();

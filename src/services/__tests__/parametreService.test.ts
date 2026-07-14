@@ -81,4 +81,18 @@ describe('ParametreService', () => {
       expect(result.id).toBe(1);
     });
   });
+
+  describe('changeMdp', () => {
+    it('respecte la méthode POST et le DTO attendus par le backend', async () => {
+      mockAxios.onPost('/identifiants/1/changer-mot-de-passe').reply(204);
+
+      await parametreService.changeMdp(1, 'ancien-secret', 'nouveau-secret');
+
+      expect(JSON.parse(mockAxios.history.post[0].data)).toEqual({
+        ancienMotDePasse: 'ancien-secret',
+        nouveauMotDePasse: 'nouveau-secret',
+      });
+      expect(mockAxios.history.put).toHaveLength(0);
+    });
+  });
 });

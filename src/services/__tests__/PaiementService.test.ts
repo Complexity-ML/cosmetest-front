@@ -52,7 +52,10 @@ describe('PaiementService', () => {
 
   describe('getPaiementsByEtude', () => {
     it('devrait récupérer les paiements d\'une étude', async () => {
-      mockAxios.onGet('/etude-volontaires/etude/10/paiements').reply(200, [{ id: 1 }]);
+      mockAxios.onGet('/etude-volontaires/etude/10').reply(200, {
+        success: true,
+        data: [{ id: 1 }],
+      });
       const result = await paiementService.getPaiementsByEtude(10);
       expect(result).toHaveLength(1);
     });
@@ -63,6 +66,17 @@ describe('PaiementService', () => {
       mockAxios.onPatch('/etude-volontaires/update-paiement').reply(200, { success: true });
       const result = await paiementService.updateStatutPaiement(10, 1, 1);
       expect(result.success).toBe(true);
+    });
+  });
+
+  describe('marquerTousPayesParEtude', () => {
+    it('utilise le POST réellement exposé par PaiementController', async () => {
+      mockAxios.onPost('/paiements/etudes/10/mark-all-paid').reply(200, { updatedCount: 3 });
+
+      const result = await paiementService.marquerTousPayesParEtude(10);
+
+      expect(result.updatedCount).toBe(3);
+      expect(mockAxios.history.patch).toHaveLength(0);
     });
   });
 });

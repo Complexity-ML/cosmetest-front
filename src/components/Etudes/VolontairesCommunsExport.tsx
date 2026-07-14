@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import * as XLSX from 'xlsx';
 import api from '../../services/api';
 import { formatPhoneNumber } from '../../utils/formatters';
 import { Button } from '@/components/ui/button';
@@ -29,6 +28,7 @@ const VolontairesCommunsExport: React.FC<VolontairesCommunsExportProps> = ({
     try {
       setIsExporting(true);
       setExportProgress(0);
+      const XLSX = await import('xlsx');
 
       const baseRef = extractBaseRef(studyRef);
       if (!baseRef) {

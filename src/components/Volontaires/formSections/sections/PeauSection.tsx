@@ -6,30 +6,6 @@ const createSyntheticEvent = (name: string, value: string) => ({
   target: { name, value, type: 'text' }
 } as any);
 
-const NoneCheckbox = ({
-  noneId,
-  checked,
-  onToggle,
-}: {
-  noneId: string;
-  checked: boolean;
-  onToggle: () => void;
-}) => (
-  <div className="flex items-center col-span-full">
-    <input
-      type="checkbox"
-      id={noneId}
-      name={noneId}
-      checked={checked}
-      onChange={onToggle}
-      className="form-checkbox h-5 w-5 text-primary-600"
-    />
-    <label htmlFor={noneId} className="ml-2 block text-sm font-medium text-gray-700">
-      Aucun
-    </label>
-  </div>
-);
-
 const GroupCheckbox = ({
   id,
   label,

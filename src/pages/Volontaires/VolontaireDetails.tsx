@@ -17,7 +17,7 @@ import {
 
 import PhotoViewer from '../../components/Volontaires/PhotoViewer.jsx';
 import VolontaireDetailsTabs from '../../components/Volontaires/VolontaireDetailsTabs.jsx';
-import renderVolontaireDetailsSection from '../../components/Volontaires/detailsSections';
+import renderVolontaireDetailsSection, { isSectionKey } from '../../components/Volontaires/detailsSections';
 import { useVolontaireDetails } from './hooks/useVolontaireDetails';
 
 const VolontaireDetails = () => {
@@ -67,9 +67,9 @@ const VolontaireDetails = () => {
 
   // Écouter les changements de location state pour changer d'onglet
   useEffect(() => {
-    const state = location.state as { activeTab?: string };
-    if (state?.activeTab) {
-      setActiveTab(state.activeTab as any);
+    const state = location.state as { activeTab?: unknown };
+    if (typeof state?.activeTab === 'string' && isSectionKey(state.activeTab)) {
+      setActiveTab(state.activeTab);
     }
   }, [location.state, setActiveTab]);
 
@@ -205,7 +205,9 @@ const VolontaireDetails = () => {
         <CardContent className="p-0">
           <VolontaireDetailsTabs
             activeTab={activeTab}
-            onTabChange={(tab) => setActiveTab(tab as any)}
+            onTabChange={(tab) => {
+              if (isSectionKey(tab)) setActiveTab(tab);
+            }}
             rdvCount={(rdvs ? rdvs.length : 0)}
             etudesCount={etudesCount}
           />

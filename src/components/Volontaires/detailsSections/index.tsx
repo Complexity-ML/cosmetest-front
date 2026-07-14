@@ -1,55 +1,52 @@
-import InfoSection from './InfoSection';
-import CaracteristiquesSection from './CaracteristiquesSection';
-import PeauSection from './PeauSection';
-import CheveuxSection from './CheveuxSection';
-import CilsSection from './CilsSection';
-import MarquesCutaneesSection from './MarquesCutaneesSection';
-import ProblemesSection from './ProblemesSection';
-import MedicalSection from './MedicalSection';
-import MedecineEsthetiqueSection from './MedecineEsthetiqueSection';
-import RibSection from './RibSection';
-import EvaluationSection from './EvaluationSection';
-import NotesSection from './NotesSection';
-import RendezVousSection from './RendezVousSection';
-import EtudesSection from './EtudesSection';
-import AssignationSection from './AssignationSection';
-import PhotosSection from './PhotosSection';
-import AnnulationsSection from './AnnulationsSection';
+import { lazy, Suspense, type ComponentType } from 'react';
 
 const SECTION_COMPONENTS = {
-  info: InfoSection,
-  caracteristiques: CaracteristiquesSection,
-  peau: PeauSection,
-  cheveux: CheveuxSection,
-  cils: CilsSection,
-  marques: MarquesCutaneesSection,
-  problemes: ProblemesSection,
-  medical: MedicalSection,
-  medecineEsthetique: MedecineEsthetiqueSection,
-  rib: RibSection,
-  evaluation: EvaluationSection,
-  notes: NotesSection,
-  rdvs: RendezVousSection,
-  etudes: EtudesSection,
-  assignation: AssignationSection,
-  photos: PhotosSection,
-  annulations: AnnulationsSection,
+  info: lazy(() => import('./InfoSection')),
+  caracteristiques: lazy(() => import('./CaracteristiquesSection')),
+  peau: lazy(() => import('./PeauSection')),
+  cheveux: lazy(() => import('./CheveuxSection')),
+  cils: lazy(() => import('./CilsSection')),
+  marques: lazy(() => import('./MarquesCutaneesSection')),
+  problemes: lazy(() => import('./ProblemesSection')),
+  medical: lazy(() => import('./MedicalSection')),
+  medecineEsthetique: lazy(() => import('./MedecineEsthetiqueSection')),
+  rib: lazy(() => import('./RibSection')),
+  evaluation: lazy(() => import('./EvaluationSection')),
+  notes: lazy(() => import('./NotesSection')),
+  rdvs: lazy(() => import('./RendezVousSection')),
+  etudes: lazy(() => import('./EtudesSection')),
+  assignation: lazy(() => import('./AssignationSection')),
+  photos: lazy(() => import('./PhotosSection')),
+  annulations: lazy(() => import('./AnnulationsSection')),
 } as const;
 
-type SectionKey = keyof typeof SECTION_COMPONENTS;
+export type SectionKey = keyof typeof SECTION_COMPONENTS;
+
+export const isSectionKey = (value: string): value is SectionKey =>
+  Object.prototype.hasOwnProperty.call(SECTION_COMPONENTS, value);
 
 interface RenderVolontaireDetailsSectionProps {
   activeTab: SectionKey;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
-export const renderVolontaireDetailsSection = ({ activeTab, ...props }: RenderVolontaireDetailsSectionProps) => {
-  const Section = SECTION_COMPONENTS[activeTab] as React.ComponentType<any>;
-  if (!Section) {
-    return null;
-  }
+export const renderVolontaireDetailsSection = ({
+  activeTab,
+  ...props
+}: RenderVolontaireDetailsSectionProps) => {
+  const Section = SECTION_COMPONENTS[activeTab] as ComponentType<Record<string, unknown>>;
 
-  return <Section {...props} />;
+  return (
+    <Suspense
+      fallback={(
+        <div className="flex justify-center items-center h-32" role="status" aria-label="Chargement de la section">
+          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary-600" />
+        </div>
+      )}
+    >
+      <Section {...props} />
+    </Suspense>
+  );
 };
 
 export default renderVolontaireDetailsSection;

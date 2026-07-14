@@ -1,4 +1,5 @@
 import api from './api';
+import { identifiantEndpoints } from './apiEndpoints';
 
 /**
  * Service for managing user identifiers/parameters
@@ -129,13 +130,21 @@ const parametreService = {
      * @param {string} mdp - The new password
      * @returns {Promise<Object>} Password change result
      */
-    changeMdp: async (idVolontaire: number | string, mdp: string) => {
+    changeMdp: async (
+        idVolontaire: number | string,
+        ancienMotDePasse: string,
+        nouveauMotDePasse: string
+    ) => {
         try {
             if (!idVolontaire) throw new Error('L\'ID est requis');
-            if (!mdp) throw new Error('Le mot de passe est requis');
-            if (mdp.length < 6) throw new Error('Le mot de passe doit contenir au moins 6 caractères');
+            if (!ancienMotDePasse) throw new Error('L\'ancien mot de passe est requis');
+            if (!nouveauMotDePasse) throw new Error('Le nouveau mot de passe est requis');
+            if (nouveauMotDePasse.length < 6) throw new Error('Le mot de passe doit contenir au moins 6 caractères');
             
-            const response = await api.put(`/identifiants/${idVolontaire}/changer-mot-de-passe`, { mdp });
+            const response = await api.post(identifiantEndpoints.changePassword(idVolontaire), {
+                ancienMotDePasse,
+                nouveauMotDePasse
+            });
             return response.data;
         } catch (error: any) {
             console.error('Error changing password:', error);

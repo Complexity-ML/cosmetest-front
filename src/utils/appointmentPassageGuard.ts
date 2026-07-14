@@ -16,6 +16,12 @@ type PlannedAssignment = {
   volunteerName?: string;
 };
 
+type PassageWarning = {
+  volunteerId: number;
+  volunteerName?: string;
+  projectedCount: number;
+};
+
 const normalizeId = (value: number | string | null | undefined): number | null => {
   if (value === null || value === undefined || value === '') return null;
   const parsed = Number(value);
@@ -42,7 +48,7 @@ export const buildPassageAverageWarning = (
   plannedAssignments: PlannedAssignment[],
 ): string | null => {
   const buildWarningMessage = (
-    warnings: { volunteerId: number; volunteerName?: string; projectedCount: number }[],
+    warnings: PassageWarning[],
     averageLabel?: string,
   ) => {
     const details = warnings
@@ -112,7 +118,7 @@ export const buildPassageAverageWarning = (
   });
 
   const warnings = plannedAssignments
-    .map(({ volunteerId, volunteerName }) => {
+    .map(({ volunteerId, volunteerName }): PassageWarning | null => {
       const normalizedVolunteerId = normalizeId(volunteerId);
       if (normalizedVolunteerId === null) return null;
 
@@ -126,9 +132,7 @@ export const buildPassageAverageWarning = (
         projectedCount,
       };
     })
-    .filter((warning): warning is { volunteerId: number; volunteerName?: string; projectedCount: number } =>
-      Boolean(warning),
-    );
+    .filter((warning): warning is PassageWarning => warning !== null);
 
   const uniqueWarnings = Array.from(
     new Map(warnings.map((warning) => [warning.volunteerId, warning])).values(),

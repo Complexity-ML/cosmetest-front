@@ -5,7 +5,7 @@
 import api from './api';
 import { AxiosError } from 'axios';
 
-interface User {
+export interface User {
   login: string;
   nom: string;
   email?: string | null;
@@ -13,9 +13,21 @@ interface User {
   authorities?: Authority[];
 }
 
-interface Authority {
-  authority?: string;
-  role?: string;
+export interface Authority {
+  authority?: string | number;
+  role?: string | number;
+}
+
+type WireRole = Authority | string | number;
+
+export interface WireUser {
+  login?: string | null;
+  nom?: string | null;
+  name?: string | null;
+  email?: string | null;
+  role?: string | number | null;
+  roles?: WireRole[] | WireRole | null;
+  authorities?: WireRole[] | WireRole | null;
 }
 
 interface LoginResponse {
@@ -28,27 +40,66 @@ interface LoginResponse {
 
 interface JwtResponse {
   username: string;
-  user?: User;
+  user?: WireUser;
 }
 
 interface ValidateResponse {
   valid?: boolean;
-  user?: User;
+  user?: WireUser;
 }
+
+const roleFromWireValue = (value: WireRole[] | WireRole | null | undefined): number | null => {
+  const values = Array.isArray(value) ? value : value == null ? [] : [value];
+
+  for (const item of values) {
+    const role = typeof item === 'object' ? item.authority ?? item.role : item;
+    if (typeof role === 'number' && Number.isFinite(role)) return role;
+    if (typeof role !== 'string') continue;
+
+    if (role === 'ROLE_ADMIN' || role === 'ADMIN' || role === 'ROLE_2') return 2;
+    if (role === 'ROLE_USER' || role === 'USER' || role === 'ROLE_1') return 1;
+
+    const numericRole = Number.parseInt(role, 10);
+    if (Number.isFinite(numericRole)) return numericRole;
+  }
+
+  return null;
+};
+
+/** Transforme la réponse variable du backend en utilisateur applicatif stable. */
+export const normalizeUser = (wireUser: WireUser | null | undefined): User | null => {
+  if (!wireUser || typeof wireUser.login !== 'string' || wireUser.login.length === 0) return null;
+
+  const authorities = Array.isArray(wireUser.authorities)
+    ? wireUser.authorities.filter((item): item is Authority => typeof item === 'object' && item !== null)
+    : [];
+  const role = roleFromWireValue(wireUser.roles)
+    ?? roleFromWireValue(wireUser.authorities)
+    ?? roleFromWireValue(wireUser.role)
+    ?? 1;
+
+  return {
+    login: wireUser.login,
+    nom: wireUser.nom || wireUser.name || wireUser.login,
+    email: wireUser.email || null,
+    role,
+    authorities,
+  };
+};
 
 class AuthService {
   // Stockage temporaire des infos utilisateur en mémoire
   private _currentUser: User | null = null;
-  private _debugMode: boolean = true; // Activé pour le debug
+  private _debugMode: boolean = import.meta.env.DEV;
 
-  private log(message: string, data: any = null): void {
+  private log(message: string, ...data: unknown[]): void {
     if (this._debugMode) {
-      console.log(`🔐 AuthService: ${message}`, data || '');
+      console.log(`🔐 AuthService: ${message}`, ...data);
     }
   }
 
-  private error(message: string, error: any = null): void {
-    console.error(`❌ AuthService: ${message}`, error || '');
+  private error(message: string, ...error: unknown[]): void {
+    console.error(`❌ AuthService: ${message}`, ...error);
   }
 
   /**
@@ -62,36 +113,33 @@ class AuthService {
       // Format JSON attendu par le backend
       const loginData = { login, motDePasse };
 
-      this.log('Données envoyées:', loginData);
       this.log('URL de connexion:', '/auth/login');
 
       // Requête d'authentification
       const response = await api.post<JwtResponse>('/auth/login', loginData);
 
-      this.log('Réponse complète:', {
-        status: response.status,
-        statusText: response.statusText,
-        headers: response.headers,
-        data: response.data
-      });
 
       // Si le backend répond 200 => connexion réussie
       if (response.status === 200) {
         // Vérifier la structure de la réponse
         if (response.data && response.data.user) {
           // Nouvelle structure de réponse (avec objet user)
-          this._currentUser = response.data.user;
+          const normalizedUser = normalizeUser(response.data.user);
+          if (!normalizedUser) {
+            this.error('Données utilisateur invalides dans la réponse de connexion');
+            return { success: false, message: 'Réponse serveur inattendue' };
+          }
+          this._currentUser = normalizedUser;
           this.log('Utilisateur mis en cache (nouvelle structure):', this._currentUser);
 
           return {
             success: true,
-            user: response.data.user,
-            role: response.data.user?.role || 1,
-            isAdmin: response.data.user?.role === 2
+            user: normalizedUser,
+            role: normalizedUser.role,
+            isAdmin: normalizedUser.role === 2
           };
         } else if (response.data && response.data.username) {
           // Ancienne structure de réponse (JwtResponse)
-          this.log('Réponse ancienne structure détectée:', response.data);
 
           // Faire un appel pour récupérer les infos utilisateur
           try {
@@ -112,7 +160,7 @@ class AuthService {
               return { success: false, message: 'Impossible de récupérer les données utilisateur' };
             }
           } catch (userError) {
-            this.error('Erreur récupération utilisateur après connexion:', userError);
+            this.error('Erreur récupération utilisateur après connexion');
             // Créer un utilisateur minimal
             const minimalUser: User = {
               login: response.data.username,
@@ -129,7 +177,7 @@ class AuthService {
             };
           }
         } else {
-          this.error('Structure de réponse inattendue:', response.data);
+          this.error('Structure de réponse inattendue');
           return {
             success: false,
             message: 'Réponse serveur inattendue'
@@ -144,16 +192,10 @@ class AuthService {
       }
     } catch (error) {
       const axiosError = error as AxiosError;
-      this.error('Erreur complète de connexion:', {
+      this.error('Échec de connexion:', {
         message: axiosError.message,
         status: axiosError.response?.status,
-        statusText: axiosError.response?.statusText,
-        data: axiosError.response?.data,
-        config: {
-          url: axiosError.config?.url,
-          method: axiosError.config?.method,
-          data: axiosError.config?.data
-        }
+        statusText: axiosError.response?.statusText
       });
 
       // Gestion détaillée des différents types d'erreur
@@ -164,7 +206,7 @@ class AuthService {
         const status = axiosError.response.status;
         const data = axiosError.response.data;
 
-        this.log('Erreur de réponse serveur:', { status, data });
+        this.log('Erreur de réponse serveur:', { status });
 
         if (status === 401) {
           errorMessage = 'Identifiants incorrects';
@@ -184,17 +226,17 @@ class AuthService {
         if (typeof data === 'string') {
           errorMessage = data;
         } else if (data && typeof data === 'object') {
-          const errorData = data as any;
-          if (errorData.message) {
+          const errorData = data as Record<string, unknown>;
+          if (typeof errorData.message === 'string') {
             errorMessage = errorData.message;
-          } else if (errorData.error) {
+          } else if (typeof errorData.error === 'string') {
             errorMessage = errorData.error;
           }
         }
 
       } else if (axiosError.request) {
         // La requête a été faite mais pas de réponse
-        this.error('Pas de réponse du serveur:', axiosError.request);
+        this.error('Pas de réponse du serveur');
         errorMessage = 'Impossible de contacter le serveur';
       } else {
         // Erreur lors de la configuration de la requête
@@ -222,7 +264,7 @@ class AuthService {
       this.log('Déconnexion réussie');
       return true;
     } catch (error) {
-      this.error('Erreur lors de la déconnexion:', error);
+      this.error('Erreur lors de la déconnexion');
       // Même en cas d'erreur, vider le cache
       this._currentUser = null;
       return false;
@@ -244,9 +286,9 @@ class AuthService {
       this.log('Appel API /users/me pour récupérer l\'utilisateur');
 
       // Faire un appel API à /users/me qui renvoie maintenant le rôle numérique
-      const response = await api.get<User>('/users/me');
+      const response = await api.get<WireUser>('/users/me');
 
-      this.log('Réponse /users/me:', response.data);
+
       this.log('Analyse de la réponse /users/me:', {
         status: response.status,
         dataType: typeof response.data,
@@ -262,60 +304,17 @@ class AuthService {
       // Normaliser les données utilisateur
       const rawUser = response.data;
       if (!rawUser || !rawUser.login) {
-        this.error('Données utilisateur invalides:', rawUser);
+        this.error('Données utilisateur invalides');
         this._currentUser = null;
         return null;
       }
 
-      // Extraire et normaliser le rôle
-      let userRole = rawUser.role;
-
-      // IMPORTANT: Toujours prioriser les authorities/roles sur le champ 'role'
-      // car les authorities sont plus fiables
-      this.log('🔍 Extraction du rôle - Données disponibles:', {
-        directRole: rawUser.role,
-        hasRoles: !!(rawUser as any).roles,
-        rolesValue: (rawUser as any).roles,
-        hasAuthorities: !!rawUser.authorities,
-        authoritiesValue: rawUser.authorities
-      });
-
-      // Essayer d'abord 'roles' (au pluriel)
-      if ((rawUser as any).roles && Array.isArray((rawUser as any).roles) && (rawUser as any).roles.length > 0) {
-        const extractedRole = this.extractRoleFromAuthorities((rawUser as any).roles);
-        if (extractedRole !== 1 || !userRole) { // Si on trouve un rôle spécial ou pas de rôle direct
-          userRole = extractedRole;
-          this.log(' Rôle extrait depuis roles:', userRole);
-        }
+      const normalizedUser = normalizeUser(rawUser);
+      if (!normalizedUser) {
+        this.error('Données utilisateur invalides');
+        this._currentUser = null;
+        return null;
       }
-      // Puis 'authorities' si pas de 'roles'
-      else if (rawUser.authorities && Array.isArray(rawUser.authorities) && rawUser.authorities.length > 0) {
-        const extractedRole = this.extractRoleFromAuthorities(rawUser.authorities);
-        if (extractedRole !== 1 || !userRole) { // Si on trouve un rôle spécial ou pas de rôle direct
-          userRole = extractedRole;
-          this.log(' Rôle extrait depuis authorities:', userRole);
-        }
-      }
-
-      this.log('🎯 Rôle final avant validation:', userRole);
-
-      // S'assurer que le rôle est un nombre valide
-      if (typeof userRole === 'string') {
-        userRole = parseInt(userRole, 10);
-      }
-      if (isNaN(userRole) || userRole === null || userRole === undefined) {
-        this.log(' Rôle invalide, utilisation du rôle par défaut (1)');
-        userRole = 1;
-      }
-
-      // Créer l'objet utilisateur normalisé
-      const normalizedUser: User = {
-        login: rawUser.login,
-        nom: rawUser.nom || (rawUser as any).name || rawUser.login,
-        email: rawUser.email || null,
-        role: userRole,
-        authorities: rawUser.authorities || []
-      };
 
       this.log('Utilisateur normalisé:', normalizedUser);
 
@@ -323,75 +322,13 @@ class AuthService {
       this._currentUser = normalizedUser;
       return normalizedUser;
     } catch (error) {
-      this.error('Impossible de récupérer l\'utilisateur:', error);
+      this.error('Impossible de récupérer l\'utilisateur');
       // Vider le cache en cas d'erreur
       this._currentUser = null;
       return null;
     }
   }
 
-  /**
-   * Extrait le rôle numérique depuis les authorities Spring Security ou roles
-   */
-  private extractRoleFromAuthorities(authoritiesOrRoles: any[] | any): number {
-    if (!authoritiesOrRoles) {
-      this.log('Pas d\'authorities/roles fournis');
-      return 1;
-    }
-
-    this.log('Extraction du rôle depuis:', authoritiesOrRoles);
-
-    // Si c'est un tableau
-    if (Array.isArray(authoritiesOrRoles)) {
-      for (const item of authoritiesOrRoles) {
-        // Cas 1: Objet avec propriété 'authority'
-        const role = item.authority || item.role || item;
-
-        this.log('Analyse de l\'élément:', item, 'Role extrait:', role);
-
-        if (typeof role === 'string') {
-          if (role === 'ROLE_ADMIN' || role === 'ADMIN') {
-            this.log('Rôle ADMIN détecté -> 2');
-            return 2;
-          } else if (role === 'ROLE_USER' || role === 'USER') {
-            this.log('Rôle USER détecté -> 1');
-            return 1;
-          } else if (role === 'ROLE_2') {
-            this.log('Rôle ROLE_2 détecté -> 2 (admin)');
-            return 2;
-          } else if (role === 'ROLE_1') {
-            this.log('Rôle ROLE_1 détecté -> 1 (user)');
-            return 1;
-          }
-        }
-
-        // Cas 2: Nombre direct
-        if (typeof role === 'number') {
-          this.log('Rôle numérique direct:', role);
-          return role;
-        }
-
-        // Cas 3: String numérique
-        if (typeof role === 'string' && !isNaN(parseInt(role))) {
-          const numRole = parseInt(role);
-          this.log('Rôle string numérique converti:', numRole);
-          return numRole;
-        }
-      }
-    }
-
-    // Si ce n'est pas un tableau, essayer de traiter directement
-    if (typeof authoritiesOrRoles === 'string') {
-      if (authoritiesOrRoles === 'ROLE_ADMIN' || authoritiesOrRoles === 'ADMIN') {
-        return 2;
-      } else if (authoritiesOrRoles === 'ROLE_USER' || authoritiesOrRoles === 'USER') {
-        return 1;
-      }
-    }
-
-    this.log('Aucun rôle reconnu, utilisation du défaut (1)');
-    return 1; // Par défaut
-  }
 
   /**
    * Vérifie si on est authentifié, en interrogeant /auth/validate.
@@ -401,7 +338,7 @@ class AuthService {
       this.log('Vérification de l\'authentification via /auth/validate');
 
       const response = await api.get<ValidateResponse | string>('/auth/validate');
-      this.log('Réponse /auth/validate:', { status: response.status, data: response.data });
+      this.log('Réponse /auth/validate:', { status: response.status });
 
       // Le backend peut retourner soit:
       // - Un objet {valid: true}
@@ -423,7 +360,7 @@ class AuthService {
 
           // Si on a des données utilisateur, les mettre en cache
           if (data.user) {
-            this._currentUser = data.user;
+            this._currentUser = normalizeUser(data.user);
             this.log('Utilisateur mis en cache depuis /auth/validate:', this._currentUser);
           }
         } else {
@@ -439,7 +376,7 @@ class AuthService {
       this.log('Résultat final isAuthenticated:', isAuth);
       return isAuth;
     } catch (error) {
-      this.error('Erreur de validation d\'authentification:', error);
+      this.error('Erreur de validation d\'authentification');
       // Vider le cache en cas d'erreur
       this._currentUser = null;
       return false;
@@ -457,7 +394,7 @@ class AuthService {
       this.log('Rôle utilisateur:', role);
       return role;
     } catch (error) {
-      this.error('Erreur lors de la récupération du rôle:', error);
+      this.error('Erreur lors de la récupération du rôle');
       return null;
     }
   }

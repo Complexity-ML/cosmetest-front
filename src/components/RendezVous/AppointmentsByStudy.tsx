@@ -4,8 +4,6 @@ import { Link } from 'react-router-dom';
 import rdvService from '../../services/rdvService';
 import etudeService from '../../services/etudeService';
 import volontaireService from '../../services/volontaireService';
-import etudeVolontaireService from '../../services/etudeVolontaireService';
-import groupeService from '../../services/groupeService';
 import annulationService from '../../services/annulationService';
 import infoBancaireService from '../../services/infoBancaireService';
 import AppointmentSwitcher from './AppointmentSwitcher';
@@ -180,208 +178,7 @@ const AppointmentsByStudy = ({ onAppointmentClick, onBack }: AppointmentsByStudy
     };
   }, []);
 
-  // 1. 🔥 FONCTION DE SUPPRESSION AGRESSIVE (remplacer handleEtudeVolontaireOnUnassign)
-  const handleEtudeVolontaireOnUnassign = async (etudeId: number, volontaireId: number) => {
-    try {
-      // Récupérer l'association existante
-      const existingAssociationsResponse = await etudeVolontaireService.getVolontairesByEtude(etudeId);
 
-      let existingAssociations = [];
-      if (Array.isArray(existingAssociationsResponse)) {
-        existingAssociations = existingAssociationsResponse;
-      } else if (existingAssociationsResponse?.data) {
-        existingAssociations = Array.isArray(existingAssociationsResponse.data) ?
-          existingAssociationsResponse.data : [existingAssociationsResponse.data];
-      }
-
-      const existingAssoc = existingAssociations.find((assoc: any) =>
-        parseInt(assoc.idVolontaire) === parseInt(volontaireId.toString())
-      );
-
-      // Stratégies de suppression multiples
-      const strategies = [];
-
-      // Stratégie 1: updateVolontaire avec null
-      strategies.push(async () => {
-        const associationId = etudeVolontaireService.createAssociationId(
-          existingAssoc.idEtude,
-          existingAssoc.idGroupe,
-          existingAssoc.idVolontaire,
-          existingAssoc.iv,
-          existingAssoc.numsujet,
-          existingAssoc.paye,
-          existingAssoc.statut
-        );
-
-        await etudeVolontaireService.updateVolontaire(associationId, null);
-        return "updateVolontaire(null)";
-      });
-
-      // Stratégie 2: Reset numsujet puis suppression (si numsujet > 0)
-      if (existingAssoc.numsujet && existingAssoc.numsujet > 0) {
-        strategies.push(async () => {
-          const associationId = etudeVolontaireService.createAssociationId(
-            existingAssoc.idEtude,
-            existingAssoc.idGroupe,
-            existingAssoc.idVolontaire,
-            existingAssoc.iv,
-            existingAssoc.numsujet,
-            existingAssoc.paye,
-            existingAssoc.statut
-          );
-
-          // Reset numsujet à 0
-          await etudeVolontaireService.updateNumSujet(associationId, 0);
-          await new Promise(resolve => setTimeout(resolve, 300));
-
-          // Supprimer avec numsujet = 0
-          const newAssociationId = etudeVolontaireService.createAssociationId(
-            existingAssoc.idEtude,
-            existingAssoc.idGroupe,
-            existingAssoc.idVolontaire,
-            existingAssoc.iv,
-            0, // numsujet = 0
-            existingAssoc.paye,
-            existingAssoc.statut
-          );
-
-          await etudeVolontaireService.delete(newAssociationId);
-          return "reset numsujet + delete";
-        });
-      }
-
-      // Stratégie 3: Statut ANNULE puis suppression
-      strategies.push(async () => {
-        const associationId = etudeVolontaireService.createAssociationId(
-          existingAssoc.idEtude,
-          existingAssoc.idGroupe,
-          existingAssoc.idVolontaire,
-          existingAssoc.iv,
-          existingAssoc.numsujet,
-          existingAssoc.paye,
-          existingAssoc.statut
-        );
-
-        await etudeVolontaireService.updateStatut(associationId, 'ANNULE');
-
-        const newAssociationId = etudeVolontaireService.createAssociationId(
-          existingAssoc.idEtude,
-          existingAssoc.idGroupe,
-          existingAssoc.idVolontaire,
-          existingAssoc.iv,
-          existingAssoc.numsujet,
-          existingAssoc.paye,
-          'ANNULE'
-        );
-
-        await etudeVolontaireService.delete(newAssociationId);
-        return "statut ANNULE + delete";
-      });
-
-      // Stratégie 4: Suppression directe
-      strategies.push(async () => {
-        await etudeVolontaireService.desassignerVolontaireDEtude(etudeId, volontaireId);
-        return "desassignerVolontaireDEtude";
-      });
-
-      // Exécuter les stratégies
-      for (const [index, strategy] of strategies.entries()) {
-        try {
-          await strategy();
-          break;
-        } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
-          console.warn(`⚠️ Stratégie ${index + 1} ÉCHOUÉE:`, errorMessage);
-        }
-      }
-
-      // Vérification finale
-      try {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-        const verificationResponse = await etudeVolontaireService.getVolontairesByEtude(etudeId);
-        let associations = [];
-
-        if (Array.isArray(verificationResponse)) {
-          associations = verificationResponse;
-        } else if (verificationResponse?.data) {
-          associations = Array.isArray(verificationResponse.data) ?
-            verificationResponse.data : [verificationResponse.data];
-        }
-
-        const stillExists = associations.some((assoc: any) =>
-          parseInt(assoc.idVolontaire) === parseInt(volontaireId.toString())
-        );
-
-        if (stillExists) {
-          console.error("🚨 PROBLÈME: L'association EXISTE ENCORE !");
-          throw new Error(`L'association persiste malgré toutes les tentatives`);
-        }
-      } catch (verificationError) {
-        if (verificationError instanceof Error && verificationError.message && verificationError.message.includes('persiste')) {
-          throw verificationError;
-        }
-        console.warn("⚠️ Impossible de vérifier la suppression:", verificationError);
-      }
-    } catch (error) {
-      console.error('🔥 ERREUR lors de la suppression agressive:', error);
-    }
-  };
-
-  // 2. 🔄 FONCTION DE CRÉATION/REMPLACEMENT (remplacer createOrUpdateEtudeVolontaireAssociation)
-  const createOrUpdateEtudeVolontaireAssociation = async (etudeId: number, volontaireId: number, rdv: RendezVous) => {
-    try {
-      // Récupérer l'ID du groupe depuis le RDV
-      const groupeId = rdv.idGroupe || rdv.groupe?.id || rdv.groupe?.idGroupe || 0;
-
-      // Récupérer l'IV du groupe si disponible
-      let ivGroupe = 0;
-      try {
-        if (groupeId && groupeId > 0) {
-          const groupeDetails = await groupeService.getById(groupeId);
-          if (groupeDetails && groupeDetails.iv !== undefined) {
-            ivGroupe = parseInt(groupeDetails.iv) || 0;
-          }
-        }
-      } catch (err) {
-        console.warn("⚠️ Impossible de récupérer l'IV du groupe:", err);
-      }
-
-      // 1.  SUPPRESSION AGRESSIVE de toute association existante
-      try {
-        await handleEtudeVolontaireOnUnassign(etudeId, volontaireId);
-      } catch (deleteError) {
-        const errorMessage = deleteError instanceof Error ? deleteError.message : 'Erreur inconnue';
-        console.warn("⚠️ Erreur lors de la suppression agressive (on continue):", errorMessage);
-      }
-
-      // 2.  Pause de sécurité
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // 3.  Création de la nouvelle association fraîche
-
-      const associationData = {
-        idEtude: etudeId,
-        idVolontaire: volontaireId,
-        idGroupe: parseInt(groupeId.toString()) || 0,
-        iv: ivGroupe,
-        numsujet: 0, // 🎯 Toujours 0 pour un nouveau départ
-        paye: 0,
-        statut: 'INSCRIT'
-      };
-
-      const result = await etudeVolontaireService.create(associationData);
-      return result;
-
-    } catch (error) {
-      console.error('❌ Erreur lors de la création/remplacement agressif:', error);
-      // Ne pas faire échouer l'assignation du RDV
-    }
-  };
-
-
-
-  // Filtrage des études avec tri DESC par ID
   const filteredEtudes = Array.isArray(etudes)
     ? etudes.filter(e => {
       const ref = (e.ref || '').toLowerCase();
@@ -437,17 +234,8 @@ const AppointmentsByStudy = ({ onAppointmentClick, onBack }: AppointmentsByStudy
 
       // Si volontaireId est null, c'est une désassignation
       if (volontaireId === null) {
-        // 1.  Supprimer l'association EtudeVolontaire si elle existe
-        const currentVolontaireId = rdv.volontaire?.id || rdv.idVolontaire;
-        if (currentVolontaireId) {
-          try {
-            await handleEtudeVolontaireOnUnassign(idEtude, currentVolontaireId);
-          } catch (assocError) {
-            console.warn("⚠️ Erreur suppression association:", assocError);
-          }
-        }
-
-        // 2. Créer les données pour la désassignation
+        // Le backend met à jour le RDV et supprime l'association étude-volontaire
+        // uniquement si aucun autre RDV opérationnel ne subsiste pour ce volontaire.
         const updatedData = {
           idEtude: idEtude,
           idRdv: rdvId,
@@ -495,39 +283,25 @@ const AppointmentsByStudy = ({ onAppointmentClick, onBack }: AppointmentsByStudy
           return;
         }
 
-        try {
-          const annulations = await annulationService.getByVolontaireAndEtude(volontaireId, idEtude);
-          if (annulations && annulations.length > 0) {
-            const ann = annulations[0] as any;
-            const dateAnn = new Date(ann.dateAnnulation).toLocaleDateString('fr-FR');
-            const msg = [
-              `⚠️ Ce volontaire a été annulé sur cette étude le ${dateAnn}.`,
-              ann.commentaire ? `Motif : ${ann.commentaire}` : null,
-              ann.annulePar ? `Annulé par : ${ann.annulePar}` : null,
-              '',
-              'Voulez-vous le remettre sur l\'étude ?\nSon entrée d\'annulation sera supprimée.',
-            ].filter(l => l !== null).join('\n');
-            if (!window.confirm(msg)) {
-              setAssignmentStatus(prev => { const n = { ...prev }; delete n[rdvId]; return n; });
-              return;
-            }
-            for (const a of annulations) {
-              if ((a as any).id) await annulationService.delete((a as any).id).catch(() => {});
-            }
+        const annulations = await annulationService.getByVolontaireAndEtude(volontaireId, idEtude);
+        if (annulations && annulations.length > 0) {
+          const ann = annulations[0] as any;
+          const dateAnn = new Date(ann.dateAnnulation).toLocaleDateString('fr-FR');
+          const msg = [
+            `⚠️ Ce volontaire a été annulé sur cette étude le ${dateAnn}.`,
+            ann.commentaire ? `Motif : ${ann.commentaire}` : null,
+            ann.annulePar ? `Annulé par : ${ann.annulePar}` : null,
+            '',
+            'Voulez-vous le remettre sur l\'étude ?\nSon entrée d\'annulation sera supprimée.',
+          ].filter(l => l !== null).join('\n');
+          if (!window.confirm(msg)) {
+            setAssignmentStatus(prev => { const n = { ...prev }; delete n[rdvId]; return n; });
+            return;
           }
-        } catch {
-          // Si la vérification échoue, on continue sans bloquer l'assignation
+          // La suppression est réalisée par updateRdv dans la même transaction que l'affectation.
         }
 
-        // 1.  Créer/Mettre à jour l'association EtudeVolontaire
-        try {
-          await createOrUpdateEtudeVolontaireAssociation(idEtude, volontaireId, rdv);
-        } catch (assocError) {
-          console.warn("⚠️ Erreur association EtudeVolontaire:", assocError);
-          // On continue même si l'association échoue
-        }
-
-        // 2. Créer les données pour l'assignation
+        // L'association étude-volontaire est créée atomiquement par le backend avec le RDV.
         const updatedData = {
           idEtude: idEtude,
           idRdv: rdvId,

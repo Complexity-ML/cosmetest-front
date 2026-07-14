@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import * as XLSX from 'xlsx';
+
 import api from '../../services/api';
 import { formatDate } from '../../utils/dateUtils';
 import { formatPhoneNumber } from '../../utils/formatters';
@@ -27,6 +27,7 @@ const RdvExcelExport: React.FC<RdvExcelExportProps> = ({
     try {
       setIsExporting(true);
       setExportProgress(0);
+      const XLSX = await import('xlsx');
 
       if (rdvs.length === 0) {
         throw new Error('Aucun rendez-vous à exporter');

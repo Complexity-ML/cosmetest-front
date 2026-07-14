@@ -4,11 +4,13 @@
 
 import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
 
-// URL de l'API
-// - En production avec proxy IIS: utiliser '/api' (same-origin)
-// - Sans proxy: utiliser l'URL complète du backend
-const API_HOST = 'http://192.168.127.36:8888';
-const baseApiUrl = `${API_HOST}/api`;
+// URL de l'API : proxy same-origin en développement, serveur WinSW en production.
+const configuredApiUrl = import.meta.env.VITE_API_URL?.replace(/\/+$/, '');
+const baseApiUrl = configuredApiUrl
+  ? configuredApiUrl.endsWith('/api') ? configuredApiUrl : `${configuredApiUrl}/api`
+  : import.meta.env.DEV
+    ? '/api'
+    : 'http://192.168.127.36:8888/api';
 
 // Créer une instance d'axios avec la configuration de base
 const api: AxiosInstance = axios.create({
@@ -19,13 +21,17 @@ const api: AxiosInstance = axios.create({
   }
 });
 
-// Intercepteur de requête : log pour debug
+// Intercepteur de requête : ne jamais journaliser la configuration ou le corps.
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     return config;
   },
   (error: AxiosError) => {
-    console.error('Erreur de requête API:', error);
+    console.error('Erreur de requête API:', {
+      url: error.config?.url,
+      method: error.config?.method,
+      code: error.code
+    });
     return Promise.reject(error);
   }
 );
@@ -39,11 +45,11 @@ api.interceptors.response.use(
     console.error('Erreur de réponse API:', {
       url: error.config?.url,
       status: error.response?.status,
-      data: error.response?.data
+      code: error.code
     });
 
-    // Gérer à la fois 401 (Unauthorized) et 403 (Forbidden)
-    if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+    // 401 = session absente/expirée. Un 403 signale seulement un droit insuffisant.
+    if (error.response?.status === 401) {
       // Ne pas rediriger si on est déjà sur la page de connexion ou en train de tenter une connexion
       const isAuthPath = window.location.pathname.includes('/cosmetest/login') ||
                          error.config?.url?.includes('/auth/login') ||

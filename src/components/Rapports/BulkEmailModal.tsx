@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Mail, Copy, Eye, FileSpreadsheet } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import * as XLSX from 'xlsx';
 import emailService from '../../services/emailService';
 import { normalizePhototype } from '@/utils/formatters';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -46,7 +45,7 @@ const BulkEmailModal: React.FC<BulkEmailModalProps> = ({
     senderName: 'CosmeTest',
     senderEmail: 'noreply@cosmetest.com'
   });
-  const [sending, setSending] = useState(false);
+  const [, setSending] = useState(false);
   const [error, setError] = useState('');
   const [showPreview, setShowPreview] = useState(false);
   const [previewVolontaire, setPreviewVolontaire] = useState<any>(null);
@@ -123,7 +122,7 @@ const BulkEmailModal: React.FC<BulkEmailModalProps> = ({
     }
   };
 
-  const handleCreateExcelFile = () => {
+  const handleCreateExcelFile = async () => {
     setError('');
 
     // Filter out archived volunteers
@@ -155,7 +154,8 @@ const BulkEmailModal: React.FC<BulkEmailModalProps> = ({
         return;
       }
 
-      // Créer le workbook Excel
+      // Charger la librairie lourde uniquement au clic d'export
+      const XLSX = await import('xlsx');
       const wb = XLSX.utils.book_new();
 
       // Diviser en groupes de 500 pour les onglets

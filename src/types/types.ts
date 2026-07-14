@@ -106,6 +106,7 @@ export interface Groupe {
 }
 
 export interface EtudeVolontaire {
+  id?: number;
   idEtude: number;
   idVolontaire: number;
   idGroupe?: number;

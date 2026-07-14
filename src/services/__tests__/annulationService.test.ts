@@ -2,9 +2,11 @@
 // annulationService.test.ts - Tests pour le service d'annulation
 // ============================================================
 
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
+import { describe, it, expect, expectTypeOf, beforeEach, vi, afterEach } from 'vitest';
 import MockAdapter from 'axios-mock-adapter';
-import annulationService, { cleanTextForDatabase } from '../annulationService';
+import annulationService, { cleanTextForDatabase, type Annulation } from '../annulationService';
+
+expectTypeOf(annulationService.getByVolontaireAndEtude).returns.toEqualTypeOf<Promise<Annulation[]>>();
 
 describe('AnnulationService', () => {
   let mockAxios: MockAdapter;
@@ -122,18 +124,20 @@ describe('AnnulationService', () => {
   });
 
   describe('getAll', () => {
-    it('devrait récupérer toutes les annulations', async () => {
-      const mockAnnulations = [
-        { id: 1, idVol: 1, idEtude: 10, dateAnnulation: '2024-01-15', commentaire: 'Test 1' },
-        { id: 2, idVol: 2, idEtude: 11, dateAnnulation: '2024-01-16', commentaire: 'Test 2' }
-      ];
-
-      mockAxios.onGet('/annulations').reply(200, mockAnnulations);
+    it('devrait parcourir les pages bornées pour les exports', async () => {
+      const first = { id: 1, idVol: 1, idEtude: 10, dateAnnulation: '2024-01-15', commentaire: 'Test 1' };
+      const second = { id: 2, idVol: 2, idEtude: 11, dateAnnulation: '2024-01-16', commentaire: 'Test 2' };
+      mockAxios.onGet('/annulations').reply((config) => [200,
+        Number(config.params.page) === 0
+          ? { content: [first], totalPages: 2 }
+          : { content: [second], totalPages: 2 }
+      ]);
 
       const result = await annulationService.getAll();
 
-      expect(result).toHaveLength(2);
-      expect(result).toEqual(mockAnnulations);
+      expect(result).toEqual([first, second]);
+      expect(mockAxios.history.get).toHaveLength(2);
+      expect(mockAxios.history.get.every(request => request.params.size === 100)).toBe(true);
     });
 
     it('devrait gérer les erreurs de récupération', async () => {
@@ -482,10 +486,10 @@ describe('AnnulationService', () => {
       });
     });
 
-    it('devrait utiliser un commentaire par défaut si vide', async () => {
+    it('devrait conserver un commentaire vide si aucun commentaire n’est fourni', async () => {
       mockAxios.onPost('/annulations').reply((config) => {
         const data = JSON.parse(config.data);
-        expect(data.commentaire).toBe('Annulation sans commentaire');
+        expect(data.commentaire).toBe('');
         return [200, { id: 1, ...data }];
       });
 
@@ -495,10 +499,10 @@ describe('AnnulationService', () => {
       });
     });
 
-    it('devrait utiliser "Annulation automatique" si le commentaire devient vide après nettoyage', async () => {
+    it('devrait conserver un commentaire vide après nettoyage', async () => {
       mockAxios.onPost('/annulations').reply((config) => {
         const data = JSON.parse(config.data);
-        expect(data.commentaire).toBe('Annulation automatique');
+        expect(data.commentaire).toBe('');
         return [200, { id: 1, ...data }];
       });
 

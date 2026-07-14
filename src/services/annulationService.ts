@@ -4,7 +4,7 @@
 
 import api from './api';
 
-interface Annulation {
+export interface Annulation {
   id?: number;
   idAnnuler?: number;
   idVol: number;
@@ -90,8 +90,18 @@ const annulationService = {
    */
   getAll: async (): Promise<Annulation[]> => {
     try {
-      const response = await api.get<Annulation[]>('/annulations');
-      return response.data;
+      const all: Annulation[] = [];
+      let page = 0;
+      let totalPages = 1;
+      do {
+        const response = await api.get<PaginatedAnnulations>('/annulations', {
+          params: { page, size: 100 },
+        });
+        all.push(...(response.data.content || []));
+        totalPages = response.data.totalPages || 1;
+        page += 1;
+      } while (page < totalPages);
+      return all;
     } catch (error) {
       console.error('Erreur lors de la récupération des annulations:', error);
       throw error;

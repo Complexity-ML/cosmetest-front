@@ -1,15 +1,22 @@
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { lazy, Suspense } from 'react'
 import { useEtudeDetail } from './hooks/useEtudeDetail'
-import DetailsSection from '../../components/Etudes/detailsSections/DetailsSection'
-import RendezVousSection from '../../components/Etudes/detailsSections/RendezVousSection'
-import GroupesSection from '../../components/Etudes/detailsSections/GroupesSection'
-import IndemnitesSection from '../../components/Etudes/detailsSections/IndemnitesSection'
-import ObservationSection from '../../components/Etudes/detailsSections/ObservationSection'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Loader2 } from 'lucide-react'
 
+const DetailsSection = lazy(() => import('../../components/Etudes/detailsSections/DetailsSection'))
+const RendezVousSection = lazy(() => import('../../components/Etudes/detailsSections/RendezVousSection'))
+const GroupesSection = lazy(() => import('../../components/Etudes/detailsSections/GroupesSection'))
+const IndemnitesSection = lazy(() => import('../../components/Etudes/detailsSections/IndemnitesSection'))
+const ObservationSection = lazy(() => import('../../components/Etudes/detailsSections/ObservationSection'))
+
+const SectionLoader = () => (
+  <div className="flex justify-center items-center h-32" role="status" aria-label="Chargement de la section">
+    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+  </div>
+)
 
 const EtudeDetail = () => {
   const { t } = useTranslation()
@@ -167,6 +174,7 @@ const EtudeDetail = () => {
         </div>
 
         <div className="p-6">
+          <Suspense fallback={<SectionLoader />}>
           {activeTab === 'details' && (
             <DetailsSection etude={etude} />
           )}
@@ -214,7 +222,6 @@ const EtudeDetail = () => {
               selectedRdv={selectedRdv}
               handleBackToRdvList={handleBackToRdvList}
               handleRdvUpdate={handleRdvUpdate}
-              navigate={navigate}
               getUniqueVolunteerIds={getUniqueVolunteerIds}
               handleOpenEmailSender={handleOpenEmailSender}
               showActionsMenu={showActionsMenu}
@@ -227,6 +234,7 @@ const EtudeDetail = () => {
               sortedRdvs={sortedRdvs}
             />
           )}
+          </Suspense>
         </div>
       </div>
 

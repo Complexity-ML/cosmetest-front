@@ -5,6 +5,7 @@ export interface StatutConfigItem {
 }
 
 export interface VolontaireAssigne {
+  id?: number;
   idVolontaire: number;
   idGroupe: number;
   idEtude: number;

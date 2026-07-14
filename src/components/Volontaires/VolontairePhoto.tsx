@@ -11,13 +11,16 @@ interface VolontairePhotoProps {
   onPhotoClick?: ((photo: { url: string; type: string; isPdf?: boolean }) => void) | null;
 }
 
+const noopPhotoLoad = () => {};
+const noopPhotoError = () => {};
+
 const VolontairePhoto = ({ 
   volontaireId, 
   photoType = 'face', 
   className = "",
   thumbnail = false,
-  onPhotoLoad = () => {},
-  onPhotoError = () => {},
+  onPhotoLoad = noopPhotoLoad,
+  onPhotoError = noopPhotoError,
   onPhotoClick = null
 }: VolontairePhotoProps) => {
   const [loading, setLoading] = useState<boolean>(true);
@@ -68,8 +71,10 @@ const VolontairePhoto = ({
 
           onPhotoLoad({ url: imageUrl, photoType });
         } else {
-          setError(checkResponse.data?.message || 'Photo non disponible');
-          onPhotoError('Photo non disponible');
+          setPhotoExists(false);
+          setImageData(null);
+          setIsPdf(false);
+          setError(null);
         }
       } catch (err: unknown) {
         console.error('Erreur complète lors du chargement de la photo:', err);
@@ -112,10 +117,18 @@ const VolontairePhoto = ({
     );
   }
 
-  if (error || !photoExists || !imageData) {
+  if (error) {
     return (
       <div className={`bg-gray-100 rounded-lg ${className} flex items-center justify-center`}>
-        <div className="text-gray-400 text-sm">{error || 'Photo non disponible'}</div>
+        <div className="text-gray-400 text-sm">{error}</div>
+      </div>
+    );
+  }
+
+  if (!photoExists || !imageData) {
+    return (
+      <div className={`bg-gray-100 rounded-lg ${className} flex items-center justify-center`}>
+        <div className="text-gray-400 text-sm">Photo indisponible</div>
       </div>
     );
   }

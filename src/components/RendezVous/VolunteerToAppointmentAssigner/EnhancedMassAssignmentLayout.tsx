@@ -198,10 +198,10 @@ const EnhancedMassAssignmentLayout: React.FC<EnhancedMassAssignmentLayoutProps> 
     />
 
     {/* Appointment Switcher Modal */}
-    {showSwitcher && (
+    {showSwitcher && switcherRdv && selectedEtudeId !== null && (
       <AppointmentSwitcher
-        preSelectedRdv={switcherRdv as any}
-        etudeId={selectedEtudeId as any}
+        preSelectedRdvs={[{ ...switcherRdv, idEtude: selectedEtudeId }]}
+        etudeId={selectedEtudeId}
         onClose={handleCloseSwitcher}
         onSwitchComplete={handleSwitchComplete}
       />

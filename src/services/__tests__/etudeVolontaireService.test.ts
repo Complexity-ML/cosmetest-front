@@ -21,10 +21,14 @@ describe('EtudeVolontaireService', () => {
   });
 
   describe('getAll', () => {
-    it('devrait récupérer toutes les relations étude-volontaire', async () => {
-      mockAxios.onGet('/etude-volontaires').reply(200, [{ id: 1 }]);
-      const result = await etudeVolontaireService.getAll();
-      expect(result).toHaveLength(1);
+    it('devrait demander une page bornée et conserver les métadonnées', async () => {
+      mockAxios.onGet('/etude-volontaires', { params: { page: 0, size: 100 } })
+        .reply(200, { data: { content: [{ id: 1 }], totalPages: 2 } });
+
+      const result = await etudeVolontaireService.getAll(-3, 10_000);
+
+      expect(result.data.content).toHaveLength(1);
+      expect(result.data.totalPages).toBe(2);
     });
   });
 
@@ -44,6 +48,15 @@ describe('EtudeVolontaireService', () => {
     });
   });
 
+  describe('getPaginated', () => {
+    it('devrait borner page et taille avant envoi', async () => {
+      mockAxios.onGet('/etude-volontaires/paginated', { params: { page: 0, size: 100 } })
+        .reply(200, { data: { content: [] } });
+
+      await expect(etudeVolontaireService.getPaginated(-1, 500)).resolves.toBeDefined();
+    });
+  });
+
   describe('create', () => {
     it('devrait créer une relation étude-volontaire', async () => {
       mockAxios.onPost('/etude-volontaires').reply(201, { id: 1 });
@@ -57,8 +70,9 @@ describe('EtudeVolontaireService', () => {
   });
 
   describe('delete', () => {
-    it('devrait supprimer une relation', async () => {
-      const associationId = {
+    it('utilise l ID technique quand il est présent', async () => {
+      const association = {
+        id: 42,
         idEtude: 10,
         idGroupe: 0,
         idVolontaire: 5,
@@ -67,8 +81,8 @@ describe('EtudeVolontaireService', () => {
         paye: 0,
         statut: 'INSCRIT'
       };
-      mockAxios.onDelete('/etude-volontaires/delete').reply(200);
-      await expect(etudeVolontaireService.delete(associationId)).resolves.not.toThrow();
+      mockAxios.onDelete('/etude-volontaires/42').reply(200);
+      await expect(etudeVolontaireService.delete(association)).resolves.not.toThrow();
     });
   });
 });

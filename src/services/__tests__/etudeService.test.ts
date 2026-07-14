@@ -177,7 +177,7 @@ describe('EtudeService', () => {
     it('devrait récupérer une étude par référence', async () => {
       const mockEtude = { id: 1, ref: 'ET001', nom: 'Test' };
 
-      mockAxios.onGet('/etudes/ref/ET001').reply(200, mockEtude);
+      mockAxios.onGet('/etudes/search-by-ref', { params: { ref: 'ET001' } }).reply(200, mockEtude);
 
       const result = await etudeService.getByRef('ET001');
 

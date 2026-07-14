@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import * as XLSX from 'xlsx';
+
 import { formatDate, formatTime } from '../../utils/dateUtils';
 import annulationService from '../../services/annulationService';
 import { AlertTriangle, XCircle, Download } from 'lucide-react';
@@ -166,8 +166,10 @@ const VolontaireDetailRdv = ({ rdvs = [], volontaireId }: VolontaireDetailRdvPro
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   // Export Excel des RDVs du jour et à venir
-  const exportToExcel = () => {
+  const exportToExcel = async () => {
     if (upcomingRdvs.length === 0) return;
+
+    const XLSX = await import('xlsx');
 
     const data = upcomingRdvs.map(rdv => {
       const annulation = isRdvAnnule(rdv);

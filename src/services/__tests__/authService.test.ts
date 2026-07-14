@@ -4,7 +4,29 @@
 
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import MockAdapter from 'axios-mock-adapter';
-import authService from '../authService';
+import authService, { normalizeUser, type WireUser } from '../authService';
+
+describe('normalizeUser', () => {
+  it('normalise un utilisateur wire sans muter la réponse du backend', () => {
+    const wireUser: WireUser = {
+      login: 'admin',
+      name: 'Administratrice',
+      email: undefined,
+      role: '1',
+      roles: [{ authority: 'ROLE_ADMIN' }],
+    };
+    const snapshot = structuredClone(wireUser);
+
+    expect(normalizeUser(wireUser)).toEqual({
+      login: 'admin',
+      nom: 'Administratrice',
+      email: null,
+      role: 2,
+      authorities: [],
+    });
+    expect(wireUser).toEqual(snapshot);
+  });
+});
 
 describe('AuthService', () => {
   let mockAxios: MockAdapter;
@@ -42,7 +64,7 @@ describe('AuthService', () => {
       const result = await authService.login('testuser', 'password123');
 
       expect(result.success).toBe(true);
-      expect(result.user).toEqual(mockUser);
+      expect(result.user).toMatchObject(mockUser);
       expect(result.role).toBe(1);
       expect(result.isAdmin).toBe(false);
     });
@@ -64,6 +86,40 @@ describe('AuthService', () => {
       expect(result.user?.login).toBe('admin');
       expect(result.role).toBe(2);
       expect(result.isAdmin).toBe(true);
+    });
+
+    it('ne devrait jamais journaliser le mot de passe ni la réponse JWT complète', async () => {
+      const secret = 'mot-de-passe-ultra-secret';
+      const jwt = 'jwt-ultra-secret';
+      mockAxios.onPost('/auth/login').reply(200, { username: 'alice', token: jwt });
+      mockAxios.onGet('/users/me').reply(200, { login: 'alice', nom: 'Alice', role: 1 });
+
+      await authService.login('alice', secret);
+
+      const authServiceLogs = [
+        ...(console.log as ReturnType<typeof vi.fn>).mock.calls,
+        ...(console.error as ReturnType<typeof vi.fn>).mock.calls
+      ].filter(call => String(call[0]).includes('AuthService'));
+      const logs = JSON.stringify(authServiceLogs);
+      expect(logs).not.toContain(secret);
+      expect(logs).not.toContain(jwt);
+      expect(logs).not.toContain('motDePasse');
+    });
+
+    it('ne devrait pas journaliser config.data ni la réponse auth complète en erreur', async () => {
+      const secret = 'secret-dans-config-data';
+      mockAxios.onPost('/auth/login').reply(401, { message: 'Identifiants incorrects', jwt: 'jwt-erreur' });
+
+      await authService.login('alice', secret);
+
+      const authServiceLogs = [
+        ...(console.log as ReturnType<typeof vi.fn>).mock.calls,
+        ...(console.error as ReturnType<typeof vi.fn>).mock.calls
+      ].filter(call => String(call[0]).includes('AuthService'));
+      const logs = JSON.stringify(authServiceLogs);
+      expect(logs).not.toContain(secret);
+      expect(logs).not.toContain('jwt-erreur');
+      expect(logs).not.toContain('config');
     });
 
     it('devrait gérer les identifiants incorrects', async () => {
@@ -236,7 +292,7 @@ describe('AuthService', () => {
       await authService.isAuthenticated();
       const user = await authService.getCurrentUser();
 
-      expect(user).toEqual(mockUser);
+      expect(user).toMatchObject(mockUser);
       expect(mockAxios.history.get.filter(req => req.url === '/users/me').length).toBe(0);
     });
   });

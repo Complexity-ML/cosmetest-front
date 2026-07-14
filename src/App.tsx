@@ -1,36 +1,44 @@
 import { ToastProvider } from '@/components/ui/ToastProvider';
 import { RendezVousProvider } from './pages/RendezVous/context/RendezVousContext';
+import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './hooks/useAuth';
-import LoginScreen from './pages/Auth/LoginScreen';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import AppLayout from '@/components/Layout/AppLayout';
-import Dashboard from './pages/Dashboard/Dashboard';
-import VolontairesPage from './pages/Volontaires/VolontairesPage';
-import VolontaireDetails from './pages/Volontaires/VolontaireDetails';
-import VolontaireForm from './pages/Volontaires/VolontaireForm';
-import EtudesPage from './pages/Etudes/EtudesPage';
-import EtudeDetail from './pages/Etudes/EtudeDetail';
-import PanelHcList from './pages/PanelHc/PanelHcList';
-import PanelHcForm from './pages/PanelHc/PanelHcForm';
-import PanelHcDetail from './pages/PanelHc/PanelHcDetail';
-import AppointmentManager from './pages/RendezVous/AppointmentManager';
-import VolunteerToAppointmentAssigner from './pages/RendezVous/VolunteerToAppointmentAssigner';
-import VolontairesHcPage from './pages/VolontaireHc/VolontairesHcPage';
-import VolontaireHcDetail from './pages/VolontaireHc/VolontaireHcDetail';
-import VolontaireHcForm from './pages/VolontaireHc/VolontaireHcForm';
-import RapportsPage from './pages/Rapports/RapportsPage';
-import GroupesPage from './pages/Groupes/GroupesPage';
-import GroupeDetails from './pages/Groupes/GroupeDetails';
-import GroupeForm from './pages/Groupes/GroupeForm';
-import EtudeFormEnhanced from './pages/Etudes/EtudeFormEnhanced';
-import SettingsPage from './pages/Parametres/SettingsPage';
-import ProfilePage from './pages/Parametres/ProfilePage';
-import ConnectionLogsPage from './pages/Parametres/ConnectionLogsPage';
-import PaiementsPage from './pages/Paiements/PaiementsPage';
-import UnauthorizedPage from './pages/Auth/UnauthorizedPage';
-import AppointmentViewerWrapper from './pages/RendezVous/AppointmentViewerWrapper';
 import { Loader2 } from 'lucide-react';
+
+const LoginScreen = lazy(() => import('./pages/Auth/LoginScreen'));
+const UnauthorizedPage = lazy(() => import('./pages/Auth/UnauthorizedPage'));
+const Dashboard = lazy(() => import('./pages/Dashboard/Dashboard'));
+const VolontairesPage = lazy(() => import('./pages/Volontaires/VolontairesPage'));
+const VolontaireDetails = lazy(() => import('./pages/Volontaires/VolontaireDetails'));
+const VolontaireForm = lazy(() => import('./pages/Volontaires/VolontaireForm'));
+const VolontairesHcPage = lazy(() => import('./pages/VolontaireHc/VolontairesHcPage'));
+const VolontaireHcDetail = lazy(() => import('./pages/VolontaireHc/VolontaireHcDetail'));
+const VolontaireHcForm = lazy(() => import('./pages/VolontaireHc/VolontaireHcForm'));
+const EtudesPage = lazy(() => import('./pages/Etudes/EtudesPage'));
+const EtudeDetail = lazy(() => import('./pages/Etudes/EtudeDetail'));
+const EtudeFormEnhanced = lazy(() => import('./pages/Etudes/EtudeFormEnhanced'));
+const GroupesPage = lazy(() => import('./pages/Groupes/GroupesPage'));
+const GroupeDetails = lazy(() => import('./pages/Groupes/GroupeDetails'));
+const GroupeForm = lazy(() => import('./pages/Groupes/GroupeForm'));
+const AppointmentManager = lazy(() => import('./pages/RendezVous/AppointmentManager'));
+const VolunteerToAppointmentAssigner = lazy(() => import('./pages/RendezVous/VolunteerToAppointmentAssigner'));
+const AppointmentViewerWrapper = lazy(() => import('./pages/RendezVous/AppointmentViewerWrapper'));
+const PanelHcList = lazy(() => import('./pages/PanelHc/PanelHcList'));
+const PanelHcForm = lazy(() => import('./pages/PanelHc/PanelHcForm'));
+const PanelHcDetail = lazy(() => import('./pages/PanelHc/PanelHcDetail'));
+const RapportsPage = lazy(() => import('./pages/Rapports/RapportsPage'));
+const SettingsPage = lazy(() => import('./pages/Parametres/SettingsPage'));
+const ProfilePage = lazy(() => import('./pages/Parametres/ProfilePage'));
+const ConnectionLogsPage = lazy(() => import('./pages/Parametres/ConnectionLogsPage'));
+const PaiementsPage = lazy(() => import('./pages/Paiements/PaiementsPage'));
+
+const RouteLoader = () => (
+  <div className="flex items-center justify-center h-screen">
+    <Loader2 className="h-12 w-12 animate-spin text-primary" />
+  </div>
+);
 
 function App() {
   const { isLoading } = useAuth();
@@ -38,16 +46,15 @@ function App() {
   if (isLoading) {
     return (
       <ToastProvider>
-        <div className="flex items-center justify-center h-screen">
-          <Loader2 className="h-12 w-12 animate-spin text-primary" />
-        </div>
+        <RouteLoader />
       </ToastProvider>
     );
   }
 
   return (
     <ToastProvider>
-      <Routes>
+      <Suspense fallback={<RouteLoader />}>
+        <Routes>
         <Route path="/login" element={<LoginScreen />} />
         <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
@@ -98,7 +105,8 @@ function App() {
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+        </Routes>
+      </Suspense>
     </ToastProvider>
   );
 }

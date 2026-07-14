@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Search, Plus, Trash2, X } from 'lucide-react';
+import { ChevronDown, Search, Plus, Trash2, X } from 'lucide-react';
 import { MAKEUP_OPTIONS, EVALUATION_FIELDS, ETHNIE_OPTIONS, TYPE_PEAU_OPTIONS } from './constants';
 import { CUSTOM_CRITERIA_OPTIONS } from './customCriteriaConstants';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { usePaginatedEtudes } from './usePaginatedEtudes';
 
 // Type pour les critères personnalisés
 export interface CustomCriterion {
@@ -66,19 +67,20 @@ export const DemographicFilters: React.FC<DemographicFiltersProps> = ({
 }) => {
   const { t } = useTranslation();
   const [excludeInput, setExcludeInput] = useState('');
+  const [excludeEtudesOpen, setExcludeEtudesOpen] = useState(false);
+  const {
+    etudes: excludeEtudes,
+    hasMore: excludeEtudesHasMore,
+    loading: excludeEtudesLoading,
+    error: excludeEtudesError,
+    loadMore: loadMoreExcludeEtudes,
+  } = usePaginatedEtudes(excludeEtudesOpen);
 
   const handleAddExcludeRef = () => {
     const ref = excludeInput.trim();
     if (ref && !values.excludeEtudeRefs.includes(ref)) {
       onAddExcludeRef(ref);
       setExcludeInput('');
-    }
-  };
-
-  const handleExcludeKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      handleAddExcludeRef();
     }
   };
 
@@ -124,26 +126,86 @@ export const DemographicFilters: React.FC<DemographicFiltersProps> = ({
           </div>
         </div>
         <div className="space-y-2">
-          <Label>{t('reports.matching.excludeStudy')}</Label>
+          <Label htmlFor="excludeEtudeRef">{t('reports.matching.excludeStudy')}</Label>
           <div className="flex gap-2">
-            <Input
-              type="text"
-              placeholder={t('reports.matching.excludeStudyPlaceholder')}
-              value={excludeInput}
-              onChange={(e) => setExcludeInput(e.target.value)}
-              onKeyDown={handleExcludeKeyDown}
-              className="flex-1"
-            />
+            <div className="relative flex-1">
+              <Button
+                id="excludeEtudeRef"
+                type="button"
+                role="combobox"
+                variant="outline"
+                aria-label={t('reports.matching.excludeStudy')}
+                aria-expanded={excludeEtudesOpen}
+                onClick={() => setExcludeEtudesOpen((open) => !open)}
+                className="w-full justify-between font-normal"
+                disabled={excludeEtudesLoading && excludeEtudes.length === 0}
+              >
+                <span className="truncate">
+                  {excludeEtudesLoading && excludeEtudes.length === 0
+                    ? 'Chargement des études...'
+                    : excludeInput || t('reports.matching.excludeStudyPlaceholder')}
+                </span>
+                <ChevronDown className="h-4 w-4 opacity-50" />
+              </Button>
+
+              {excludeEtudesOpen && (
+                <div
+                  data-testid="exclude-study-menu"
+                  className="absolute z-50 mt-1 w-full min-w-[24rem] overflow-hidden rounded-md border bg-white shadow-lg"
+                >
+                  <div role="listbox" className="max-h-64 overflow-y-auto p-1">
+                    {excludeEtudes
+                      .filter((etude) => etude.ref && !values.excludeEtudeRefs.includes(etude.ref))
+                      .map((etude) => (
+                        <button
+                          key={etude.idEtude ?? etude.id ?? etude.ref}
+                          type="button"
+                          role="option"
+                          aria-selected={excludeInput === etude.ref}
+                          onClick={() => {
+                            setExcludeInput(etude.ref);
+                            setExcludeEtudesOpen(false);
+                          }}
+                          className="flex w-full items-start rounded-sm px-2 py-2 text-left text-sm hover:bg-gray-100"
+                        >
+                          <span className="font-medium">{etude.ref}</span>
+                          {etude.titre && <span className="ml-2 text-gray-500">— {etude.titre}</span>}
+                        </button>
+                      ))}
+                  </div>
+
+                  {excludeEtudesHasMore && (
+                    <div className="border-t bg-gray-50 p-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="w-full"
+                        onClick={() => void loadMoreExcludeEtudes()}
+                        disabled={excludeEtudesLoading}
+                      >
+                        {excludeEtudesLoading ? 'Chargement...' : 'Charger plus'}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
             <Button
               type="button"
               variant="outline"
               size="icon"
               onClick={handleAddExcludeRef}
               disabled={!excludeInput.trim()}
+              aria-label="Ajouter l’étude à exclure"
             >
               <Plus className="w-4 h-4" />
             </Button>
           </div>
+
+          {excludeEtudesError && (
+            <p className="text-xs text-red-600">{excludeEtudesError}</p>
+          )}
           {values.excludeEtudeRefs.length > 0 && (
             <div className="flex flex-wrap gap-2 mt-2">
               {values.excludeEtudeRefs.map((ref) => (
@@ -430,8 +492,17 @@ export const MakeupFilters: React.FC<MakeupFiltersProps> = ({
   );
 };
 
+export interface EvaluationRangeInput {
+  min?: string;
+  max?: string;
+}
+
+export type EvaluationFilterValues = Record<string, string | EvaluationRangeInput> & {
+  globale: EvaluationRangeInput;
+};
+
 interface EvaluationFiltersProps {
-  values: Record<string, any>;
+  values: EvaluationFilterValues;
   onChange: (key: string, type: 'min' | 'max' | 'value', value: string) => void;
 }
 
@@ -456,7 +527,7 @@ export const EvaluationFilters: React.FC<EvaluationFiltersProps> = ({ values, on
                     min="0"
                     max="5"
                     step="1"
-                    value={values[key]?.min ?? ''}
+                    value={values.globale.min ?? ''}
                     placeholder="0"
                     onChange={(e) => onChange(key, 'min', e.target.value)}
                   />
@@ -471,7 +542,7 @@ export const EvaluationFilters: React.FC<EvaluationFiltersProps> = ({ values, on
                     min="0"
                     max="5"
                     step="1"
-                    value={values[key]?.max ?? ''}
+                    value={values.globale.max ?? ''}
                     placeholder="5"
                     onChange={(e) => onChange(key, 'max', e.target.value)}
                   />
@@ -480,7 +551,8 @@ export const EvaluationFilters: React.FC<EvaluationFiltersProps> = ({ values, on
             ) : (
               <div className="flex gap-2">
                 {['Oui', 'Non'].map((opt) => {
-                  const isActive = (values[key] || '') === opt;
+                  const currentValue = values[key];
+                  const isActive = (typeof currentValue === 'string' ? currentValue : '') === opt;
                   const label = opt;
                   const activeClass =
                     opt === 'Oui'
@@ -567,7 +639,7 @@ interface CriteriaPanelProps {
       yeux: string[];
       levres: string[];
     };
-    evaluations: Record<string, { min?: string; max?: string }>;
+    evaluations: EvaluationFilterValues;
     customCriteria?: CustomCriterion[];
   };
   onAgeChange: (field: string, value: string) => void;
@@ -578,7 +650,7 @@ interface CriteriaPanelProps {
   onAddExcludeRef: (ref: string) => void;
   onRemoveExcludeRef: (ref: string) => void;
   onMakeupToggle: (category: string, value: string) => void;
-  onEvaluationChange: (key: string, type: 'min' | 'max', value: string) => void;
+  onEvaluationChange: (key: string, type: 'min' | 'max' | 'value', value: string) => void;
   onAddCustomCriterion?: () => void;
   onRemoveCustomCriterion?: (id: string) => void;
   onChangeCustomCriterion?: (id: string, field: 'label' | 'field' | 'filter', value: string) => void;

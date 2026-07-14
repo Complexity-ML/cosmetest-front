@@ -2,8 +2,10 @@
 import React from 'react';
 
 // Base icon component creator
-const createIconComponent = (SvgContent) => {
-  return function IconComponent({ className = "", width = 24, height = 24, fill = "currentColor", stroke = "currentColor", ...props }) {
+type IconProps = React.SVGProps<SVGSVGElement>;
+
+const createIconComponent = (SvgContent: React.ReactElement<IconProps>) => {
+  return function IconComponent({ className = "", width = 24, height = 24, fill = "currentColor", stroke = "currentColor", ...props }: IconProps) {
     return React.cloneElement(SvgContent, {
       className,
       width,
