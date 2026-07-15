@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import rdvService from '../../../services/rdvService';
 import etudeService from '../../../services/etudeService';
 import groupeService from '../../../services/groupeService';
-import etudeVolontaireService from '../../../services/etudeVolontaireService';
+
 import volontaireService from '../../../services/volontaireService';
 import { timeToMinutes } from '../../../utils/timeUtils';
 import { buildPassageAverageWarning } from '../../../utils/appointmentPassageGuard';
@@ -592,182 +592,7 @@ const useMassAssignment = (etudeIdFromUrl: string | number | null | undefined): 
     }
   }, [filteredVolunteers, getVolunteerId, selectedVolunteers, selectedGroupeDetails, t]);
 
-  const removeStudyVolunteerAssociation = useCallback(
-    async (etudeId: number, volunteerId: number) => {
-      const normalizedVolunteerId = normalizeId(volunteerId);
-      if (!etudeId || !normalizedVolunteerId) {
-        return;
-      }
 
-      try {
-        const response = await etudeVolontaireService.getVolontairesByEtude(etudeId);
-        const associations = Array.isArray(response)
-          ? response
-          : Array.isArray(response?.data)
-            ? response.data
-            : [];
-
-        const existingAssociation = associations.find(
-          (item: any) => normalizeId(item.idVolontaire) === normalizedVolunteerId,
-        );
-
-        if (!existingAssociation) {
-          return;
-        }
-
-        const strategies: Array<() => Promise<void>> = [];
-
-        strategies.push(async () => {
-          const associationId = etudeVolontaireService.createAssociationId(
-            existingAssociation.idEtude,
-            existingAssociation.idGroupe,
-            existingAssociation.idVolontaire,
-            existingAssociation.iv,
-            existingAssociation.numsujet,
-            existingAssociation.paye,
-            existingAssociation.statut,
-          );
-          await etudeVolontaireService.updateVolontaire(associationId, null);
-        });
-
-        if (existingAssociation.numsujet && existingAssociation.numsujet > 0) {
-          strategies.push(async () => {
-            const associationId = etudeVolontaireService.createAssociationId(
-              existingAssociation.idEtude,
-              existingAssociation.idGroupe,
-              existingAssociation.idVolontaire,
-              existingAssociation.iv,
-              existingAssociation.numsujet,
-              existingAssociation.paye,
-              existingAssociation.statut,
-            );
-
-            await etudeVolontaireService.updateNumSujet(associationId, 0);
-            await etudeVolontaireService.delete(
-              etudeVolontaireService.createAssociationId(
-                existingAssociation.idEtude,
-                existingAssociation.idGroupe,
-                existingAssociation.idVolontaire,
-                existingAssociation.iv,
-                0,
-                existingAssociation.paye,
-                existingAssociation.statut,
-              ),
-            );
-          });
-        }
-
-        strategies.push(async () => {
-          const associationId = etudeVolontaireService.createAssociationId(
-            existingAssociation.idEtude,
-            existingAssociation.idGroupe,
-            existingAssociation.idVolontaire,
-            existingAssociation.iv,
-            existingAssociation.numsujet,
-            existingAssociation.paye,
-            existingAssociation.statut,
-          );
-          await etudeVolontaireService.updateStatut(associationId, 'ANNULE');
-          await etudeVolontaireService.delete(
-            etudeVolontaireService.createAssociationId(
-              existingAssociation.idEtude,
-              existingAssociation.idGroupe,
-              existingAssociation.idVolontaire,
-              existingAssociation.iv,
-              existingAssociation.numsujet,
-              existingAssociation.paye,
-              'ANNULE',
-            ),
-          );
-        });
-
-        strategies.push(async () => {
-          await etudeVolontaireService.desassignerVolontaireDEtude(etudeId, normalizedVolunteerId);
-        });
-
-        for (const strategy of strategies) {
-          try {
-            await strategy();
-            break;
-          } catch (err) {
-            console.warn('Stratégie suppression association échouée', err);
-          }
-        }
-      } catch (err) {
-        console.error('Erreur lors de la suppression association Etude/Volontaire', err);
-      }
-    },
-    [],
-  );
-
-  const ensureVolunteerAssociation = useCallback(
-    async (etudeId: number, groupId: number | null, volunteerId: number) => {
-      const normalizedVolunteerId = normalizeId(volunteerId);
-      if (!etudeId || !normalizedVolunteerId) {
-        return;
-      }
-
-      const normalizedGroupId = normalizeId(groupId);
-
-      // Récupérer l'association existante AVANT suppression pour préserver l'IV individuel
-      let existingIv = 0;
-      let existingNumsujet = 0;
-      let existingPaye = 0;
-      let existingStatut = 'INSCRIT';
-      try {
-        const response = await etudeVolontaireService.getVolontairesByEtude(etudeId);
-        const associations = Array.isArray(response)
-          ? response
-          : Array.isArray(response?.data)
-            ? response.data
-            : [];
-        const existingAssoc = associations.find(
-          (item: any) => normalizeId(item.idVolontaire) === normalizedVolunteerId,
-        );
-        if (existingAssoc) {
-          existingIv = existingAssoc.iv || 0;
-          existingNumsujet = existingAssoc.numsujet || 0;
-          existingPaye = existingAssoc.paye || 0;
-          existingStatut = existingAssoc.statut || 'INSCRIT';
-        }
-      } catch (err) {
-        console.warn("Impossible de récupérer l'association existante", err);
-      }
-
-      try {
-        await removeStudyVolunteerAssociation(etudeId, normalizedVolunteerId);
-      } catch (err) {
-        console.warn("Impossible de supprimer l'association existante Etude/Volontaire", err);
-      }
-
-      const groupDetails =
-        groupes.find((group) => normalizeId(group.id ?? group.idGroupe) === normalizedGroupId) ||
-        selectedGroupeDetails ||
-        null;
-
-      const groupIv = groupDetails?.iv ? parseInt(String(groupDetails.iv), 10) || 0 : 0;
-
-      // Préserver l'IV individuel existant, sauf si pas d'IV existant (utiliser celui du groupe)
-      const ivValue = existingIv > 0 ? existingIv : groupIv;
-
-      const payload = {
-        idEtude: etudeId,
-        idVolontaire: normalizedVolunteerId,
-        idGroupe: normalizedGroupId ?? 0,
-        iv: ivValue,
-        numsujet: existingNumsujet,
-        paye: existingPaye > 0 ? existingPaye : 0,
-        statut: existingStatut,
-      };
-
-      try {
-        await etudeVolontaireService.create(payload);
-      } catch (err) {
-        console.warn('Creation association Etude/Volontaire impossible', err);
-      }
-    },
-    [groupes, removeStudyVolunteerAssociation, selectedGroupeDetails],
-  );
 
   const handleMassAssignment = useCallback(async () => {
     if (!selectedEtudeId || selectedAppointments.length === 0) {
@@ -802,11 +627,7 @@ const useMassAssignment = (etudeIdFromUrl: string | number | null | undefined): 
         }
 
         await Promise.all(
-          unassignments.map(async ({ appointment, volunteerId }) => {
-            if (volunteerId) {
-              await removeStudyVolunteerAssociation(selectedEtudeId, volunteerId);
-            }
-
+          unassignments.map(async ({ appointment }) => {
             const payload = {
               idEtude: selectedEtudeId,
               idRdv: getAppointmentId(appointment),
@@ -902,7 +723,6 @@ const useMassAssignment = (etudeIdFromUrl: string | number | null | undefined): 
         const results = await Promise.all(
           assignments.map(async ({ appointment, volunteer }) => {
             const volunteerId = getVolunteerId(volunteer) as number;
-            await ensureVolunteerAssociation(selectedEtudeId, selectedGroupeId, volunteerId);
 
             const payload = {
               idEtude: selectedEtudeId,
@@ -956,13 +776,13 @@ const useMassAssignment = (etudeIdFromUrl: string | number | null | undefined): 
   }, [
     actionMode,
     assignmentMode,
-    ensureVolunteerAssociation,
+
     getAppointmentId,
     getVolunteerId,
     hasScheduleConflict,
     loadEtudeData,
     refreshContext,
-    removeStudyVolunteerAssociation,
+
     selectedAppointments,
     selectedEtudeId,
     selectedGroupeDetails,
@@ -983,10 +803,6 @@ const useMassAssignment = (etudeIdFromUrl: string | number | null | undefined): 
 
       try {
         setLoading(true);
-        const volunteerId = normalizeId(appointment.volontaire?.id ?? appointment.idVolontaire);
-        if (volunteerId) {
-          await removeStudyVolunteerAssociation(selectedEtudeId, volunteerId);
-        }
 
         const payload = {
           idEtude: selectedEtudeId,
@@ -1014,7 +830,7 @@ const useMassAssignment = (etudeIdFromUrl: string | number | null | undefined): 
         setLoading(false);
       }
     },
-    [getAppointmentId, loadEtudeData, refreshContext, removeStudyVolunteerAssociation, selectedEtudeId],
+    [getAppointmentId, loadEtudeData, refreshContext, selectedEtudeId],
   );
 
   // Handlers for appointment switcher

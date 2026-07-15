@@ -14,6 +14,7 @@ import { Badge } from '../../ui/badge';
 import { Alert, AlertDescription } from '../../ui/alert';
 import rdvService from '../../../services/rdvService';
 import etudeService from '../../../services/etudeService';
+import { dateFallsWithinPeriod, resolveStudyPeriod } from '../../../utils/studyOverlap';
 
 interface Rdv {
   idRdv?: number;
@@ -89,15 +90,6 @@ const StudyOverlapAlert = ({
     return timeString;
   };
 
-  // Fonction pour vérifier si deux périodes se chevauchent
-  const periodsOverlap = (
-    start1: Date,
-    end1: Date,
-    start2: Date,
-    end2: Date
-  ): boolean => {
-    return start1 <= end2 && end1 >= start2;
-  };
 
   // Fonction principale pour vérifier les chevauchements
   const checkOverlaps = useCallback(async () => {
@@ -120,14 +112,15 @@ const StudyOverlapAlert = ({
         return;
       }
 
-      // Calculer la période de l'étude cible (min et max des dates de RDV)
-      const targetDates = targetRdvList.map((rdv) => new Date(rdv.date));
-      const targetStartDate = new Date(Math.min(...targetDates.map((d) => d.getTime())));
-      const targetEndDate = new Date(Math.max(...targetDates.map((d) => d.getTime())));
-
-      // Ajouter une marge de sécurité (7 jours avant et après)
-      targetStartDate.setDate(targetStartDate.getDate() - 7);
-      targetEndDate.setDate(targetEndDate.getDate() + 7);
+      // La période officielle de l'étude est la source de vérité. Les dates RDV
+      // ne servent de repli que pour les anciennes études sans dates renseignées.
+      const targetPeriod = resolveStudyPeriod(targetEtudeData, targetRdvList);
+      if (!targetPeriod) {
+        setOverlappingStudies([]);
+        setHasChecked(true);
+        onCheckComplete?.(false, []);
+        return;
+      }
 
       // 3. Récupérer tous les RDV du volontaire (utiliser getByVolontaire qui est plus fiable)
       const volunteerRdvsData = await rdvService.getByVolontaire(Number(volontaireId));
@@ -137,8 +130,7 @@ const StudyOverlapAlert = ({
       const otherStudyRdvs = volunteerRdvs.filter((rdv: Rdv) => {
         if (Number(rdv.idEtude) === Number(targetEtudeId)) return false;
 
-        const rdvDate = new Date(rdv.date);
-        return periodsOverlap(targetStartDate, targetEndDate, rdvDate, rdvDate);
+        return dateFallsWithinPeriod(rdv.date, targetPeriod.start, targetPeriod.end);
       });
 
       // 5. Grouper par étude

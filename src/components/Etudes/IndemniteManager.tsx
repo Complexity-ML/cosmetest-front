@@ -66,6 +66,33 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
     );
   }, [rdvs]);
 
+  const missingAssociationCount = useMemo(() => {
+    const associatedIds = new Set(
+      volontairesAssignes
+        .map((volontaire) => Number(volontaire.idVolontaire))
+        .filter((id) => Number.isInteger(id) && id > 0),
+    );
+    return [...volunteerIdsWithRdv].filter((id) => !associatedIds.has(id)).length;
+  }, [volontairesAssignes, volunteerIdsWithRdv]);
+
+  const repairMissingAssociations = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const response = await api.post(`/etude-volontaires/repair/${etudeId}`);
+      const result = response.data;
+      if (result.repaired > 0) {
+        alert(`${result.repaired} association(s) réparée(s) sur ${result.missing} manquante(s).`);
+        window.location.reload();
+      } else {
+        alert('Aucune association manquante détectée.');
+      }
+    } catch (err: any) {
+      alert('Erreur lors de la réparation: ' + (err?.response?.data?.message || err?.message || 'Erreur inconnue'));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [etudeId]);
+
   const getVolontaireKey = useCallback((volontaire: VolontaireAssigne) => volontaire.id
     ? `ev:${volontaire.id}`
     : [
@@ -454,6 +481,20 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
         </Alert>
       )}
 
+      {missingAssociationCount > 0 && (
+        <Alert className="border-orange-300 bg-orange-50">
+          <AlertTriangle className="h-4 w-4 text-orange-600" />
+          <AlertDescription className="flex items-center justify-between">
+            <span className="text-orange-800">
+              <strong>{missingAssociationCount}</strong> volontaire{missingAssociationCount > 1 ? 's ont' : ' a'} un RDV assigné mais ne figure{missingAssociationCount > 1 ? 'nt' : ''} pas encore dans les indemnités.
+            </span>
+            <Button variant="outline" size="sm" className="ml-4 border-orange-400 text-orange-700 hover:bg-orange-100" onClick={repairMissingAssociations}>
+              Réparer les associations
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Alerte aucun volontaire */}
       {volontairesAssignes.length === 0 && !isLoading && (
         <Alert className="border-orange-300 bg-orange-50">
@@ -466,23 +507,7 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
               variant="outline"
               size="sm"
               className="ml-4 border-orange-400 text-orange-700 hover:bg-orange-100"
-              onClick={async () => {
-                try {
-                  setIsLoading(true);
-                  const response = await api.post(`/etude-volontaires/repair/${etudeId}`);
-                  const result = response.data;
-                  if (result.repaired > 0) {
-                    alert(`${result.repaired} association(s) réparée(s) sur ${result.missing} manquante(s).`);
-                    window.location.reload();
-                  } else {
-                    alert('Aucune association manquante détectée.');
-                  }
-                } catch (err: any) {
-                  alert('Erreur lors de la réparation: ' + (err?.message || 'Erreur inconnue'));
-                } finally {
-                  setIsLoading(false);
-                }
-              }}
+              onClick={repairMissingAssociations}
             >
               Réparer les associations
             </Button>

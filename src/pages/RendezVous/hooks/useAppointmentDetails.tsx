@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import rdvService from '../../../services/rdvService';
 import groupeService from '../../../services/groupeService';
 import volontaireService from '../../../services/volontaireService';
-import etudeVolontaireService from '../../../services/etudeVolontaireService';
+
 import { buildPassageAverageWarning } from '../../../utils/appointmentPassageGuard';
 import { useRendezVousContext } from '../context/RendezVousContext';
 
@@ -232,108 +232,6 @@ const useAppointmentDetails = (initialAppointment: Appointment | null): UseAppoi
     void fetchAppointment();
   }, [fetchAppointment, identifiers]);
 
-  const ensureVolunteerAssociation = useCallback(
-    async (etudeId: number, groupId: number | null, volunteerId: number) => {
-      const normalizedVolunteerId = normalizeId(volunteerId);
-      const normalizedGroupId = normalizeId(groupId);
-      if (!etudeId || !normalizedVolunteerId) {
-        return;
-      }
-
-      let associations: any[] = [];
-      try {
-        const response = await etudeVolontaireService.getVolontairesByEtude(etudeId);
-        if (Array.isArray(response)) {
-          associations = response;
-        } else if (Array.isArray(response?.data)) {
-          associations = response.data;
-        }
-      } catch (err) {
-        console.warn('Récupération associations Étude/Volontaire impossible', err);
-      }
-
-      const existingAssociation = associations.find(
-        (item) => normalizeId(item.idVolontaire) === normalizedVolunteerId,
-      );
-
-      if (existingAssociation) {
-        try {
-          const associationId = etudeVolontaireService.createAssociationId(
-            existingAssociation.idEtude,
-            existingAssociation.idGroupe,
-            existingAssociation.idVolontaire,
-            existingAssociation.iv,
-            existingAssociation.numsujet,
-            existingAssociation.paye,
-            existingAssociation.statut,
-          );
-          await etudeVolontaireService.delete(associationId);
-        } catch (err) {
-          console.warn('Suppression association Étude/Volontaire impossible', err);
-        }
-      }
-
-      // Préserver l'IV individuel existant si le volontaire en avait un
-      const existingIv = existingAssociation?.iv || 0;
-      const existingNumsujet = existingAssociation?.numsujet || 0;
-      const existingPaye = existingAssociation?.paye || 0;
-      const existingStatut = existingAssociation?.statut || 'INSCRIT';
-      const groupIv = group?.iv ?? 0;
-      const ivValue = existingIv > 0 ? existingIv : groupIv;
-
-      const payload = {
-        idEtude: etudeId,
-        idVolontaire: normalizedVolunteerId,
-        idGroupe: normalizedGroupId ?? 0,
-        iv: ivValue,
-        numsujet: existingNumsujet,
-        paye: existingPaye > 0 ? existingPaye : 0,
-        statut: existingStatut,
-      };
-
-      try {
-        await etudeVolontaireService.create(payload);
-      } catch (err) {
-        console.warn('Création association Étude/Volontaire impossible', err);
-      }
-    },
-    [group],
-  );
-
-  const removeVolunteerAssociation = useCallback(async (etudeId: number, volunteerId: number | string | null | undefined) => {
-    const normalizedVolunteerId = normalizeId(volunteerId);
-    if (!etudeId || !normalizedVolunteerId) {
-      return;
-    }
-
-    try {
-      const response = await etudeVolontaireService.getVolontairesByEtude(etudeId);
-      const associations = Array.isArray(response)
-        ? response
-        : Array.isArray(response?.data)
-          ? response.data
-          : [];
-
-      const association = associations.find((item: any) => normalizeId(item.idVolontaire) === normalizedVolunteerId);
-      if (!association) {
-        return;
-      }
-
-      const associationId = etudeVolontaireService.createAssociationId(
-        association.idEtude,
-        association.idGroupe,
-        association.idVolontaire,
-        association.iv,
-        association.numsujet,
-        association.paye,
-        association.statut,
-      );
-
-      await etudeVolontaireService.delete(associationId);
-    } catch (err) {
-      console.warn('Impossible de supprimer lassociation Étude/Volontaire', err);
-    }
-  }, []);
 
   const assignVolunteer = useCallback(
     async ({ volunteerId, groupId }: AssignVolunteerParams): Promise<void> => {
@@ -373,11 +271,6 @@ const useAppointmentDetails = (initialAppointment: Appointment | null): UseAppoi
           console.warn('Impossible de verifier la moyenne de passages', warningError);
         }
 
-        // Supprimer l'association de l'ancien volontaire s'il y en a un
-        const oldVolunteerId = appointment?.idVolontaire ?? appointment?.volontaire?.id;
-        if (oldVolunteerId && normalizeId(oldVolunteerId) !== normalizedVolunteerId) {
-          await removeVolunteerAssociation(identifiers.idEtude, oldVolunteerId);
-        }
 
         const targetGroupId =
           normalizeId(groupId) ??
@@ -386,7 +279,6 @@ const useAppointmentDetails = (initialAppointment: Appointment | null): UseAppoi
           normalizeId(appointment?.groupe?.idGroupe) ??
           0;
 
-        await ensureVolunteerAssociation(identifiers.idEtude, targetGroupId, normalizedVolunteerId);
 
         const payload: any = {
           idEtude: identifiers.idEtude,
@@ -417,7 +309,7 @@ const useAppointmentDetails = (initialAppointment: Appointment | null): UseAppoi
         setAssigning(false);
       }
     },
-    [appointment, ensureVolunteerAssociation, fetchAppointment, identifiers, refreshContext, removeVolunteerAssociation, volunteerOptions],
+    [appointment, fetchAppointment, identifiers, refreshContext, volunteerOptions],
   );
 
   const unassignVolunteer = useCallback(async (): Promise<void> => {
@@ -429,10 +321,6 @@ const useAppointmentDetails = (initialAppointment: Appointment | null): UseAppoi
       setAssigning(true);
       setError(null);
 
-      await removeVolunteerAssociation(
-        identifiers.idEtude,
-        appointment?.idVolontaire ?? appointment?.volontaire?.id,
-      );
 
       const payload: any = {
         idEtude: identifiers.idEtude,
@@ -460,7 +348,7 @@ const useAppointmentDetails = (initialAppointment: Appointment | null): UseAppoi
     } finally {
       setAssigning(false);
     }
-  }, [appointment, fetchAppointment, identifiers, refreshContext, removeVolunteerAssociation]);
+  }, [appointment, fetchAppointment, identifiers, refreshContext]);
 
   const deleteAppointment = useCallback(async (): Promise<void> => {
     if (!identifiers.idEtude || !identifiers.idRdv) {

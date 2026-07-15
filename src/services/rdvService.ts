@@ -27,9 +27,12 @@ const rdvService = {
     return response.data;
   },
 
-  // Récupérer un rendez-vous spécifique
-  getById: async (rdvPk: number) => {
-    const response = await api.get(`${API_URL}/${rdvPk}`);
+  // Récupérer un rendez-vous spécifique par ID technique ou par clé composite legacy
+  getById: async (rdvPkOrEtude: number, legacyNumeroRdv?: number) => {
+    const url = legacyNumeroRdv !== undefined
+      ? `${API_URL}/${rdvPkOrEtude}/${legacyNumeroRdv}`
+      : `${API_URL}/${rdvPkOrEtude}`;
+    const response = await api.get(url);
     return response.data;
   },
 
@@ -39,9 +42,17 @@ const rdvService = {
     return response.data;
   },
 
-  // Mettre à jour un rendez-vous
-  update: async (rdvPk: number, rdvData: any) => {
-    const response = await api.put(`${API_URL}/${rdvPk}`, { ...rdvData, rdvPk });
+  // Mettre à jour un rendez-vous. Les écrans migrés utilisent l'ID technique;
+  // les écrans historiques fournissent encore (idEtude, idRdv, payload).
+  update: async (rdvPkOrEtude: number, rdvDataOrNumero: any, legacyData?: any) => {
+    const legacyCall = legacyData !== undefined;
+    const url = legacyCall
+      ? `${API_URL}/${rdvPkOrEtude}/${rdvDataOrNumero}`
+      : `${API_URL}/${rdvPkOrEtude}`;
+    const payload = legacyCall
+      ? legacyData
+      : { ...rdvDataOrNumero, rdvPk: rdvPkOrEtude };
+    const response = await api.put(url, payload);
     return response.data;
   },
 
@@ -65,8 +76,11 @@ const rdvService = {
   },
 
   // Supprimer un rendez-vous
-  delete: async (rdvPk: number) => {
-    const response = await api.delete(`${API_URL}/${rdvPk}`);
+  delete: async (rdvPkOrEtude: number, legacyNumeroRdv?: number) => {
+    const url = legacyNumeroRdv !== undefined
+      ? `${API_URL}/${rdvPkOrEtude}/${legacyNumeroRdv}`
+      : `${API_URL}/${rdvPkOrEtude}`;
+    const response = await api.delete(url);
     return response.data;
   },
 

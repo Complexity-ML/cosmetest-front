@@ -43,6 +43,19 @@ describe('RdvService', () => {
       const result = await rdvService.getById(9001);
       expect(result.rdvPk).toBe(9001);
     });
+
+    it('préserve la lecture composite des écrans historiques', async () => {
+      mockAxios.onGet('/rdvs/2189/7').reply(200, {
+        rdvPk: 99001,
+        idEtude: 2189,
+        idRdv: 7,
+        idVolontaire: null,
+      });
+
+      const result = await rdvService.getById(2189, 7);
+
+      expect(result).toMatchObject({ idEtude: 2189, idRdv: 7, idVolontaire: null });
+    });
   });
 
   describe('create', () => {
@@ -59,6 +72,18 @@ describe('RdvService', () => {
       const result = await rdvService.update(9001, { date: '2024-01-02' });
       expect(result.updated).toBe(true);
     });
+
+    it('préserve le contrat composite utilisé par les écrans d’affectation', async () => {
+      const payload = { idVolontaire: 77, idGroupe: 4, etat: 'PLANIFIE' };
+      mockAxios.onPut('/rdvs/12/3', payload).reply(200, {
+        success: true,
+        rdv: { idEtude: 12, idRdv: 3, idVolontaire: 77 }
+      });
+
+      const result = await rdvService.update(12, 3, payload);
+
+      expect(result.rdv.idVolontaire).toBe(77);
+    });
   });
 
   describe('delete', () => {
@@ -66,6 +91,11 @@ describe('RdvService', () => {
       mockAxios.onDelete('/rdvs/9001').reply(200, {});
       const result = await rdvService.delete(9001);
       expect(result).toBeDefined();
+    });
+
+    it('préserve la suppression composite utilisée par les écrans historiques', async () => {
+      mockAxios.onDelete('/rdvs/12/3').reply(200, {});
+      await expect(rdvService.delete(12, 3)).resolves.toBeDefined();
     });
   });
 
