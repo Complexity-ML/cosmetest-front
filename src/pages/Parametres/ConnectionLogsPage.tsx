@@ -132,6 +132,13 @@ const ConnectionLogsPage = () => {
     const [historyPage, setHistoryPage] = useState(0);
     const [historyLoading, setHistoryLoading] = useState(false);
     const [historyError, setHistoryError] = useState<string | null>(null);
+    const [historyPurgeDate, setHistoryPurgeDate] = useState(() => {
+        const d = new Date();
+        d.setMonth(d.getMonth() - 6);
+        return d.toISOString().slice(0, 10);
+    });
+    const [historyPurgeLoading, setHistoryPurgeLoading] = useState(false);
+    const [historyPurgeConfirm, setHistoryPurgeConfirm] = useState(false);
 
     // Audit detail modal
     const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null);
@@ -285,6 +292,22 @@ const ConnectionLogsPage = () => {
             setAuditError(err instanceof Error ? err.message : t("logs.unknownError"));
         } finally {
             setPurgeLoading(false);
+        }
+    };
+
+    const handleHistoryPurge = async () => {
+        try {
+            setHistoryPurgeLoading(true);
+            setHistoryError(null);
+            const result = await parametreService.purgeSessionHistory(historyPurgeDate);
+            setHistoryPurgeConfirm(false);
+            setHistoryPage(0);
+            await fetchHistory(0);
+            alert(`${result.deleted} session(s) supprimée(s).`);
+        } catch (err) {
+            setHistoryError(err instanceof Error ? err.message : t("logs.unknownError"));
+        } finally {
+            setHistoryPurgeLoading(false);
         }
     };
 
@@ -771,11 +794,38 @@ const ConnectionLogsPage = () => {
                     {/* Historique des sessions */}
                     <Card>
                         <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <Clock className="h-5 w-5" />
-                                {t("logs.sessionHistoryTitle")}
-                            </CardTitle>
-                            <CardDescription>{t("logs.sessionHistoryDesc")}</CardDescription>
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                <div>
+                                    <CardTitle className="flex items-center gap-2">
+                                        <Clock className="h-5 w-5" />
+                                        {t("logs.sessionHistoryTitle")}
+                                    </CardTitle>
+                                    <CardDescription>{t("logs.sessionHistoryDesc")}</CardDescription>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    {!historyPurgeConfirm ? (
+                                        <Button variant="outline" size="sm" className="text-destructive border-destructive hover:bg-destructive hover:text-white" onClick={() => setHistoryPurgeConfirm(true)}>
+                                            <Trash2 className="mr-2 h-4 w-4" />
+                                            {t("logs.purge")}
+                                        </Button>
+                                    ) : (
+                                        <>
+                                            <input
+                                                type="date"
+                                                className="text-sm border rounded px-2 py-1"
+                                                value={historyPurgeDate}
+                                                max={new Date().toISOString().slice(0, 10)}
+                                                onChange={e => setHistoryPurgeDate(e.target.value)}
+                                            />
+                                            <Button variant="destructive" size="sm" disabled={historyPurgeLoading || !historyPurgeDate} onClick={handleHistoryPurge}>
+                                                {historyPurgeLoading ? <RefreshCw className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
+                                                {t("logs.purgeConfirm")}
+                                            </Button>
+                                            <Button variant="ghost" size="sm" onClick={() => setHistoryPurgeConfirm(false)}>{t("logs.cancel")}</Button>
+                                        </>
+                                    )}
+                                </div>
+                            </div>
                         </CardHeader>
                         <CardContent>
                             {historyError && (

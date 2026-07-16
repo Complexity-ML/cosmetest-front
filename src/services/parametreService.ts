@@ -277,6 +277,18 @@ const parametreService = {
     },
 
     /**
+     * Purge completed sessions older than the selected date (admin only)
+     */
+    purgeSessionHistory: async (before: string) => {
+        try {
+            const response = await api.delete(`/connexions/session-history/purge?before=${before}`);
+            return response.data;
+        } catch (error: any) {
+            throw new Error(error.response?.data?.message || "Erreur lors de la purge de l'historique des sessions");
+        }
+    },
+
+    /**
      * Get parameters with pagination
      * @param {number} page - Page number (1-based)
      * @param {number} limit - Number of items per page
