@@ -61,7 +61,12 @@
     "deleteError": "Error during deletion",
     "updating": "Updating...",
     "importantInfo": "Important information",
-    "notDefined": "Not defined"
+    "notDefined": "Not defined",
+    "copy": "Copy",
+    "deleting": "Deleting...",
+    "filters": "Filters",
+    "limitedTo50Results": "Results limited to the first 50",
+    "saving": "Saving..."
   },
   "app": {
     "title": "Cosmetest",
@@ -381,7 +386,8 @@
         "etudeCils": "Lash study",
         "corneoLevre": "Lip corneo",
         "corneoBras": "Arm corneo",
-        "dtm": "DTM"
+        "dtm": "DTM",
+        "observations": "Observations"
       }
     },
     "rdvAssignment": "Appointment assignment",
@@ -714,7 +720,18 @@
     "country": "Country",
     "for": "for",
     "star": "star",
-    "resetRating": "Reset rating"
+    "resetRating": "Reset rating",
+    "archiveConfirm": "Voulez-vous archiver ce volontaire ?",
+    "includeArchived": "Inclure les volontaires archivés",
+    "searchPlaceholder": "Rechercher un volontaire...",
+    "hcCreated": "Cosmetic habits created",
+    "hcUpdated": "Cosmetic habits updated",
+    "identifier": "Identifier",
+    "loadListError": "Unable to load the volunteer list",
+    "noEmail": "No email address",
+    "required": "Volunteer is required",
+    "submitError": "Error while saving",
+    "volunteerOptional": "Volunteer (optional)"
   },
   "panel": {
     "title": "HC Panel",
@@ -804,7 +821,19 @@
     "rdvLabel": "Appointments",
     "availableAppointments": "Available appointments",
     "outOf": "out of",
-    "deselectAll": "Deselect all"
+    "deselectAll": "Deselect all",
+    "type": "Type",
+    "appointmentsInPeriod": "Appointments in period",
+    "identifier": "Identifier",
+    "selectedDateAppointments": "Appointments on {{date}}",
+    "unknownError": "Unknown error",
+    "statuses": {
+      "CONFIRME": "Confirmed",
+      "EN_ATTENTE": "Pending",
+      "ANNULE": "Cancelled",
+      "COMPLETE": "Completed",
+      "PLANIFIE": "Scheduled"
+    }
   },
   "studies": {
     "studies": "Studies",
@@ -909,7 +938,14 @@
     "studyHistory": "Study history",
     "filterAwaitingPaymentActive": "Active filter: Awaiting payment",
     "results": "result(s)",
-    "clearFilter": "Clear filter"
+    "clearFilter": "Clear filter",
+    "archiveConfirm": "Archive this study?",
+    "archiveError": "Error while archiving",
+    "noStudyFound": "No study found",
+    "noTitle": "Untitled",
+    "study": "Study",
+    "unarchive": "Unarchive",
+    "unarchiveConfirm": "Unarchive this study?"
   },
   "appointments": {
     "title": "Appointment Management",
@@ -1194,7 +1230,23 @@
     "changeTimeForSelected": "Change time for selected appointments",
     "newTime": "New time",
     "pleaseSelectTime": "Please select a time",
-    "switchVolunteers": "Switch volunteers"
+    "switchVolunteers": "Switch volunteers",
+    "appointmentsWillBeDeleted": "appointments will be deleted",
+    "changeDate": "Change date",
+    "changeDateAndTime": "Change date and time",
+    "changeDateAndTimeForSelected": "Change date and time for selected appointments",
+    "changeDateForSelected": "Change date for selected appointments",
+    "confirmDeleteSelected": "Are you sure you want to delete the selected appointments?",
+    "createAppointment": "Create appointment",
+    "dateAndTime": "Date and time",
+    "dateOnly": "Date only",
+    "deleteAppointments": "Delete appointments",
+    "newDate": "New date",
+    "pleaseSelectDate": "Please select a date",
+    "timeOnly": "Time only",
+    "volunteerAsc": "Volunteer A–Z",
+    "volunteerDesc": "Volunteer Z–A",
+    "whatToChange": "What would you like to change?"
   },
   "groups": {
     "groupOptional": "Group (optional)",
@@ -1261,7 +1313,8 @@
     "chooseGroup": "Choose a group",
     "group": "Group",
     "phototypes": "Phototypes",
-    "phototypesSelected": "{{count}} phototype(s) selected"
+    "phototypesSelected": "{{count}} phototype(s) selected",
+    "description": "Description"
   },
   "payments": {
     "title": "Payment Management",
@@ -1594,7 +1647,11 @@
     "validationError": "Validation error",
     "serverError": "Server error",
     "tryAgain": "Please try again",
-    "contactSupport": "Contact support if the problem persists"
+    "contactSupport": "Contact support if the problem persists",
+    "conversionError": "Conversion error",
+    "invalidGroupId": "Invalid group identifier",
+    "invalidStudyId": "Invalid study identifier",
+    "unknown": "Unknown error"
   },
   "validation": {
     "selectStudy": "Please select a study",
@@ -1609,7 +1666,8 @@
     "dateInvalid": "Invalid date",
     "dateInFuture": "Date must be in the future",
     "dateInPast": "Date must be in the past",
-    "passwordMismatch": "Passwords do not match"
+    "passwordMismatch": "Passwords do not match",
+    "dateRequired": "Date is required"
   },
   "pagination": {
     "showing": "Showing",
@@ -1858,7 +1916,11 @@
     "statusAnnule": "Cancelled",
     "sortByName": "Sort alphabetically",
     "sortBySubjectNumber": "Sort by subject number",
-    "sortByIndemnity": "Sort by compensation"
+    "sortByIndemnity": "Sort by compensation",
+    "changeIV": "Change indemnity",
+    "changeStatus": "Change status",
+    "newIVFor": "New indemnity for {{count}} volunteer(s)",
+    "newStatusFor": "New status for {{count}} volunteer(s)"
   },
   "volunteerAppointments": {
     "assignToAppointments": "Assign to appointments",
@@ -1875,7 +1937,13 @@
     "assignmentInProgress": "Assignment in progress",
     "appointmentsGroup": "{{count}} appointment(s) • Group: {{group}}",
     "assigning": "Assigning...",
-    "assign": "Assign"
+    "assign": "Assign",
+    "canStillAssign": "You can still assign this volunteer, but confirmation will be required.",
+    "continueAnyway": "Do you want to continue anyway?",
+    "doesNotMatch": "does not match the group phototypes",
+    "noVolunteerPhototype": "The volunteer has no phototype defined.",
+    "phototypeIncompatibility": "Phototype mismatch",
+    "phototypeWarning": "Warning: the volunteer phototype"
   },
   "studyOverlap": {
     "warningTitle": "Warning: Study overlap detected",

@@ -58,7 +58,15 @@
     "deleteError": "Erreur lors de la suppression",
     "updating": "Mise à jour...",
     "importantInfo": "Information importante",
-    "notDefined": "Non défini"
+    "notDefined": "Non défini",
+    "retry": "Réessayer",
+    "accessDenied": "Accès refusé",
+    "adminOnly": "Cette page est réservée aux administrateurs.",
+    "copy": "Copier",
+    "deleting": "Suppression...",
+    "filters": "Filtres",
+    "limitedTo50Results": "Résultats limités aux 50 premiers",
+    "saving": "Enregistrement..."
   },
   "app": {
     "title": "Cosmetest",
@@ -715,7 +723,15 @@
     "country": "Pays",
     "for": "pour",
     "star": "étoile",
-    "resetRating": "Réinitialiser la note"
+    "resetRating": "Réinitialiser la note",
+    "hcCreated": "Habitudes cosmétiques créées",
+    "hcUpdated": "Habitudes cosmétiques mises à jour",
+    "identifier": "Identifiant",
+    "loadListError": "Impossible de charger la liste des volontaires",
+    "noEmail": "Aucune adresse e-mail",
+    "required": "Le volontaire est requis",
+    "submitError": "Erreur lors de l’enregistrement",
+    "volunteerOptional": "Volontaire (facultatif)"
   },
   "panel": {
     "title": "Panel HC",
@@ -805,7 +821,19 @@
     "rdvLabel": "RDV",
     "availableAppointments": "Rendez-vous disponibles",
     "outOf": "sur",
-    "deselectAll": "Tout désélectionner"
+    "deselectAll": "Tout désélectionner",
+    "type": "Type",
+    "appointmentsInPeriod": "RDV dans la période",
+    "identifier": "Identifiant",
+    "selectedDateAppointments": "RDV du {{date}}",
+    "unknownError": "Erreur inconnue",
+    "statuses": {
+      "CONFIRME": "Confirmé",
+      "EN_ATTENTE": "En attente",
+      "ANNULE": "Annulé",
+      "COMPLETE": "Terminé",
+      "PLANIFIE": "Planifié"
+    }
   },
   "studies": {
     "studies": "Études",
@@ -910,7 +938,14 @@
     "studyHistory": "Historique des études",
     "filterAwaitingPaymentActive": "Filtre actif : En attente de paiement",
     "results": "résultat(s)",
-    "clearFilter": "Effacer le filtre"
+    "clearFilter": "Effacer le filtre",
+    "archiveConfirm": "Archiver cette étude ?",
+    "archiveError": "Erreur lors de l’archivage",
+    "noStudyFound": "Aucune étude trouvée",
+    "noTitle": "Sans titre",
+    "study": "Étude",
+    "unarchive": "Désarchiver",
+    "unarchiveConfirm": "Désarchiver cette étude ?"
   },
   "appointments": {
     "title": "Gestion des Rendez-vous",
@@ -1195,7 +1230,23 @@
     "changeTimeForSelected": "Modifier l'heure pour les rendez-vous sélectionnés",
     "newTime": "Nouvelle heure",
     "pleaseSelectTime": "Veuillez sélectionner une heure",
-    "switchVolunteers": "Échanger les volontaires"
+    "switchVolunteers": "Échanger les volontaires",
+    "appointmentsWillBeDeleted": "rendez-vous seront supprimés",
+    "changeDate": "Changer la date",
+    "changeDateAndTime": "Changer la date et l’heure",
+    "changeDateAndTimeForSelected": "Modifier la date et l’heure des rendez-vous sélectionnés",
+    "changeDateForSelected": "Modifier la date des rendez-vous sélectionnés",
+    "confirmDeleteSelected": "Êtes-vous sûr de vouloir supprimer les rendez-vous sélectionnés ?",
+    "createAppointment": "Créer un rendez-vous",
+    "dateAndTime": "Date et heure",
+    "dateOnly": "Date seulement",
+    "deleteAppointments": "Supprimer les rendez-vous",
+    "newDate": "Nouvelle date",
+    "pleaseSelectDate": "Veuillez sélectionner une date",
+    "timeOnly": "Heure seulement",
+    "volunteerAsc": "Volontaire A–Z",
+    "volunteerDesc": "Volontaire Z–A",
+    "whatToChange": "Que souhaitez-vous modifier ?"
   },
   "groups": {
     "groupOptional": "Groupe (facultatif)",
@@ -1262,7 +1313,8 @@
     "chooseGroup": "Choisir un groupe",
     "group": "Groupe",
     "phototypes": "Phototypes",
-    "phototypesSelected": "{{count}} phototype(s) sélectionné(s)"
+    "phototypesSelected": "{{count}} phototype(s) sélectionné(s)",
+    "description": "Description"
   },
   "payments": {
     "title": "Gestion des Paiements",
@@ -1595,7 +1647,11 @@
     "serverError": "Erreur serveur",
     "tryAgain": "Veuillez réessayer",
     "contactSupport": "Contactez le support si le problème persiste",
-    "unknownError": "Une erreur inconnue est survenue"
+    "unknownError": "Une erreur inconnue est survenue",
+    "conversionError": "Erreur de conversion",
+    "invalidGroupId": "Identifiant de groupe invalide",
+    "invalidStudyId": "Identifiant d’étude invalide",
+    "unknown": "Erreur inconnue"
   },
   "validation": {
     "required": "Ce champ est requis",
@@ -1608,7 +1664,10 @@
     "dateInvalid": "Date invalide",
     "dateInFuture": "La date doit être dans le futur",
     "dateInPast": "La date doit être dans le passé",
-    "passwordMismatch": "Les mots de passe ne correspondent pas"
+    "passwordMismatch": "Les mots de passe ne correspondent pas",
+    "dateTimeRequired": "La date et l’heure sont requises",
+    "selectStudy": "Veuillez sélectionner une étude",
+    "dateRequired": "La date est requise"
   },
   "pagination": {
     "showing": "Affichage de",
@@ -1878,7 +1937,13 @@
     "assignmentInProgress": "Assignation en cours",
     "appointmentsGroup": "{{count}} rendez-vous • Groupe: {{group}}",
     "assigning": "Assignation...",
-    "assign": "Assigner"
+    "assign": "Assigner",
+    "canStillAssign": "Vous pouvez toujours assigner ce volontaire, mais une confirmation sera demandée.",
+    "continueAnyway": "Voulez-vous continuer malgré tout ?",
+    "doesNotMatch": "ne correspond pas aux phototypes du groupe",
+    "noVolunteerPhototype": "Le volontaire n’a pas de phototype défini.",
+    "phototypeIncompatibility": "Incompatibilité de phototype",
+    "phototypeWarning": "Attention : le phototype du volontaire"
   },
   "studyOverlap": {
     "warningTitle": "Attention : Chevauchement d'études détecté",

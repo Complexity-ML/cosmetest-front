@@ -52,6 +52,28 @@ describe('Dashboard - chargement des sections', () => {
     ]);
   });
 
+  it("affiche atomiquement le nombre de volontaires fourni avec chaque étude récente", async () => {
+    vi.mocked(api.get).mockImplementation(async (endpoint) => {
+      if (endpoint === dashboardEndpoints.etudesRecentes) {
+        return {
+          data: [{
+            id: 2940,
+            ref: '2940',
+            titre: 'use 1 semaine 2 parfums solides',
+            volontaires: 12,
+            status: 'À venir',
+          }],
+        } as never;
+      }
+      return responseFor(String(endpoint)) as never;
+    });
+
+    renderDashboard();
+
+    expect(await screen.findByText('12 dashboard.volunteers')).toBeInTheDocument();
+    expect(screen.queryByText('0 dashboard.volunteers')).not.toBeInTheDocument();
+  });
+
   it("conserve l'erreur de la section études en cours quand les autres réussissent", async () => {
     vi.mocked(api.get).mockImplementation(async (endpoint) => {
       if (endpoint === dashboardEndpoints.etudesEnCours) {

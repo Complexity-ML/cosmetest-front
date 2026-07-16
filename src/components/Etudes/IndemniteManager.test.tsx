@@ -1,4 +1,4 @@
-import { render, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import IndemniteManager from './IndemniteManager';
 import api from '../../services/api';
@@ -78,5 +78,46 @@ describe('IndemniteManager - chargement des associations', () => {
     expect(api.post).not.toHaveBeenCalled();
     expect(etudeVolontaireService.create).not.toHaveBeenCalled();
     expect(groupeService.getById).not.toHaveBeenCalled();
+  });
+
+  it('compte 32 personnes et non 62 lignes quand 30 anciennes associations sans numéro sont présentes', async () => {
+    const associations = Array.from({ length: 32 }, (_, index) => ({
+      id: index + 1,
+      idEtude: 2171,
+      idGroupe: 10,
+      idVolontaire: index + 100,
+      numsujet: index + 1,
+      iv: 60,
+      paye: 0,
+      statut: 'INSCRIT',
+    }));
+    associations.push({
+      id: 999,
+      idEtude: 2171,
+      idGroupe: 10,
+      idVolontaire: 999,
+      numsujet: 99,
+      iv: 60,
+      paye: 0,
+      statut: 'INSCRIT',
+    });
+    associations.push(...associations.slice(0, 30).map((row, index) => ({
+      ...row,
+      id: 1000 + index,
+      numsujet: 0,
+    })));
+    vi.mocked(etudeVolontaireService.getVolontairesByEtude).mockResolvedValue(associations);
+
+    render(
+      <IndemniteManager
+        etudeId={2171}
+        etudeTitre="2915 IN USE"
+        rdvs={associations.slice(0, 32) as never}
+      />
+    );
+
+    expect(await screen.findByText('1920 €')).toBeInTheDocument();
+    expect(screen.getByText(/30 anciennes lignes sans numéro sujet/)).toBeInTheDocument();
+    expect(screen.queryByText('3720 €')).not.toBeInTheDocument();
   });
 });

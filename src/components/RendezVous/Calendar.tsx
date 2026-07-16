@@ -6,6 +6,7 @@ import api from '../../services/api';
 import { Button } from '../ui/button';
 import { Alert, AlertDescription } from '../ui/alert';
 import { ChevronLeft, ChevronRight, AlertCircle, Loader2 } from 'lucide-react';
+import { formatCalendarDate } from './calendarLocale';
 
 interface Appointment {
   idRdv?: number;
@@ -41,7 +42,8 @@ interface StudyRdvs {
 }
 
 const Calendar = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const language = i18n.resolvedLanguage || i18n.language;
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [calendarData, setCalendarData] = useState<CalendarData | null>(null);
@@ -168,14 +170,14 @@ const Calendar = () => {
         setCalendarData({ ...data, etudes: etudesAvecRdv });
       } catch (err) {
         console.error('Erreur lors du chargement du calendrier:', err);
-        setError((err as Error)?.message || 'Erreur inconnue');
+        setError((err as Error)?.message || t('calendar.unknownError'));
       } finally {
         setLoading(false);
       }
     };
 
     loadCalendarData();
-  }, [monthStart, monthEnd, getPeriodeData, formatLocalDate]);
+  }, [monthStart, monthEnd, getPeriodeData, formatLocalDate, t]);
 
   // --- UI logic ---
   const navigateMonth = (direction: number) => {
@@ -263,9 +265,9 @@ const Calendar = () => {
     return pastelColors[hash % pastelColors.length];
   };
 
-  const formatDateFr = (dateStr: string) => {
+  const formatLongDate = (dateStr: string) => {
     const date = parseLocalDateStr(dateStr);
-    return date.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    return formatCalendarDate(date, language, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   };
 
   const getRdvStatusColor = (etat?: string) => {
@@ -318,7 +320,7 @@ const Calendar = () => {
             <ChevronLeft className="h-4 w-4 mr-1" />
             {t('calendar.previous')}
           </Button>
-          <h2 className="calendar-title">{currentDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}</h2>
+          <h2 className="calendar-title">{formatCalendarDate(currentDate, language, { month: 'long', year: 'numeric' })}</h2>
           <Button variant="outline" onClick={() => navigateMonth(1)}>
             {t('calendar.next')}
             <ChevronRight className="h-4 w-4 ml-1" />
@@ -368,7 +370,7 @@ const Calendar = () => {
                       key={study.id || study.idEtude || studyIndex}
                       className="study-marker"
                       style={{ backgroundColor: getStudyTypeColor(study), borderColor: getStudyTypeColor(study) }}
-                      title={`${study.ref} - ${study.titre || ''}\nType: ${study.type || 'Non défini'}\nRDV dans la période: ${study.nombreRdvPeriode || 0}`}
+                      title={`${study.ref} - ${study.titre || ''}\n${t('calendar.type')}: ${study.type || t('calendar.notDefined')}\n${t('calendar.appointmentsInPeriod')}: ${study.nombreRdvPeriode || 0}`}
                       onClick={(e) => handleStudyClick(study, day.date, e)}
                     >
                       <span className="study-ref">{study.ref || study.id || study.idEtude}</span>
@@ -394,7 +396,7 @@ const Calendar = () => {
                   <span className="rdv-count">{studyRdvs.selectedDate.length} {t('calendar.rdvThisDay')}</span>
                   {selectedDate && (
                     <span className="selected-date-info">
-                      📅 {formatDateFr(formatLocalDate(selectedDate))}
+                      📅 {formatLongDate(formatLocalDate(selectedDate))}
                     </span>
                   )}
                 </div>
@@ -417,7 +419,9 @@ const Calendar = () => {
                         <div className="time-badge selected-date-badge">
                           <span className="badge-icon">📅</span>
                           <span className="badge-text">
-                            RDV du {selectedDate ? formatDateFr(formatLocalDate(selectedDate)) : 'jour sélectionné'}
+                            {t('calendar.selectedDateAppointments', {
+                              date: selectedDate ? formatLongDate(formatLocalDate(selectedDate)) : t('calendar.selectedDay'),
+                            })}
                           </span>
                           <span className="badge-count">({studyRdvs.selectedDate.length})</span>
                         </div>
@@ -427,7 +431,7 @@ const Calendar = () => {
                           <div key={`rdv-${index}`} className="rdv-card selected-date-card">
                             <div className="rdv-time-slot">
                               <span className="time-display">{rdv.heure || '--:--'}</span>
-                              <span className="date-display">{formatDateFr(rdv.date || '')}</span>
+                              <span className="date-display">{formatLongDate(rdv.date || '')}</span>
                             </div>
                             <div className="rdv-details">
                               <div className="volunteer-info">
@@ -448,7 +452,7 @@ const Calendar = () => {
                                     className="volunteer-name underline hover:opacity-80 transition-opacity"
                                     onClick={(e) => e.stopPropagation()}
                                   >
-                                    ID: {rdv.idVolontaire}
+                                    {t('calendar.identifier')}: {rdv.idVolontaire}
                                   </Link>
                                 ) : (
                                   <span className="volunteer-name">
@@ -458,7 +462,9 @@ const Calendar = () => {
                               </div>
                               <div className="rdv-status">
                                 <span className={`status-badge ${getRdvStatusColor(rdv.etat)}`}>
-                                  {rdv.etat || t('calendar.notDefined')}
+                                  {rdv.etat
+                                    ? t(`calendar.statuses.${rdv.etat}`, { defaultValue: rdv.etat })
+                                    : t('calendar.notDefined')}
                                 </span>
                               </div>
                             </div>
@@ -477,7 +483,7 @@ const Calendar = () => {
                       <div className="no-rdv-icon">📅</div>
                       <p>
                         {t('calendar.noAppointmentFound')} {' '}
-                        {selectedDate ? formatDateFr(formatLocalDate(selectedDate)) : t('calendar.selectedDay')}
+                        {selectedDate ? formatLongDate(formatLocalDate(selectedDate)) : t('calendar.selectedDay')}
                       </p>
                     </div>
                   )}

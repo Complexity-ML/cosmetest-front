@@ -147,15 +147,15 @@ const CheveuxSection = ({ formData, onChange }: any) => {
           <label htmlFor="couleurCheveux" className="block text-sm font-medium text-gray-700 mb-1">
             {t('volunteers.hairColor')}
           </label>
-          <select id="couleurCheveux" name="couleurCheveux" value={formData.couleurCheveux} onChange={onChange} onKeyDown={(e) => handleSelectKeyDown(e, ['Blonds','Bruns','Chatains','Noirs','Roux','Gris','Blancs','Colorés'])} className="form-select block w-full">
+          <select id="couleurCheveux" name="couleurCheveux" value={formData.couleurCheveux} onChange={onChange} onKeyDown={(e) => handleSelectKeyDown(e, ['Blond','Brun','Châtain','Noir','Roux','Gris','Blanc','Colorés'])} className="form-select block w-full">
             <option value="">{t('common.select')}</option>
-            <option value="Blonds">{t('volunteers.hairColorOptions.Blonds')}</option>
-            <option value="Bruns">{t('volunteers.hairColorOptions.Bruns')}</option>
-            <option value="Chatains">{t('volunteers.hairColorOptions.Chatains')}</option>
-            <option value="Noirs">{t('volunteers.hairColorOptions.Noirs')}</option>
+            <option value="Blond">{t('volunteers.hairColorOptions.Blonds')}</option>
+            <option value="Brun">{t('volunteers.hairColorOptions.Bruns')}</option>
+            <option value="Châtain">{t('volunteers.hairColorOptions.Chatains')}</option>
+            <option value="Noir">{t('volunteers.hairColorOptions.Noirs')}</option>
             <option value="Roux">{t('volunteers.hairColorOptions.Roux')}</option>
             <option value="Gris">{t('volunteers.hairColorOptions.Gris')}</option>
-            <option value="Blancs">{t('volunteers.hairColorOptions.Blancs')}</option>
+            <option value="Blanc">{t('volunteers.hairColorOptions.Blancs')}</option>
             <option value="Colorés">{t('volunteers.hairColorOptions.Colorés')}</option>
           </select>
         </div>

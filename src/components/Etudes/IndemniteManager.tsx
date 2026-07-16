@@ -29,6 +29,7 @@ import { NumSujetInput, IVInput } from "./indemnite/InputComponents";
 import StatutDisplay from "./indemnite/StatutDisplay";
 import { AnnulationButton, DeleteButton } from "./indemnite/ActionButtons";
 import BatchActions from "./indemnite/BatchActions";
+import { normalizeIndemnityAssociations } from "./indemnite/associationNormalization";
 
 const IndemniteManager: React.FC<IndemniteManagerProps> = ({
   etudeId,
@@ -52,6 +53,8 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
     order: 'asc' | 'desc';
   }>({ column: 'none', order: 'asc' });
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set());
+  const [ignoredLegacyRows, setIgnoredLegacyRows] = useState(0);
+  const [ambiguousVolunteerCount, setAmbiguousVolunteerCount] = useState(0);
 
   // Hooks personnalisés
   const { volontairesInfo, loadGroupesInfo, loadVolontairesInfo } = useEntitiesInfo();
@@ -127,6 +130,7 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
         ? (error as any).response?.data?.message || String(error)
         : error instanceof Error ? error.message : 'Erreur inconnue';
       setError(`Erreur lors de l'enregistrement de l'annulation: ${errorMessage}`);
+      throw error;
     }
   }, [etudeId]);
 
@@ -404,11 +408,18 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
       try {
         setIsLoading(true);
         const response = await etudeVolontaireService.getVolontairesByEtude(etudeId);
-        const allAssignes: VolontaireAssigne[] = parseEtudeVolontaireResponse(response);
+        const rawAssociations: VolontaireAssigne[] = parseEtudeVolontaireResponse(response);
+        const rdvAssociations = rdvs
+          ? rawAssociations.filter((association) => volunteerIdsWithRdv.has(Number(association.idVolontaire)))
+          : rawAssociations;
+        const normalized = normalizeIndemnityAssociations(rdvAssociations);
+        const allAssignes = normalized.associations;
 
         volontairesAssignesRef.current = allAssignes;
         setVolontairesAssignes(allAssignes);
-        setDebugInfo(`${allAssignes.length} volontaires trouvés`);
+        setIgnoredLegacyRows(normalized.ignoredLegacyRows);
+        setAmbiguousVolunteerCount(normalized.ambiguousVolunteerCount);
+        setDebugInfo(`${allAssignes.length} personnes avec RDV affichées sur ${rawAssociations.length} associations`);
         if (allAssignes.length > 0) {
           const uniqueGroupeIds = [...new Set(allAssignes.map((v) => v.idGroupe).filter((id) => id && id !== 0))] as number[];
           const uniqueVolontaireIds = [...new Set(allAssignes.map((v) => v.idVolontaire).filter((id) => id && id !== 0))] as number[];
@@ -418,6 +429,8 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
         console.error("Erreur lors du chargement des volontaires:", error);
         volontairesAssignesRef.current = [];
         setVolontairesAssignes([]);
+        setIgnoredLegacyRows(0);
+        setAmbiguousVolunteerCount(0);
         setError("Erreur lors du chargement des volontaires");
       } finally {
         setIsLoading(false);
@@ -457,6 +470,24 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
         <Alert>
           <AlertDescription><strong>Debug:</strong> {debugInfo}</AlertDescription>
           <Button variant="ghost" size="sm" onClick={() => setDebugInfo("")} className="absolute top-2 right-2">×</Button>
+        </Alert>
+      )}
+
+      {ignoredLegacyRows > 0 && (
+        <Alert className="border-blue-300 bg-blue-50">
+          <AlertCircle className="h-4 w-4 text-blue-600" />
+          <AlertDescription className="text-blue-800">
+            <strong>{ignoredLegacyRows} anciennes lignes sans numéro sujet</strong> ont été exclues des totaux car une association numérotée équivalente existe pour la même personne. Aucune donnée n'a été supprimée.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {ambiguousVolunteerCount > 0 && (
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            <strong>{ambiguousVolunteerCount} personne{ambiguousVolunteerCount > 1 ? 's ont' : ' a'}</strong> plusieurs associations financièrement différentes. Ces lignes restent affichées et nécessitent un contrôle manuel.
+          </AlertDescription>
         </Alert>
       )}
 
