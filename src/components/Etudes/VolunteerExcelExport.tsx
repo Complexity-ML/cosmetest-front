@@ -12,6 +12,14 @@ interface VolunteerExcelExportProps {
   studyRef?: string | null;
 }
 
+const ETHNICITY_STATS_ORDER = [
+  'Caucasian',
+  'Asian',
+  'African',
+  'Indian',
+  'West-Indian',
+] as const;
+
 const VolunteerExcelExport: React.FC<VolunteerExcelExportProps> = ({ 
   volunteerIds = [], 
   studyId = null, 
@@ -42,8 +50,8 @@ const VolunteerExcelExport: React.FC<VolunteerExcelExportProps> = ({
         .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
       if (key.includes('caucas')) return 'Caucasian';
-      if (key.includes('africa')) return 'African';
       if (key.includes('asia') || key.includes('asiat')) return 'Asian';
+      if (key.includes('africa')) return 'African';
       if (key.includes('indien') || key.includes('indian')) return 'Indian';
       if (key.includes('antill') || key.includes('west')) return 'West-Indian';
 
@@ -453,8 +461,8 @@ const VolunteerExcelExport: React.FC<VolunteerExcelExportProps> = ({
         ['STATISTIQUES D\'ÂGE', 'Valeur', 'Unité'],
         ['N (effectif)', ages.length, ''],
         ['Moyenne', moyenneAge, 'ans'],
-        ['Médiane', medianeAge, 'ans'],
         ['Écart type', ecartTypeAge, 'ans'],
+        ['Médiane', medianeAge, 'ans'],
         ['Minimum', minAge, 'ans'],
         ['Maximum', maxAge, 'ans'],
         ['', '', '']
@@ -589,11 +597,14 @@ const VolunteerExcelExport: React.FC<VolunteerExcelExportProps> = ({
       currentRowIndex = dataRows.length;
 
       // === 5. STATISTIQUES D'ETHNIES ===
-      const ethniesPresentes = Object.keys(ethniesStats);
+      const ethniesSupplementaires = Object.keys(ethniesStats)
+        .filter(ethnie => !ETHNICITY_STATS_ORDER.includes(ethnie as typeof ETHNICITY_STATS_ORDER[number]))
+        .sort((a, b) => a.localeCompare(b, 'en'));
+      const ethniesPresentes = [...ETHNICITY_STATS_ORDER, ...ethniesSupplementaires];
 
       const ethniesLabels: (string | number)[][] = [['ETHNIES', 'N', '%']];
       ethniesPresentes.forEach(ethnie => {
-        const count = ethniesStats[ethnie];
+        const count = ethniesStats[ethnie] ?? 0;
         const pct = Math.round((count / volunteersData.length) * 100 * 10) / 10;
         ethniesLabels.push([ethnie, count, pct]);
       });
@@ -608,7 +619,7 @@ const VolunteerExcelExport: React.FC<VolunteerExcelExportProps> = ({
 
         if (idx >= 1 && idx <= ethniesPresentes.length) {
           const ethnie = ethniesPresentes[idx - 1];
-          const count = ethniesStats[ethnie];
+          const count = ethniesStats[ethnie] ?? 0;
           const pct = Math.round((count / volunteersData.length) * 100 * 10) / 10;
           formulesToApply.push({row: currentRowIndex + idx, col: 1, formula: `COUNTIF(${ethnieRange},"${ethnie}")`, value: count});
           formulesToApply.push({row: currentRowIndex + idx, col: 2, formula: `ROUND(COUNTIF(${ethnieRange},"${ethnie}")/COUNTA(${ethnieRange})*100,1)`, value: pct});
