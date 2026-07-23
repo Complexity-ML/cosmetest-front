@@ -62,6 +62,18 @@ const VolunteerExcelExport: React.FC<VolunteerExcelExportProps> = ({
     }
   };
 
+  const parseMainEthnicities = (ethnie: any): string[] => {
+    if (!ethnie) return [];
+
+    const values = Array.isArray(ethnie)
+      ? ethnie
+      : String(ethnie).split(/[;,]/);
+
+    return values
+      .map((value: any) => String(value).trim())
+      .filter(Boolean);
+  };
+
   // Fonction pour normaliser les types de peau (regrouper les variations)
   const normalizeTypePeau = (typePeau: any) => {
     if (!typePeau) return 'Non spécifié';
@@ -290,6 +302,7 @@ const VolunteerExcelExport: React.FC<VolunteerExcelExportProps> = ({
         'Sensibilité cutanée',
         'D0', // Date de début d'étude
         'ETHNIE',
+        'ETHNIE 2',
       ];
 
       // 3. Créer les lignes de données
@@ -366,8 +379,11 @@ const VolunteerExcelExport: React.FC<VolunteerExcelExportProps> = ({
           ? formatDateEnglish(firstPassageDateByVolunteer[volunteer.idVolontaire])
           : '';
         row.push(volunteerD0);
+        const mainEthnicities = parseMainEthnicities(volunteer.ethnie);
         // ETHNIE
-        row.push(formatEthnieEnglish(volunteer.ethnie) || '');
+        row.push(formatEthnieEnglish(mainEthnicities[0]) || '');
+        // ETHNIE 2 — deuxième ethnie principale uniquement, sans sous-ethnie
+        row.push(formatEthnieEnglish(mainEthnicities[1]) || '');
 
         dataRows.push(row);
       });
@@ -379,7 +395,7 @@ const VolunteerExcelExport: React.FC<VolunteerExcelExportProps> = ({
       const dataStartRowExcel = 4; // Ligne Excel (1-indexed)
       const dataEndRowExcel = dataStartRowExcel + volunteersData.length - 1;
 
-      // Colonnes: C=Age, D=Type peau EN, E=Phototype, F=Type peau, G=Sensibilité, I=Ethnie
+      // Colonnes: C=Age, D=Type peau EN, E=Phototype, F=Type peau, G=Sensibilité, I=Ethnie principale
       const ageRange = `C${dataStartRowExcel}:C${dataEndRowExcel}`;
       const sensibiliteRange = `G${dataStartRowExcel}:G${dataEndRowExcel}`;
       const typePeauRange = `F${dataStartRowExcel}:F${dataEndRowExcel}`;
@@ -436,7 +452,8 @@ const VolunteerExcelExport: React.FC<VolunteerExcelExportProps> = ({
       }, {});
 
       const ethniesStats: Record<string, number> = volunteersData.reduce((acc: Record<string, number>, v: any) => {
-        const ethnie = formatEthnieEnglish(v.ethnie) || 'Not specified';
+        const [primaryEthnicity] = parseMainEthnicities(v.ethnie);
+        const ethnie = formatEthnieEnglish(primaryEthnicity) || 'Not specified';
         acc[ethnie] = (acc[ethnie] || 0) + 1;
         return acc;
       }, {});
@@ -833,6 +850,7 @@ const VolunteerExcelExport: React.FC<VolunteerExcelExportProps> = ({
         { width: 20 },  // Sensibilité cutanée
         { width: 12 },  // D0
         { width: 15 },  // ETHNIE
+        { width: 15 },  // ETHNIE 2
       ];
 
       ws['!cols'] = colWidths;
