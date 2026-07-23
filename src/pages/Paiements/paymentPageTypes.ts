@@ -19,6 +19,7 @@ export interface VolontaireInfo {
 export interface GroupeInfo {
   idGroupe: number | string;
   nom: string;
+  libelle?: string;
   [key: string]: unknown;
 }
 

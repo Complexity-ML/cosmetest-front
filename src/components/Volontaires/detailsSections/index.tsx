@@ -34,7 +34,7 @@ export const renderVolontaireDetailsSection = ({
   activeTab,
   ...props
 }: RenderVolontaireDetailsSectionProps) => {
-  const Section = SECTION_COMPONENTS[activeTab] as ComponentType<Record<string, unknown>>;
+  const Section = SECTION_COMPONENTS[activeTab] as unknown as ComponentType<Record<string, unknown>>;
 
   return (
     <Suspense

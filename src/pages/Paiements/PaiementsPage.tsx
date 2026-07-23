@@ -456,7 +456,7 @@ const PaiementsPage = () => {
     const prenom = volontaire.prenom || volontaire.prenomVol || '';
     const nom = volontaire.nom || volontaire.nomVol || '';
     if (prenom && nom) return `${prenom} ${nom}`;
-    return volontaire.nomComplet || `Volontaire #${idVolontaire}`;
+    return (volontaire.nomComplet as string) || `Volontaire #${idVolontaire}`;
   };
 
   const getEtudeName = (idEtude: string | number) => {
@@ -467,7 +467,7 @@ const PaiementsPage = () => {
   const getGroupeName = (idGroupe: string | number, idEtude: string | number) => {
     const groupe = groupesInfo[idGroupe];
     if (groupe) return groupe.nom || groupe.libelle || `Groupe ${idGroupe}`;
-    const groupesEtude = groupesInfo[`etude_${idEtude}`] || [];
+    const groupesEtude = (groupesInfo[`etude_${idEtude}`] as unknown as GroupeInfo[]) || [];
     const groupeInEtude = groupesEtude.find((g: any) => g.id === idGroupe || g.idGroupe === idGroupe);
     if (groupeInEtude) return groupeInEtude.nom || groupeInEtude.libelle || `Groupe ${idGroupe}`;
     return `Groupe #${idGroupe}`;
