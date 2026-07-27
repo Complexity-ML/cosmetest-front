@@ -1,9 +1,10 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import IndemniteManager from './IndemniteManager';
 import api from '../../services/api';
 import etudeVolontaireService from '../../services/etudeVolontaireService';
 import groupeService from '../../services/groupeService';
+import annulationService from '../../services/annulationService';
 
 const loadGroupesInfo = vi.fn().mockResolvedValue(undefined);
 const loadVolontairesInfo = vi.fn().mockResolvedValue(undefined);
@@ -45,7 +46,11 @@ vi.mock('./indemnite/InputComponents', () => ({
 }));
 vi.mock('./indemnite/StatutDisplay', () => ({ default: () => null }));
 vi.mock('./indemnite/ActionButtons', () => ({
-  AnnulationButton: () => null,
+  AnnulationButton: ({ volontaire, onAnnuler }: any) => (
+    <button onClick={() => onAnnuler(volontaire, 'motif test', 'VOLONTAIRE')}>
+      annuler-test
+    </button>
+  ),
   DeleteButton: () => null,
 }));
 vi.mock('./indemnite/BatchActions', () => ({ default: () => null }));
@@ -55,6 +60,13 @@ describe('IndemniteManager - chargement des associations', () => {
     vi.clearAllMocks();
     vi.mocked(api.post).mockResolvedValue({ data: { repaired: 2, missing: 2 } });
     vi.mocked(etudeVolontaireService.getVolontairesByEtude).mockResolvedValue([]);
+    vi.mocked(annulationService.createWithValidation).mockResolvedValue({
+      idAnnuler: 77,
+      idVol: 101,
+      idEtude: 7,
+      dateAnnulation: '2026-07-27',
+      commentaire: 'motif test',
+    });
   });
 
   it("reste en lecture seule même si des RDV n'ont pas d'association", async () => {
@@ -78,6 +90,34 @@ describe('IndemniteManager - chargement des associations', () => {
     expect(api.post).not.toHaveBeenCalled();
     expect(etudeVolontaireService.create).not.toHaveBeenCalled();
     expect(groupeService.getById).not.toHaveBeenCalled();
+  });
+
+  it("conserve l'association métier lors de l'annulation", async () => {
+    vi.mocked(etudeVolontaireService.getVolontairesByEtude).mockResolvedValue([{
+      id: 44,
+      idEtude: 7,
+      idGroupe: 11,
+      idVolontaire: 101,
+      numsujet: 12,
+      iv: 60,
+      paye: 0,
+      statut: 'INSCRIT',
+    }]);
+
+    render(
+      <IndemniteManager
+        etudeId={7}
+        etudeTitre="Étude test"
+        rdvs={[{ idVolontaire: 101, idGroupe: 11 }] as never}
+      />
+    );
+
+    fireEvent.click(await screen.findByRole('button', { name: 'annuler-test' }));
+
+    await waitFor(() => {
+      expect(annulationService.createWithValidation).toHaveBeenCalledTimes(1);
+    });
+    expect(api.delete).not.toHaveBeenCalled();
   });
 
   it('compte 32 personnes et non 62 lignes quand 30 anciennes associations sans numéro sont présentes', async () => {

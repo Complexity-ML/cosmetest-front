@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { Badge } from '../../ui/badge';
-import { Loader2, AlertTriangle, Calendar, User, BookOpen, MessageSquare } from 'lucide-react';
+import { Button } from '../../ui/button';
+import { Loader2, AlertTriangle, Calendar, User, BookOpen, MessageSquare, Pencil, Save, Undo2, X } from 'lucide-react';
 import annulationService from '../../../services/annulationService';
 import etudeService from '../../../services/etudeService';
 
 interface Annulation {
+  id?: number;
   idAnnuler?: number;
   idVol: number;
   idEtude: number;
@@ -25,18 +27,20 @@ const AnnulationsSection = ({ volontaireId }: AnnulationsSectionProps) => {
   const [etudeRefs, setEtudeRefs] = useState<Record<number, string>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [savingId, setSavingId] = useState<number | null>(null);
+  const [undoingId, setUndoingId] = useState<number | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [draftCommentaire, setDraftCommentaire] = useState('');
+  const [draftAnnulePar, setDraftAnnulePar] = useState<'COSMETEST' | 'VOLONTAIRE'>('VOLONTAIRE');
 
   useEffect(() => {
     const fetchAnnulations = async () => {
       try {
         setIsLoading(true);
         setError(null);
-        const rawData = (await annulationService.getRecentByVolontaire(Number(volontaireId))) as Annulation[];
-        // Exclure les annulations faites par Cosmetest (on ne garde que celles du volontaire)
-        const data = rawData.filter(a => {
-          const par = (a.annulePar || '').toUpperCase();
-          return par !== 'COSMETEST';
-        });
+        const data = (await annulationService.getRecentByVolontaire(Number(volontaireId))) as Annulation[];
         setAnnulations(data);
 
         // Récupérer la ref de chaque étude unique
@@ -66,6 +70,75 @@ const AnnulationsSection = ({ volontaireId }: AnnulationsSectionProps) => {
     }
   }, [volontaireId]);
 
+  const getAnnulationId = (annulation: Annulation) => annulation.idAnnuler ?? annulation.id;
+
+  const startEditing = (annulation: Annulation) => {
+    const id = getAnnulationId(annulation);
+    if (!id) return;
+    setEditingId(id);
+    setDraftCommentaire(annulation.commentaire || '');
+    setDraftAnnulePar(
+      annulation.annulePar?.toUpperCase() === 'COSMETEST' ? 'COSMETEST' : 'VOLONTAIRE'
+    );
+    setActionError(null);
+  };
+
+  const cancelEditing = () => {
+    setEditingId(null);
+    setDraftCommentaire('');
+    setActionError(null);
+  };
+
+  const saveEditing = async (annulation: Annulation) => {
+    const id = getAnnulationId(annulation);
+    if (!id) return;
+
+    setSavingId(id);
+    setActionError(null);
+    try {
+      const updated = await annulationService.update(id, {
+        commentaire: draftCommentaire.trim(),
+        annulePar: draftAnnulePar,
+      });
+      setAnnulations((current) => current.map((item) =>
+        getAnnulationId(item) === id ? { ...item, ...updated } : item
+      ));
+      setEditingId(null);
+    } catch (caught) {
+      console.error("Erreur lors de la modification de l'annulation:", caught);
+      setActionError("Impossible de modifier l'annulation.");
+    } finally {
+      setSavingId(null);
+    }
+  };
+
+  const undoAnnulation = async (annulation: Annulation) => {
+    const id = getAnnulationId(annulation);
+    if (!id) return;
+
+    const confirmed = window.confirm(
+      "Annuler cette annulation et restaurer tous les anciens rendez-vous ? L'opération sera refusée si un horaire n'est plus libre."
+    );
+    if (!confirmed) return;
+
+    setUndoingId(id);
+    setActionError(null);
+    setSuccessMessage(null);
+    try {
+      const result = await annulationService.undo(id);
+      setAnnulations((current) => current.filter((item) => getAnnulationId(item) !== id));
+      setSuccessMessage(
+        `${result.restoredRdvCount} rendez-vous restauré${result.restoredRdvCount > 1 ? 's' : ''}.`
+      );
+    } catch (caught: unknown) {
+      const apiError = (caught as { response?: { data?: { details?: string; message?: string } } })
+        .response?.data;
+      setActionError(apiError?.details || apiError?.message || "Impossible d'annuler cette annulation.");
+    } finally {
+      setUndoingId(null);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-32">
@@ -94,6 +167,11 @@ const AnnulationsSection = ({ volontaireId }: AnnulationsSectionProps) => {
           <CardTitle>{t('volunteers.cancellations', 'Annulations')}</CardTitle>
         </CardHeader>
         <CardContent>
+          {successMessage && (
+            <div className="mb-4 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800">
+              {successMessage}
+            </div>
+          )}
           <p className="text-sm text-gray-500">
             {t('volunteers.noCancellations', 'Aucune annulation enregistrée pour ce volontaire.')}
           </p>
@@ -164,6 +242,17 @@ const AnnulationsSection = ({ volontaireId }: AnnulationsSectionProps) => {
         </div>
       </CardHeader>
       <CardContent>
+        {successMessage && (
+          <div className="mb-4 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800">
+            {successMessage}
+          </div>
+        )}
+        {actionError && (
+          <div role="alert" className="mb-4 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+            <AlertTriangle className="h-4 w-4 shrink-0" />
+            {actionError}
+          </div>
+        )}
         <div className="space-y-6">
           {sortedYears.map(year => (
             <div key={year}>
@@ -193,11 +282,105 @@ const AnnulationsSection = ({ volontaireId }: AnnulationsSectionProps) => {
                         </div>
                       )}
                     </div>
-                    {annulation.commentaire && (
-                      <div className="flex items-start gap-1.5 text-sm text-gray-700">
-                        <MessageSquare className="h-4 w-4 mt-0.5 text-gray-400 shrink-0" />
-                        <span>{annulation.commentaire}</span>
+                    {editingId === getAnnulationId(annulation) ? (
+                      <div className="mt-4 space-y-4 rounded-lg border bg-white p-4">
+                        <div className="space-y-1.5">
+                          <label
+                            htmlFor={`motif-annulation-${getAnnulationId(annulation)}`}
+                            className="text-sm font-medium text-gray-700"
+                          >
+                            Motif de l'annulation
+                          </label>
+                          <textarea
+                            id={`motif-annulation-${getAnnulationId(annulation)}`}
+                            value={draftCommentaire}
+                            onChange={(event) => setDraftCommentaire(event.target.value)}
+                            rows={3}
+                            maxLength={200}
+                            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                          />
+                        </div>
+
+                        <fieldset className="space-y-2">
+                          <legend className="text-sm font-medium text-gray-700">Annulation faite par</legend>
+                          <div className="flex flex-wrap gap-5">
+                            <label className="flex items-center gap-2 text-sm">
+                              <input
+                                type="radio"
+                                name={`annule-par-${getAnnulationId(annulation)}`}
+                                checked={draftAnnulePar === 'COSMETEST'}
+                                onChange={() => setDraftAnnulePar('COSMETEST')}
+                              />
+                              Cosmetest
+                            </label>
+                            <label className="flex items-center gap-2 text-sm">
+                              <input
+                                type="radio"
+                                name={`annule-par-${getAnnulationId(annulation)}`}
+                                checked={draftAnnulePar === 'VOLONTAIRE'}
+                                onChange={() => setDraftAnnulePar('VOLONTAIRE')}
+                              />
+                              La volontaire
+                            </label>
+                          </div>
+                        </fieldset>
+
+                        <div className="flex flex-wrap gap-2">
+                          <Button
+                            type="button"
+                            size="sm"
+                            disabled={savingId === getAnnulationId(annulation)}
+                            onClick={() => saveEditing(annulation)}
+                          >
+                            {savingId === getAnnulationId(annulation) ? (
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            ) : (
+                              <Save className="mr-2 h-4 w-4" />
+                            )}
+                            Enregistrer
+                          </Button>
+                          <Button type="button" variant="outline" size="sm" onClick={cancelEditing}>
+                            <X className="mr-2 h-4 w-4" />
+                            Annuler
+                          </Button>
+                        </div>
                       </div>
+                    ) : (
+                      <>
+                        {annulation.commentaire && (
+                          <div className="flex items-start gap-1.5 text-sm text-gray-700">
+                            <MessageSquare className="h-4 w-4 mt-0.5 text-gray-400 shrink-0" />
+                            <span>{annulation.commentaire}</span>
+                          </div>
+                        )}
+                        {getAnnulationId(annulation) && (
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => startEditing(annulation)}
+                            >
+                              <Pencil className="mr-2 h-4 w-4" />
+                              Modifier l'annulation
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              disabled={undoingId !== null}
+                              onClick={() => undoAnnulation(annulation)}
+                            >
+                              {undoingId === getAnnulationId(annulation) ? (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              ) : (
+                                <Undo2 className="mr-2 h-4 w-4" />
+                              )}
+                              Annuler l'annulation
+                            </Button>
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                 ))}

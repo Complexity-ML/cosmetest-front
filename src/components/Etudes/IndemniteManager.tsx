@@ -144,17 +144,6 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
     try {
       setUpdateStatus((prev) => ({ ...prev, [statusKey]: "loading" }));
       await enregistrerAnnulation(volontaire, commentaire, annulePar);
-      await api.delete(volontaire.id ? `/etude-volontaires/${volontaire.id}` : "/etude-volontaires/delete", {
-        params: volontaire.id ? undefined : {
-          idEtude: parseInt(etudeId.toString()),
-          idGroupe: volontaire.idGroupe || 0,
-          idVolontaire: volontaire.idVolontaire,
-          iv: volontaire.iv || 0,
-          numsujet: volontaire.numsujet || 0,
-          paye: volontaire.paye || 0,
-          statut: volontaire.statut || "INSCRIT",
-        },
-      });
       const nextAssignes = volontairesAssignesRef.current.filter((v) => getVolontaireKey(v) !== rowKey);
       volontairesAssignesRef.current = nextAssignes;
       setVolontairesAssignes(nextAssignes);
@@ -164,7 +153,7 @@ const IndemniteManager: React.FC<IndemniteManagerProps> = ({
         return next;
       });
       setUpdateStatus((prev) => ({ ...prev, [statusKey]: "success" }));
-      setDebugInfo(`Volontaire annulé par ${annulePar} : association supprimée, annulation enregistrée. Commentaire: ${commentaire}`);
+      setDebugInfo(`Volontaire annulé par ${annulePar} : association conservée, annulation enregistrée. Commentaire: ${commentaire}`);
       setTimeout(() => { setUpdateStatus((prev) => { const n = { ...prev }; delete n[statusKey]; return n; }); }, 2000);
     } catch (error: unknown) {
       setUpdateStatus((prev) => ({ ...prev, [statusKey]: "error" }));

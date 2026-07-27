@@ -15,6 +15,13 @@ export interface Annulation {
   annulePar?: string;
 }
 
+export interface AnnulationUndoResult {
+  idAnnulation: number;
+  idVol: number;
+  idEtude: number;
+  restoredRdvCount: number;
+}
+
 interface PaginatedAnnulations {
   content: Annulation[];
   totalElements: number;
@@ -263,6 +270,19 @@ const annulationService = {
       await api.delete(`/annulations/${id}`);
     } catch (error) {
       console.error(`Erreur lors de la suppression de l'annulation ${id}:`, error);
+      throw error;
+    }
+  },
+
+  /**
+   * Annuler une annulation et restaurer tous ses anciens horaires encore libres.
+   */
+  undo: async (id: number): Promise<AnnulationUndoResult> => {
+    try {
+      const response = await api.post<AnnulationUndoResult>(`/annulations/${id}/undo`);
+      return response.data;
+    } catch (error) {
+      console.error(`Erreur lors de la restauration de l'annulation ${id}:`, error);
       throw error;
     }
   },

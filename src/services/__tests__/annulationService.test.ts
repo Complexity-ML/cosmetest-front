@@ -409,6 +409,22 @@ describe('AnnulationService', () => {
     });
   });
 
+  describe('undo', () => {
+    it("devrait restaurer les anciens horaires d'une annulation", async () => {
+      const expected = {
+        idAnnulation: 77,
+        idVol: 5,
+        idEtude: 20,
+        restoredRdvCount: 3,
+      };
+      mockAxios.onPost('/annulations/77/undo').reply(200, expected);
+
+      const result = await annulationService.undo(77);
+
+      expect(result).toEqual(expected);
+    });
+  });
+
   describe('hasAnnulationForEtude', () => {
     it('devrait retourner true si le volontaire a des annulations pour l\'étude', async () => {
       const mockAnnulations = [
