@@ -7,10 +7,14 @@ import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig, AxiosResp
 // URL de l'API : proxy same-origin en développement, serveur WinSW en production.
 const configuredApiUrl = import.meta.env.VITE_API_URL?.replace(/\/+$/, '');
 const baseApiUrl = configuredApiUrl
-  ? configuredApiUrl.endsWith('/api') ? configuredApiUrl : `${configuredApiUrl}/api`
+  ? configuredApiUrl.endsWith('/api/v1')
+    ? configuredApiUrl
+    : configuredApiUrl.endsWith('/api')
+      ? `${configuredApiUrl}/v1`
+      : `${configuredApiUrl}/api/v1`
   : import.meta.env.DEV
-    ? '/api'
-    : 'http://192.168.127.36:8888/api';
+    ? '/api/v1'
+    : 'http://192.168.127.36:8888/api/v1';
 
 // Créer une instance d'axios avec la configuration de base
 const api: AxiosInstance = axios.create({

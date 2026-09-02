@@ -17,26 +17,26 @@ beforeAll(async () => {
 
 describe('résolution des URL API', () => {
   it.each(Object.values(dashboardEndpoints))(
-    'résout le endpoint Dashboard %s sous une seule base /api',
+    'résout le endpoint Dashboard %s sous une seule base /api/v1',
     (endpoint) => {
       const resolvedUrl = api.getUri({ url: endpoint });
 
-      expect(resolvedUrl).toMatch(/^\/api\/dashboard\//);
+      expect(resolvedUrl).toMatch(/^\/api\/v1\/dashboard\//);
       expect(resolvedUrl).not.toContain('/api/api/');
     },
   );
 
-  it('résout la suppression Panel sous une seule base /api', () => {
+  it('résout la suppression Panel sous une seule base /api/v1', () => {
     const resolvedUrl = api.getUri({ url: panelEndpoint(42) });
 
-    expect(resolvedUrl).toBe('/api/panels/42');
+    expect(resolvedUrl).toBe('/api/v1/panels/42');
     expect(resolvedUrl).not.toContain('/api/api/');
   });
 
   it('conserve les contrats backend pour mot de passe et paiement groupé', () => {
     expect(api.getUri({ url: identifiantEndpoints.changePassword(7) }))
-      .toBe('/api/identifiants/7/changer-mot-de-passe');
+      .toBe('/api/v1/identifiants/7/changer-mot-de-passe');
     expect(api.getUri({ url: paiementEndpoints.markAllPaid(9) }))
-      .toBe('/api/paiements/etudes/9/mark-all-paid');
+      .toBe('/api/v1/paiements/etudes/9/mark-all-paid');
   });
 });

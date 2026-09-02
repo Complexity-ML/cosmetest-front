@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('../api', async () => {
   const axios = await import('axios');
-  return { default: axios.default.create({ baseURL: '/api' }) };
+  return { default: axios.default.create({ baseURL: '/api/v1' }) };
 });
 
 import api from '../api';

@@ -1,7 +1,9 @@
 // src/services/photoService.ts
-import axios from 'axios';
+import api from './api';
 
-const API_URL = import.meta.env.VITE_API_URL || '';
+const apiOrigin = typeof api.defaults.baseURL === 'string'
+  ? api.defaults.baseURL.replace(/\/api\/v1$/, '')
+  : '';
 
 interface PhotoCheckResponse {
   exists: boolean;
@@ -28,7 +30,7 @@ const photoService = {
    */
   checkVolontairePhotoById: async (volontaireId: number, type: string = 'face'): Promise<PhotoCheckResponse> => {
     try {
-      const response = await axios.get<{ exists: boolean; photoUrl?: string }>(`${API_URL}/api/volontaires/${volontaireId}/photos/${type}`);
+      const response = await api.get<{ exists: boolean; photoUrl?: string }>(`/volontaires/${volontaireId}/photos/${type}`);
 
       return {
         exists: response.data.exists,
@@ -64,7 +66,7 @@ const photoService = {
           const filename = `f_${nameVariant}${ext}`;
 
           try {
-            const response = await axios.get<{ exists: boolean }>(`${API_URL}/api/photos/check`, {
+            const response = await api.get<{ exists: boolean }>('/photos/check', {
               params: { filename }
             });
 
@@ -72,7 +74,7 @@ const photoService = {
               console.log(`Photo trouvée: ${filename}`);
               return {
                 exists: true,
-                url: `${API_URL}/photos/volontaires/${filename}`
+                url: `${apiOrigin}/photos/volontaires/${filename}`
               };
             }
           } catch (error) {
@@ -95,7 +97,7 @@ const photoService = {
    */
   getAllVolontairePhotos: async (volontaireId: number): Promise<PhotoInfo> => {
     try {
-      const response = await axios.get<PhotoInfo>(`${API_URL}/api/volontaires/${volontaireId}/photos`);
+      const response = await api.get<PhotoInfo>(`/volontaires/${volontaireId}/photos`);
 
       return {
         photos: response.data.photos || [],
@@ -115,14 +117,14 @@ const photoService = {
    * Obtient l'URL de l'image directement
    */
   getPhotoImageUrl: (volontaireId: number, type: string = 'face'): string => {
-    return `${API_URL}/api/volontaires/${volontaireId}/photos/${type}/image`;
+    return api.getUri({ url: `/volontaires/${volontaireId}/photos/${type}/image` });
   },
 
   /**
    * Obtient l'URL de la miniature
    */
   getPhotoThumbnailUrl: (volontaireId: number, type: string = 'face'): string => {
-    return `${API_URL}/api/volontaires/${volontaireId}/photos/${type}/thumbnail`;
+    return api.getUri({ url: `/volontaires/${volontaireId}/photos/${type}/thumbnail` });
   },
 
   /**
@@ -133,7 +135,7 @@ const photoService = {
       const formData = new FormData();
       formData.append('photo', photoFile);
 
-      await axios.post(`${API_URL}/api/volontaires/${volontaireId}/photo`, formData, {
+      await api.post(`/volontaires/${volontaireId}/photo`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }

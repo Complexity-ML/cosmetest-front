@@ -15,7 +15,7 @@ sequenceDiagram
     rect rgb(232, 245, 233)
         Note over U,DB: AUTHENTIFICATION
         U->>F: Login (email, password)
-        F->>Auth: POST /api/auth/login
+        F->>Auth: POST /api/v1/auth/login
         Auth->>DB: SELECT user
         DB-->>Auth: User data
         Auth->>Auth: Verify password + Generate JWT
@@ -27,14 +27,14 @@ sequenceDiagram
     rect rgb(227, 242, 253)
         Note over U,DB: CONSULTATION VOLONTAIRE
         U->>F: Recherche volontaire
-        F->>Vol: GET /api/volontaires?search=...
+        F->>Vol: GET /api/v1/volontaires?search=...
         Vol->>DB: SELECT volontaires
         DB-->>Vol: Liste volontaires
         Vol-->>F: VolontaireDTO[]
         F-->>U: Affiche liste
 
         U->>F: Clic sur volontaire
-        F->>Vol: GET /api/volontaires/{id}
+        F->>Vol: GET /api/v1/volontaires/{id}
         Vol->>DB: SELECT volontaire + relations
         DB-->>Vol: Volontaire complet
         Vol-->>F: VolontaireDetailDTO
@@ -45,18 +45,18 @@ sequenceDiagram
     rect rgb(255, 243, 224)
         Note over U,DB: ASSIGNATION VOLONTAIRE À ÉTUDE
         U->>F: Sélection étude + groupe
-        F->>Etu: GET /api/etudes/{id}
+        F->>Etu: GET /api/v1/etudes/{id}
         Etu->>DB: SELECT etude + groupes
         DB-->>Etu: Etude data
         Etu-->>F: EtudeDTO
 
         U->>F: Clic "Assigner à étude"
-        F->>EV: GET /api/etude-volontaires/exists?etude={}&vol={}
+        F->>EV: GET /api/v1/etude-volontaires/exists?etude={}&vol={}
         EV->>DB: SELECT COUNT
         DB-->>EV: 0
         EV-->>F: false
 
-        F->>EV: POST /api/etude-volontaires
+        F->>EV: POST /api/v1/etude-volontaires
         EV->>DB: INSERT etude_volontaire
         DB-->>EV: OK
         EV-->>F: 201 Created
@@ -67,7 +67,7 @@ sequenceDiagram
     rect rgb(252, 228, 236)
         Note over U,DB: ASSIGNATION VOLONTAIRE À RDV
         U->>F: Sélection créneaux RDV
-        F->>Rdv: GET /api/rdvs?etude={id}
+        F->>Rdv: GET /api/v1/rdvs?etude={id}
         Rdv->>DB: SELECT rdvs
         DB-->>Rdv: Liste RDV
         Rdv-->>F: RdvDTO[]
@@ -75,7 +75,7 @@ sequenceDiagram
         U->>F: Clic "Assigner aux RDV"
 
         loop Pour chaque RDV sélectionné
-            F->>Rdv: PUT /api/rdvs/{id}
+            F->>Rdv: PUT /api/v1/rdvs/{id}
             Rdv->>DB: UPDATE rdv SET idVolontaire=?
             DB-->>Rdv: OK
         end
@@ -90,14 +90,14 @@ sequenceDiagram
         U->>F: Clic "Désassigner"
         U->>F: Confirmer
 
-        F->>Rdv: PUT /api/rdvs/{id}
+        F->>Rdv: PUT /api/v1/rdvs/{id}
         Rdv->>DB: UPDATE rdv SET idVolontaire=NULL
         DB-->>Rdv: OK
 
         F->>F: Vérifier RDV restants
 
         alt Plus aucun RDV
-            F->>EV: DELETE /api/etude-volontaires
+            F->>EV: DELETE /api/v1/etude-volontaires
             EV->>DB: DELETE
             DB-->>EV: OK
         end
@@ -109,7 +109,7 @@ sequenceDiagram
     rect rgb(239, 235, 233)
         Note over U,DB: ENREGISTRER ANNULATION
         U->>F: Annuler RDV + motif
-        F->>Rdv: PUT /api/rdvs/{id}/annuler
+        F->>Rdv: PUT /api/v1/rdvs/{id}/annuler
         Rdv->>DB: UPDATE rdv SET etat='ANNULE'
         Rdv->>DB: INSERT annulation
         DB-->>Rdv: OK

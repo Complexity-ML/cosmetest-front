@@ -23,9 +23,9 @@ describe('ApiService', () => {
     expect(legacyModule.default).toBe(canonicalModule.default);
   });
 
-  it('devrait conserver une baseURL normalisée terminant par /api', async () => {
+  it('devrait conserver une baseURL normalisée terminant par /api/v1', async () => {
     const apiModule = await import('../apiService');
-    expect(apiModule.default.defaults.baseURL).toMatch(/\/api$/);
+    expect(apiModule.default.defaults.baseURL).toMatch(/\/api\/v1$/);
     expect(apiModule.default.defaults.baseURL).not.toContain('/api/api');
   });
 

@@ -3,24 +3,26 @@
 // ============================================================
 
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import axios from 'axios';
 import photoService from '../photoService';
 
-// Mock axios module
-vi.mock('axios');
+const apiMocks = vi.hoisted(() => ({
+  defaults: { baseURL: '/api/v1' },
+  get: vi.fn(),
+  post: vi.fn(),
+  getUri: vi.fn(({ url }: { url: string }) => `/api/v1${url}`),
+}));
+
+vi.mock('../api', () => ({ default: apiMocks }));
 
 describe('PhotoService', () => {
-  const mockGet = vi.fn();
-  const mockPost = vi.fn();
+  const mockGet = apiMocks.get;
+  const mockPost = apiMocks.post;
 
   beforeEach(() => {
     vi.clearAllMocks();
     vi.spyOn(console, 'error').mockImplementation(() => {});
     vi.spyOn(console, 'log').mockImplementation(() => {});
 
-    // Setup axios mock
-    (axios.get as any) = mockGet;
-    (axios.post as any) = mockPost;
   });
 
   afterEach(() => {
@@ -29,14 +31,16 @@ describe('PhotoService', () => {
 
   describe('checkVolontairePhotoById', () => {
     it('devrait vérifier qu\'une photo existe', async () => {
-      mockGet.mockResolvedValue({
+      const response = {
         data: { exists: true, photoUrl: '/photos/1_face.jpg' }
-      });
+      };
+      mockGet.mockResolvedValue(response);
 
       const result = await photoService.checkVolontairePhotoById(1, 'face');
 
       expect(result.exists).toBe(true);
       expect(result.url).toBe('/photos/1_face.jpg');
+      expect(apiMocks.get).toHaveBeenCalledWith('/volontaires/1/photos/face');
     });
 
     it('devrait retourner false si la photo n\'existe pas (404)', async () => {
@@ -105,14 +109,14 @@ describe('PhotoService', () => {
   describe('getPhotoImageUrl', () => {
     it('devrait générer l\'URL correcte', () => {
       const url = photoService.getPhotoImageUrl(1, 'face');
-      expect(url).toContain('/volontaires/1/photos/face/image');
+      expect(url).toBe('/api/v1/volontaires/1/photos/face/image');
     });
   });
 
   describe('getPhotoThumbnailUrl', () => {
     it('devrait générer l\'URL correcte', () => {
       const url = photoService.getPhotoThumbnailUrl(1, 'face');
-      expect(url).toContain('/volontaires/1/photos/face/thumbnail');
+      expect(url).toBe('/api/v1/volontaires/1/photos/face/thumbnail');
     });
   });
 

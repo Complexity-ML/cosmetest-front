@@ -53,29 +53,39 @@ describe('API Service', () => {
       expect(api.defaults).toBeDefined();
     });
 
-    it('devrait utiliser /api par défaut afin de conserver le proxy Vite same-origin', () => {
-      expect(api.defaults.baseURL).toBe('/api');
-      expect(api.getUri({ url: '/dashboard/stats' })).toBe('/api/dashboard/stats');
+    it('devrait utiliser /api/v1 par défaut afin de conserver le proxy Vite same-origin', () => {
+      expect(api.defaults.baseURL).toBe('/api/v1');
+      expect(api.getUri({ url: '/dashboard/stats' })).toBe('/api/v1/dashboard/stats');
     });
 
-    it('devrait ajouter /api à VITE_API_URL quand elle contient seulement l’hôte', async () => {
+    it('devrait ajouter /api/v1 à VITE_API_URL quand elle contient seulement l’hôte', async () => {
       vi.stubEnv('VITE_API_URL', 'https://api.example.test');
       vi.resetModules();
 
       const configuredApi = (await import('../api')).default;
 
-      expect(configuredApi.defaults.baseURL).toBe('https://api.example.test/api');
-      expect(configuredApi.getUri({ url: '/panels/42' })).toBe('https://api.example.test/api/panels/42');
+      expect(configuredApi.defaults.baseURL).toBe('https://api.example.test/api/v1');
+      expect(configuredApi.getUri({ url: '/panels/42' })).toBe('https://api.example.test/api/v1/panels/42');
     });
 
-    it('ne devrait pas doubler un suffixe /api déjà configuré', async () => {
+    it('devrait compléter un suffixe /api déjà configuré avec /v1', async () => {
       vi.stubEnv('VITE_API_URL', 'https://api.example.test/api/');
       vi.resetModules();
 
       const configuredApi = (await import('../api')).default;
 
-      expect(configuredApi.defaults.baseURL).toBe('https://api.example.test/api');
+      expect(configuredApi.defaults.baseURL).toBe('https://api.example.test/api/v1');
       expect(configuredApi.defaults.baseURL).not.toContain('/api/api');
+    });
+
+    it('ne devrait pas doubler un suffixe /api/v1 déjà configuré', async () => {
+      vi.stubEnv('VITE_API_URL', 'https://api.example.test/api/v1/');
+      vi.resetModules();
+
+      const configuredApi = (await import('../api')).default;
+
+      expect(configuredApi.defaults.baseURL).toBe('https://api.example.test/api/v1');
+      expect(configuredApi.defaults.baseURL).not.toContain('/v1/v1');
     });
 
     it('devrait avoir withCredentials activé', () => {

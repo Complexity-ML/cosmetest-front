@@ -44,11 +44,11 @@ Une seule variable frontend est nécessaire :
 VITE_API_URL=
 ```
 
-Elle contient l'origine du backend, avec ou sans suffixe `/api`. Le code normalise automatiquement l'URL.
+Elle contient l'origine du backend, avec ou sans suffixe `/api` ou `/api/v1`. Le code normalise automatiquement l'URL vers l’API v1.
 
 | Mode | Configuration actuelle | Résultat |
 |---|---|---|
-| Développement | `VITE_API_URL` vide | requêtes relatives vers `/api`, proxifiées par Vite |
+| Développement | `VITE_API_URL` vide | requêtes relatives vers `/api/v1`, proxifiées par Vite |
 | Proxy Vite | `vite.config.ts` | `http://127.0.0.1:8888` |
 | Production | `.env.production` | `http://192.168.127.36:8888` |
 
@@ -77,17 +77,17 @@ npm run dev
 http://127.0.0.1:3000
 ```
 
-Les appels `/api/**` restent same-origin côté navigateur et Vite les transmet au backend local. Axios utilise `withCredentials: true` afin d'envoyer le cookie JWT HttpOnly.
+Les appels `/api/v1/**` restent same-origin côté navigateur et Vite les transmet au backend local. Axios utilise `withCredentials: true` afin d'envoyer le cookie JWT HttpOnly.
 
 Points de contrôle utiles :
 
 ```text
 Frontend                 http://127.0.0.1:3000
-Santé via le proxy       http://127.0.0.1:3000/api/health
-Validation sans session http://127.0.0.1:3000/api/auth/validate
+Santé via le proxy       http://127.0.0.1:3000/api/v1/health
+Validation sans session http://127.0.0.1:3000/api/v1/auth/validate
 ```
 
-Sans session, `/api/auth/validate` doit répondre `401`. Un `403` indique un utilisateur authentifié sans le droit demandé ; il ne doit pas être traité comme une session expirée.
+Sans session, `/api/v1/auth/validate` doit répondre `401`. Un `403` indique un utilisateur authentifié sans le droit demandé ; il ne doit pas être traité comme une session expirée.
 
 ## Scripts
 
@@ -164,10 +164,10 @@ Les alias Vite disponibles sont :
 Le frontend n'enregistre pas le JWT dans un fichier de configuration. Le parcours web principal repose sur le cookie HttpOnly fourni par le backend :
 
 ```text
-POST /api/auth/login
-GET  /api/auth/validate
-GET  /api/users/me
-POST /api/auth/logout
+POST /api/v1/auth/login
+GET  /api/v1/auth/validate
+GET  /api/v1/users/me
+POST /api/v1/auth/logout
 ```
 
 Les informations utilisateur nécessaires à l'interface sont conservées en mémoire et normalisées pour prendre en charge les anciens et nouveaux formats de rôles.
@@ -216,7 +216,7 @@ Vérifiez au minimum :
 4. consultation des indemnités et paiements ;
 5. export d'un rapport représentatif ;
 6. absence d'erreur inattendue dans la console et l'onglet Réseau ;
-7. déconnexion puis réponse `401` de `/api/auth/validate`.
+7. déconnexion puis réponse `401` de `/api/v1/auth/validate`.
 
 ## Dépannage
 
@@ -235,7 +235,7 @@ Vérifiez au minimum :
 
 ### Erreur `401`
 
-La session est absente ou expirée. Reconnectez-vous et vérifiez que les cookies sont acceptés. Un `401` sur `/api/auth/validate` avant connexion est attendu.
+La session est absente ou expirée. Reconnectez-vous et vérifiez que les cookies sont acceptés. Un `401` sur `/api/v1/auth/validate` avant connexion est attendu.
 
 ### Erreur CORS ou cookie absent
 
